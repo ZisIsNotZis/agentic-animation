@@ -1,0 +1,34 @@
+{
+  "status": "draft",
+  "version": 1,
+  "model": {
+    "name": "Qwen-Image-Edit-Q4_K_M.gguf",
+    "license": "Apache-2.0"
+  },
+  "style": "Hindu miniature painting inspired: Pahari/Kangra-school flat 2D illustration, fine ink outlines, jewel-tone flat color fills, gold-leaf ornament accents, stylised almond eyes, serene expression, front-facing devotional icon framing.",
+  "promptFragments": {
+    "global": "traditional Indian miniature painting, Kangra school, flat 2D illustration, clean ink linework, jewel-tone flat fills, gold ornament, no photorealism",
+    "portrait": "single figure, front-facing, full body, neutral pose, plain background",
+    "partSheet": "isolated body part, complete overlapping edges (art continues under adjacent parts), flat magenta chroma background, no shadow, no cropping at joints",
+    "mouth": "mouth region only, flat magenta chroma background, consistent lip color, no teeth artifacts"
+  },
+  "negativePrompts": [
+    "photorealistic",
+    "3d render",
+    "harsh drop shadow",
+    "cropped joints",
+    "extra limbs",
+    "watermark",
+    "text",
+    "signature"
+  ],
+  "palette": {
+    "krishnaBlue": "#2E4A8B",
+    "saffron": "#F4A300",
+    "vermilion": "#E34234",
+    "leafGreen": "#1E6E3C",
+    "gold": "#C9A227",
+    "ivory": "#F6EFE0",
+    "ink": "#2A2118"
+  }
+}

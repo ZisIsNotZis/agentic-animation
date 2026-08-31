@@ -1,0 +1,115 @@
+{
+  "$ref": "#/definitions/script",
+  "definitions": {
+    "script": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "en",
+            "hi",
+            "zh"
+          ],
+          "default": "en"
+        },
+        "scenes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^_?[a-z0-9][a-z0-9_-]*$"
+              },
+              "name": {
+                "type": "string"
+              },
+              "display": {
+                "type": "string",
+                "minLength": 1
+              },
+              "tts": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mood": {
+                "type": "string",
+                "enum": [
+                  "mystic",
+                  "festive",
+                  "tense",
+                  "tender",
+                  "triumphant",
+                  "somber",
+                  "suspense"
+                ]
+              },
+              "padBefore": {
+                "type": "number",
+                "minimum": 0,
+                "default": 2
+              },
+              "padAfter": {
+                "type": "number",
+                "minimum": 0,
+                "default": 2.4
+              },
+              "dialogue": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "$ref": "#/definitions/script/properties/scenes/items/properties/id"
+                    },
+                    "characterId": {
+                      "$ref": "#/definitions/script/properties/scenes/items/properties/id"
+                    },
+                    "display": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "tts": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "characterId",
+                    "display",
+                    "tts"
+                  ],
+                  "additionalProperties": false
+                },
+                "default": []
+              }
+            },
+            "required": [
+              "id",
+              "display",
+              "tts",
+              "mood"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "title",
+        "scenes"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

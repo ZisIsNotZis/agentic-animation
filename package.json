@@ -1,0 +1,33 @@
+{
+  "name": "agentic-animation",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Agent-operated toolkit that turns a written story into a narrated, deterministic 2D animated MP4.",
+  "workspaces": [
+    "packages/*",
+    "packages/adapters/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "anim": "tsx packages/cli/src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test \"packages/core/test/*.test.ts\" \"packages/studio/test/*.test.ts\" \"tools/stage-lock/*.test.ts\"",
+    "test:all": "node --import tsx --test \"packages/core/test/*.test.ts\" \"packages/studio/test/*.test.ts\" \"packages/adapters/*/test/*.test.ts\" \"tools/stage-lock/*.test.ts\"",
+    "schemas": "tsx packages/core/scripts/export-schemas.ts",
+    "validate:episode-yaml": "tsx tools/validate-narrow-episode.mjs",
+    "gen:fixtures": "npm run gen:placeholder -w @anim/studio && npm run gen:testrig -w @anim/studio",
+    "pretest": "npm run gen:fixtures",
+    "smoke": "node tools/smoke.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "yaml": "^2.9.0"
+  }
+}

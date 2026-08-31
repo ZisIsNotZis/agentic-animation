@@ -1,0 +1,87 @@
+# dependencies
+node_modules/
+
+# build / typecheck outputs
+dist/
+**/dist/
+build/
+**/build/
+*.tsbuildinfo
+
+# local scratch, temporary workspaces, and generated QA material
+.tmp/
+**/.tmp/
+.scratch/
+**/screenshots/
+**/screenshot-*.png
+**/*-screenshot.png
+**/contact-sheet*.png
+**/asset-contact-sheet.png
+
+# pinned binaries fetched by setup scripts (tools/fetch-rhubarb.sh)
+vendor/*
+!vendor/.gitkeep
+
+# python (uv-managed, per-machine)
+py/.venv/
+py/**/__pycache__/
+py/**/*.pyc
+
+# per-machine config overlay (never committed)
+anim.config.local.json
+
+# heavy-stage lock files (ARCHITECTURE §11) — runtime-only, never committed
+.anim/
+
+# rendered episode outputs — regenerable, kept out of git.
+# keep the dist/ dirs themselves via their .gitkeep.
+episodes/*/dist/*
+!episodes/*/dist/.gitkeep
+episodes/*/audio/*.wav
+episodes/*/audio/*.mp3
+episodes/*/build/*.json
+episodes/*/build/stills/*
+# generated timing/build/cue manifests — re-emitted by their producing stage.
+episodes/*/timeline.json
+episodes/*/episode.build.json
+episodes/*/cues/*.json
+episodes/*/performance.json
+episodes/*/golden.json
+
+# stray media at repo root
+/*.mp4
+/*.mov
+
+# generated media anywhere in the workspace
+*.mp4
+*.mov
+*.webm
+*.mkv
+*.wav
+*.mp3
+*.ogg
+*.flac
+*.srt
+*.vtt
+
+# generated episode audio manifests and QA reports
+episodes/*/audio/*.json
+episodes/*/build/*.json
+
+# OS / editor cruft
+.DS_Store
+*.log
+
+# generated/binary character art — never committed, always regenerable.
+# _placeholder and _testrig are deterministic build output of
+# packages/studio/src/generate-{placeholder,testrig}.ts (`npm run gen:fixtures`).
+# Real character work lives in library/characters/<id>/draft/ (pre-approval
+# exploration — expendable by design) and, once approved, <id>/v<N>/. None of
+# it is tracked today. When a character is actually approved, revisit this
+# rule and wire up Git LFS before tracking its parts/*.png.
+library/characters/*
+!library/characters/.gitkeep
+
+# same reasoning for generated backgrounds
+library/backgrounds/*
+!library/backgrounds/.gitkeep

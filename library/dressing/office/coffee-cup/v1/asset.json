@@ -1,0 +1,11 @@
+{
+  "id": "dressing.office.coffee-cup.v1",
+  "version": 1,
+  "kind": "dressing",
+  "source": "art.svg",
+  "preview": "preview.png",
+  "semanticRole": "coffee-cup",
+  "notes": [
+    "Hard-edge office dressing; can be placed independently from the set background."
+  ]
+}

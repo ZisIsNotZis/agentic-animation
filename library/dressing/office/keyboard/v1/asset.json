@@ -1,0 +1,11 @@
+{
+  "id": "dressing.office.keyboard.v1",
+  "version": 1,
+  "kind": "dressing",
+  "source": "art.svg",
+  "preview": "preview.png",
+  "semanticRole": "keyboard",
+  "notes": [
+    "Hard-edge office dressing; can be placed independently from the set background."
+  ]
+}

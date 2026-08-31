@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>anim · pivot editor</title>
+<style>
+  :root { color-scheme: light dark; --bg:#14110d; --fg:#f6efe0; --line:#4a3f2c; --accent:#f4a300; --panel:#1e1a14; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.4 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+  header { padding:10px 16px; border-bottom:1px solid var(--line); display:flex; gap:12px; align-items:center; }
+  header h1 { font-size:15px; margin:0; font-weight:600; }
+  header .path { color:#c9a227; font-size:12px; }
+  button { background:var(--accent); color:#241a05; border:0; padding:7px 14px; border-radius:6px; font-weight:600; cursor:pointer; }
+  button.secondary { background:transparent; color:var(--fg); border:1px solid var(--line); }
+  #status { margin-left:auto; font-size:12px; color:#9fd39f; }
+  main { display:grid; grid-template-columns:280px 1fr; gap:0; height:calc(100vh - 52px); }
+  #list { overflow:auto; border-right:1px solid var(--line); }
+  .row { padding:8px 12px; border-bottom:1px solid #2a2418; cursor:pointer; display:flex; justify-content:space-between; gap:8px; }
+  .row:hover { background:var(--panel); }
+  .row.active { background:#2c2412; border-left:3px solid var(--accent); }
+  .row small { color:#a89b7c; }
+  #stage { overflow:auto; padding:16px; position:relative; }
+  .canvas-wrap { position:relative; display:inline-block; border:1px solid var(--line); background:
+    repeating-conic-gradient(#000 0% 25%, #222 0% 50%) 50%/24px 24px; }
+  .canvas-wrap img { display:block; max-width:70vw; }
+  .pivot { position:absolute; width:16px; height:16px; margin:-8px 0 0 -8px; border-radius:50%;
+    border:2px solid var(--accent); background:rgba(244,163,0,.35); pointer-events:none; }
+  .pivot.mouth { border-color:#4ea0ff; background:rgba(78,160,255,.35); }
+  .fields { margin-top:14px; display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+  .fields label { display:flex; gap:6px; align-items:center; color:#cdbfa0; }
+  .fields input, .fields select { background:var(--panel); color:var(--fg); border:1px solid var(--line);
+    border-radius:5px; padding:4px 6px; }
+  .hint { color:#a89b7c; margin-top:8px; font-size:12px; }
+  .mode { display:flex; gap:8px; }
+  .mode button { padding:5px 10px; font-size:12px; }
+  .mode button:not(.on) { background:transparent; border:1px solid var(--line); color:var(--fg); }
+</style>
+</head>
+<body>
+<header>
+  <h1>pivot editor</h1>
+  <span class="path" id="path"></span>
+  <div class="mode">
+    <button id="mode-pivot" class="on">set pivot</button>
+    <button id="mode-mouth">set mouth.at</button>
+  </div>
+  <button class="secondary" id="reload">reload</button>
+  <button id="save">save puppet.json</button>
+  <span id="status"></span>
+</header>
+<main>
+  <div id="list"></div>
+  <div id="stage">
+    <div class="canvas-wrap" id="wrap">
+      <img id="img" alt="part" />
+      <div class="pivot" id="pivotDot" hidden></div>
+      <div class="pivot mouth" id="mouthDot" hidden></div>
+    </div>
+    <div class="fields" id="fields"></div>
+    <div class="hint">Click the image to place the marker. Pivot mode sets the selected part's rotation pivot; mouth mode sets <code>mouth.at</code> (shown on the mouth anchor part). Natural-pixel coordinates are stored.</div>
+  </div>
+</main>
+<script>
+let puppet = null;
+let selected = null;      // part id
+let mode = "pivot";       // "pivot" | "mouth"
+
+const $ = (id) => document.getElementById(id);
+const status = (msg, good = true) => { const s = $("status"); s.textContent = msg; s.style.color = good ? "#9fd39f" : "#ff9b9b"; };
+
+async function load() {
+  puppet = await (await fetch("/api/puppet")).json();
+  $("path").textContent = puppet.id + " (draft v" + puppet.version + ")";
+  renderList();
+  if (!selected || !puppet.parts.find((p) => p.id === selected)) selected = puppet.parts[0]?.id;
+  select(selected);
+  status("loaded");
+}
+
+function renderList() {
+  const el = $("list");
+  el.innerHTML = "";
+  for (const p of [...puppet.parts].sort((a, b) => a.z - b.z)) {
+    const row = document.createElement("div");
+    row.className = "row" + (p.id === selected ? " active" : "");
+    row.innerHTML = `<span>${p.id}</span><small>z${p.z} · ${p.parent ?? "root"}</small>`;
+    row.onclick = () => select(p.id);
+    el.appendChild(row);
+  }
+}
+
+function part() { return puppet.parts.find((p) => p.id === selected); }
+
+function select(id) {
+  selected = id;
+  const p = part();
+  if (!p) return;
+  renderList();
+  const img = $("img");
+  // In mouth mode, always show the mouth anchor part image.
+  const shownId = mode === "mouth" ? puppet.mouth.anchor : id;
+  const shown = puppet.parts.find((x) => x.id === shownId) ?? p;
+  img.dataset.for = shown.id;
+  img.src = "/img/" + shown.image + "?t=" + Date.now();
+  img.onload = () => { drawMarkers(); };
+  renderFields();
+}
+
+function drawMarkers() {
+  const img = $("img");
+  const sx = img.clientWidth / img.naturalWidth;
+  const sy = img.clientHeight / img.naturalHeight;
+  const shownId = img.dataset.for;
+  const p = puppet.parts.find((x) => x.id === shownId);
+  const pd = $("pivotDot"), md = $("mouthDot");
+  if (p && p.id === selected && mode === "pivot") {
+    pd.hidden = false; pd.style.left = p.pivot[0] * sx + "px"; pd.style.top = p.pivot[1] * sy + "px";
+  } else pd.hidden = true;
+  if (mode === "mouth" && shownId === puppet.mouth.anchor) {
+    md.hidden = false; md.style.left = puppet.mouth.at[0] * sx + "px"; md.style.top = puppet.mouth.at[1] * sy + "px";
+  } else md.hidden = true;
+}
+
+function renderFields() {
+  const p = part();
+  const f = $("fields");
+  const opts = ["<option value=''>root</option>"]
+    .concat(puppet.parts.filter((x) => x.id !== p.id).map((x) => `<option ${x.id === p.parent ? "selected" : ""}>${x.id}</option>`))
+    .join("");
+  f.innerHTML =
+    `<label>part <b>${p.id}</b></label>` +
+    `<label>pivot <input id="fx" size="5" value="${p.pivot[0]}"> , <input id="fy" size="5" value="${p.pivot[1]}"></label>` +
+    `<label>z <input id="fz" size="4" value="${p.z}"></label>` +
+    `<label>parent <select id="fp">${opts}</select></label>`;
+  $("fx").onchange = $("fy").onchange = () => { p.pivot = [num("fx"), num("fy")]; drawMarkers(); dirty(); };
+  $("fz").onchange = () => { p.z = num("fz"); renderList(); dirty(); };
+  $("fp").onchange = () => { p.parent = $("fp").value || null; renderList(); dirty(); };
+}
+const num = (id) => Number($(id).value);
+
+$("img").addEventListener("click", (e) => {
+  const img = $("img");
+  const r = img.getBoundingClientRect();
+  const x = Math.round(((e.clientX - r.left) / img.clientWidth) * img.naturalWidth);
+  const y = Math.round(((e.clientY - r.top) / img.clientHeight) * img.naturalHeight);
+  if (mode === "pivot") { part().pivot = [x, y]; }
+  else { puppet.mouth.at = [x, y]; }
+  drawMarkers(); renderFields(); dirty();
+});
+
+function setMode(m) {
+  mode = m;
+  $("mode-pivot").classList.toggle("on", m === "pivot");
+  $("mode-mouth").classList.toggle("on", m === "mouth");
+  select(selected);
+}
+$("mode-pivot").onclick = () => setMode("pivot");
+$("mode-mouth").onclick = () => setMode("mouth");
+$("reload").onclick = load;
+
+function dirty() { status("unsaved changes", false); }
+$("save").onclick = async () => {
+  const res = await fetch("/api/puppet", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(puppet) });
+  const j = await res.json();
+  status(res.ok ? "saved ✓" : ("error: " + (j.error || res.status)), res.ok);
+};
+
+load();
+</script>
+</body>
+</html>

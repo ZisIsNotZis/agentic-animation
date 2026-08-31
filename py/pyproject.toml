@@ -1,0 +1,21 @@
+[project]
+name = "anim-py"
+version = "0.0.0"
+description = "uv-managed Python sidecars for agentic-animation (Kokoro TTS + future part-cutting helpers). Thin JSON-in/JSON-out CLIs only."
+requires-python = ">=3.10"
+dependencies = [
+    # Kokoro TTS — Apache-2.0, en + hi (DECISIONS.md). Model weights are fetched
+    # at setup time by tools/setup-kokoro.sh, not declared here.
+    "kokoro>=0.9.4",
+    "soundfile>=0.12.1",
+    "numpy>=1.26",
+]
+
+[tool.uv]
+# Pin nothing exotic; the lockfile is created by `uv sync` in setup-kokoro.sh.
+package = false
+
+# Kokoro currently pulls a legacy docopt sdist through its English phonemizer.
+# Provide setuptools while uv builds that old package.
+[tool.uv.extra-build-dependencies]
+docopt = ["setuptools"]

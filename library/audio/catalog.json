@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "generatedBy": "tools/audio-qa/generate-cues.mjs",
+  "cues": {
+    "sip": {
+      "kind": "sfx",
+      "path": "sfx/sip.wav"
+    },
+    "paper-unroll": {
+      "kind": "sfx",
+      "path": "sfx/paper-unroll.wav"
+    },
+    "reveal-chime": {
+      "kind": "sfx",
+      "path": "sfx/reveal-chime.wav"
+    },
+    "paper-rattle": {
+      "kind": "sfx",
+      "path": "sfx/paper-rattle.wav"
+    },
+    "push-thump": {
+      "kind": "sfx",
+      "path": "sfx/push-thump.wav"
+    },
+    "desk-slam": {
+      "kind": "sfx",
+      "path": "sfx/desk-slam.wav"
+    },
+    "laugh": {
+      "kind": "sfx",
+      "path": "sfx/laugh.wav"
+    },
+    "flashlight-click": {
+      "kind": "sfx",
+      "path": "sfx/flashlight-click.wav"
+    },
+    "keyboard-taps": {
+      "kind": "sfx",
+      "path": "sfx/keyboard-taps.wav"
+    },
+    "shiver-rattle": {
+      "kind": "sfx",
+      "path": "sfx/shiver-rattle.wav"
+    },
+    "object-whoosh": {
+      "kind": "sfx",
+      "path": "sfx/object-whoosh.wav"
+    },
+    "pen-scratch": {
+      "kind": "sfx",
+      "path": "sfx/pen-scratch.wav"
+    },
+    "close-click": {
+      "kind": "sfx",
+      "path": "sfx/close-click.wav"
+    },
+    "error-chime": {
+      "kind": "sfx",
+      "path": "sfx/error-chime.wav"
+    },
+    "digital-glitch": {
+      "kind": "sfx",
+      "path": "sfx/digital-glitch.wav"
+    },
+    "power-down": {
+      "kind": "sfx",
+      "path": "sfx/power-down.wav"
+    },
+    "power-up": {
+      "kind": "sfx",
+      "path": "sfx/power-up.wav"
+    },
+    "error-burst": {
+      "kind": "sfx",
+      "path": "sfx/error-burst.wav"
+    },
+    "paper-snap": {
+      "kind": "sfx",
+      "path": "sfx/paper-snap.wav"
+    },
+    "static-buzz": {
+      "kind": "sfx",
+      "path": "sfx/static-buzz.wav"
+    },
+    "light-switch": {
+      "kind": "sfx",
+      "path": "sfx/light-switch.wav"
+    },
+    "ending-cadence": {
+      "kind": "music",
+      "path": "music/ending-cadence.wav"
+    }
+  }
+}

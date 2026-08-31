@@ -1,0 +1,3 @@
+file '/home/z/vibe/silly_2d_animate/agentic-animation/episodes/liu-secret/audio/b_two.wav'
+file '/home/z/vibe/silly_2d_animate/agentic-animation/episodes/liu-secret/audio/b_two-gap.wav'
+file '/home/z/vibe/silly_2d_animate/agentic-animation/episodes/liu-secret/audio/b_fall.wav'

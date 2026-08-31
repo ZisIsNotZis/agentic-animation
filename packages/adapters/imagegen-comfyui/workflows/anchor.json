@@ -1,0 +1,45 @@
+{
+  "_meta": {
+    "workflowId": "anchor",
+    "title": "Canonical frontal reference (identity anchor)",
+    "description": "Text-to-image on Qwen-Image via ComfyUI-GGUF. Produces the single approved front-facing portrait that every later edit is locked to. M1 starting template — validate node names against the installed ComfyUI-GGUF version before first real run.",
+    "requires": ["unet (GGUF)", "clip (qwen_image text encoder)", "vae"],
+    "inject": {
+      "model": { "node": "unet", "field": "unet_name" },
+      "clip": { "node": "clip", "field": "clip_name" },
+      "vae": { "node": "vae", "field": "vae_name" },
+      "positive": { "node": "pos", "field": "text" },
+      "negative": { "node": "neg", "field": "text" },
+      "width": { "node": "latent", "field": "width" },
+      "height": { "node": "latent", "field": "height" },
+      "filenamePrefix": { "node": "save", "field": "filename_prefix" }
+    },
+    "seedFields": [{ "node": "sampler", "field": "seed" }],
+    "saveNodes": ["save"]
+  },
+  "prompt": {
+    "unet": { "class_type": "UnetLoaderGGUF", "inputs": { "unet_name": "Qwen-Image-Edit-Q4_K_M.gguf" } },
+    "clip": { "class_type": "CLIPLoader", "inputs": { "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors", "type": "qwen_image" } },
+    "vae": { "class_type": "VAELoader", "inputs": { "vae_name": "qwen_image_vae.safetensors" } },
+    "pos": { "class_type": "CLIPTextEncode", "inputs": { "text": "portrait", "clip": ["clip", 0] } },
+    "neg": { "class_type": "CLIPTextEncode", "inputs": { "text": "", "clip": ["clip", 0] } },
+    "latent": { "class_type": "EmptySD3LatentImage", "inputs": { "width": 1024, "height": 1024, "batch_size": 1 } },
+    "sampler": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 0,
+        "steps": 24,
+        "cfg": 4.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1.0,
+        "model": ["unet", 0],
+        "positive": ["pos", 0],
+        "negative": ["neg", 0],
+        "latent_image": ["latent", 0]
+      }
+    },
+    "decode": { "class_type": "VAEDecode", "inputs": { "samples": ["sampler", 0], "vae": ["vae", 0] } },
+    "save": { "class_type": "SaveImage", "inputs": { "filename_prefix": "anim/anchor", "images": ["decode", 0] } }
+  }
+}

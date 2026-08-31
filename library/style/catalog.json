@@ -1,0 +1,5 @@
+{
+  "_note": "Set + fx vocabularies the studio placeholder runtime can draw (SUPPORTED_SETS / SUPPORTED_FX in @anim/studio). Canonical YAML validation checks set/fx names against this.",
+  "sets": ["void", "interior", "exterior", "sky", "river", "forest", "cultivation", "arena"],
+  "fx": ["fade", "title", "glow", "flash", "system"]
+}

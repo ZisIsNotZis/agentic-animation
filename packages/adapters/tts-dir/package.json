@@ -1,0 +1,13 @@
+{
+  "name": "@anim/adapter-tts-dir",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TTS adapter: pre-recorded human takes read from voice/<sceneId>.wav.",
+  "exports": { ".": "./src/index.ts" },
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@anim/core": "*",
+    "execa": "^9.5.2"
+  }
+}

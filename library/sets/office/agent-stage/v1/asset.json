@@ -1,0 +1,25 @@
+{
+  "id": "set.office.agent-stage.v1",
+  "version": 1,
+  "kind": "set",
+  "source": "scene.svg",
+  "preview": "preview.png",
+  "coordinateSpace": "1920x1080",
+  "layers": [
+    "back-wall",
+    "window",
+    "project-board",
+    "desk-left",
+    "desk-right",
+    "floor"
+  ],
+  "safeActorArea": {
+    "x": 300,
+    "y": 250,
+    "width": 1320,
+    "height": 700
+  },
+  "notes": [
+    "Detailed office stage in hard-edged flat fills; dressing remains replaceable by semantic id."
+  ]
+}

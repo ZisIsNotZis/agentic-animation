@@ -1,0 +1,447 @@
+{
+  "$ref": "#/definitions/episode.build",
+  "definitions": {
+    "episode.build": {
+      "type": "object",
+      "properties": {
+        "generatedBy": {
+          "type": "object",
+          "properties": {
+            "stage": {
+              "type": "string"
+            },
+            "tool": {
+              "type": "string"
+            },
+            "at": {
+              "type": "string"
+            },
+            "inputHash": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "stage",
+            "tool",
+            "at"
+          ],
+          "additionalProperties": false
+        },
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "video": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "fps": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "width",
+            "height",
+            "fps"
+          ],
+          "additionalProperties": false
+        },
+        "total": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "audioPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "captionsPath": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "shots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^_?[a-z0-9][a-z0-9_-]*$"
+              },
+              "sceneId": {
+                "$ref": "#/definitions/episode.build/properties/shots/items/properties/id"
+              },
+              "start": {
+                "type": "number",
+                "minimum": 0
+              },
+              "end": {
+                "type": "number",
+                "minimum": 0
+              },
+              "set": {
+                "type": "string",
+                "minLength": 1
+              },
+              "setOpts": {
+                "type": "object",
+                "additionalProperties": {}
+              },
+              "grade": {
+                "type": "object",
+                "additionalProperties": {}
+              },
+              "camera": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "t": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    },
+                    "z": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "ease": {
+                      "type": "string",
+                      "enum": [
+                        "linear",
+                        "io",
+                        "in",
+                        "out",
+                        "back"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "t"
+                  ],
+                  "additionalProperties": false
+                },
+                "default": []
+              },
+              "actors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "$ref": "#/definitions/episode.build/properties/shots/items/properties/id"
+                    },
+                    "characterId": {
+                      "$ref": "#/definitions/episode.build/properties/shots/items/properties/id"
+                    },
+                    "version": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "puppetPath": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "at": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    "scale": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "flip": {
+                      "type": "boolean",
+                      "default": false
+                    },
+                    "facing": {
+                      "type": "number",
+                      "enum": [
+                        1,
+                        -1
+                      ],
+                      "default": 1
+                    },
+                    "emotion": {
+                      "type": "string",
+                      "default": "neutral"
+                    },
+                    "skin": {
+                      "type": "string",
+                      "default": "default"
+                    },
+                    "partTracks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "part": {
+                            "$ref": "#/definitions/episode.build/properties/shots/items/properties/id"
+                          },
+                          "keys": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "t": {
+                                  "type": "number",
+                                  "minimum": 0
+                                },
+                                "rot": {
+                                  "type": "number"
+                                },
+                                "pos": {
+                                  "$ref": "#/definitions/episode.build/properties/shots/items/properties/actors/items/properties/at"
+                                },
+                                "scale": {
+                                  "type": "number",
+                                  "exclusiveMinimum": 0
+                                },
+                                "ease": {
+                                  "$ref": "#/definitions/episode.build/properties/shots/items/properties/camera/items/properties/ease"
+                                }
+                              },
+                              "required": [
+                                "t"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "part",
+                          "keys"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "default": []
+                    },
+                    "mouthTrack": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "start": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "end": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "viseme": {
+                            "type": "string",
+                            "enum": [
+                              "A",
+                              "B",
+                              "C",
+                              "D",
+                              "E",
+                              "F",
+                              "G",
+                              "H",
+                              "X"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "start",
+                          "end",
+                          "viseme"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "default": []
+                    },
+                    "blinkTrack": {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "default": []
+                    },
+                    "faceTrack": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "t": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "smile": {
+                            "type": "number"
+                          },
+                          "brow": {
+                            "type": "number"
+                          },
+                          "eyeOpen": {
+                            "type": "number"
+                          },
+                          "lipsPart": {
+                            "type": "number"
+                          },
+                          "gaze": {
+                            "$ref": "#/definitions/episode.build/properties/shots/items/properties/actors/items/properties/at"
+                          }
+                        },
+                        "required": [
+                          "t"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "default": []
+                    },
+                    "moveTrack": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "t": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "to": {
+                            "$ref": "#/definitions/episode.build/properties/shots/items/properties/actors/items/properties/at"
+                          },
+                          "t1": {
+                            "type": "number",
+                            "minimum": 0
+                          }
+                        },
+                        "required": [
+                          "t",
+                          "to"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "default": []
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "characterId",
+                    "version",
+                    "puppetPath",
+                    "at",
+                    "scale"
+                  ],
+                  "additionalProperties": false
+                },
+                "default": []
+              },
+              "fx": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "t": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "fx": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "opts": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "t",
+                    "fx"
+                  ],
+                  "additionalProperties": false
+                },
+                "default": []
+              },
+              "captions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "start": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "end": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "text": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "start",
+                    "end",
+                    "text"
+                  ],
+                  "additionalProperties": false
+                },
+                "default": []
+              }
+            },
+            "required": [
+              "id",
+              "sceneId",
+              "start",
+              "end",
+              "set"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "slug",
+        "title",
+        "video",
+        "total",
+        "seed",
+        "audioPath",
+        "shots"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

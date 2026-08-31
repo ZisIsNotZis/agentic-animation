@@ -1,0 +1,17 @@
+{
+  "_comment": "Per-machine overrides — copy to anim.config.local.json (gitignored). Deep-merged over anim.config.json, then schema-validated (unknown keys are dropped). Only include keys you actually change.",
+
+  "paths": {
+    "corpus": ""
+  },
+
+  "adapters": {
+    "_comment": "Swap TTS to the macOS `say` engine for a fast, model-free smoke run (dev only — never ships in monetized video).",
+    "tts": "say"
+  },
+
+  "render": {
+    "_comment": "Lower on a memory-constrained machine; raise cautiously (ARCHITECTURE §11 caps for 24 GB).",
+    "concurrency": 2
+  }
+}

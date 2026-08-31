@@ -1,0 +1,27 @@
+{
+  "name": "walk",
+  "duration": 1,
+  "loop": true,
+  "procedural": { "blinkEvery": 4.5 },
+  "keys": [
+    { "part": "leg_u_l", "t": 0, "rot": 22, "ease": "io" },
+    { "part": "leg_u_l", "t": 0.5, "rot": -22, "ease": "io" },
+    { "part": "leg_u_l", "t": 1, "rot": 22, "ease": "io" },
+    { "part": "leg_l_l", "t": 0, "rot": 4, "ease": "io" },
+    { "part": "leg_l_l", "t": 0.25, "rot": 34, "ease": "io" },
+    { "part": "leg_l_l", "t": 0.5, "rot": 2, "ease": "io" },
+    { "part": "leg_l_l", "t": 1, "rot": 4, "ease": "io" },
+    { "part": "leg_u_r", "t": 0, "rot": -22, "ease": "io" },
+    { "part": "leg_u_r", "t": 0.5, "rot": 22, "ease": "io" },
+    { "part": "leg_u_r", "t": 1, "rot": -22, "ease": "io" },
+    { "part": "leg_l_r", "t": 0, "rot": 2, "ease": "io" },
+    { "part": "leg_l_r", "t": 0.75, "rot": 34, "ease": "io" },
+    { "part": "leg_l_r", "t": 1, "rot": 2, "ease": "io" },
+    { "part": "arm_u_l", "t": 0, "rot": -18, "ease": "io" },
+    { "part": "arm_u_l", "t": 0.5, "rot": 18, "ease": "io" },
+    { "part": "arm_u_l", "t": 1, "rot": -18, "ease": "io" },
+    { "part": "arm_u_r", "t": 0, "rot": 18, "ease": "io" },
+    { "part": "arm_u_r", "t": 0.5, "rot": -18, "ease": "io" },
+    { "part": "arm_u_r", "t": 1, "rot": 18, "ease": "io" }
+  ]
+}

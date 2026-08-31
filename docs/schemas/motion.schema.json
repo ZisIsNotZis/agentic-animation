@@ -1,0 +1,97 @@
+{
+  "$ref": "#/definitions/motion",
+  "definitions": {
+    "motion": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^_?[a-z0-9][a-z0-9_-]*$"
+        },
+        "duration": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "loop": {
+          "type": "boolean",
+          "default": false
+        },
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "part": {
+                "$ref": "#/definitions/motion/properties/name"
+              },
+              "t": {
+                "type": "number",
+                "minimum": 0
+              },
+              "rot": {
+                "type": "number"
+              },
+              "pos": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "scale": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "ease": {
+                "type": "string",
+                "enum": [
+                  "linear",
+                  "io",
+                  "in",
+                  "out",
+                  "back"
+                ]
+              }
+            },
+            "required": [
+              "part",
+              "t"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "procedural": {
+          "type": "object",
+          "properties": {
+            "breathe": {
+              "type": "number",
+              "minimum": 0
+            },
+            "sway": {
+              "type": "number",
+              "minimum": 0
+            },
+            "blinkEvery": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "duration"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

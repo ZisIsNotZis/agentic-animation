@@ -1,0 +1,178 @@
+{
+  "$ref": "#/definitions/narrow-episode",
+  "definitions": {
+    "narrow-episode": {
+      "type": "object",
+      "properties": {
+        "episode": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "language": {
+              "type": "string",
+              "minLength": 2
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "language"
+          ],
+          "additionalProperties": false
+        },
+        "actors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "use": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z0-9-]+)+\\.v[1-9]\\d*$"
+              },
+              "voice": {
+                "$ref": "#/definitions/narrow-episode/properties/actors/additionalProperties/properties/use"
+              }
+            },
+            "required": [
+              "use",
+              "voice"
+            ],
+            "additionalProperties": false
+          },
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_]*$"
+          }
+        },
+        "locations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "use": {
+                "$ref": "#/definitions/narrow-episode/properties/actors/additionalProperties/properties/use"
+              }
+            },
+            "required": [
+              "use"
+            ],
+            "additionalProperties": false
+          },
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_]*$"
+          }
+        },
+        "objects": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "use": {
+                "$ref": "#/definitions/narrow-episode/properties/actors/additionalProperties/properties/use"
+              }
+            },
+            "required": [
+              "use"
+            ],
+            "additionalProperties": false
+          },
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_]*$"
+          }
+        },
+        "scenes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/narrow-episode/properties/episode/properties/id"
+              },
+              "location": {
+                "$ref": "#/definitions/narrow-episode/properties/episode/properties/id"
+              },
+              "actors": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "facing": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/definitions/narrow-episode/properties/episode/properties/id"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "audience",
+                            "left",
+                            "right"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "facing"
+                  ],
+                  "additionalProperties": false
+                },
+                "propertyNames": {
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "default": {}
+              },
+              "objects": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string",
+                  "pattern": "^(?:center|left|right|foreground|background|on\\([a-z][a-z0-9_]*\\))$"
+                },
+                "propertyNames": {
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "default": {}
+              },
+              "script": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "propertyNames": {
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  }
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "id",
+              "location",
+              "script"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "episode",
+        "actors",
+        "locations",
+        "objects",
+        "scenes"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

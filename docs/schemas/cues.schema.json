@@ -1,0 +1,92 @@
+{
+  "$ref": "#/definitions/cues",
+  "definitions": {
+    "cues": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "number",
+                "minimum": 0
+              },
+              "end": {
+                "type": "number",
+                "minimum": 0
+              },
+              "viseme": {
+                "type": "string",
+                "enum": [
+                  "A",
+                  "B",
+                  "C",
+                  "D",
+                  "E",
+                  "F",
+                  "G",
+                  "H",
+                  "X"
+                ]
+              }
+            },
+            "required": [
+              "start",
+              "end",
+              "viseme"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "generatedBy": {
+              "type": "object",
+              "properties": {
+                "stage": {
+                  "type": "string"
+                },
+                "tool": {
+                  "type": "string"
+                },
+                "at": {
+                  "type": "string"
+                },
+                "inputHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "stage",
+                "tool",
+                "at"
+              ],
+              "additionalProperties": false
+            },
+            "lineId": {
+              "type": "string",
+              "pattern": "^_?[a-z0-9][a-z0-9_-]*$"
+            },
+            "offset": {
+              "type": "number",
+              "minimum": 0
+            },
+            "cues": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/cues/anyOf/0/items"
+              }
+            }
+          },
+          "required": [
+            "cues"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

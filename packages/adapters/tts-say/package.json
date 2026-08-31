@@ -1,0 +1,13 @@
+{
+  "name": "@anim/adapter-tts-say",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TTS adapter: macOS `say` — dev/smoke only, never ships in monetized video.",
+  "exports": { ".": "./src/index.ts" },
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@anim/core": "*",
+    "execa": "^9.5.2"
+  }
+}

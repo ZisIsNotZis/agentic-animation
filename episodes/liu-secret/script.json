@@ -1,0 +1,11 @@
+{
+  "title": "柳如烟居然逃学了？", "subtitle": "小卖部现场", "language": "zh",
+  "scenes": [
+    { "id":"secret", "name":"秘密公开", "display":"我告诉你一个秘密。什么秘密？柳如烟，昨天居然逃学了！什么？真的假的？", "tts":"我告诉你一个秘密。什么秘密？柳如烟，昨天居然逃学了！什么？真的假的？", "mood":"suspense", "padBefore":0.3,"padAfter":0.4,
+      "dialogue":[{"id":"a_secret","characterId":"student_a","display":"我告诉你一个秘密。","tts":"我告诉你一个秘密。"},{"id":"b_what","characterId":"student_b","display":"什么秘密？","tts":"什么秘密？"},{"id":"a_reveal","characterId":"student_a","display":"柳如烟，昨天居然逃学了！","tts":"柳如烟，昨天居然逃学了！"},{"id":"b_shock","characterId":"student_b","display":"什么？真的假的？","tts":"什么？真的假的？"}] },
+    { "id":"canteen", "name":"小卖部", "display":"真的，她还去了小卖部。她去买学习用品？不，她买了两个烤肠。", "tts":"真的，她还去了小卖部。她去买学习用品？不，她买了两个烤肠。", "mood":"festive", "padBefore":0.2,"padAfter":0.4,
+      "dialogue":[{"id":"a_proof","characterId":"student_a","display":"真的，她还去了小卖部。","tts":"真的，她还去了小卖部。"},{"id":"b_guess","characterId":"student_b","display":"她去买学习用品？","tts":"她去买学习用品？"},{"id":"a_sausage","characterId":"student_a","display":"不，她买了两个烤肠。","tts":"不，她买了两个烤肠。"}] },
+    { "id":"punchline", "name":"暴击", "display":"两个？她堕落得好彻底！","tts":"两个？她堕落得好彻底！", "mood":"triumphant", "padBefore":0.2,"padAfter":0.6,
+      "dialogue":[{"id":"b_two","characterId":"student_b","display":"两个？","tts":"两个？"},{"id":"b_fall","characterId":"student_b","display":"她堕落得好彻底！","tts":"她堕落得好彻底！"}] }
+  ]
+}
