@@ -1,0 +1,89 @@
+{
+  "$ref": "#/definitions/library-meta",
+  "definitions": {
+    "library-meta": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^_?[a-z0-9][a-z0-9_-]*$"
+        },
+        "version": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "character",
+            "background"
+          ]
+        },
+        "model": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "license": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "name",
+            "license"
+          ],
+          "additionalProperties": false
+        },
+        "seeds": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "default": {}
+        },
+        "prompts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "date": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approver": {
+          "type": "string",
+          "minLength": 1
+        },
+        "grounding": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "kind",
+        "model",
+        "date",
+        "approver"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

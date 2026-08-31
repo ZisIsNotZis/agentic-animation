@@ -1,0 +1,17 @@
+{
+  "name": "idle",
+  "duration": 4,
+  "loop": true,
+  "procedural": { "breathe": 8, "sway": 1.5, "blinkEvery": 4 },
+  "keys": [
+    { "part": "arm_u_l", "t": 0, "rot": 0, "ease": "io" },
+    { "part": "arm_u_l", "t": 2, "rot": 4, "ease": "io" },
+    { "part": "arm_u_l", "t": 4, "rot": 0, "ease": "io" },
+    { "part": "arm_u_r", "t": 0, "rot": 0, "ease": "io" },
+    { "part": "arm_u_r", "t": 2, "rot": -4, "ease": "io" },
+    { "part": "arm_u_r", "t": 4, "rot": 0, "ease": "io" },
+    { "part": "head", "t": 0, "rot": 0, "ease": "io" },
+    { "part": "head", "t": 2, "rot": 1.5, "ease": "io" },
+    { "part": "head", "t": 4, "rot": 0, "ease": "io" }
+  ]
+}

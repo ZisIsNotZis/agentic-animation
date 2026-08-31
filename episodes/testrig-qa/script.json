@@ -1,0 +1,9 @@
+{
+  "title": "Testrig QA",
+  "language": "en",
+  "scenes": [
+    { "id": "s_idle", "display": "Idle stance.", "tts": "Idle stance.", "mood": "tender", "padBefore": 0, "padAfter": 0 },
+    { "id": "s_walk", "display": "Walk cycle.", "tts": "Walk cycle.", "mood": "festive", "padBefore": 0, "padAfter": 0 },
+    { "id": "s_gesture", "display": "Gesture.", "tts": "Gesture.", "mood": "triumphant", "padBefore": 0, "padAfter": 0 }
+  ]
+}

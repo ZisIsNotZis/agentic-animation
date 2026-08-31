@@ -1,0 +1,258 @@
+{
+  "$ref": "#/definitions/storyboard",
+  "definitions": {
+    "storyboard": {
+      "type": "object",
+      "properties": {
+        "shots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^_?[a-z0-9][a-z0-9_-]*$"
+              },
+              "sceneId": {
+                "$ref": "#/definitions/storyboard/properties/shots/items/properties/id"
+              },
+              "set": {
+                "type": "string",
+                "minLength": 1
+              },
+              "setOpts": {
+                "type": "object",
+                "additionalProperties": {}
+              },
+              "grade": {
+                "type": "object",
+                "additionalProperties": {}
+              },
+              "camera": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "t": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "pattern": "^(\\d+(\\.\\d+)?%|narr[+-]\\d+(\\.\\d+)?)$"
+                        }
+                      ]
+                    },
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    },
+                    "z": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "ease": {
+                      "type": "string",
+                      "enum": [
+                        "linear",
+                        "io",
+                        "in",
+                        "out",
+                        "back"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "t"
+                  ],
+                  "additionalProperties": false
+                },
+                "default": []
+              },
+              "actors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "$ref": "#/definitions/storyboard/properties/shots/items/properties/id"
+                    },
+                    "characterId": {
+                      "$ref": "#/definitions/storyboard/properties/shots/items/properties/id"
+                    },
+                    "version": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "at": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    "scale": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "default": 1
+                    },
+                    "flip": {
+                      "type": "boolean"
+                    },
+                    "facing": {
+                      "type": "number",
+                      "enum": [
+                        1,
+                        -1
+                      ]
+                    },
+                    "emotion": {
+                      "type": "string"
+                    },
+                    "motion": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "clip": {
+                                "type": "string"
+                              },
+                              "speed": {
+                                "type": "number",
+                                "exclusiveMinimum": 0
+                              },
+                              "mirror": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "clip"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "default": []
+                    },
+                    "speakLineIds": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/storyboard/properties/shots/items/properties/id"
+                      },
+                      "default": []
+                    }
+                  },
+                  "required": [
+                    "characterId",
+                    "version",
+                    "at"
+                  ],
+                  "additionalProperties": false
+                },
+                "default": []
+              },
+              "beats": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "at": {
+                      "$ref": "#/definitions/storyboard/properties/shots/items/properties/camera/items/properties/t"
+                    },
+                    "actor": {
+                      "$ref": "#/definitions/storyboard/properties/shots/items/properties/id"
+                    },
+                    "pose": {
+                      "type": "string"
+                    },
+                    "face": {
+                      "type": "object",
+                      "properties": {
+                        "smile": {
+                          "type": "number"
+                        },
+                        "brow": {
+                          "type": "number"
+                        },
+                        "eyeOpen": {
+                          "type": "number"
+                        },
+                        "lipsPart": {
+                          "type": "number"
+                        },
+                        "gaze": {
+                          "$ref": "#/definitions/storyboard/properties/shots/items/properties/actors/items/properties/at"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "move": {
+                      "type": "object",
+                      "properties": {
+                        "to": {
+                          "$ref": "#/definitions/storyboard/properties/shots/items/properties/actors/items/properties/at"
+                        },
+                        "gait": {
+                          "type": "string"
+                        },
+                        "t1": {
+                          "$ref": "#/definitions/storyboard/properties/shots/items/properties/camera/items/properties/t"
+                        }
+                      },
+                      "required": [
+                        "to"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "fx": {
+                      "type": "string"
+                    },
+                    "opts": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "over": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "at"
+                  ],
+                  "additionalProperties": false
+                },
+                "default": []
+              }
+            },
+            "required": [
+              "id",
+              "sceneId",
+              "set"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "shots"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -1,0 +1,67 @@
+{
+  "title": "Karna's Gift of the Armor",
+  "subtitle": "the kavacha-kuṇḍala daana",
+  "language": "en",
+  "scenes": [
+    {
+      "id": "born",
+      "name": "Born in golden armor",
+      "display": "Karṇa, son of Sūrya, was born wearing golden armor and earrings, fused to his flesh. No weapon could slay him.",
+      "tts": "Kar-na, son of Soor-ya, was born wearing golden armor and earrings, fused to his flesh. No weapon could slay him.",
+      "mood": "mystic",
+      "padBefore": 1.3,
+      "padAfter": 1.3,
+      "dialogue": []
+    },
+    {
+      "id": "dream",
+      "name": "Surya's warning",
+      "display": "One night Sūrya warned him in a dream: Indra would come as a brāhmaṇa to beg the armor away — and to give it was to die.",
+      "tts": "One night, Soor-ya warned him in a dream. Indra would come as a brahmin to beg the armor away; and to give it, was to die.",
+      "mood": "suspense",
+      "padBefore": 1.0,
+      "padAfter": 1.3,
+      "dialogue": []
+    },
+    {
+      "id": "resolve",
+      "name": "Karna's resolve",
+      "display": "But Karṇa would not be shamed by refusing a beggar. His fame as the greatest of givers outweighed a long life.",
+      "tts": "But Kar-na would not be shamed by refusing a beggar. His fame as the greatest of givers outweighed a long life.",
+      "mood": "tender",
+      "padBefore": 1.0,
+      "padAfter": 1.3,
+      "dialogue": []
+    },
+    {
+      "id": "beggar",
+      "name": "Indra at noon",
+      "display": "As Karṇa worshipped the noon Sun, an old brāhmaṇa came begging for the kavacha and kuṇḍala. It was Indra.",
+      "tts": "As Kar-na worshipped the noon Sun, an old brahmin came begging for the ka-va-cha and koon-da-la. It was Indra.",
+      "mood": "tense",
+      "padBefore": 1.0,
+      "padAfter": 1.3,
+      "dialogue": []
+    },
+    {
+      "id": "gift",
+      "name": "The flaying gift",
+      "display": "Karṇa did not flinch. Smiling, he cut the armor and earrings from his own body. The wounds closed — but now he could die.",
+      "tts": "Kar-na did not flinch. Smiling, he cut the armor and earrings from his own body. The wounds closed; but now, he could die.",
+      "mood": "somber",
+      "padBefore": 1.0,
+      "padAfter": 2.2,
+      "dialogue": []
+    },
+    {
+      "id": "boon",
+      "name": "The Vasava Shakti",
+      "display": "Moved, Indra gave him the Vāsavī Śakti — a dart that never misses, but only once. Karṇa kept it for Arjuna; fate would spend it elsewhere.",
+      "tts": "Moved, Indra gave him the Vaa-sa-vee Shak-ti. A dart that never misses, but only once. Kar-na saved it for Ar-ju-na; but fate would spend it elsewhere.",
+      "mood": "triumphant",
+      "padBefore": 1.0,
+      "padAfter": 2.6,
+      "dialogue": []
+    }
+  ]
+}

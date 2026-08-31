@@ -1,0 +1,11 @@
+{
+  "slug": "liu-secret",
+  "title": "柳如烟居然逃学了？",
+  "sources": [],
+  "cast": [
+    { "characterId": "_placeholder", "role": "student-a" },
+    { "characterId": "_placeholder", "role": "student-b" },
+    { "characterId": "_placeholder", "role": "liu" }
+  ],
+  "beats": [], "variants": [], "language": "zh"
+}

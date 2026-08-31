@@ -1,0 +1,31 @@
+{
+  "slug": "ai-work-adventure",
+  "title": "AI打工奇遇记：别让人工智能毁掉你的项目",
+  "sources": [
+    {"path": "episodes/ai-work-adventure/AI 打工奇遇记.md", "citation": "用户提供的原创教育型小品原稿"},
+    {"path": "episodes/ai-work-adventure/Agentic Coding 血泪通关指南：别让 AI 毁掉你的项目.md", "citation": "用户提供的原创 Agentic Coding 实战指南"}
+  ],
+  "cast": [
+    {"characterId": "_placeholder", "role": "阿伟：入职半年的程序员，AI重度依赖，负责提出典型误区"},
+    {"characterId": "_placeholder", "role": "阿强：资深程序员，负责解释工程方法与取舍"},
+    {"characterId": "_placeholder", "role": "AI：被拟人化的高级打工人，负责演示模型边界与反馈"}
+  ],
+  "beats": [
+    {"id": "opening", "summary": "阿伟展示项目翻车，阿强提出把AI当高级打工人而非神仙", "sceneRef": "opening"},
+    {"id": "failure-triad", "summary": "用一连串需求演示人的问题、工作流问题和模型硬上限", "sceneRef": "failure-triad"},
+    {"id": "teach-ai", "summary": "明确人设、规则、审美和底线，避免把模糊指令交给AI猜", "sceneRef": "teach-ai"},
+    {"id": "skills", "summary": "讲自我蒸馏、精准匹配Skill与安全风险，强调按需极简", "sceneRef": "skills"},
+    {"id": "memory", "summary": "建立双层AGENTS.md与docs、wiki、design，维护单一信息源", "sceneRef": "memory"},
+    {"id": "token", "summary": "解释无效重试、缓存、模型分层和配置稳定对成本的影响", "sceneRef": "token"},
+    {"id": "engine", "summary": "比较第三方引擎、原生API、快速模式与自动压缩的取舍", "sceneRef": "engine"},
+    {"id": "refactor", "summary": "用电商重构事故说明增量修改、先规划后执行和垂直切片", "sceneRef": "refactor"},
+    {"id": "minimal", "summary": "反对提前抽象和伪需求，建立无代码优先的最简原则", "sceneRef": "minimal"},
+    {"id": "quality", "summary": "讲方案评审、TDD、视觉抽检、独立Review与人机双测的质量闭环", "sceneRef": "quality"},
+    {"id": "security", "summary": "讨论Git、权限、Auto Mode与人类对高风险操作的最终控制", "sceneRef": "security"},
+    {"id": "workflow", "summary": "说明并行只做解耦叶子任务，建立Issue状态机与标准执行闭环", "sceneRef": "workflow"},
+    {"id": "delivery", "summary": "根据项目规模选择轻重流程，沉淀复盘并清理长期记忆污染", "sceneRef": "delivery"},
+    {"id": "human-value", "summary": "以渐进式解放收束，明确人类负责定义、规则、架构和最终兜底", "sceneRef": "human-value"}
+  ],
+  "variants": [],
+  "language": "zh"
+}

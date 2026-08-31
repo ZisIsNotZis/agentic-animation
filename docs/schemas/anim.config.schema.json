@@ -1,0 +1,139 @@
+{
+  "$ref": "#/definitions/anim.config",
+  "definitions": {
+    "anim.config": {
+      "type": "object",
+      "properties": {
+        "adapters": {
+          "type": "object",
+          "properties": {
+            "imagegen": {
+              "type": "string",
+              "default": "comfyui"
+            },
+            "tts": {
+              "type": "string",
+              "default": "kokoro"
+            },
+            "lipsync": {
+              "type": "string",
+              "default": "rhubarb"
+            },
+            "music": {
+              "type": "string",
+              "default": "raga"
+            },
+            "renderer": {
+              "type": "string",
+              "default": "remotion"
+            },
+            "corpus": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "paths": {
+          "type": "object",
+          "properties": {
+            "library": {
+              "type": "string",
+              "default": "library"
+            },
+            "episodes": {
+              "type": "string",
+              "default": "episodes"
+            },
+            "vendor": {
+              "type": "string",
+              "default": "vendor"
+            },
+            "corpus": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "video": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "default": 1920
+            },
+            "height": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "default": 1080
+            },
+            "fps": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "default": 24
+            },
+            "crf": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 51,
+              "default": 20
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "render": {
+          "type": "object",
+          "properties": {
+            "concurrency": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "default": 4
+            },
+            "offthreadVideoCacheSizeInBytes": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "default": 2147483648
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "tts": {
+          "type": "object",
+          "properties": {
+            "voice": {
+              "type": "string",
+              "default": "af_heart"
+            },
+            "lang": {
+              "type": "string",
+              "enum": [
+                "en",
+                "hi",
+                "zh"
+              ],
+              "default": "en"
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "seed": {
+          "type": "integer",
+          "default": 1234
+        },
+        "allowFluxFamily": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

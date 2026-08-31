@@ -1,0 +1,10 @@
+{
+  "title": "The Jellybean Boom",
+  "subtitle": "The brave little bean",
+  "language": "en",
+  "scenes": [
+    { "id": "jar", "display": "A jellybean rolls out of a jar.", "tts": "At breakfast, one brave jellybean rolled out of the jar. It shouted, I am free!", "mood": "festive", "padBefore": 1, "padAfter": 1.2, "dialogue": [] },
+    { "id": "mayor", "display": "The jellybean becomes mayor.", "tts": "It bounced onto a spoon and declared, I am mayor of the kitchen! The spoon immediately resigned.", "mood": "triumphant", "padBefore": 1, "padAfter": 1.2, "dialogue": [] },
+    { "id": "cup", "display": "The jellybean gets stuck in a teacup.", "tts": "Then it fell into a teacup. A friend pulled it out, and the jellybean shared its tiny hat. Everyone cheered for Mayor Bean.", "mood": "tender", "padBefore": 1, "padAfter": 1.5, "dialogue": [] }
+  ]
+}

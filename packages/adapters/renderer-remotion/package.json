@@ -1,0 +1,17 @@
+{
+  "name": "@anim/adapter-renderer-remotion",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Renderer adapter: drives the Remotion studio render + stills programmatically.",
+  "exports": { ".": "./src/index.ts" },
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@anim/core": "*",
+    "@anim/studio": "*",
+    "@remotion/bundler": "~4.0.0",
+    "@remotion/renderer": "~4.0.0",
+    "execa": "^9.5.2",
+    "remotion": "~4.0.0"
+  }
+}

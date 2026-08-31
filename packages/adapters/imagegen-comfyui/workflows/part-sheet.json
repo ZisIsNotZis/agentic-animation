@@ -1,0 +1,48 @@
+{
+  "_meta": {
+    "workflowId": "part-sheet",
+    "title": "Single body part on flat chroma (identity-locked edit)",
+    "description": "Edits the approved anchor into ONE isolated body part (head, torso, arm_u_l, …) drawn complete — including regions that overlap at joints — on a flat chroma background, so rembg yields clean puppet parts. Called once per part with a per-part positive prompt. Requires inputs.__imagePath (the anchor).",
+    "requires": ["unet (GGUF Qwen-Image-Edit)", "clip (qwen_image text encoder)", "vae"],
+    "inject": {
+      "model": { "node": "unet", "field": "unet_name" },
+      "clip": { "node": "clip", "field": "clip_name" },
+      "vae": { "node": "vae", "field": "vae_name" },
+      "positive": { "node": "pos", "field": "prompt" },
+      "negative": { "node": "neg", "field": "text" },
+      "image": { "node": "load", "field": "image" },
+      "filenamePrefix": { "node": "save", "field": "filename_prefix" }
+    },
+    "seedFields": [{ "node": "sampler", "field": "seed" }],
+    "saveNodes": ["save"]
+  },
+  "prompt": {
+    "unet": { "class_type": "UnetLoaderGGUF", "inputs": { "unet_name": "Qwen-Image-Edit-Q4_K_M.gguf" } },
+    "clip": { "class_type": "CLIPLoader", "inputs": { "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors", "type": "qwen_image" } },
+    "vae": { "class_type": "VAELoader", "inputs": { "vae_name": "qwen_image_vae.safetensors" } },
+    "load": { "class_type": "LoadImage", "inputs": { "image": "anchor.png" } },
+    "pos": {
+      "class_type": "TextEncodeQwenImageEdit",
+      "inputs": { "prompt": "isolated body part on flat magenta background, complete overlapping edges", "clip": ["clip", 0], "vae": ["vae", 0], "image": ["load", 0] }
+    },
+    "neg": { "class_type": "CLIPTextEncode", "inputs": { "text": "cropped joints, drop shadow, extra limbs", "clip": ["clip", 0] } },
+    "encode": { "class_type": "VAEEncode", "inputs": { "pixels": ["load", 0], "vae": ["vae", 0] } },
+    "sampler": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 0,
+        "steps": 24,
+        "cfg": 4.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 0.75,
+        "model": ["unet", 0],
+        "positive": ["pos", 0],
+        "negative": ["neg", 0],
+        "latent_image": ["encode", 0]
+      }
+    },
+    "decode": { "class_type": "VAEDecode", "inputs": { "samples": ["sampler", 0], "vae": ["vae", 0] } },
+    "save": { "class_type": "SaveImage", "inputs": { "filename_prefix": "anim/part", "images": ["decode", 0] } }
+  }
+}

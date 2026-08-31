@@ -1,0 +1,6 @@
+# py/parts/cut.py deps — install into a uv-managed venv:
+#   cd py && uv venv && uv pip install -r parts/requirements.txt
+# rembg pulls onnxruntime (CPU) — runs fine on Apple Silicon.
+pillow>=10.4
+rembg>=2.0.59
+onnxruntime>=1.19

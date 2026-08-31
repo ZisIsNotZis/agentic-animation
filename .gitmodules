@@ -1,0 +1,6 @@
+[submodule "vendor/remotion"]
+	path = vendor/remotion
+	url = https://github.com/remotion-dev/skills
+[submodule "vendor/svg-creator-skill"]
+	path = vendor/svg-creator-skill
+	url = https://github.com/upbrew-tech/svg-creator-skill

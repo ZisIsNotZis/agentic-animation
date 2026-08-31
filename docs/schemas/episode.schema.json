@@ -1,0 +1,109 @@
+{
+  "$ref": "#/definitions/episode",
+  "definitions": {
+    "episode": {
+      "type": "object",
+      "properties": {
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "citation": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "path",
+              "citation"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "cast": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "characterId": {
+                "type": "string",
+                "pattern": "^_?[a-z0-9][a-z0-9_-]*$"
+              },
+              "role": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "characterId",
+              "role"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "beats": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/episode/properties/cast/items/properties/characterId"
+              },
+              "summary": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sceneRef": {
+                "$ref": "#/definitions/episode/properties/cast/items/properties/characterId"
+              }
+            },
+            "required": [
+              "id",
+              "summary",
+              "sceneRef"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "en",
+            "hi",
+            "zh"
+          ],
+          "default": "en"
+        }
+      },
+      "required": [
+        "slug",
+        "title"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

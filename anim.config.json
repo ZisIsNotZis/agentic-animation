@@ -1,0 +1,32 @@
+{
+  "adapters": {
+    "imagegen": "comfyui",
+    "tts": "edge",
+    "lipsync": "rhubarb",
+    "music": "raga",
+    "renderer": "remotion",
+    "corpus": "hindu-timeline"
+  },
+  "paths": {
+    "library": "library",
+    "episodes": "episodes",
+    "vendor": "vendor",
+    "corpus": "ANIM_CORPUS_ROOT_REQUIRED"
+  },
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 24,
+    "crf": 20
+  },
+  "render": {
+    "concurrency": 2,
+    "offthreadVideoCacheSizeInBytes": 2147483648
+  },
+  "tts": {
+    "voice": "zh-CN-YunxiaNeural",
+    "lang": "zh"
+  },
+  "seed": 1234,
+  "allowFluxFamily": false
+}

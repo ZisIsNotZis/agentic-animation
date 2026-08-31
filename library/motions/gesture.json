@@ -1,0 +1,18 @@
+{
+  "name": "gesture",
+  "duration": 1.8,
+  "loop": false,
+  "keys": [
+    { "part": "arm_u_r", "t": 0, "rot": 0, "ease": "out" },
+    { "part": "arm_u_r", "t": 0.5, "rot": -105, "ease": "out" },
+    { "part": "arm_u_r", "t": 1.3, "rot": -105, "ease": "io" },
+    { "part": "arm_u_r", "t": 1.8, "rot": 0, "ease": "in" },
+    { "part": "arm_l_r", "t": 0, "rot": 0, "ease": "out" },
+    { "part": "arm_l_r", "t": 0.5, "rot": -25, "ease": "out" },
+    { "part": "arm_l_r", "t": 1.3, "rot": -25, "ease": "io" },
+    { "part": "arm_l_r", "t": 1.8, "rot": 0, "ease": "in" },
+    { "part": "head", "t": 0, "rot": 0, "ease": "io" },
+    { "part": "head", "t": 0.6, "rot": -3, "ease": "io" },
+    { "part": "head", "t": 1.8, "rot": 0, "ease": "io" }
+  ]
+}

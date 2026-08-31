@@ -1,0 +1,15 @@
+{
+  "name": "@anim/adapter-corpus-hindu-timeline",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Corpus adapter: reads the sibling the-Hindu-timeline repo (events.jsonl / catalog.json / deep-dives).",
+  "exports": { ".": "./src/index.ts" },
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "node --import tsx --test \"test/*.test.ts\""
+  },
+  "dependencies": {
+    "@anim/core": "*"
+  }
+}

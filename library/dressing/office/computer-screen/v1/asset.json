@@ -1,0 +1,11 @@
+{
+  "id": "dressing.office.computer-screen.v1",
+  "version": 1,
+  "kind": "dressing",
+  "source": "art.svg",
+  "preview": "preview.png",
+  "semanticRole": "computer-screen",
+  "notes": [
+    "Hard-edge office dressing; can be placed independently from the set background."
+  ]
+}

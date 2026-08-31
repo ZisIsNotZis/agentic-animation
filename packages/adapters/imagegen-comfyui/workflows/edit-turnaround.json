@@ -1,0 +1,48 @@
+{
+  "_meta": {
+    "workflowId": "edit-turnaround",
+    "title": "Identity-locked turnaround / expression edit (Qwen-Image-Edit)",
+    "description": "Image edit: takes the approved anchor as reference and re-poses / re-expresses it while holding identity, using Qwen-Image-Edit (Apache-2.0). Requires a source image via inputs.__imagePath. M1 starting template — validate the TextEncodeQwenImageEdit / reference-latent wiring against the installed ComfyUI-GGUF version.",
+    "requires": ["unet (GGUF Qwen-Image-Edit)", "clip (qwen_image text encoder)", "vae"],
+    "inject": {
+      "model": { "node": "unet", "field": "unet_name" },
+      "clip": { "node": "clip", "field": "clip_name" },
+      "vae": { "node": "vae", "field": "vae_name" },
+      "positive": { "node": "pos", "field": "prompt" },
+      "negative": { "node": "neg", "field": "text" },
+      "image": { "node": "load", "field": "image" },
+      "filenamePrefix": { "node": "save", "field": "filename_prefix" }
+    },
+    "seedFields": [{ "node": "sampler", "field": "seed" }],
+    "saveNodes": ["save"]
+  },
+  "prompt": {
+    "unet": { "class_type": "UnetLoaderGGUF", "inputs": { "unet_name": "Qwen-Image-Edit-Q4_K_M.gguf" } },
+    "clip": { "class_type": "CLIPLoader", "inputs": { "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors", "type": "qwen_image" } },
+    "vae": { "class_type": "VAELoader", "inputs": { "vae_name": "qwen_image_vae.safetensors" } },
+    "load": { "class_type": "LoadImage", "inputs": { "image": "anchor.png" } },
+    "pos": {
+      "class_type": "TextEncodeQwenImageEdit",
+      "inputs": { "prompt": "same character, three-quarter turn", "clip": ["clip", 0], "vae": ["vae", 0], "image": ["load", 0] }
+    },
+    "neg": { "class_type": "CLIPTextEncode", "inputs": { "text": "", "clip": ["clip", 0] } },
+    "encode": { "class_type": "VAEEncode", "inputs": { "pixels": ["load", 0], "vae": ["vae", 0] } },
+    "sampler": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 0,
+        "steps": 24,
+        "cfg": 4.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 0.7,
+        "model": ["unet", 0],
+        "positive": ["pos", 0],
+        "negative": ["neg", 0],
+        "latent_image": ["encode", 0]
+      }
+    },
+    "decode": { "class_type": "VAEDecode", "inputs": { "samples": ["sampler", 0], "vae": ["vae", 0] } },
+    "save": { "class_type": "SaveImage", "inputs": { "filename_prefix": "anim/turnaround", "images": ["decode", 0] } }
+  }
+}

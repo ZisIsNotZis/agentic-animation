@@ -1,0 +1,20 @@
+{
+  "slug": "bailan-system",
+  "title": "摆烂系统：躺着也能无敌？",
+  "sources": [{"path":"episodes/bailan-system/摆烂系统.md","citation":"用户提供的原创剧本"}],
+  "cast": [
+    {"characterId":"_placeholder","role":"林摆摆"},
+    {"characterId":"_placeholder","role":"大师兄"},
+    {"characterId":"_placeholder","role":"长老"},
+    {"characterId":"_placeholder","role":"围观弟子"}
+  ],
+  "beats": [
+    {"id":"awakening","summary":"林摆摆穿越并绑定摆烂系统","sceneRef":"awakening"},
+    {"id":"first-slap","summary":"大师兄嘲讽后被护盾反弹","sceneRef":"first-slap"},
+    {"id":"arena","summary":"摆烂值升级，剑气全部消失","sceneRef":"arena"},
+    {"id":"elder","summary":"长老施压反而帮助主角突破","sceneRef":"elder"},
+    {"id":"collapse","summary":"卷王道心崩溃，系统发布三日任务","sceneRef":"collapse"}
+  ],
+  "variants": [],
+  "language": "zh"
+}

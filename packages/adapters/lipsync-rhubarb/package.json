@@ -1,0 +1,13 @@
+{
+  "name": "@anim/adapter-lipsync-rhubarb",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Lip-sync adapter: Rhubarb CLI wrapper (always passes -d dialog text).",
+  "exports": { ".": "./src/index.ts" },
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@anim/core": "*",
+    "execa": "^9.5.2"
+  }
+}

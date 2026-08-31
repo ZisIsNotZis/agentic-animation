@@ -1,0 +1,260 @@
+{
+  "shots": [
+    {
+      "id": "secret-wide",
+      "sceneId": "secret",
+      "set": "interior",
+      "camera": [
+        {
+          "t": 0,
+          "x": 0,
+          "z": 1
+        }
+      ],
+      "actors": [
+        {
+          "id": "student_a",
+          "characterId": "_placeholder",
+          "version": 1,
+          "at": [
+            480,
+            1040
+          ],
+          "scale": 0.45,
+          "motion": [
+            "idle",
+            "gesture"
+          ],
+          "speakLineIds": [
+            "a_secret",
+            "a_reveal"
+          ],
+          "emotion": "smug"
+        },
+        {
+          "id": "student_b",
+          "characterId": "_placeholder",
+          "version": 1,
+          "at": [
+            1050,
+            1040
+          ],
+          "scale": 0.45,
+          "motion": [
+            "idle",
+            "gesture"
+          ],
+          "speakLineIds": [
+            "b_what",
+            "b_shock"
+          ],
+          "emotion": "shock"
+        }
+      ],
+      "beats": [
+        { "at": 0, "actor": "student_a", "face": { "brow": 18, "smile": 0.8 } },
+        { "at": "narr+2.2", "actor": "student_b", "face": { "brow": -18, "eyeOpen": 1.25 } },
+        { "at": "narr+5.0", "actor": "student_a", "face": { "brow": 24, "smile": 1 }, "move": { "to": [520, 1040], "t1": "narr+5.8" } },
+        { "at": "narr+7.2", "actor": "student_b", "face": { "brow": -28, "eyeOpen": 1.5 } }
+        ,{ "at": "narr+3.6", "actor": "student_b", "pose": "gesture" }
+        ,{ "at": "narr+6.1", "actor": "student_a", "pose": "gesture" }
+      ]
+    },
+    {
+      "id": "secret-reaction",
+      "sceneId": "secret",
+      "set": "interior",
+      "camera": [
+        {
+          "t": 0,
+          "x": 0,
+          "z": 1
+        }
+      ],
+      "actors": [
+        {
+          "id": "student_a",
+          "characterId": "_placeholder",
+          "version": 1,
+          "at": [
+            480,
+            1040
+          ],
+          "scale": 0.45,
+          "motion": [
+            "idle",
+            "gesture"
+          ],
+          "speakLineIds": [
+            "a_reveal"
+          ],
+          "emotion": "smug"
+        },
+        {
+          "id": "student_b",
+          "characterId": "_placeholder",
+          "version": 1,
+          "at": [
+            1050,
+            1040
+          ],
+          "scale": 0.45,
+          "motion": [
+            "idle",
+            "gesture"
+          ],
+          "speakLineIds": [
+            "b_shock"
+          ],
+          "emotion": "shock"
+        }
+      ],
+      "beats": [
+        { "at": 0, "actor": "student_a", "face": { "brow": 24, "smile": 1 } },
+        { "at": "narr+1.5", "actor": "student_b", "face": { "brow": -18, "eyeOpen": 1.35 } }
+      ]
+    },
+    {
+      "id": "canteen",
+      "sceneId": "canteen",
+      "set": "interior",
+      "camera": [
+        {
+          "t": 0,
+          "x": 0,
+          "z": 1
+        }
+      ],
+      "actors": [
+        {
+          "id": "student_a",
+          "characterId": "_placeholder",
+          "version": 1,
+          "at": [
+            480,
+            1040
+          ],
+          "scale": 0.42,
+          "motion": [
+            "idle",
+            "gesture"
+          ],
+          "speakLineIds": [
+            "a_proof",
+            "a_sausage"
+          ],
+          "emotion": "smug"
+        },
+        {
+          "id": "student_b",
+          "characterId": "_placeholder",
+          "version": 1,
+          "at": [
+            1050,
+            1040
+          ],
+          "scale": 0.42,
+          "motion": [
+            "idle"
+          ],
+          "speakLineIds": [
+            "b_guess"
+          ],
+          "emotion": "skeptic"
+        },
+        {
+          "id": "liu",
+          "characterId": "_placeholder",
+          "version": 1,
+          "at": [
+            1620,
+            1040
+          ],
+          "scale": 0.42,
+          "motion": [
+            "idle"
+          ],
+          "speakLineIds": [],
+          "emotion": "neutral"
+        }
+      ],
+      "beats": [
+        { "at": 0, "actor": "student_a", "face": { "brow": 20, "smile": 0.9 } },
+        { "at": "narr+2.5", "actor": "student_b", "face": { "brow": -16, "eyeOpen": 0.75 } },
+        { "at": "narr+5.5", "actor": "student_a", "face": { "brow": 30, "smile": 1 }, "move": { "to": [540, 1040], "t1": "narr+6.1" } }
+        ,{ "at": "narr+2.7", "actor": "student_b", "pose": "gesture" }
+        ,{ "at": "narr+5.6", "actor": "student_a", "pose": "gesture" }
+      ]
+    },
+    {
+      "id": "punchline",
+      "sceneId": "punchline",
+      "set": "interior",
+      "camera": [
+        {
+          "t": 0,
+          "x": 0,
+          "z": 1
+        }
+      ],
+      "actors": [
+        {
+          "id": "student_b",
+          "characterId": "_placeholder",
+          "version": 1,
+          "at": [
+            1050,
+            1040
+          ],
+          "scale": 0.48,
+          "motion": [
+            "idle",
+            "gesture"
+          ],
+          "speakLineIds": [
+            "b_two",
+            "b_fall"
+          ],
+          "emotion": "panic"
+        },
+        {
+          "id": "student_a",
+          "characterId": "_placeholder",
+          "version": 1,
+          "at": [
+            480,
+            1040
+          ],
+          "scale": 0.42,
+          "motion": [
+            "idle",
+            "gesture"
+          ],
+          "speakLineIds": [],
+          "emotion": "smug"
+        },
+        {
+          "id": "liu",
+          "characterId": "_placeholder",
+          "version": 1,
+          "at": [
+            1620,
+            1040
+          ],
+          "scale": 0.42,
+          "motion": [
+            "idle",
+            "gesture"
+          ],
+          "speakLineIds": [],
+          "emotion": "neutral"
+        }
+      ],
+      "beats": [
+        { "at": 0, "actor": "student_b", "face": { "brow": -30, "eyeOpen": 1.5 } },
+        { "at": "narr+2.0", "actor": "student_b", "face": { "brow": -38, "eyeOpen": 1.7 } }
+        ,{ "at": "narr+0.2", "actor": "student_b", "pose": "gesture" }
+      ]
+    }
+  ]
+}

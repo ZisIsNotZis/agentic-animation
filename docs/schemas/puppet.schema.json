@@ -1,0 +1,229 @@
+{
+  "$ref": "#/definitions/puppet",
+  "definitions": {
+    "puppet": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^_?[a-z0-9][a-z0-9_-]*$"
+        },
+        "version": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "rig": {
+          "type": "string",
+          "enum": [
+            "sharedFrame",
+            "nativeAttach"
+          ],
+          "default": "sharedFrame"
+        },
+        "designSize": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/puppet/properties/id"
+              },
+              "image": {
+                "type": "string",
+                "minLength": 1
+              },
+              "pivot": {
+                "$ref": "#/definitions/puppet/properties/designSize"
+              },
+              "z": {
+                "type": "number"
+              },
+              "parent": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/puppet/properties/id"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "attach": {
+                "$ref": "#/definitions/puppet/properties/designSize"
+              },
+              "norm": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                ],
+                "default": [
+                  1,
+                  1
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "image",
+              "pivot",
+              "z",
+              "parent"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "mouth": {
+          "type": "object",
+          "properties": {
+            "anchor": {
+              "$ref": "#/definitions/puppet/properties/id"
+            },
+            "at": {
+              "$ref": "#/definitions/puppet/properties/designSize"
+            },
+            "shapes": {
+              "type": "object",
+              "properties": {
+                "A": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "B": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "C": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "D": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "E": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "F": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "G": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "H": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "X": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                "F",
+                "G",
+                "H",
+                "X"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "anchor",
+            "at",
+            "shapes"
+          ],
+          "additionalProperties": false
+        },
+        "eyes": {
+          "type": "object",
+          "properties": {
+            "blink": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "blink"
+          ],
+          "additionalProperties": false
+        },
+        "skins": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            },
+            "propertyNames": {
+              "pattern": "^_?[a-z0-9][a-z0-9_-]*$"
+            }
+          },
+          "default": {
+            "default": {}
+          }
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "grounding": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "designSize",
+        "parts",
+        "mouth"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

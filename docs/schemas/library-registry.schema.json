@@ -1,0 +1,316 @@
+{
+  "$ref": "#/definitions/library-registry",
+  "definitions": {
+    "library-registry": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "kind": {
+          "type": "string",
+          "const": "registry"
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "capabilities": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "default": []
+              },
+              "implementationKey": {
+                "type": "string",
+                "minLength": 1
+              },
+              "dependencies": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "default": []
+              },
+              "hash": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "figure",
+                  "voice",
+                  "set",
+                  "prop",
+                  "dressing",
+                  "layout"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z0-9-]+)+\\.v[1-9]\\d*$"
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "version",
+              "implementationKey",
+              "hash",
+              "kind",
+              "id",
+              "path"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "procedures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "$ref": "#/definitions/library-registry/properties/assets/items/properties/version"
+              },
+              "capabilities": {
+                "$ref": "#/definitions/library-registry/properties/assets/items/properties/capabilities"
+              },
+              "implementationKey": {
+                "$ref": "#/definitions/library-registry/properties/assets/items/properties/implementationKey"
+              },
+              "dependencies": {
+                "$ref": "#/definitions/library-registry/properties/assets/items/properties/dependencies"
+              },
+              "hash": {
+                "$ref": "#/definitions/library-registry/properties/assets/items/properties/hash"
+              },
+              "kind": {
+                "type": "string",
+                "const": "procedure"
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+$"
+              },
+              "path": {
+                "$ref": "#/definitions/library-registry/properties/procedures/items/properties/id"
+              },
+              "owner": {
+                "type": "string",
+                "enum": [
+                  "actor",
+                  "object",
+                  "camera",
+                  "vfx",
+                  "sfx",
+                  "music"
+                ]
+              },
+              "procedureKind": {
+                "type": "string",
+                "enum": [
+                  "timed",
+                  "state",
+                  "speech"
+                ]
+              },
+              "subjects": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "actor",
+                    "camera",
+                    "vfx",
+                    "sfx",
+                    "music"
+                  ]
+                },
+                "minItems": 1
+              },
+              "positional": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "^[a-z][a-z0-9_]*$"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "actor",
+                        "object",
+                        "dressing",
+                        "entity",
+                        "asset",
+                        "string",
+                        "number",
+                        "boolean"
+                      ]
+                    },
+                    "required": {
+                      "type": "boolean",
+                      "default": true
+                    },
+                    "default": {
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean"
+                      ]
+                    },
+                    "enum": {
+                      "type": "array",
+                      "items": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean"
+                        ]
+                      },
+                      "minItems": 1
+                    },
+                    "min": {
+                      "type": "number"
+                    },
+                    "max": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "type"
+                  ],
+                  "additionalProperties": false
+                },
+                "default": []
+              },
+              "modifiers": {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/definitions/library-registry/properties/procedures/items/properties/positional/items"
+                },
+                "default": {}
+              },
+              "params": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/library-registry/properties/procedures/items/properties/positional/items"
+                }
+              },
+              "arity": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "timing": {
+                "type": "object",
+                "properties": {
+                  "defaultDuration": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "scalable": {
+                    "type": "boolean"
+                  },
+                  "span": {
+                    "type": "object",
+                    "properties": {
+                      "enter": {
+                        "type": "object",
+                        "properties": {
+                          "min": {
+                            "type": "number"
+                          },
+                          "max": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "min",
+                          "max"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "sustain": {
+                        "$ref": "#/definitions/library-registry/properties/procedures/items/properties/timing/properties/span/properties/enter"
+                      },
+                      "exit": {
+                        "$ref": "#/definitions/library-registry/properties/procedures/items/properties/timing/properties/span/properties/enter"
+                      }
+                    },
+                    "required": [
+                      "enter",
+                      "sustain",
+                      "exit"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "defaultDuration",
+                  "scalable"
+                ],
+                "additionalProperties": false
+              },
+              "claims": {
+                "type": "object",
+                "properties": {
+                  "exclusive": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "shared": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "recipe": {
+                "type": "object",
+                "additionalProperties": {},
+                "default": {}
+              }
+            },
+            "required": [
+              "version",
+              "implementationKey",
+              "hash",
+              "kind",
+              "id",
+              "subjects"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "version",
+        "kind"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -1,0 +1,5 @@
+file '/home/z/vibe/silly_2d_animate/agentic-animation/episodes/liu-secret/audio/a_proof.wav'
+file '/home/z/vibe/silly_2d_animate/agentic-animation/episodes/liu-secret/audio/a_proof-gap.wav'
+file '/home/z/vibe/silly_2d_animate/agentic-animation/episodes/liu-secret/audio/b_guess.wav'
+file '/home/z/vibe/silly_2d_animate/agentic-animation/episodes/liu-secret/audio/b_guess-gap.wav'
+file '/home/z/vibe/silly_2d_animate/agentic-animation/episodes/liu-secret/audio/a_sausage.wav'
