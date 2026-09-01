@@ -1,0 +1,234 @@
+{
+  "id": "system_orb",
+  "version": 1,
+  "rig": "sharedFrame",
+  "designSize": [
+    1024,
+    2048
+  ],
+  "parts": [
+    {
+      "id": "torso",
+      "image": "parts/torso.png",
+      "pivot": [
+        512,
+        600
+      ],
+      "z": 40,
+      "parent": null
+    },
+    {
+      "id": "head",
+      "image": "parts/head.png",
+      "pivot": [
+        512,
+        560
+      ],
+      "z": 60,
+      "parent": "torso",
+      "attach": [
+        512,
+        400
+      ]
+    },
+    {
+      "id": "arm_u_l",
+      "image": "parts/arm_u_l.png",
+      "pivot": [
+        392,
+        600
+      ],
+      "z": 50,
+      "parent": "torso",
+      "attach": [
+        392,
+        600
+      ]
+    },
+    {
+      "id": "arm_l_l",
+      "image": "parts/arm_l_l.png",
+      "pivot": [
+        350,
+        820
+      ],
+      "z": 50,
+      "parent": "arm_u_l",
+      "attach": [
+        350,
+        820
+      ]
+    },
+    {
+      "id": "hand_l",
+      "image": "parts/hand_l.png",
+      "pivot": [
+        332,
+        1010
+      ],
+      "z": 52,
+      "parent": "arm_l_l",
+      "attach": [
+        332,
+        1010
+      ]
+    },
+    {
+      "id": "arm_u_r",
+      "image": "parts/arm_u_r.png",
+      "pivot": [
+        632,
+        600
+      ],
+      "z": 50,
+      "parent": "torso",
+      "attach": [
+        632,
+        600
+      ]
+    },
+    {
+      "id": "arm_l_r",
+      "image": "parts/arm_l_r.png",
+      "pivot": [
+        674,
+        820
+      ],
+      "z": 50,
+      "parent": "arm_u_r",
+      "attach": [
+        674,
+        820
+      ]
+    },
+    {
+      "id": "hand_r",
+      "image": "parts/hand_r.png",
+      "pivot": [
+        692,
+        1010
+      ],
+      "z": 52,
+      "parent": "arm_l_r",
+      "attach": [
+        692,
+        1010
+      ]
+    },
+    {
+      "id": "leg_u_l",
+      "image": "parts/leg_u_l.png",
+      "pivot": [
+        452,
+        1120
+      ],
+      "z": 30,
+      "parent": "torso",
+      "attach": [
+        452,
+        1120
+      ]
+    },
+    {
+      "id": "leg_l_l",
+      "image": "parts/leg_l_l.png",
+      "pivot": [
+        448,
+        1470
+      ],
+      "z": 30,
+      "parent": "leg_u_l",
+      "attach": [
+        448,
+        1470
+      ]
+    },
+    {
+      "id": "foot_l",
+      "image": "parts/foot_l.png",
+      "pivot": [
+        448,
+        1780
+      ],
+      "z": 31,
+      "parent": "leg_l_l",
+      "attach": [
+        448,
+        1780
+      ]
+    },
+    {
+      "id": "leg_u_r",
+      "image": "parts/leg_u_r.png",
+      "pivot": [
+        572,
+        1120
+      ],
+      "z": 30,
+      "parent": "torso",
+      "attach": [
+        572,
+        1120
+      ]
+    },
+    {
+      "id": "leg_l_r",
+      "image": "parts/leg_l_r.png",
+      "pivot": [
+        576,
+        1470
+      ],
+      "z": 30,
+      "parent": "leg_u_r",
+      "attach": [
+        576,
+        1470
+      ]
+    },
+    {
+      "id": "foot_r",
+      "image": "parts/foot_r.png",
+      "pivot": [
+        576,
+        1780
+      ],
+      "z": 31,
+      "parent": "leg_l_r",
+      "attach": [
+        576,
+        1780
+      ]
+    }
+  ],
+  "mouth": {
+    "anchor": "head",
+    "at": [
+      512,
+      480
+    ],
+    "shapes": {
+      "A": "mouth/A.png",
+      "B": "mouth/B.png",
+      "C": "mouth/C.png",
+      "D": "mouth/D.png",
+      "E": "mouth/E.png",
+      "F": "mouth/F.png",
+      "G": "mouth/G.png",
+      "H": "mouth/H.png",
+      "X": "mouth/X.png"
+    }
+  },
+  "eyes": {
+    "blink": [
+      "eyes/open.png",
+      "eyes/half.png",
+      "eyes/closed.png"
+    ]
+  },
+  "meta": {
+    "grounding": "",
+    "notes": [
+      "Hand-authored deterministic flat Chinese skit figure; separate articulated parts, face overlays, and hand sockets."
+    ]
+  }
+}

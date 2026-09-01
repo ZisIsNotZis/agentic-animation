@@ -1,0 +1,297 @@
+{
+  "id": "_testrig",
+  "version": 1,
+  "rig": "nativeAttach",
+  "designSize": [
+    1024,
+    2048
+  ],
+  "parts": [
+    {
+      "id": "torso",
+      "image": "parts/torso.png",
+      "pivot": [
+        110,
+        70
+      ],
+      "z": 10,
+      "parent": null,
+      "attach": [
+        512,
+        620
+      ],
+      "norm": [
+        1.5455,
+        1.32
+      ]
+    },
+    {
+      "id": "head",
+      "image": "parts/head.png",
+      "pivot": [
+        250,
+        447
+      ],
+      "z": 40,
+      "parent": "torso",
+      "attach": [
+        110,
+        25
+      ],
+      "norm": [
+        0.66,
+        0.7115
+      ]
+    },
+    {
+      "id": "arm_u_l",
+      "image": "parts/arm_u_l.png",
+      "pivot": [
+        32,
+        36
+      ],
+      "z": 20,
+      "parent": "torso",
+      "attach": [
+        18,
+        70
+      ],
+      "norm": [
+        1.4063,
+        1
+      ]
+    },
+    {
+      "id": "arm_l_l",
+      "image": "parts/arm_l_l.png",
+      "pivot": [
+        25,
+        24
+      ],
+      "z": 20,
+      "parent": "arm_u_l",
+      "attach": [
+        32,
+        270
+      ],
+      "norm": [
+        1.56,
+        1.0833
+      ]
+    },
+    {
+      "id": "hand_l",
+      "image": "parts/hand_l.png",
+      "pivot": [
+        40,
+        11
+      ],
+      "z": 21,
+      "parent": "arm_l_l",
+      "attach": [
+        25,
+        216
+      ],
+      "norm": [
+        1.375,
+        1.375
+      ]
+    },
+    {
+      "id": "arm_u_r",
+      "image": "parts/arm_u_r.png",
+      "pivot": [
+        70,
+        25
+      ],
+      "z": 20,
+      "parent": "torso",
+      "attach": [
+        202,
+        70
+      ],
+      "norm": [
+        0.6429,
+        1.4286
+      ]
+    },
+    {
+      "id": "arm_l_r",
+      "image": "parts/arm_l_r.png",
+      "pivot": [
+        60,
+        18
+      ],
+      "z": 20,
+      "parent": "arm_u_r",
+      "attach": [
+        70,
+        189
+      ],
+      "norm": [
+        0.65,
+        1.4444
+      ]
+    },
+    {
+      "id": "hand_r",
+      "image": "parts/hand_r.png",
+      "pivot": [
+        80,
+        28
+      ],
+      "z": 21,
+      "parent": "arm_l_r",
+      "attach": [
+        60,
+        162
+      ],
+      "norm": [
+        0.6875,
+        0.55
+      ]
+    },
+    {
+      "id": "leg_u_l",
+      "image": "parts/leg_u_l.png",
+      "pivot": [
+        45,
+        37
+      ],
+      "z": 5,
+      "parent": "torso",
+      "attach": [
+        57,
+        475
+      ],
+      "norm": [
+        1.3333,
+        0.9348
+      ]
+    },
+    {
+      "id": "leg_l_l",
+      "image": "parts/leg_l_l.png",
+      "pivot": [
+        35,
+        34
+      ],
+      "z": 5,
+      "parent": "leg_u_l",
+      "attach": [
+        45,
+        423
+      ],
+      "norm": [
+        1.4857,
+        0.9286
+      ]
+    },
+    {
+      "id": "foot_l",
+      "image": "parts/foot_l.png",
+      "pivot": [
+        45,
+        25
+      ],
+      "z": 6,
+      "parent": "leg_l_l",
+      "attach": [
+        35,
+        378
+      ],
+      "norm": [
+        1.2857,
+        1.3714
+      ]
+    },
+    {
+      "id": "leg_u_r",
+      "image": "parts/leg_u_r.png",
+      "pivot": [
+        100,
+        24
+      ],
+      "z": 5,
+      "parent": "torso",
+      "attach": [
+        163,
+        475
+      ],
+      "norm": [
+        0.6,
+        1.4333
+      ]
+    },
+    {
+      "id": "leg_l_r",
+      "image": "parts/leg_l_r.png",
+      "pivot": [
+        90,
+        21
+      ],
+      "z": 5,
+      "parent": "leg_u_r",
+      "attach": [
+        100,
+        276
+      ],
+      "norm": [
+        0.5778,
+        1.5
+      ]
+    },
+    {
+      "id": "foot_r",
+      "image": "parts/foot_r.png",
+      "pivot": [
+        177,
+        53
+      ],
+      "z": 6,
+      "parent": "leg_l_r",
+      "attach": [
+        90,
+        234
+      ],
+      "norm": [
+        0.6923,
+        0.64
+      ]
+    }
+  ],
+  "mouth": {
+    "anchor": "head",
+    "at": [
+      250,
+      229
+    ],
+    "shapes": {
+      "A": "mouth/A.png",
+      "B": "mouth/B.png",
+      "C": "mouth/C.png",
+      "D": "mouth/D.png",
+      "E": "mouth/E.png",
+      "F": "mouth/F.png",
+      "G": "mouth/G.png",
+      "H": "mouth/H.png",
+      "X": "mouth/X.png"
+    }
+  },
+  "eyes": {
+    "blink": [
+      "eyes/open.png",
+      "eyes/half.png",
+      "eyes/closed.png"
+    ]
+  },
+  "skins": {
+    "default": {}
+  },
+  "meta": {
+    "grounding": "",
+    "notes": [
+      "Programmatic nativeAttach test rig — heterogeneous native part sizes, not for publication."
+    ]
+  }
+}

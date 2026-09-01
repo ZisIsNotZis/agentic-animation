@@ -1,0 +1,341 @@
+{
+  "id": "_placeholder",
+  "version": 1,
+  "rig": "sharedFrame",
+  "designSize": [
+    1024,
+    2048
+  ],
+  "parts": [
+    {
+      "id": "torso",
+      "image": "parts/torso.png",
+      "pivot": [
+        512,
+        600
+      ],
+      "z": 40,
+      "parent": null,
+      "norm": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "head",
+      "image": "parts/head.png",
+      "pivot": [
+        512,
+        560
+      ],
+      "z": 60,
+      "parent": "torso",
+      "attach": [
+        512,
+        400
+      ],
+      "norm": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "arm_u_l",
+      "image": "parts/arm_u_l.png",
+      "pivot": [
+        392,
+        600
+      ],
+      "z": 50,
+      "parent": "torso",
+      "attach": [
+        392,
+        600
+      ],
+      "norm": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "arm_l_l",
+      "image": "parts/arm_l_l.png",
+      "pivot": [
+        350,
+        820
+      ],
+      "z": 50,
+      "parent": "arm_u_l",
+      "attach": [
+        350,
+        820
+      ],
+      "norm": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "hand_l",
+      "image": "parts/hand_l.png",
+      "pivot": [
+        332,
+        1010
+      ],
+      "z": 52,
+      "parent": "arm_l_l",
+      "attach": [
+        332,
+        1010
+      ],
+      "norm": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "arm_u_r",
+      "image": "parts/arm_u_r.png",
+      "pivot": [
+        632,
+        600
+      ],
+      "z": 50,
+      "parent": "torso",
+      "attach": [
+        632,
+        600
+      ],
+      "norm": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "arm_l_r",
+      "image": "parts/arm_l_r.png",
+      "pivot": [
+        674,
+        820
+      ],
+      "z": 50,
+      "parent": "arm_u_r",
+      "attach": [
+        674,
+        820
+      ],
+      "norm": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "hand_r",
+      "image": "parts/hand_r.png",
+      "pivot": [
+        692,
+        1010
+      ],
+      "z": 52,
+      "parent": "arm_l_r",
+      "attach": [
+        692,
+        1010
+      ],
+      "norm": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "leg_u_l",
+      "image": "parts/leg_u_l.png",
+      "pivot": [
+        452,
+        1120
+      ],
+      "z": 30,
+      "parent": "torso",
+      "attach": [
+        452,
+        1120
+      ],
+      "norm": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "leg_l_l",
+      "image": "parts/leg_l_l.png",
+      "pivot": [
+        448,
+        1470
+      ],
+      "z": 30,
+      "parent": "leg_u_l",
+      "attach": [
+        448,
+        1470
+      ],
+      "norm": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "foot_l",
+      "image": "parts/foot_l.png",
+      "pivot": [
+        448,
+        1780
+      ],
+      "z": 31,
+      "parent": "leg_l_l",
+      "attach": [
+        448,
+        1780
+      ],
+      "norm": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "leg_u_r",
+      "image": "parts/leg_u_r.png",
+      "pivot": [
+        572,
+        1120
+      ],
+      "z": 30,
+      "parent": "torso",
+      "attach": [
+        572,
+        1120
+      ],
+      "norm": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "leg_l_r",
+      "image": "parts/leg_l_r.png",
+      "pivot": [
+        576,
+        1470
+      ],
+      "z": 30,
+      "parent": "leg_u_r",
+      "attach": [
+        576,
+        1470
+      ],
+      "norm": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "foot_r",
+      "image": "parts/foot_r.png",
+      "pivot": [
+        576,
+        1780
+      ],
+      "z": 31,
+      "parent": "leg_l_r",
+      "attach": [
+        576,
+        1780
+      ],
+      "norm": [
+        1,
+        1
+      ]
+    }
+  ],
+  "mouth": {
+    "anchor": "head",
+    "at": [
+      512,
+      470
+    ],
+    "shapes": {
+      "A": "mouth/A.png",
+      "B": "mouth/B.png",
+      "C": "mouth/C.png",
+      "D": "mouth/D.png",
+      "E": "mouth/E.png",
+      "F": "mouth/F.png",
+      "G": "mouth/G.png",
+      "H": "mouth/H.png",
+      "X": "mouth/X.png"
+    }
+  },
+  "eyes": {
+    "blink": [
+      "eyes/open.png",
+      "eyes/half.png",
+      "eyes/closed.png"
+    ]
+  },
+  "skins": {
+    "default": {},
+    "lin": {
+      "torso": "skins/lin/torso.png",
+      "head": "skins/lin/head.png",
+      "arm_u_l": "skins/lin/arm_u_l.png",
+      "arm_l_l": "skins/lin/arm_l_l.png",
+      "hand_l": "skins/lin/hand_l.png",
+      "arm_u_r": "skins/lin/arm_u_r.png",
+      "arm_l_r": "skins/lin/arm_l_r.png",
+      "hand_r": "skins/lin/hand_r.png",
+      "leg_u_l": "skins/lin/leg_u_l.png",
+      "leg_l_l": "skins/lin/leg_l_l.png",
+      "foot_l": "skins/lin/foot_l.png",
+      "leg_u_r": "skins/lin/leg_u_r.png",
+      "leg_l_r": "skins/lin/leg_l_r.png",
+      "foot_r": "skins/lin/foot_r.png"
+    },
+    "senior": {
+      "torso": "skins/senior/torso.png",
+      "head": "skins/senior/head.png",
+      "arm_u_l": "skins/senior/arm_u_l.png",
+      "arm_l_l": "skins/senior/arm_l_l.png",
+      "hand_l": "skins/senior/hand_l.png",
+      "arm_u_r": "skins/senior/arm_u_r.png",
+      "arm_l_r": "skins/senior/arm_l_r.png",
+      "hand_r": "skins/senior/hand_r.png",
+      "leg_u_l": "skins/senior/leg_u_l.png",
+      "leg_l_l": "skins/senior/leg_l_l.png",
+      "foot_l": "skins/senior/foot_l.png",
+      "leg_u_r": "skins/senior/leg_u_r.png",
+      "leg_l_r": "skins/senior/leg_l_r.png",
+      "foot_r": "skins/senior/foot_r.png"
+    },
+    "elder": {
+      "torso": "skins/elder/torso.png",
+      "head": "skins/elder/head.png",
+      "arm_u_l": "skins/elder/arm_u_l.png",
+      "arm_l_l": "skins/elder/arm_l_l.png",
+      "hand_l": "skins/elder/hand_l.png",
+      "arm_u_r": "skins/elder/arm_u_r.png",
+      "arm_l_r": "skins/elder/arm_l_r.png",
+      "hand_r": "skins/elder/hand_r.png",
+      "leg_u_l": "skins/elder/leg_u_l.png",
+      "leg_l_l": "skins/elder/leg_l_l.png",
+      "foot_l": "skins/elder/foot_l.png",
+      "leg_u_r": "skins/elder/leg_u_r.png",
+      "leg_l_r": "skins/elder/leg_l_r.png",
+      "foot_r": "skins/elder/foot_r.png"
+    }
+  },
+  "meta": {
+    "grounding": "",
+    "notes": [
+      "Programmatic placeholder cast — flat shapes, not for publication."
+    ]
+  }
+}
