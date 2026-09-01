@@ -103,11 +103,11 @@ for document ownership and conflict precedence.
 The three current episode renders are playable directly in Markdown viewers
 that support HTML5 video:
 
-<video controls width="640" src="episodes/ai-work-adventure/dist/ai-work-adventure.mp4"></video>
+<video controls preload="metadata" width="640" src="https://raw.githubusercontent.com/ZisIsNotZis/agentic-animation/main/episodes/ai-work-adventure/dist/ai-work-adventure.mp4"></video>
 
-<video controls width="640" src="episodes/bailan-system/dist/bailan-system.mp4"></video>
+<video controls preload="metadata" width="640" src="https://raw.githubusercontent.com/ZisIsNotZis/agentic-animation/main/episodes/bailan-system/dist/bailan-system.mp4"></video>
 
-<video controls width="640" src="episodes/liu-secret/dist/liu-secret.mp4"></video>
+<video controls preload="metadata" width="640" src="https://raw.githubusercontent.com/ZisIsNotZis/agentic-animation/main/episodes/liu-secret/dist/liu-secret.mp4"></video>
 
 ## Evidence, versioning, and contribution
 
