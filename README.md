@@ -100,14 +100,16 @@ for document ownership and conflict precedence.
 
 ## Episode previews
 
-The three current episode renders are playable directly in Markdown viewers
-that support HTML5 video:
+The three current episode renders are playable directly on GitHub:
 
-<video controls preload="metadata" width="640" src="https://raw.githubusercontent.com/ZisIsNotZis/agentic-animation/main/episodes/ai-work-adventure/dist/ai-work-adventure.mp4"></video>
+<video controls preload="metadata" width="640" src="https://media.githubusercontent.com/media/ZisIsNotZis/agentic-animation/main/episodes/ai-work-adventure/dist/ai-work-adventure.mp4"></video>
+[Watch AI Work Adventure](https://media.githubusercontent.com/media/ZisIsNotZis/agentic-animation/main/episodes/ai-work-adventure/dist/ai-work-adventure.mp4)
 
-<video controls preload="metadata" width="640" src="https://raw.githubusercontent.com/ZisIsNotZis/agentic-animation/main/episodes/bailan-system/dist/bailan-system.mp4"></video>
+<video controls preload="metadata" width="640" src="https://media.githubusercontent.com/media/ZisIsNotZis/agentic-animation/main/episodes/bailan-system/dist/bailan-system.mp4"></video>
+[Watch Bailan System](https://media.githubusercontent.com/media/ZisIsNotZis/agentic-animation/main/episodes/bailan-system/dist/bailan-system.mp4)
 
-<video controls preload="metadata" width="640" src="https://raw.githubusercontent.com/ZisIsNotZis/agentic-animation/main/episodes/liu-secret/dist/liu-secret.mp4"></video>
+<video controls preload="metadata" width="640" src="https://media.githubusercontent.com/media/ZisIsNotZis/agentic-animation/main/episodes/liu-secret/dist/liu-secret.mp4"></video>
+[Watch Liu Secret](https://media.githubusercontent.com/media/ZisIsNotZis/agentic-animation/main/episodes/liu-secret/dist/liu-secret.mp4)
 
 ## Evidence, versioning, and contribution
 
