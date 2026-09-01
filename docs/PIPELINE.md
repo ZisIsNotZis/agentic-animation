@@ -85,6 +85,16 @@ streams, subtitle content, representative frame contact sheet, audio loudness,
 and absence of frame exits or continuity jumps. Deliver only after inspecting
 the final artifact, not merely after a successful process exit.
 
+The committed render defaults are 1280x720 and four workers; explicit CLI
+dimensions, frame rate, CRF, and thread overrides remain supported. Generated
+audio, video, manifests, screenshots, and render caches stay ignored; all
+temporary QA output belongs under `/tmp`.
+
+`anim make episode.yml --voice-speed <n>` and `anim render-yaml episode.yml
+--voice-speed <n>` override the configured `tts.speed` for this canonical run.
+The value must be greater than zero. Inline `voice.speed(...)` calls take
+precedence for their subsequent dialogue chunks.
+
 ## Operating rule
 
 Docs define intent, assets encode reusable craft, YAML directs performance, IR

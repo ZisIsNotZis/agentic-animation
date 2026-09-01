@@ -55,6 +55,13 @@ test("speech alternates open and closed at a deterministic fixed cadence", () =>
   assert.equal(samples[1].speechOpen, deriveActorPose(actor([{kind: "speech", value: {text: "hello"}, progress: 0.2, frame: 0, endFrame: 25}])).speechOpen);
 });
 
+test("speech speed changes the renderer-consumed mouth cadence", () => {
+  const sample = (speed: number, frame: number) => deriveActorPose(actor([{kind: "speech", value: {text: "hello", speed}, frame, endFrame: frame + 20, progress: 0.5}]));
+  const slow = [0, 1, 2, 3, 4, 5].map((frame) => sample(1, frame).speechOpen);
+  const fast = [0, 1, 2, 3, 4, 5].map((frame) => sample(2, frame).speechOpen);
+  assert.notDeepEqual(slow, fast);
+});
+
 test("face families cover distinct eyes, pupils/gaze, brows, and mouth semantics", () => {
   const names = ["shock", "fear", "desperate", "confused", "skeptical", "embarrassed", "relief", "excited", "proud", "somber", "calm"];
   assert.deepEqual(names.map(faceFamily), names);

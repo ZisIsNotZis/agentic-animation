@@ -2,6 +2,9 @@
 
 Last reconciled: 2026-08-31. Status: **active development**.
 
+The AI 打工奇遇记 production pass is in implementation; final render and
+multimodal QA remain pending until the current source changes are verified.
+
 ## Verified now
 
 - Canonical narrow YAML DSL and strict registry/compiler path are implemented;

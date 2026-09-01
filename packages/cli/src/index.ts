@@ -33,6 +33,7 @@ export function buildProgram(): Command {
     .command("make <episode.yml>")
     .description("prepare audio-authoritative takes and compile performance.json")
     .option("--provider <id>", "override the TTS adapter id")
+    .option("--voice-speed <n>", "override the TTS voice speed", (v) => Number.parseFloat(v))
     .option("--synthesize-unmatched", "synthesize exact-text misses with the selected TTS adapter")
     .action((episodePath: string, opts, command) =>
       stage("make", async (ctx) => { await makeYamlEpisode(ctx, episodePath, opts); })(episodePath, opts, command),
@@ -53,6 +54,7 @@ export function buildProgram(): Command {
     .option("--scale <n>", "output scale, e.g. 0.6666666666666666 for 720p", (v) => Number.parseFloat(v))
     .option("--fps <n>", "frames per second override", (v) => Number.parseInt(v, 10))
     .option("--crf <n>", "x264 crf override", (v) => Number.parseInt(v, 10))
+    .option("--voice-speed <n>", "override the TTS voice speed", (v) => Number.parseFloat(v))
     .option("--force", "forward the force override to the manifest renderer")
     .action((episodePath: string, opts, command) =>
       stage("render-yaml", (ctx) =>

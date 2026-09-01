@@ -64,12 +64,12 @@
             "width": {
               "type": "integer",
               "exclusiveMinimum": 0,
-              "default": 1920
+              "default": 1280
             },
             "height": {
               "type": "integer",
               "exclusiveMinimum": 0,
-              "default": 1080
+              "default": 720
             },
             "fps": {
               "type": "number",
@@ -118,6 +118,11 @@
                 "zh"
               ],
               "default": "en"
+            },
+            "speed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "default": 1.2
             }
           },
           "additionalProperties": false,

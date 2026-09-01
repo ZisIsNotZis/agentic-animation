@@ -463,14 +463,14 @@ export const DEFAULT_ELLIPSIS_BEAT_SEC = 0.55;
  * Split direct dialogue at brace groups. The parser has already rejected bad
  * groups, so this seam only deals with timing/audio concerns.
  */
-export function segmentYamlAudio(source: YamlAudioSource): YamlAudioSpeechChunk[] {
+export function segmentYamlAudio(source: YamlAudioSource, voiceSpeed?: number): YamlAudioSpeechChunk[] {
   const chunks: YamlAudioSpeechChunk[] = [];
   for (const scene of source.scenes) {
     for (const [statementIndex, statement] of scene.script.entries()) {
       const lineId = stableTakeId(scene.id, statementIndex);
       let cursor = 0;
       let chunkIndex = 0;
-      let speed = 1;
+      let speed = voiceSpeed ?? 1;
       let interruptionIndex = 0;
       let pendingEvents: Array<{call: ProcedureCall; sourceStart: number; at: "start" | "end"}> = [];
       let previousChunk: YamlAudioSpeechChunk | undefined;

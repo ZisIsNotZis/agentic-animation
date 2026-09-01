@@ -4,3 +4,6 @@
 [submodule "vendor/svg-creator-skill"]
 	path = vendor/svg-creator-skill
 	url = https://github.com/upbrew-tech/svg-creator-skill
+[submodule "vendor/anthropic"]
+	path = vendor/anthropic
+	url = https://github.com/anthropics/skills

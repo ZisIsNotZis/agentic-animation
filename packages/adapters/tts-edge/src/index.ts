@@ -185,7 +185,9 @@ export const adapter: TtsAdapter & {
   async synthesizeWithBoundaries(req) {
     const subtitlePath = `${req.outPath}.srt`;
     const result = await synthesizeEdge(req, subtitlePath);
-    return { ...result, boundaries: mapSubtitleBoundaries(req.text, parseSubtitleBoundaries(readFileSync(subtitlePath, "utf8"))) };
+    const boundaries = mapSubtitleBoundaries(req.text, parseSubtitleBoundaries(readFileSync(subtitlePath, "utf8")))
+      .map((boundary) => ({...boundary, startSec: Math.min(boundary.startSec, result.durationSec), endSec: Math.min(boundary.endSec, result.durationSec)}));
+    return { ...result, boundaries };
   },
   cacheIdentityForVoice(voiceAsset) {
     return edgeVoiceCacheIdentity(voiceAsset);

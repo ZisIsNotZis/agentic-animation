@@ -65,13 +65,13 @@ scenes:
       - awei: 各位……你们有没有过这种感觉？就是……你以为你请了个高级助理，结果请回来一个……{awei.act.slam(desk)}人工智障！{awei.face.desperate(), camera.use.punch_in(awei), vfx.use.screen_error(screen), sfx.play.error_burst()}
       - aqiang: "{aqiang.act.enter()}"
       - aqiang: "{aqiang.act.pickup(thermos)}"
-      - aqiang: 哟，又崩了？
+      - aqiang: "{aqiang.look.at(awei)}哟，又崩了？"
       - awei: "{awei.face.relief()}{awei.look.at(aqiang)}强哥！你可来了！我这项目……{awei.act.point(screen)}它……它又失忆了！我昨天刚跟它说的架构，今天它给我全忘了！还把我数据库表名改了！我现在数据库里有三张表叫 `user`、`users`、`user_info_new_v2_final`！"
-      - aqiang: "{aqiang.act.sip(thermos)}正常。"
+      - aqiang: "{aqiang.act.sip(thermos), aqiang.face.calm(), aqiang.look.at(awei)}正常。"
       - awei: 正常？！这叫正常？！我跟它说"重构一下"，它把我整个项目删了三分之一！我问它为什么，它说"根据最优架构判断，这些代码是冗余的"！冗余？！那是我写了三个月的核心业务逻辑啊！
       - aqiang: "{aqiang.act.putdown(thermos, desk)}"
       - aqiang: "{aqiang.face.thoughtful()}阿伟，你知道为什么 90% 的人用 AI 写代码，越用越崩吗？"
-      - awei: 因为……AI 蠢？
+      - awei: "{awei.face.confused()}因为……AI 蠢？"
       - aqiang: "{aqiang.face.calm()}不。是因为你把 AI 当神仙，其实它是个……高级打工人。你不给它定规矩，它就给你摸鱼；你不给它划边界，它就给你越界；你让它自由发挥，它就给你……自由落体。"
       - awei: 那……那怎么办？
       - aqiang: "{aqiang.act.pickup(scroll)}"
@@ -110,7 +110,7 @@ scenes:
       - awei: 那模型硬上限呢？
       - aqiang: "{aqiang.face.somber()}有些复杂逻辑、隐性工程经验，再强的 AI 也无法自主顿悟。就像你让一个从没谈过恋爱的人写情感咨询——理论一套一套的，实操全是灾难。"
       - awei: 那……那我岂不是没救了？
-      - aqiang: 有救。真正的 Agent 高手，从来不是会写 prompt，而是——{aqiang.act.think()}会立规则、会控流程、会堵漏洞、会懂取舍。
+      - aqiang: "{aqiang.act.think(), aqiang.look.audience()}有救。真正的 Agent 高手，从来不是会写 prompt，而是——会立规则、会控流程、会堵漏洞、会懂取舍。"
       - awei: 听起来像……居委会大妈？
       - aqiang: "{aqiang.act.pat(awei)}你懂什么！这叫工程管理！来，进入下一章。"
   - id: teach_ai
@@ -135,7 +135,7 @@ scenes:
       - aqiang: "{aqiang.act.handover(skill_bottle, awei)}"
       - awei: 这……怎么用？喝下去？
       - awei: "{awei.act.handover(skill_bottle, aqiang)}"
-      - aqiang: 这是比喻！你要把你的偏好写进规则里。比如——你喜欢用 TypeScript 还是 JavaScript？你偏好函数式还是面向对象？你对命名的要求是什么？这些都得明明白白告诉它。
+      - aqiang: "{aqiang.look.at(awei)}这是比喻！你要把你的偏好写进规则里。比如——你喜欢用 TypeScript 还是 JavaScript？你偏好函数式还是面向对象？你对命名的要求是什么？这些都得明明白白告诉它。"
       - awei: 我……我都随便。
       - aqiang: '"随便"就是 AI 翻车的第一元凶！模糊的默认认知，等于告诉它"你看着办"，它看着办的结果就是——（模仿 AI 语气）"我觉得这个变量名可以叫 `data`，那个也可以叫 `data`，还有那个……也叫 `data` 吧。"'
       - awei: "{awei.act.shiver()}"
@@ -170,12 +170,12 @@ scenes:
     script:
       - awei: "{awei.act.tap_head()}"
       - awei: 强哥！说到健忘，我那个 AI 是真的记不住事！我上午跟它说的约定，下午它就不认了！我现在每次开会都得重新跟它讲一遍项目背景，比跟新员工入职还累！
-      - aqiang: AI 健忘从来不是记忆力差，是你没给它搭建永久记忆，全靠临时上下文兜底。上下文会刷新、会压缩、会丢失——只有文档和规则，才是永恒的。
+      - aqiang: "{aqiang.act.tap_head(), aqiang.look.at(awei)}AI 健忘从来不是记忆力差，是你没给它搭建永久记忆，全靠临时上下文兜底。上下文会刷新、会压缩、会丢失——只有文档和规则，才是永恒的。"
       - awei: 那我该建什么文档？
       - aqiang: "{aqiang.act.pickup(scroll)}"
       - aqiang: "{aqiang.act.present(scroll)}双层 AGENTS.md 规则体系，强制规范。"
       - aqiang: "{aqiang.act.putdown(scroll, desk)}"
-      - awei: 双层？汉堡吗？
+      - awei: "{awei.face.confused(), awei.act.point(scroll)}双层？汉堡吗？"
       - aqiang: 不理你的梗。全局 AGENTS.md——存放通用编码规范、全局审美、通用工具使用规则，适配所有项目。项目本地 AGENTS.md——存放当前项目专属架构、文件约定、业务约束、权限规则。
       - awei: 那要是两个规则冲突了听谁的？
       - aqiang: 最高优先级铁律——本地规则大于全局规则！就像……国家法律和村规民约，村规不能违反国法，但具体到你们村怎么分地，听村里的。
@@ -223,8 +223,8 @@ scenes:
       - awei: "{awei.act.count_money()}"
       - awei: 说到钱……强哥，我上个月的 API 账单……三千八！我工资才多少啊！我都不知道我干了啥！
       - aqiang: 大部分人 Token 超标，不是写代码太多，是无效重试、重复加载、频繁改配置、反复返工造成的隐形消耗。你是不是经常中途换模型、换工具、换 Skill？
-      - awei: 我……我就试了十几个模型而已……
-      - aqiang: 每次配置变更都会直接清空缓存、触发全量重计算，Token 消耗直接翻倍！你这不是试模型，你这是在给 API 公司送 KPI。
+      - awei: "{awei.face.embarrassed(), awei.act.count_money()}我……我就试了十几个模型而已……"
+      - aqiang: "{aqiang.act.count_three(), camera.use.wide()}每次配置变更都会直接清空缓存、触发全量重计算，Token 消耗直接翻倍！你这不是试模型，你这是在给 API 公司送 KPI。"
       - awei: 那我该怎么省钱？
       - aqiang: "{aqiang.act.pickup(thermos)}"
       - aqiang: "{aqiang.act.slam(desk)}第一招——高低配模型分层，极致性价比。高智商旗舰模型，只做顶层规划、方案评审、复杂决策。中低端廉价模型，全权负责编码、测试、修改、格式化等重复实操工作。"
@@ -287,7 +287,7 @@ scenes:
       - awei: 下……下辈子？！
       - aqiang: AI 把 delivery_time 字段的默认值改成了 `never`。
       - awei: 那……那我该怎么改代码？
-      - aqiang: 只允许增量修改，大规模重构必须交给独立子 Agent，全程人工 Diff 校验。记住——先规划后执行，拒绝即兴开发。
+      - aqiang: "{aqiang.act.point(mirror), aqiang.face.somber()}只允许增量修改，大规模重构必须交给独立子 Agent，全程人工 Diff 校验。记住——先规划后执行，拒绝即兴开发。"
       - awei: 啥叫先规划后执行？
       - aqiang: 信息一次性完整披露，实现渐进落地；文档全量前置且持续最新，实现代码增量迭代。能一次性讲清的需求、边界、架构约束、取舍逻辑，绝不分批追加。
       - awei: 我就喜欢想到啥说啥……
@@ -296,7 +296,7 @@ scenes:
       - aqiang: 还有，禁止提前抽象。没有足够业务迭代经验，所有提前抽象都是自作聪明。只会浪费 Token、增加代码复杂度、拖慢开发进度。
       - awei: 可我听说优秀的程序员都善于抽象啊？
       - aqiang: 优秀的程序员抽象的是已经验证过的模式，你那是……还没学会走路就想跑马拉松，结果摔了个狗吃屎还觉得自己姿势优雅。
-      - awei: 那……正确的开发模式是啥？
+      - awei: "{awei.look.at(aqiang)}那……正确的开发模式是啥？"
       - aqiang: 垂直切片开发，唯一靠谱的 Agent 迭代模式。标准流程——设计文档 → 原型草稿 → 最小可用 v1 → 迭代优化。先跑通完整业务链路，再优化细节，拒绝碎片化开发。
       - awei: 就像……先把房子骨架搭起来，再装修？
       - aqiang: 对。你不能先把客厅装修完了再想卧室放哪。
@@ -396,7 +396,7 @@ scenes:
       - aqiang: 权限安全大坑。严格管控子 Agent 权限——禁止随意执行 Shell、修改核心配置、变更 CI/环境变量、引入陌生三方依赖。架构扩容、新增依赖、目录结构调整必须人类审批。
       - awei: 我给了它全部权限……省事嘛……
       - aqiang: 你这不是省事，你这是把家门钥匙给了一个陌生人，还告诉他"家里没人，随便拿"。
-      - awei: 那……Auto Mode 呢？
+      - awei: "{awei.act.raise_hand(), awei.face.fearful()}那……Auto Mode 呢？"
       - aqiang: 官方模型优先使用 Auto Mode，依靠官方安全分类器自动区分高低风险操作，兼顾效率与安全。但 Auto Mode 仅适配官方高阶模型，非官方引擎易风控失效；存在漏报概率，不可完全替代人工兜底。
       - awei: 第三个坑？
       - aqiang: 人的认知负荷陷阱。Agentic Coding 不是全自动躺平！你依然需要审核规划、校验文档、排查 Bug、纠正 Agent 错误。极小修改直接手写，复杂项目再上 Agent 工作流，别杀鸡用牛刀。
@@ -447,7 +447,7 @@ scenes:
       - aqiang: "{aqiang.act.present(ask_matt_sign)}不懂就问这个。它已经完整蒸馏了整套工程思维、取舍标准、流程范式、工具适配经验。你只需描述当前项目阶段、遇到的卡点、想要达成的目标，它会自动路由出当下最优技能组合、正确执行顺序、对应规范流程。"
       - aqiang: "{aqiang.act.handover(ask_matt_sign, awei)}"
       - awei: 这么神奇？
-      - aqiang: 新手入门、老手避坑、防止流程跑偏的最强导航工具。
+      - aqiang: "{aqiang.look.audience(), camera.use.punch_in(aqiang)}新手入门、老手避坑、防止流程跑偏的最强导航工具。"
       - awei: "{awei.act.putdown(ask_matt_sign, desk)}"
   - id: ending
     location: office
@@ -472,7 +472,7 @@ scenes:
       - awei: 那……我该从哪开始？
       - aqiang: "{aqiang.act.pickup(thermos)}"
       - aqiang: "{aqiang.act.handover(thermos, awei)}"
-      - aqiang: 从今天开始，先做三件事。第一，给你的项目建一个 AGENTS.md，把你的规则写进去。第二，下次改代码之前，先更新文档。第三，别再装五十个 Skill 了，按需极简。
+      - aqiang: "{aqiang.act.count_three(), aqiang.act.present(thermos)}从今天开始，先做三件事。第一，给你的项目建一个 AGENTS.md，把你的规则写进去。第二，下次改代码之前，先更新文档。第三，别再装五十个 Skill 了，按需极简。"
       - awei: "{awei.act.nod()}我记住了！"
       - aqiang: "{aqiang.look.audience()}各位，Agentic Coding 的终极意义，不是让 AI 取代人类，而是让人类从机械重复中解放出来，去做真正有创造力、有判断力、有温度的事。"
       - awei: "{awei.act.raise_hand()}强哥！我还有最后一个问题！"

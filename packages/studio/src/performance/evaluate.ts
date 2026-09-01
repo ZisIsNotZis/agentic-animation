@@ -65,6 +65,21 @@ function pointOf(value: unknown): [number, number] | undefined {
     : undefined;
 }
 
+const CANVAS = {width: 1920, height: 1080} as const;
+
+function stagePoint(point: [number, number], staging: {viewport?: {width?: number; height?: number}}, video: {width: number; height: number}): [number, number] {
+  const viewport = staging.viewport;
+  return viewport && viewport.width !== undefined && viewport.width <= 1
+    ? [point[0] * CANVAS.width, point[1] * CANVAS.height]
+    : point;
+}
+
+function stageScale(scale: number, _staging: {viewport?: {width?: number}}, _video: {width: number}): number {
+  // Actor scales are relative to the renderer's canonical 1920-wide artwork,
+  // not the logical canvas; only positions/camera offsets need projection.
+  return scale;
+}
+
 function frameOf(key: { frame?: number; t?: number; at?: number | [number, number]; startFrame?: number }): number {
   return key.frame ?? key.startFrame ?? key.t ?? (typeof key.at === "number" ? key.at : 0);
 }
@@ -106,6 +121,66 @@ function cameraTargetPoint(target: unknown, actors: readonly EvaluatedActor[], f
   return actor ? [actor.x, actor.y - 360 * actor.scale] : fallback;
 }
 
+function repelActors(actors: readonly EvaluatedActor[]): EvaluatedActor[] {
+  const result = actors.map((actor) => ({...actor}));
+  const ordered = [...result].sort((a, b) => a.y - b.y || a.x - b.x || a.id.localeCompare(b.id));
+  for (let i = 1; i < ordered.length; i += 1) {
+    const left = ordered[i - 1]!;
+    const right = ordered[i]!;
+    if (Math.abs(left.y - right.y) > 80) continue;
+    const required = 200 * left.scale + 200 * right.scale;
+    if (left.id === right.id) continue;
+    if (right.x - left.x >= required || (left.x === right.x && left.id !== right.id)) {
+      if (left.x === right.x && left.id !== right.id) {
+        left.x -= required / 2;
+        right.x += required / 2;
+      }
+      continue;
+    }
+    const center = (left.x + right.x) / 2;
+    left.x = center - required / 2;
+    right.x = center + required / 2;
+  }
+  return result;
+}
+
+function fitCameraToActors(
+  target: [number, number],
+  actors: readonly EvaluatedActor[],
+  requestedZoom: number,
+  video: {width: number; height: number},
+): {center: [number, number]; zoom: number} {
+  const visible = actors.filter((actor) => actor.present);
+  if (!visible.length) return {center: target, zoom: requestedZoom};
+  const margin = 36;
+  const left = Math.min(...visible.map((actor) => actor.x - 200 * actor.scale)) - margin;
+  const right = Math.max(...visible.map((actor) => actor.x + 200 * actor.scale)) + margin;
+  const top = Math.min(...visible.map((actor) => actor.y - 720 * actor.scale)) - margin;
+  const bottom = Math.max(...visible.map((actor) => actor.y)) + margin;
+  const zoom = Math.min(requestedZoom, video.width / (right - left), video.height / (bottom - top));
+  const desiredX = video.width * 0.62 / zoom;
+  const desiredY = video.height * 0.42 / zoom;
+  const viewportWidth = video.width / zoom;
+  const viewportHeight = video.height / zoom;
+  const x = Math.max(right - viewportWidth, Math.min(left, target[0] - desiredX));
+  const y = Math.max(bottom - viewportHeight, Math.min(top, target[1] - desiredY));
+  return {center: [x + viewportWidth / 2, y + viewportHeight / 2], zoom};
+}
+
+function fitPushCamera(
+  target: [number, number],
+  actors: readonly EvaluatedActor[],
+  requestedZoom: number,
+  video: {width: number; height: number},
+): {center: [number, number]; zoom: number} {
+  const relevant = actors.filter((actor) => actor.present);
+  if (relevant.length < 2) return {center: target, zoom: requestedZoom};
+  const left = Math.min(...relevant.map((actor) => actor.x - 200 * actor.scale)) - 36;
+  const right = Math.max(...relevant.map((actor) => actor.x + 200 * actor.scale)) + 36;
+  const zoom = Math.min(requestedZoom, video.width / (right - left));
+  return {center: [(left + right) / 2, target[1]], zoom};
+}
+
 function cameraKeyFromEvent(
   event: PerformanceTrackEvent,
   actors: readonly EvaluatedActor[],
@@ -118,13 +193,22 @@ function cameraKeyFromEvent(
   const zoom = typeof value.zoom === "number" ? value.zoom : typeof value.z === "number" ? value.z : undefined;
   const target = cameraTargetPoint(value.target, actors, [previous.x, previous.y]);
   const nextZoom = zoom === undefined ? previous.z : zoom;
-  const centeredX = target[0] * nextZoom - viewport.width / 2;
-  const centeredY = target[1] * nextZoom - viewport.height / 2;
+  // PerformanceFrame applies `translate(-x, -y) scale(z)`, so x/y are world
+  // offsets, not already-scaled pixel translations.
+  const fitted = operation === "push" || (operation === "hold" && typeof value.target === "string")
+    ? fitPushCamera(target, actors, nextZoom, viewport)
+    : undefined;
+  const centeredX = (fitted?.center[0] ?? target[0]) - viewport.width / (2 * (fitted?.zoom ?? nextZoom));
+  const centeredY = (fitted?.center[1] ?? target[1]) - viewport.height / (2 * (fitted?.zoom ?? nextZoom));
   const compositionX = viewport.width * nextZoom / 2 - viewport.width / 2;
   const compositionY = viewport.height * nextZoom / 2 - viewport.height / 2;
-  const x = typeof value.x === "number" ? value.x : operation === "push" ? centeredX : operation === "pull" ? composition.x : previous.x;
-  const y = typeof value.y === "number" ? value.y : operation === "push" ? centeredY : operation === "pull" ? composition.y : previous.y;
-  return {frame: trackEventStart(event), x, y, z: nextZoom, rotation: numberOr(value.rotation as number | undefined, previous.rotation), ease: event.ease ?? value.ease as PerformanceCameraKey["ease"]};
+  // Semantic camera recipes carry placeholder x/y=0. A push must center its
+  // target before zooming; treating those placeholders as literal coordinates
+  // scales the world around its top-left corner and can crop the other actor.
+  const targetPush = operation === "push" || (operation === "hold" && typeof value.target === "string");
+  const x = targetPush ? centeredX : typeof value.x === "number" ? value.x : operation === "pull" ? composition.x : previous.x;
+  const y = targetPush ? centeredY : typeof value.y === "number" ? value.y : operation === "pull" ? composition.y : previous.y;
+  return {frame: trackEventStart(event), x, y, z: fitted?.zoom ?? nextZoom, rotation: numberOr(value.rotation as number | undefined, previous.rotation), ease: event.ease ?? value.ease as PerformanceCameraKey["ease"]};
 }
 
 function cameraKeysFromTracks(
@@ -681,7 +765,7 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
   const normalized = normalizePerformanceManifest({ ...manifest, timebase: manifest.timebase ?? "seconds" });
   const safeFrame = Number.isFinite(frame) ? Math.max(0, Math.floor(frame)) : 0;
   const tracks = (normalized.tracks ?? []).flatMap((track) => evaluateTracks([track], safeFrame));
-  const actors = (normalized.actors ?? []).map((actor) => actorState(actor, normalized, safeFrame, tracksForSubject(tracks, actor.id)));
+  const actors = repelActors((normalized.actors ?? []).map((actor) => actorState(actor, normalized, safeFrame, tracksForSubject(tracks, actor.id))));
   const actorById = new Map(actors.map((actor) => [actor.id, actor]));
   const props = (normalized.props ?? normalized.objects ?? []).map((prop) => {
     const projected = {...prop, tracks: [...(prop.tracks ?? []), ...tracksForSubject(tracks, prop.id)]};
@@ -775,19 +859,20 @@ function assetVisual(asset: UnknownRecord | undefined) {
 
 function compiledPlacements(compiled: PerformanceManifest, assets: UnknownRecord): Record<string, PerformancePlacementValue> {
   const placements: Record<string, PerformancePlacementValue> = {};
+  const video = compiled.video ?? {width: 1920, height: 1080};
   for (const scene of compiled.sceneTrack ?? []) {
     const layout = resolvedAsset(assets, "layouts", scene.layout);
     const marks = asRecord(layout?.marks);
     for (const [name, value] of Object.entries(marks ?? {})) {
       const point = pointOf(value);
-      if (point) placements[name] = point;
+      if (point) placements[name] = stagePoint(point, scene.staging, video);
       else if (asRecord(value)) placements[name] = value as PerformancePlacement;
     }
     for (const [id, actor] of Object.entries(scene.staging?.actors ?? {})) {
-      placements[id] = {at: [actor.at[0], actor.at[1]], scale: actor.scale, flip: actor.flip};
+      placements[id] = {at: stagePoint([actor.at[0], actor.at[1]], scene.staging, video), scale: stageScale(actor.scale, scene.staging, video), flip: actor.flip};
     }
     for (const [id, object] of Object.entries(scene.staging?.objects ?? {})) {
-      placements[id] = {at: [object.at[0], object.at[1]], scale: object.scale};
+      placements[id] = {at: stagePoint([object.at[0], object.at[1]], scene.staging, video), scale: object.scale};
     }
   }
   return placements;
@@ -808,7 +893,10 @@ function compiledStateTracks(compiled: PerformanceManifest, actorId: string, fps
     if (!state) continue;
     const frame = Math.round(scene.start * fps);
     const staged = scene.staging?.actors?.[actorId];
-    if (staged) placements.push({frame, placement: {at: [staged.at[0], staged.at[1]], scale: staged.scale, flip: staged.flip}});
+    if (staged) {
+      const video = compiled.video ?? {width: 1920, height: 1080};
+      placements.push({frame, placement: {at: stagePoint([staged.at[0], staged.at[1]], scene.staging, video), scale: stageScale(staged.scale, scene.staging, video), flip: staged.flip}});
+    }
     else if (state.placement !== undefined) placements.push({frame, placement: state.placement as PerformancePlacement | SemanticPlacement | string});
     presents.push({frame, present: state.present});
     poses.push({frame, value: state.pose});
@@ -825,6 +913,10 @@ function projectCompiledActors(compiled: PerformanceManifest, assets: UnknownRec
     const expressions = [...stateTracks.expressions];
     const tracks: PerformanceGenericTrack[] = [];
     for (const event of compiled.performanceTracks?.find((track) => track.subject === id)?.events ?? []) {
+      if (event.kind === "speech") {
+        tracks.push({kind: "speech", events: [{frame: Math.round(event.start * fps), endFrame: Math.round(event.end * fps), text: event.text, speed: event.speed, ...(event.boundaries ? {boundaries: event.boundaries} : {})}]});
+        continue;
+      }
       if (event.kind !== "call") continue;
       const start = Math.round(event.start * fps);
       const performance = asRecord(event.performance);
@@ -887,6 +979,7 @@ function projectCompiledPerformance(compiled: PerformanceManifest, fps: number):
       const endFrame = Math.round(event.end * fps);
       if (event.kind === "speech") {
         subtitles.push({id: `speech-${speechId++}`, startFrame, endFrame, text: event.text});
+        genericTracks.push({kind: "speech", subject: track.subject, events: [{frame: startFrame, endFrame, text: event.text, speed: event.speed, ...(event.boundaries ? {boundaries: event.boundaries} : {})}]});
         continue;
       }
       const performance = asRecord(event.performance);
@@ -924,7 +1017,15 @@ function projectCompiledPerformance(compiled: PerformanceManifest, fps: number):
   for (const scene of compiled.sceneTrack ?? []) {
     const staged = scene.staging?.camera;
     if (!staged) continue;
-    camera.push({frame: Math.round(scene.start * fps), x: staged.center[0] - (compiled.video?.width ?? 1920) / 2, y: staged.center[1] - (compiled.video?.height ?? 1080) / 2, z: staged.zoom});
+    const center = stagePoint([staged.center[0], staged.center[1]], scene.staging, compiled.video ?? CANVAS);
+    const video = compiled.video ?? CANVAS;
+    const fit = Math.min(video.width / CANVAS.width, video.height / CANVAS.height);
+    const focused = staged.framing === "focus";
+    const cameraCenter: [number, number] = focused ? center : [CANVAS.width / 2, CANVAS.height / 2];
+    const focus = focused ? fitCameraToActors(center, actors as unknown as EvaluatedActor[], Math.max(fit, staged.zoom), video) : undefined;
+    const zoom = focus?.zoom ?? fit * staged.zoom;
+    const finalCenter = focus?.center ?? cameraCenter;
+    camera.push({frame: Math.round(scene.start * fps), x: finalCenter[0] - video.width / (2 * zoom), y: finalCenter[1] - video.height / (2 * zoom), z: zoom});
   }
   return {
     timebase: "frames",

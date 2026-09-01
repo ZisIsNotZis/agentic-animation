@@ -163,6 +163,27 @@ scenes:
   assert.deepEqual(seen, ["boundary.0.0", "boundary.0.1"]);
 });
 
+test("global speech speed reaches timing and renderer metadata while inline speed wins", async () => {
+  const path = episodeFile(`${header}
+scenes:
+  - id: speed
+    location: room
+    actors: {alice: {facing: audience}}
+    objects: {cup: center}
+    script:
+      - alice: "first{alice.voice.speed(2)}second"
+`);
+  const speeds: number[] = [];
+  const compiled = await compileEpisode(path, {registry, resolver, voiceSpeed: 1.25, speechTiming: (request) => {
+    speeds.push(request.speed);
+    return {durationSec: 1, boundaries: [{kind: "character", text: request.text[0], startSec: 0, endSec: 0.5}]};
+  }});
+  const speeches = compiled.performanceTracks[0]!.events.filter((event) => event.kind === "speech");
+  assert.deepEqual(speeds, [1.25, 2]);
+  assert.deepEqual(speeches.map((event) => event.speed), [1.25, 2]);
+  assert.equal(speeches[0]!.boundaries?.[0]?.text, "f");
+});
+
 test("passes typed calls and normalized kwargs to registry validation", async () => {
   const calls: Array<{id: string; subject: string}> = [];
   const path = episodeFile(`${header}

@@ -31,6 +31,7 @@ export const YAML_AUDIO_ARTIFACT_NAME = "yaml-audio.json";
 export interface YamlMakeOptions {
   provider?: string;
   synthesizeUnmatched?: boolean;
+  voiceSpeed?: number;
 }
 
 export interface YamlRenderOptions {
@@ -40,6 +41,7 @@ export interface YamlRenderOptions {
   fps?: number;
   crf?: number;
   force?: boolean;
+  voiceSpeed?: number;
 }
 
 export interface YamlRenderRequest {
@@ -60,6 +62,8 @@ export interface YamlPipelineDependencies {
     ctx: StageContext,
     episodePath: string,
     provider?: string,
+    _synthesizeUnmatched?: boolean,
+    _voiceSpeed?: number,
   ) => Promise<YamlAudioPreparationArtifact>;
   speechTimingProvider?: SpeechTimingProvider;
   renderManifest?: (ctx: StageContext, request: YamlRenderRequest) => Promise<RenderReport>;
@@ -134,9 +138,10 @@ export async function makeYamlEpisode(
   opts: YamlMakeOptions = {},
   deps: YamlPipelineDependencies = {},
 ): Promise<YamlMakeResult> {
+  validateVoiceSpeed(opts.voiceSpeed, "make");
   const resolved = await resolveYamlEpisode(ctx, input);
   const registry = await (deps.loadAssetRegistry ?? coreLoadAssetRegistry)(libraryDir(ctx));
-  let preparation = await (deps.prepareAudio ?? prepareYamlAudio)(ctx, resolved.path, opts.provider, opts.synthesizeUnmatched);
+  let preparation = await (deps.prepareAudio ?? prepareYamlAudio)(ctx, resolved.path, opts.provider, opts.synthesizeUnmatched, opts.voiceSpeed);
   if (preparation.unmatchedCount) {
     throw new Error(
       `make: ${preparation.unmatchedCount} YAML speech take(s) have no exact source audio; ` +
@@ -150,6 +155,7 @@ export async function makeYamlEpisode(
     registry,
     resolver: procedureResolver,
     speechTiming: timing,
+    voiceSpeed: opts.voiceSpeed ?? ctx.config.tts.speed,
   });
   const starts = speechStarts(preparation, compiled);
   preparation = synchronizeYamlAudioStarts(preparation, starts);
@@ -199,7 +205,8 @@ export async function renderYamlEpisode(
   opts: YamlRenderOptions = {},
   deps: YamlPipelineDependencies = {},
 ): Promise<YamlRenderResult> {
-  const made = await makeYamlEpisode(ctx, input, {}, deps);
+  validateVoiceSpeed(opts.voiceSpeed, "render-yaml");
+  const made = await makeYamlEpisode(ctx, input, {voiceSpeed: opts.voiceSpeed}, deps);
   const outPath = join(dirname(made.manifestPath), "dist", `${basename(dirname(made.manifestPath))}.mp4`);
   const report = await renderYamlManifest(ctx, made, opts, deps, outPath, false);
   if (!report) throw manifestRendererMissing();
@@ -212,6 +219,7 @@ async function prepareYamlAudio(
   episodePath: string,
   provider?: string,
   synthesizeUnmatched?: boolean,
+  voiceSpeed?: number,
 ): Promise<YamlAudioPreparationArtifact> {
   const resolved = await resolveYamlEpisode(ctx, episodePath);
   const audioContext: StageContext = {
@@ -229,6 +237,7 @@ async function prepareYamlAudio(
     episode: resolved.slug,
     ...(provider ? {provider} : {}),
     ...(synthesizeUnmatched ? {synthesizeUnmatched: true} : {}),
+    ...(voiceSpeed !== undefined ? {voiceSpeed} : {}),
   });
   return readJson(join(resolved.dir, "audio", YAML_AUDIO_ARTIFACT_NAME), YamlAudioPreparationSchema);
 }
@@ -276,6 +285,12 @@ function validateRenderOptions(opts: YamlRenderOptions): void {
   }
   if (opts.crf !== undefined && (!Number.isInteger(opts.crf) || opts.crf < 0 || opts.crf > 51)) {
     throw new Error("render-yaml: --crf must be an integer from 0 to 51");
+  }
+}
+
+function validateVoiceSpeed(speed: number | undefined, command: "make" | "render-yaml"): void {
+  if (speed !== undefined && (!Number.isFinite(speed) || speed <= 0)) {
+    throw new Error(`${command}: --voice-speed must be greater than zero`);
   }
 }
 
