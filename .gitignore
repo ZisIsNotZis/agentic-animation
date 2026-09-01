@@ -75,17 +75,3 @@ episodes/*/build/*.json
 # OS / editor cruft
 .DS_Store
 *.log
-
-# generated/binary character art — never committed, always regenerable.
-# _placeholder and _testrig are deterministic build output of
-# packages/studio/src/generate-{placeholder,testrig}.ts (`npm run gen:fixtures`).
-# Real character work lives in library/characters/<id>/draft/ (pre-approval
-# exploration — expendable by design) and, once approved, <id>/v<N>/. None of
-# it is tracked today. When a character is actually approved, revisit this
-# rule and wire up Git LFS before tracking its parts/*.png.
-library/figure/*
-!library/figure/.gitkeep
-
-# same reasoning for generated backgrounds
-library/backgrounds/*
-!library/backgrounds/.gitkeep

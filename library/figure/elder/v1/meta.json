@@ -1,0 +1,14 @@
+{
+  "model": {
+    "name": "hand-authored-svg-flat",
+    "license": "ours"
+  },
+  "seeds": {},
+  "prompts": {},
+  "date": "2026-08-31",
+  "approver": "tools/asset-qa/materialize",
+  "grounding": [],
+  "notes": [
+    "Deterministic native SVG source rasterized to PNG; reusable articulated figure asset, not a placeholder alias."
+  ]
+}

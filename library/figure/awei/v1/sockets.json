@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "coordinateSpace": "design",
+  "sockets": {
+    "hand_l": [
+      332,
+      1010
+    ],
+    "hand_r": [
+      692,
+      1010
+    ],
+    "propPickup": [
+      692,
+      1010
+    ],
+    "propHold": [
+      746,
+      918
+    ],
+    "point": [
+      750,
+      780
+    ],
+    "sip": [
+      620,
+      505
+    ]
+  },
+  "notes": [
+    "hand_l and hand_r are independent sprites; prop actions can target these sockets without repainting the figure."
+  ]
+}
