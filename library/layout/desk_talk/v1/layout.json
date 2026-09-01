@@ -1,0 +1,72 @@
+{
+  "coordinateSpace": [
+    1920,
+    1080
+  ],
+  "anchors": {
+    "desk": [
+      960,
+      720
+    ],
+    "awei": [
+      720,
+      820
+    ],
+    "aqiang": [
+      1210,
+      820
+    ],
+    "screen": [
+      1550,
+      520
+    ],
+    "aiStandee": [
+      360,
+      410
+    ],
+    "captionSafe": [
+      80,
+      860,
+      1760,
+      160
+    ]
+  },
+  "actors": {
+    "阿伟": {
+      "anchor": "awei",
+      "facing": 1,
+      "handSockets": [
+        "hand_l",
+        "hand_r"
+      ]
+    },
+    "阿强": {
+      "anchor": "aqiang",
+      "facing": -1,
+      "handSockets": [
+        "hand_l",
+        "hand_r"
+      ]
+    }
+  },
+  "objectPlacements": {
+    "办公桌": {
+      "anchor": "desk",
+      "z": 20
+    },
+    "电脑屏幕": {
+      "anchor": [
+        1510,
+        500
+      ],
+      "z": 30
+    },
+    "AI立牌": {
+      "anchor": "aiStandee",
+      "z": 30
+    }
+  },
+  "notes": [
+    "Semantic placement separates authored intent from renderer coordinates; interaction uses figure hand sockets."
+  ]
+}

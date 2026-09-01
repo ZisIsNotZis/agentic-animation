@@ -1,5 +1,5 @@
 /**
- * Generate the built-in placeholder cast: `library/characters/_placeholder/v1`
+ * Generate the built-in placeholder cast: `library/figure/_placeholder/v1`
  * (ARCHITECTURE §9). Simple flat-shape parts for ALL 14 standard parts + 9
  * mouth visemes + 3 eye states + a valid `puppet.json`, so the entire pipeline
  * is testable before any generated art exists.
@@ -185,7 +185,7 @@ async function main(): Promise<void> {
   const outArgIdx = process.argv.indexOf("--out");
   const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
   const libraryDir = outArgIdx >= 0 ? process.argv[outArgIdx + 1]! : join(repoRoot, "library");
-  const root = join(libraryDir, "characters", "_placeholder", "v1");
+  const root = join(libraryDir, "figure", "_placeholder", "v1");
   mkdirSync(join(root, "parts"), { recursive: true });
   mkdirSync(join(root, "mouth"), { recursive: true });
   mkdirSync(join(root, "eyes"), { recursive: true });
@@ -238,9 +238,6 @@ async function main(): Promise<void> {
   writeFileSync(join(root, "puppet.json"), JSON.stringify(puppet, null, 2) + "\n");
 
   const meta = LibraryMetaSchema.parse({
-    id: "_placeholder",
-    version: 1,
-    kind: "character",
     model: { name: "procedural-placeholder", license: "ours" },
     seeds: {},
     prompts: {},

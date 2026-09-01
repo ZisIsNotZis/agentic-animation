@@ -181,6 +181,31 @@ function fitPushCamera(
   return {center: [(left + right) / 2, target[1]], zoom};
 }
 
+/** Keep the evaluated camera from defeating staging during a focused shot. */
+function containCamera(
+  camera: EvaluatedCamera,
+  actors: readonly EvaluatedActor[],
+  video: {width: number; height: number},
+): EvaluatedCamera {
+  const visible = actors.filter((actor) => actor.present);
+  if (!visible.length) return camera;
+  const margin = 24;
+  const left = Math.min(...visible.map((actor) => actor.x - 200 * actor.scale)) - margin;
+  const right = Math.max(...visible.map((actor) => actor.x + 200 * actor.scale)) + margin;
+  const top = Math.min(...visible.map((actor) => actor.y - 720 * actor.scale)) - margin;
+  const bottom = Math.max(...visible.map((actor) => actor.y)) + margin;
+  const zoom = Math.min(camera.z, video.width / Math.max(1, right - left), video.height / Math.max(1, bottom - top));
+  const viewportWidth = video.width / zoom;
+  const viewportHeight = video.height / zoom;
+  const x = right - left <= viewportWidth
+    ? Math.max(left, Math.min(camera.x, right - viewportWidth))
+    : left;
+  const y = bottom - top <= viewportHeight
+    ? Math.max(top, Math.min(camera.y, bottom - viewportHeight))
+    : top;
+  return {x, y, z: zoom, rotation: camera.rotation};
+}
+
 function cameraKeyFromEvent(
   event: PerformanceTrackEvent,
   actors: readonly EvaluatedActor[],
@@ -785,9 +810,12 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
   const explicitCameraKeys = cameraKeys(normalized.camera ?? normalized.cameraTrack);
   const composition = interpolateCamera(explicitCameraKeys, 0);
   const projectedCameraKeys = cameraKeysFromTracks(tracks, actors, composition, normalized.video ?? {width: 1920, height: 1080, fps: 24});
+  const interpolatedCamera = interpolateCamera([...explicitCameraKeys, ...projectedCameraKeys], safeFrame);
   return {
     frame: safeFrame,
-    camera: interpolateCamera([...explicitCameraKeys, ...projectedCameraKeys], safeFrame),
+    camera: manifest.locationScenes
+      ? containCamera(interpolatedCamera, actors, normalized.video ?? {width: 1920, height: 1080})
+      : interpolatedCamera,
     actors,
     props: evaluatedProps,
     subtitles: activeSubtitles(normalized.subtitles ?? normalized.subtitleTrack ?? normalized.captions, safeFrame),

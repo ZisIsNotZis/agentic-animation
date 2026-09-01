@@ -304,6 +304,8 @@ export interface PerformanceManifestData {
   propConstraints?: PerformanceConstraint[];
   bindingConstraints?: PerformanceConstraint[];
   background?: string;
+  /** Preloaded checked-in set artwork, keyed by compiled location instance. */
+  locationScenes?: Record<string, string>;
   assets?: unknown;
   /** Optional renderer-neutral scene/track fields accepted from compiled output. */
   episode?: unknown;

@@ -1,0 +1,20 @@
+{
+  "source": "scene.svg",
+  "preview": "preview.png",
+  "coordinateSpace": "1920x1080",
+  "layers": [
+    "backdrop",
+    "midground",
+    "floor",
+    "interactive-zones"
+  ],
+  "safeActorArea": {
+    "x": 220,
+    "y": 180,
+    "width": 1480,
+    "height": 720
+  },
+  "notes": [
+    "Hand-authored environment with replaceable props."
+  ]
+}

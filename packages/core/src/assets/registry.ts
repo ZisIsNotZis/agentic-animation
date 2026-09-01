@@ -51,7 +51,10 @@ export interface AssetRegistry {
 
 export async function loadAssetRegistry(libraryRoot: string): Promise<AssetRegistry> {
   const manifest = LibraryRegistrySchema.parse(JSON.parse(await readFile(join(libraryRoot, "registry", "manifest.json"), "utf8")));
-  for (const asset of manifest.assets) if (asset.path.startsWith("/") || asset.path.split("/").includes("..")) throw new Error(`asset path must stay inside library root: ${asset.id}`);
+  for (const asset of manifest.assets) {
+    if (asset.path.startsWith("/") || asset.path.split("/").includes("..")) throw new Error(`asset path must stay inside library root: ${asset.path}`);
+    if (asset.id !== asset.path.replaceAll("/", ".")) throw new Error(`asset identity must derive from path: ${asset.path}`);
+  }
   return createAssetRegistry(manifest);
 }
 export const loadRegistry = loadAssetRegistry;

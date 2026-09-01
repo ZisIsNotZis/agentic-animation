@@ -66,7 +66,7 @@ export function buildProgram(): Command {
   const char = program.command("char").description("legacy: character pre-production");
   char
     .command("new <id>")
-    .description("scaffold library/characters/<id>/draft/ (brief + house-style + gen-inputs)")
+    .description("scaffold library/figure/<id>/draft/ (brief + house-style + gen-inputs)")
     .option("--force", "reset an existing draft")
     .action((id: string, opts, command) =>
       stage("char new", (ctx) => charNew(ctx, id, opts))(id, opts, command),

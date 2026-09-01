@@ -13,32 +13,32 @@ const libraryRoot = join(process.cwd(), "library");
 
 const locals: RegistryLocals = {
   actors: {
-    aqiang: {use: "figure.office.aqiang.v1", voice: "voice.zh.aqiang.v1"},
-    awei: {use: "figure.office.awei.v1", voice: "voice.zh.awei.v1"},
+    aqiang: {use: "figure.aqiang.v1", voice: "voice.zh.aqiang.v1"},
+    awei: {use: "figure.awei.v1", voice: "voice.zh.awei.v1"},
   },
   objects: {
-    desk: "prop.office.desk.v1",
-    coffee: "prop.office.thermos.v1",
+    desk: "prop.desk.v1",
+    coffee: "prop.thermos.v1",
   },
   dressing: {
-    screen: "dressing.office.computer-screen.v1",
-    keyboard: "dressing.office.keyboard.v1",
+    screen: "dressing.computer_screen.v1",
+    keyboard: "dressing.keyboard.v1",
   },
 };
 
 test("loads the library registry and resolves immutable asset ids", async () => {
   const registry = await loadAssetRegistry(libraryRoot);
 
-  assert.equal(registry.resolveAsset("figure.office.aqiang.v1").kind, "figure");
+  assert.equal(registry.resolveAsset("figure.aqiang.v1").kind, "figure");
   assert.equal(registry.resolveAsset("voice.zh.aqiang.v1").kind, "voice");
-  assert.equal(registry.resolveAsset("set.office.agent-stage.v1").kind, "set");
-  assert.equal(registry.resolveAsset("prop.office.thermos.v1").kind, "prop");
+  assert.equal(registry.resolveAsset("set.agent_stage.v1").kind, "set");
+  assert.equal(registry.resolveAsset("prop.thermos.v1").kind, "prop");
 
   assert.throws(
-    () => registry.resolveAsset("figure.office.aqiang"),
+    () => registry.resolveAsset("figure.aqiang"),
     /immutable asset id/i,
   );
-  assert.throws(() => registry.resolveAsset("figure.office.missing.v1"), /unknown asset/i);
+  assert.throws(() => registry.resolveAsset("figure.missing.v1"), /unknown asset/i);
 });
 
 test("registers every asset identifier used by the AI work adventure", async () => {
@@ -75,11 +75,13 @@ test("resolves every procedure referenced by the AI work adventure", async () =>
   }
 });
 
-test("requires manifest version fields and rejects mismatched asset versions", async () => {
+test("derives asset identity from canonical paths", async () => {
   const registry = await loadAssetRegistry(libraryRoot);
-  const raw = structuredClone(registry.manifest) as any;
-  raw.assets[0].version = 2;
-  assert.throws(() => createRegistryForTest(raw), /version must match/i);
+  for (const asset of registry.manifest.assets) {
+    assert.equal(asset.id, asset.path.replaceAll("/", "."));
+    assert.equal(asset.kind, asset.path.split("/")[0]);
+    assert.equal(asset.version, Number(asset.path.split("/").at(-1)!.slice(1)));
+  }
 });
 
 test("validates subject and typed actor, object, and dressing locals", async () => {
@@ -90,7 +92,7 @@ test("validates subject and typed actor, object, and dressing locals", async () 
     locals,
   );
   assert.equal(result.procedure.id, "act.pickup");
-  assert.equal(result.args[0]!.assetId, "prop.office.thermos.v1");
+  assert.equal(result.args[0]!.assetId, "prop.thermos.v1");
 
   assert.throws(
     () => registry.validateProcedureCall({ subject: "aqiang", id: "prop.pickup", args: ["screen"] }, locals),
@@ -109,7 +111,3 @@ test("validates subject and typed actor, object, and dressing locals", async () 
     /subject/i,
   );
 });
-
-function createRegistryForTest(value: unknown) {
-  return RegistryAssetManifestSchema.parse((value as any).assets[0]);
-}

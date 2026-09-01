@@ -1,5 +1,5 @@
 /**
- * Generate the `_testrig` character: `library/characters/_testrig/v1`
+ * Generate the `_testrig` character: `library/figure/_testrig/v1`
  * (ARCHITECTURE §8.2, `nativeAttach` model). Unlike the `_placeholder` cast
  * (sharedFrame — every part a full 1024×2048 canvas), _testrig exercises the
  * NATIVE-PART model the way `anim char rig` emits it:
@@ -196,7 +196,7 @@ async function main(): Promise<void> {
   const outArgIdx = process.argv.indexOf("--out");
   const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
   const libraryDir = outArgIdx >= 0 ? process.argv[outArgIdx + 1]! : join(repoRoot, "library");
-  const root = join(libraryDir, "characters", "_testrig", "v1");
+  const root = join(libraryDir, "figure", "_testrig", "v1");
   mkdirSync(join(root, "parts"), { recursive: true });
   mkdirSync(join(root, "mouth"), { recursive: true });
   mkdirSync(join(root, "eyes"), { recursive: true });
@@ -261,9 +261,6 @@ async function main(): Promise<void> {
   writeFileSync(join(root, "puppet.json"), JSON.stringify(puppet, null, 2) + "\n");
 
   const meta = LibraryMetaSchema.parse({
-    id: "_testrig",
-    version: 1,
-    kind: "character",
     model: { name: "procedural-testrig", license: "ours" },
     seeds: {},
     prompts: {},

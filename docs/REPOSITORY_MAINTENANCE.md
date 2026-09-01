@@ -39,8 +39,12 @@ State exactly what was and was not verified.
 ## Content and asset rules
 
 - Use only the canonical YAML DSL; deprecated authoring forms are rejected.
-- Pin reusable assets to immutable IDs such as `figure.office.awei.v1`.
-- Keep model, asset, and license provenance with artifact metadata.
+- Pin reusable assets by canonical library path; runtime derives IDs such as
+  `figure.awei.v1` from `figure/awei/v1`. Do not add identity, kind, or version
+  copies to asset metadata. Scene context belongs in episode locations and set
+  content, not unrelated asset namespaces.
+- Keep model and license provenance with artifact metadata; path identity is
+  maintained only by the directory and registry index.
 - Do not add no-op or silent fallbacks for missing story requirements.
 - Do not commit secrets or generated outputs unless the owning contract requires them.
 - Episodes are demos until a release explicitly says otherwise.

@@ -98,6 +98,17 @@ for document ownership and conflict precedence.
 - [docs/DECISIONS.md](docs/DECISIONS.md) — tool + licensing decisions (binding).
 - [CLAUDE.md](CLAUDE.md) — agent operating guide.
 
+## Episode previews
+
+The three current episode renders are playable directly in Markdown viewers
+that support HTML5 video:
+
+<video controls width="640" src="episodes/ai-work-adventure/dist/ai-work-adventure.mp4"></video>
+
+<video controls width="640" src="episodes/bailan-system/dist/bailan-system.mp4"></video>
+
+<video controls width="640" src="episodes/liu-secret/dist/liu-secret.mp4"></video>
+
 ## Evidence, versioning, and contribution
 
 The latest recorded checks are summarized in [docs/STATUS.md](docs/STATUS.md):

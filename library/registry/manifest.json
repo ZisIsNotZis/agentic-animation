@@ -3,280 +3,391 @@
   "kind": "registry",
   "assets": [
     {
-      "version": 1,
       "capabilities": [
         "asset.figure"
       ],
       "implementationKey": "asset.figure",
       "dependencies": [],
-      "kind": "figure",
-      "id": "figure.office.aqiang.v1",
-      "path": "characters/aqiang/v1",
-      "hash": "sha256:38aa7d70e4a63d0e8f57fc1ee3fae5aa766f806d34cd98b22a2f340a54aa4f48"
+      "path": "figure/aqiang/v1",
+      "hash": "sha256:29a4865cd8a240ac98e95ebc5a9c65e8de8094daaa6bcbd897029907c5701c26"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.figure"
       ],
       "implementationKey": "asset.figure",
       "dependencies": [],
-      "kind": "figure",
-      "id": "figure.office.awei.v1",
-      "path": "characters/awei/v1",
-      "hash": "sha256:1524ad8672911c7ed4150159f2d99981f99b4fbe824cbf2eab5124be8833d2e2"
+      "path": "figure/awei/v1",
+      "hash": "sha256:a92f763d0d39de66b4d9a00fc6d283e0f669014ec833cfbce8973b365453953e"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.voice"
       ],
       "implementationKey": "asset.voice",
       "dependencies": [],
-      "kind": "voice",
-      "id": "voice.zh.aqiang.v1",
-      "path": "voices/aqiang/v1",
-      "hash": "sha256:0458248642b1cca68b247ea0ff76cc2bf495212628143117fb326fce24e6c919"
+      "path": "voice/zh/aqiang/v1",
+      "hash": "sha256:aabeb79551d1f9fc8a72d63df0920d3a68b2af5b6cab44372b6fdc6f888c51c6"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.voice"
       ],
       "implementationKey": "asset.voice",
       "dependencies": [],
-      "kind": "voice",
-      "id": "voice.zh.awei.v1",
-      "path": "voices/awei/v1",
-      "hash": "sha256:70539c580964be95781e8d2af69245930ebca1a1eedb02fb10f99e0ad51e060c"
+      "path": "voice/zh/awei/v1",
+      "hash": "sha256:afce92d9157e2922c87d6fbbff67ce598fb3e95a788cd54f0c76ae103a2d1589"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.set"
       ],
       "implementationKey": "asset.set",
       "dependencies": [],
-      "kind": "set",
-      "id": "set.office.agent-stage.v1",
-      "path": "sets/office/agent-stage/v1",
-      "hash": "sha256:6fa750f84b7b0d84a477a61549ef8c37d83f33058015e2eb8627f6d565c939e4"
+      "path": "set/agent_stage/v1",
+      "hash": "sha256:4f4179b56d7708f7971f547ef916c7b0bbe33d833924e881570eefd8be22a584"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.prop"
       ],
       "implementationKey": "asset.prop",
       "dependencies": [],
-      "kind": "prop",
-      "id": "prop.office.desk.v1",
-      "path": "props/office/desk/v1",
-      "hash": "sha256:d8821c1b791dbb874671e4c801094845abef97659eed85c56da5b5a55b4f827d"
+      "path": "prop/desk/v1",
+      "hash": "sha256:27aafecc222d657674e81fe08e266f53ca0657066ade0f3192116d78597ee13c"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.prop"
       ],
       "implementationKey": "asset.prop",
       "dependencies": [],
-      "kind": "prop",
-      "id": "prop.office.thermos.v1",
-      "path": "props/office/thermos/v1",
-      "hash": "sha256:40e1c3615c336d8f334e092899d14b5ddcb84b73493f991d2e133800acfed1d3"
+      "path": "prop/thermos/v1",
+      "hash": "sha256:6a2d9d690b1b15a70264fc5b2e49241d8f79f81a90c95514d7b482a4c241fab2"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.prop"
       ],
       "implementationKey": "asset.prop",
       "dependencies": [],
-      "kind": "prop",
-      "id": "prop.office.scroll.v1",
-      "path": "props/office/scroll/v1",
-      "hash": "sha256:0abdd61a38e26b4a7ea52cdaba105f1f1c7ccdf347f8e448526f37398bdbc4e7"
+      "path": "prop/scroll/v1",
+      "hash": "sha256:05afeb0155919b68ddf439573d74738b64bd550e4ea8a8d616c74951393a724c"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.prop"
       ],
       "implementationKey": "asset.prop",
       "dependencies": [],
-      "kind": "prop",
-      "id": "prop.office.skill-bottle.v1",
-      "path": "props/office/skill-bottle/v1",
-      "hash": "sha256:3e2edb0f3fcb5f8ad82a1d19132d86454a5403f3dbe283776c3effcb4b979cf1"
+      "path": "prop/skill_bottle/v1",
+      "hash": "sha256:4664299f13d271f2f963043ddc9fadbe494d01df6409175c43f4e3c98ec64818"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.prop"
       ],
       "implementationKey": "asset.prop",
       "dependencies": [],
-      "kind": "prop",
-      "id": "prop.office.skill-cards.v1",
-      "path": "props/office/skill-cards/v1",
-      "hash": "sha256:6682bef41e7d3f00995612ff70c5bc764788d312733c7fe1386a0812cf02a3e8"
+      "path": "prop/skill_cards/v1",
+      "hash": "sha256:dc75b64362d2c7aeeca1ebe0aff36c06452cdd3f6732b1589f0ea0e709ba28f1"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.prop"
       ],
       "implementationKey": "asset.prop",
       "dependencies": [],
-      "kind": "prop",
-      "id": "prop.office.phone.v1",
-      "path": "props/office/phone/v1",
-      "hash": "sha256:f9f9ff3257d852eb7ebe2d6bc643d5bff3b8adad857f21b4050117c203191182"
+      "path": "prop/phone/v1",
+      "hash": "sha256:b653c9bccfcf841a452d7878c3505a2b88182846cd63ce6577f0e4d0bede525a"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.prop"
       ],
       "implementationKey": "asset.prop",
       "dependencies": [],
-      "kind": "prop",
-      "id": "prop.office.notebook.v1",
-      "path": "props/office/notebook/v1",
-      "hash": "sha256:e44592d55237bb762c224f9b2539b202411ad17b9de3d6a7b03b79196f4d4261"
+      "path": "prop/notebook/v1",
+      "hash": "sha256:c7314e4227981ccec5ce06c0a492b1070bf587498cfdf82111cc1d4fa22d04be"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.prop"
       ],
       "implementationKey": "asset.prop",
       "dependencies": [],
-      "kind": "prop",
-      "id": "prop.office.mirror.v1",
-      "path": "props/office/mirror/v1",
-      "hash": "sha256:b6e0445578c89d8ee15bbc875412ece5538cd64e710bee1bf6d9535533150975"
+      "path": "prop/mirror/v1",
+      "hash": "sha256:eeca84eeeb2230251e5f0de0ecc6e36389f3dbd370140e7c746389054448b18c"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.prop"
       ],
       "implementationKey": "asset.prop",
       "dependencies": [],
-      "kind": "prop",
-      "id": "prop.office.flashlight.v1",
-      "path": "props/office/flashlight/v1",
-      "hash": "sha256:12bf946e8e5da3faaecd8f7e9a3a2b276e51333f123b5aa4d5844a4c2fec519f"
+      "path": "prop/flashlight/v1",
+      "hash": "sha256:ecad5cd77ade7b8f71b77f0929c8523a17a2c15ab5121b91dc4634a893bec461"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.prop"
       ],
       "implementationKey": "asset.prop",
       "dependencies": [],
-      "kind": "prop",
-      "id": "prop.office.ask-matt-sign.v1",
-      "path": "props/office/ask-matt-sign/v1",
-      "hash": "sha256:d1505a3c9f83849da06ce19309da448201d0e7e97d048f3de8957e1dc637109a"
+      "path": "prop/ask_matt_sign/v1",
+      "hash": "sha256:0e5e3e7e489aeef196b5a4ea0e2399236289cb670d9b5f7f2968fcd69284fcdb"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.dressing"
       ],
       "implementationKey": "asset.dressing",
       "dependencies": [],
-      "kind": "dressing",
-      "id": "dressing.office.computer-screen.v1",
-      "path": "dressing/office/computer-screen/v1",
-      "hash": "sha256:8952d54735f69dac8b34665afc4ba5dedd934553282866723c7a0baf2e5cec09"
+      "path": "dressing/computer_screen/v1",
+      "hash": "sha256:b4ad983ce00655c1eb2efaeefac9fd7807bce4cdc1c3609f0c0d68b3c652e7ba"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.dressing"
       ],
       "implementationKey": "asset.dressing",
       "dependencies": [],
-      "kind": "dressing",
-      "id": "dressing.office.keyboard.v1",
-      "path": "dressing/office/keyboard/v1",
-      "hash": "sha256:68023e9196b098f3c490e45f5314da4ddb9ff66bd59a18fb5a5943eeb0bf14cc"
+      "path": "dressing/keyboard/v1",
+      "hash": "sha256:777fec0e4f06f66da7ce7196c6c17ca0a933d9cc9dd4863504b6e9ca1aaf150d"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.dressing"
       ],
       "implementationKey": "asset.dressing",
       "dependencies": [],
-      "kind": "dressing",
-      "id": "dressing.office.coffee-cup.v1",
-      "path": "dressing/office/coffee-cup/v1",
-      "hash": "sha256:0bf15eebb28f25852bfdaef45cf0b4360ccfd2d48f754b3e20796ad11bc946df"
+      "path": "dressing/coffee_cup/v1",
+      "hash": "sha256:29ffcc8b02e335cc01480aef73a7fc8609f00c859ddaa906f316d6850d5ea4c1"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.dressing"
       ],
       "implementationKey": "asset.dressing",
       "dependencies": [],
-      "kind": "dressing",
-      "id": "dressing.office.hair-comb.v1",
-      "path": "dressing/office/hair-comb/v1",
-      "hash": "sha256:02e0948d378d43cd25287f22247dedc98f79cfcab71c4c99a8f699a72984d760"
+      "path": "dressing/hair_comb/v1",
+      "hash": "sha256:aac2b48fd1fdd0595ddf5182eccf66798fe63c82cc87af8fed3f1b1b988a8d9a"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.dressing"
       ],
       "implementationKey": "asset.dressing",
       "dependencies": [],
-      "kind": "dressing",
-      "id": "dressing.office.ai-standee.v1",
-      "path": "dressing/office/ai-standee/v1",
-      "hash": "sha256:b730c753e6400490bbe3cf5605b7b7b1b7efc0d40f71e66301ce088eca2e8aa3"
+      "path": "dressing/ai_standee/v1",
+      "hash": "sha256:74815b178def0e1f44b45327476a0af7b20fd282b544a47c113fc9fa7a367fe2"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.dressing"
       ],
       "implementationKey": "asset.dressing",
       "dependencies": [],
-      "kind": "dressing",
-      "id": "dressing.office.engine-signs.v1",
-      "path": "dressing/office/engine-signs/v1",
-      "hash": "sha256:bd99f3884849b50345411e8a0a8b878646407e9df37f39370dc4d5b8deb229f3"
+      "path": "dressing/engine_signs/v1",
+      "hash": "sha256:3190d3a2c2f0bd2c434c0953a72c4a755dc14cb7dee03a086dab0edc76c9391e"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.dressing"
       ],
       "implementationKey": "asset.dressing",
       "dependencies": [],
-      "kind": "dressing",
-      "id": "dressing.office.document-trees.v1",
-      "path": "dressing/office/document-trees/v1",
-      "hash": "sha256:5c8184cc3d7358eb2e3b629038bf1396139cea58964f88a741d23e4af7989ffc"
+      "path": "dressing/document_trees/v1",
+      "hash": "sha256:0d7e3a986ecb62426b9108373b9ef7f3426f09809d2c8df811b2557a4919d6a1"
     },
     {
-      "version": 1,
       "capabilities": [
         "asset.layout"
       ],
       "implementationKey": "asset.layout",
       "dependencies": [],
-      "kind": "layout",
-      "id": "layout.office.desk-talk.v1",
-      "path": "layouts/office/desk-talk/v1",
-      "hash": "sha256:b432d573856fa3af92ecc2f702e69fdc0b2dc7b79fed29c21b97f214256338c1"
+      "path": "layout/desk_talk/v1",
+      "hash": "sha256:066ebeb426ec8d6d2f2db9a59a187fd1b4e93e7927df1da1c6a1f5f5763fb8a9"
+    },
+    {
+      "capabilities": [
+        "asset.figure"
+      ],
+      "implementationKey": "asset.figure",
+      "dependencies": [],
+      "path": "figure/elder/v1",
+      "hash": "sha256:01693736207504d341db28c52f78e51650654e55f6a13606c572219edc32db64"
+    },
+    {
+      "capabilities": [
+        "asset.figure"
+      ],
+      "implementationKey": "asset.figure",
+      "dependencies": [],
+      "path": "figure/lin/v1",
+      "hash": "sha256:9adb1e597dc70cb33d44d5e542563bcb720fd61962524aae492dfc8e8398075d"
+    },
+    {
+      "capabilities": [
+        "asset.figure"
+      ],
+      "implementationKey": "asset.figure",
+      "dependencies": [],
+      "path": "figure/senior/v1",
+      "hash": "sha256:18d233b5661d0d1080a1837c87657686f1229e4460dc2bb8d76f07c706a56469"
+    },
+    {
+      "capabilities": [
+        "asset.figure"
+      ],
+      "implementationKey": "asset.figure",
+      "dependencies": [],
+      "path": "figure/system_orb/v1",
+      "hash": "sha256:8489cf25d1c4824f52ab3c73e29b1cbb726081985492c29d8122a6a4ef1908e9"
+    },
+    {
+      "capabilities": [
+        "asset.voice"
+      ],
+      "implementationKey": "asset.voice",
+      "dependencies": [],
+      "path": "voice/zh/elder/v1",
+      "hash": "sha256:b0971442f9be5aa69415286ae90bd09cb421da84de34d9a202621573f476a6fc"
+    },
+    {
+      "capabilities": [
+        "asset.voice"
+      ],
+      "implementationKey": "asset.voice",
+      "dependencies": [],
+      "path": "voice/zh/lin/v1",
+      "hash": "sha256:ea9429f5a639a58e2c9b2a0ae68f28b75acfa5175d3bc64a54f6b6520d24a8a0"
+    },
+    {
+      "capabilities": [
+        "asset.voice"
+      ],
+      "implementationKey": "asset.voice",
+      "dependencies": [],
+      "path": "voice/zh/senior/v1",
+      "hash": "sha256:247d8dc3260bef75d11404469aee25dcaf5a5bb6c183105d9307df3d016124dd"
+    },
+    {
+      "capabilities": [
+        "asset.voice"
+      ],
+      "implementationKey": "asset.voice",
+      "dependencies": [],
+      "path": "voice/zh/system/v1",
+      "hash": "sha256:a0e1ac658459ee2decb1bc087ebb6ca587784ae30358286577dd195cc96c3d17"
+    },
+    {
+      "capabilities": [
+        "asset.set"
+      ],
+      "implementationKey": "asset.set",
+      "dependencies": [],
+      "path": "set/qingyun_dormitory/v1",
+      "hash": "sha256:4e977446370a7e093568387be3da0dcb059b668a483c77643341791e0600e123"
+    },
+    {
+      "capabilities": [
+        "asset.set"
+      ],
+      "implementationKey": "asset.set",
+      "dependencies": [],
+      "path": "set/qingyun_courtyard/v1",
+      "hash": "sha256:7bac3a692024af046724ac8004ae4137830c228b5f74584468f5d3a4fbd1702d"
+    },
+    {
+      "capabilities": [
+        "asset.set"
+      ],
+      "implementationKey": "asset.set",
+      "dependencies": [],
+      "path": "set/qingyun_arena/v1",
+      "hash": "sha256:b312f1f96e89d2758eec4fe5e3f6abc6c96f84a7da7b829c9290441fa7b63677"
+    },
+    {
+      "capabilities": [
+        "asset.figure"
+      ],
+      "implementationKey": "asset.figure",
+      "dependencies": [],
+      "path": "figure/student_a/v1",
+      "hash": "sha256:de57a6a5a598d3ee0f32e9290c83423bb9478abcc2f7171ab9e6a99293682590"
+    },
+    {
+      "capabilities": [
+        "asset.figure"
+      ],
+      "implementationKey": "asset.figure",
+      "dependencies": [],
+      "path": "figure/student_b/v1",
+      "hash": "sha256:a868d942a0287c26029f06b70c2035aa1062903749d6a62a47bda7dea7bbd118"
+    },
+    {
+      "capabilities": [
+        "asset.figure"
+      ],
+      "implementationKey": "asset.figure",
+      "dependencies": [],
+      "path": "figure/liu/v1",
+      "hash": "sha256:6588dd4e1141471a051c0753cf53abbad8338b1db968dba773faf3caf2337d6c"
+    },
+    {
+      "capabilities": [
+        "asset.voice"
+      ],
+      "implementationKey": "asset.voice",
+      "dependencies": [],
+      "path": "voice/zh/student_a/v1",
+      "hash": "sha256:bc13dadbe35825cb93e936f6d2ebbf911bbab610b60e6d14c0d1d53e8e2703f8"
+    },
+    {
+      "capabilities": [
+        "asset.voice"
+      ],
+      "implementationKey": "asset.voice",
+      "dependencies": [],
+      "path": "voice/zh/student_b/v1",
+      "hash": "sha256:e2f9131cb8d97f8fbf1b2d3ba2749442569344aa67d2b2385c536f768c0a8c9d"
+    },
+    {
+      "capabilities": [
+        "asset.voice"
+      ],
+      "implementationKey": "asset.voice",
+      "dependencies": [],
+      "path": "voice/zh/liu/v1",
+      "hash": "sha256:a900ac6a41be38c4d48cbc543af51343c1bc188eafd78882a072bc53eab41c6a"
+    },
+    {
+      "capabilities": [
+        "asset.set"
+      ],
+      "implementationKey": "asset.set",
+      "dependencies": [],
+      "path": "set/school_corridor/v1",
+      "hash": "sha256:d9dd8c6c104d6eb24dde7feb12e72c9e9d3b7b9bee5ac9357d41f4958716fe72"
+    },
+    {
+      "capabilities": [
+        "asset.set"
+      ],
+      "implementationKey": "asset.set",
+      "dependencies": [],
+      "path": "set/school_canteen/v1",
+      "hash": "sha256:ef055f83d41caa40dff3381c390a12d4d644277a3e3c092ca78b81f30a4e7e99"
+    },
+    {
+      "capabilities": [
+        "asset.prop"
+      ],
+      "implementationKey": "asset.prop",
+      "dependencies": [],
+      "path": "prop/roasted_sausage/v1",
+      "hash": "sha256:36b0db80a4cc2de89532ab849450a499c23096f6f478d9af9cce4c497f686b7a"
     }
   ],
   "procedures": [
@@ -3282,6 +3393,73 @@
                     "arm_u_r",
                     "hand_r",
                     "head"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "version": 1,
+      "kind": "procedure",
+      "id": "act.count_two",
+      "params": [],
+      "arity": 0,
+      "subjects": [
+        "actor"
+      ],
+      "capabilities": [
+        "actor"
+      ],
+      "implementationKey": "procedure.act.count_two.v1",
+      "dependencies": [],
+      "hash": "sha256:08cd63830c6ae6fae7672cf0f099577e58efb81f3e5602d00a0afdc6c022ae2d",
+      "recipe": {
+        "tracks": [
+          {
+            "kind": "bone",
+            "events": [
+              {
+                "at": 0,
+                "phase": "one",
+                "action": "raise the index finger",
+                "parts": [
+                  "arm_u_r",
+                  "arm_l_r",
+                  "hand_r"
+                ],
+                "duration": 0.35,
+                "value": {
+                  "at": 0,
+                  "phase": "one",
+                  "action": "raise the index finger",
+                  "parts": [
+                    "arm_u_r",
+                    "arm_l_r",
+                    "hand_r"
+                  ]
+                }
+              },
+              {
+                "at": 0.35,
+                "phase": "two",
+                "action": "add the middle finger and hold the count",
+                "parts": [
+                  "arm_u_r",
+                  "arm_l_r",
+                  "hand_r"
+                ],
+                "duration": 0.35,
+                "value": {
+                  "at": 0.35,
+                  "phase": "two",
+                  "action": "add the middle finger and hold the count",
+                  "parts": [
+                    "arm_u_r",
+                    "arm_l_r",
+                    "hand_r"
                   ]
                 }
               }

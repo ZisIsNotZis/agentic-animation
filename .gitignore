@@ -52,8 +52,8 @@ episodes/*/golden.json
 /*.mp4
 /*.mov
 
-# generated media anywhere in the workspace
-*.mp4
+# Generated media remains ignored by default, except for reviewed episode
+# deliveries explicitly published below.
 *.mov
 *.webm
 *.mkv
@@ -63,6 +63,10 @@ episodes/*/golden.json
 *.flac
 *.srt
 *.vtt
+
+# Reviewed episode renders are intentionally publishable in the repository.
+!episodes/*/dist/
+!episodes/*/dist/*.mp4
 
 # generated episode audio manifests and QA reports
 episodes/*/audio/*.json
@@ -79,8 +83,8 @@ episodes/*/build/*.json
 # exploration — expendable by design) and, once approved, <id>/v<N>/. None of
 # it is tracked today. When a character is actually approved, revisit this
 # rule and wire up Git LFS before tracking its parts/*.png.
-library/characters/*
-!library/characters/.gitkeep
+library/figure/*
+!library/figure/.gitkeep
 
 # same reasoning for generated backgrounds
 library/backgrounds/*

@@ -98,6 +98,23 @@ function readPerformanceManifest(manifestPath: string): PerformanceManifest {
   return value as PerformanceManifest;
 }
 
+function preloadLocationScenes(manifestPath: string, manifest: PerformanceManifest): PerformanceManifest {
+  const assets = manifest.assets as {locations?: Record<string, {resolved?: {path?: unknown}}>} | undefined;
+  const locations = assets?.locations;
+  if (!locations) return manifest;
+  const libraryRoot = resolve(dirname(manifestPath), "..", "..", "library");
+  const locationScenes: Record<string, string> = {};
+  for (const [instance, entry] of Object.entries(locations)) {
+    const assetPath = entry.resolved?.path;
+    if (typeof assetPath !== "string") continue;
+    const scenePath = resolve(libraryRoot, assetPath, "scene.svg");
+    if (scenePath.startsWith(`${libraryRoot}/`) && existsSync(scenePath)) {
+      locationScenes[instance] = readFileSync(scenePath, "utf8");
+    }
+  }
+  return Object.keys(locationScenes).length ? {...manifest, locationScenes} : manifest;
+}
+
 function performanceFps(manifest: PerformanceManifest, override?: number): number {
   const fps = override ?? manifest.video?.fps ?? 24;
   if (!Number.isInteger(fps) || fps < 1) throw new Error("renderer: performance fps must be a positive integer");
@@ -373,7 +390,7 @@ export function performanceSubtitles(manifest: PerformanceManifest): string {
 }
 
 async function preparePerformance(manifestPath: string, requestedFps?: number): Promise<PreparedPerformance> {
-  const source = readPerformanceManifest(manifestPath);
+  const source = preloadLocationScenes(manifestPath, readPerformanceManifest(manifestPath));
   const fps = performanceFps(source, requestedFps);
   const sourceFps = source.video?.fps ?? 24;
   const sourceDurationSec = source.duration ?? source.total ?? source.totalDuration ??

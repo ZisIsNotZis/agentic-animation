@@ -20,6 +20,10 @@ approved asset library + episode.yml
 
 The performance IR is the only renderer input. YAML parsing, procedure lookup,
 timing inference, and action-name interpretation never occur during rendering.
+Location assets are resolved before the Remotion bundle runs and carried into
+the manifest as renderer-safe SVG strings; the renderer selects a scene asset
+from the compiled location instance, with procedural art retained only for
+legacy manifests that contain no location asset.
 
 ## Deep modules
 

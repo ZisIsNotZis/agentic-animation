@@ -1,0 +1,71 @@
+episode:
+  id: liu_secret
+  title: 柳如烟居然逃学了？
+  language: zh-CN
+
+# Asset pass: these are intentional production identities for step 2.
+# The source story needs two distinct gossiping students, a silent Liu, a
+# school-canteen environment, and a readable pair of roasted sausages.
+actors:
+  student_a:
+    use: figure.student_a.v1
+    voice: voice.zh.student_a.v1
+  student_b:
+    use: figure.student_b.v1
+    voice: voice.zh.student_b.v1
+  liu:
+    use: figure.liu.v1
+    voice: voice.zh.liu.v1
+
+locations:
+  corridor:
+    use: set.school_corridor.v1
+  canteen:
+    use: set.school_canteen.v1
+
+objects:
+  sausage_a:
+    use: prop.roasted_sausage.v1
+  sausage_b:
+    use: prop.roasted_sausage.v1
+
+scenes:
+  - id: secret
+    location: corridor
+    actors:
+      student_a: {facing: student_b}
+      student_b: {facing: student_a}
+    script:
+      - student_a: "{student_a.look.at(student_b), student_a.face.secretive(), student_a.act.cover_mouth(student_b)}我告诉你一个秘密。"
+      - student_b: "{student_b.face.confused(), student_b.look.at(student_a)}什么秘密？"
+      - student_a: "{student_a.face.proud(), student_a.act.point(student_b)}柳如烟，昨天居然{student_a.face.shocked()}逃学了！{student_a.face.proud()}"
+      - student_b: "{student_b.face.shocked(), camera.use.punch_in(student_b)}什么？真的假的？"
+
+  - id: canteen
+    location: canteen
+    actors:
+      student_a: {facing: student_b}
+      student_b: {facing: student_a}
+      liu: {facing: audience}
+    objects:
+      sausage_a: left
+      sausage_b: right
+    script:
+      - student_a: "{student_a.face.secretive(), student_a.look.at(student_b)}真的，她还去了小卖部。"
+      - student_b: "{student_b.face.skeptical(), student_b.look.at(student_a)}她去买学习用品？"
+      - student_a: "{student_a.face.proud(), student_a.act.count_two(), student_a.act.present(sausage_a), student_a.act.present(sausage_b)}不，她买了两个烤肠。"
+      - liu: "{liu.face.embarrassed(), liu.look.at(student_a)}"
+
+  - id: punchline
+    location: canteen
+    actors:
+      student_a: {facing: student_b}
+      student_b: {facing: student_a}
+      liu: {facing: audience}
+    objects:
+      sausage_a: left
+      sausage_b: right
+    script:
+      - student_b: "{student_b.face.shocked(), student_b.act.count_two(), camera.use.punch_in(student_b)}两个？"
+      - student_b: "{student_b.face.desperate(), student_b.act.cover_mouth(student_a)}她堕落得好彻底！"
+      - liu: "{liu.face.embarrassed(), liu.act.exit()}"

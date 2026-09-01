@@ -12,6 +12,15 @@ JSON schemas. This document fixes their intended interfaces.
 - Facing targets actor, object, `audience`, `left`, or `right`. Entrances and
   placement relations are validated semantic values, not executable strings.
 
+## Asset identity
+
+The asset directory is the only identity source. A canonical path has the form
+`<kind>/<name>/v<N>` relative to `library/`; its runtime ID is that path with
+`/` replaced by `.`, for example `figure/aqiang/v1` becomes
+`figure.aqiang.v1`. Asset metadata does not repeat identity fields. Registry
+JSON stores the path and operational index data; the loader derives and
+validates `id`, `kind`, and `version` for runtime use.
+
 ## Parsed call
 
 ```ts
@@ -55,7 +64,11 @@ and lifecycle events.
 One immutable renderer-neutral manifest contains absolute scene/audio timing,
 resolved assets, automatic staging, speech/captions/lips from one timeline,
 typed performance tracks, continuous constraints, and provenance hashes. The
-renderer consumes this IR only and evaluates tracks deterministically.
+renderer consumes this IR only and evaluates tracks deterministically. For
+checked-in location assets, the Remotion adapter adds a transient
+`locationScenes` map containing the corresponding `scene.svg` text before
+browser evaluation; this keeps filesystem access out of frame rendering and
+selects backgrounds by compiled location instance rather than scene names.
 
 ## Invariants
 
@@ -67,6 +80,8 @@ values. Renderers project them into their output pixel dimensions; they must not
 reinterpret output pixels as authored scene coordinates.
 
 - Every local and terminal resolves uniquely.
+- Asset paths use lowercase underscore names, and derived identity is the only
+  accepted asset ID; legacy aliases and contextual namespaces are invalid.
 - Required procedure arguments are positional; optional modifiers are kwargs.
 - Subject, rig, capability, parameter value, and object are compatible.
 - Exclusive bone/socket claims cannot overlap without declared mixing.

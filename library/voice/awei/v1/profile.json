@@ -1,0 +1,25 @@
+{
+  "language": "zh-CN",
+  "provider": "edge-tts",
+  "license": "ours",
+  "profile": {
+    "register": "焦虑、碎碎念、突然爆发",
+    "pitch": "中高",
+    "pace": "偏快，惊慌处加速",
+    "energy": "外放，反应先于思考",
+    "pronunciation": "口语化，吐槽词清楚"
+  },
+  "delivery": {
+    "edge": {
+      "providerVoice": "zh-CN-YunxiNeural",
+      "rate": "+8%",
+      "pitch": "+2Hz"
+    },
+    "breathPauses": true,
+    "punchlinePauseMs": 180,
+    "avoidSinging": true
+  },
+  "notes": [
+    "Metadata only: no unlicensed cloned voice or generated audio is checked in."
+  ]
+}

@@ -8,13 +8,13 @@ only inside dialogue and human-facing metadata such as the title.
 ```yaml
 episode: {id: coffee, title: 咖啡事件, language: zh-CN}
 actors:
-  xiaoming: {use: figure.office.xiaoming.v1, voice: voice.zh.xiaoming.v1}
-  xiaohong: {use: figure.office.xiaohong.v1, voice: voice.zh.xiaohong.v1}
+  xiaoming: {use: figure.xiaoming.v1, voice: voice.zh.xiaoming.v1}
+  xiaohong: {use: figure.xiaohong.v1, voice: voice.zh.xiaohong.v1}
 locations:
-  office: {use: set.office.startup.v1}
+  office: {use: set.agent_stage.v1}
 objects:
   coffee: {use: prop.office.coffee.v1}
-  desk: {use: prop.office.desk.v1}
+  desk: {use: prop.desk.v1}
 scenes:
   - id: reveal
     location: office
