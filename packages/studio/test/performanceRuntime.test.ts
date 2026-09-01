@@ -143,6 +143,22 @@ test("semantic push centers its target instead of cropping from the world origin
   }
 });
 
+test("focused camera preserves every visible actor silhouette", () => {
+  const manifest: PerformanceManifest = {
+    video: {width: 1280, height: 720, fps: 24},
+    locationScenes: {test: "<svg/>"},
+    actors: [
+      {id: "left", placement: {at: [240, 690], scale: 0.7}, present: true},
+      {id: "right", placement: {at: [1040, 690], scale: 0.7}, present: true},
+    ],
+    camera: [{frame: 0, x: 500, y: 100, z: 1.4}],
+  };
+  const state = evaluatePerformance(manifest, 0);
+  const viewportRight = state.camera.x + manifest.video!.width / state.camera.z;
+  assert.ok(state.actors.every((actor) => actor.x + 200 * actor.scale <= viewportRight));
+  assert.ok(state.actors.every((actor) => actor.x - 200 * actor.scale >= state.camera.x));
+});
+
 test("semantic focus fits all present actors before choosing the largest useful zoom", () => {
   const manifest: PerformanceManifest = {
     video: {width: 1280, height: 720, fps: 24},

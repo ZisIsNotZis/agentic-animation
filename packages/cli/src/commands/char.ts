@@ -45,7 +45,7 @@ interface Paths {
 
 function paths(ctx: StageContext, id: string): Paths {
   const libraryRoot = resolvePath(ctx.rootDir, ctx.config.paths.library);
-  const charsRoot = join(libraryRoot, "characters");
+  const charsRoot = join(libraryRoot, "figure");
   const charRoot = join(charsRoot, id);
   return {
     libraryRoot,
@@ -527,9 +527,6 @@ export function charApprove(ctx: StageContext, id: string, opts: CharApproveOpti
   // Approval is a human gate: the timestamp is legitimate wall-clock metadata,
   // not render-path output. Override with --date for reproducible fixtures.
   const meta: LibraryMeta = {
-    id,
-    version,
-    kind: "character",
     model: genMeta.model,
     seeds: genMeta.seeds,
     prompts: genMeta.prompts,

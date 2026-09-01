@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { IdSchema } from "./common";
 
-export const RegistryAssetIdSchema = z.string().regex(/^[a-z][a-z0-9-]*(?:\.[a-z0-9-]+)+\.v[1-9]\d*$/, "asset id must include an immutable .vN suffix");
+export const RegistryAssetIdSchema = z.string().regex(/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+\.v[1-9]\d*$/, "asset id must include an immutable .vN suffix");
 export type RegistryAssetId = z.infer<typeof RegistryAssetIdSchema>;
 export const ProcedureIdSchema = z.string().regex(/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/, "procedure id must be namespace.name");
 export type ProcedureId = z.infer<typeof ProcedureIdSchema>;
@@ -20,14 +20,30 @@ const RegistryCommonSchema = z.object({
   hash: z.string().regex(/^sha256:[a-f0-9]{64}$/),
 }).strict();
 
-export const RegistryAssetManifestSchema = RegistryCommonSchema.extend({
-  kind: RegistryAssetKindSchema,
-  id: RegistryAssetIdSchema,
-  path: z.string().min(1),
-}).superRefine((asset, ctx) => {
-  const version = Number(asset.id.slice(asset.id.lastIndexOf(".v") + 2));
-  if (asset.version !== version) ctx.addIssue({code: z.ZodIssueCode.custom, path: ["version"], message: "version must match the immutable id suffix"});
-  if (asset.id.split(".")[0] !== asset.kind) ctx.addIssue({code: z.ZodIssueCode.custom, path: ["kind"], message: "kind must match the first segment of id"});
+const RegistryAssetCommonSchema = z.object({
+  capabilities: z.array(z.string().min(1)).default([]),
+  implementationKey: z.string().min(1),
+  dependencies: z.array(z.string().min(1)).default([]),
+  hash: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+}).strict();
+
+const RegistryAssetPathSchema = z.string().regex(
+  /^(?:(?:figure|set|prop|dressing|layout)\/[a-z][a-z0-9_]*|voice\/zh\/[a-z][a-z0-9_]*)\/v[1-9]\d*$/,
+  "asset path must use canonical lowercase underscore naming",
+);
+
+const RegistryAssetIndexSchema = RegistryAssetCommonSchema.extend({path: RegistryAssetPathSchema}).strict();
+export const RegistryAssetManifestSchema = RegistryAssetIndexSchema.transform((asset, ctx) => {
+  const segments = asset.path.split("/");
+  const versionSegment = segments.at(-1)!;
+  const version = Number(versionSegment.slice(1));
+  const id = asset.path.replaceAll("/", ".");
+  const kind = segments[0]!;
+  if (!RegistryAssetKindSchema.safeParse(kind).success) {
+    ctx.addIssue({code: z.ZodIssueCode.custom, path: ["path"], message: `unsupported asset kind: ${kind}`});
+    return z.NEVER;
+  }
+  return {...asset, id, kind, version: version} as const;
 });
 export type RegistryAssetManifest = z.infer<typeof RegistryAssetManifestSchema>;
 export const AssetManifestSchema = RegistryAssetManifestSchema;
@@ -101,7 +117,7 @@ export const AssetModelSchema = z.object({name: z.string().min(1), license: z.st
 export type AssetModel = z.infer<typeof AssetModelSchema>;
 
 export const LibraryMetaSchema = z.object({
-  id: IdSchema, version: z.number().int().positive(), kind: z.enum(["character", "background"]), model: AssetModelSchema,
+  model: AssetModelSchema,
   seeds: z.record(z.string(), z.number().int()).default({}), prompts: z.record(z.string(), z.string()).default({}),
   date: z.string().min(1), approver: z.string().min(1), grounding: z.array(z.string()).default([]), notes: z.array(z.string()).default([]),
 }).strict();

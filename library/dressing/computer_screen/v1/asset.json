@@ -1,0 +1,8 @@
+{
+  "source": "art.svg",
+  "preview": "preview.png",
+  "semanticRole": "computer_screen",
+  "notes": [
+    "Hard-edge dressing; can be placed independently from the set background."
+  ]
+}

@@ -31,9 +31,9 @@ try {
   cpSync(join(ROOT, "library", "registry", "manifest.json"), join(project, "library", "registry", "manifest.json"));
   writeFileSync(join(project, "anim.config.json"), JSON.stringify({ paths: { library: "library", episodes: "episodes" }, adapters: { tts: "dir", renderer: "remotion" } }));
   writeFileSync(episodePath, `episode: {id: smoke, title: Canonical smoke, language: en}
-actors: {alice: {use: figure.office.aqiang.v1, voice: voice.zh.aqiang.v1}}
-locations: {stage: {use: set.office.agent-stage.v1}}
-objects: {desk: {use: prop.office.desk.v1}}
+actors: {alice: {use: figure.aqiang.v1, voice: voice.zh.aqiang.v1}}
+locations: {stage: {use: set.agent_stage.v1}}
+objects: {desk: {use: prop.desk.v1}}
 scenes:
   - id: check
     location: stage

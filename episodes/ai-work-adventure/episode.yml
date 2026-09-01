@@ -4,49 +4,49 @@ episode:
   language: zh-CN
 actors:
   aqiang:
-    use: figure.office.aqiang.v1
+    use: figure.aqiang.v1
     voice: voice.zh.aqiang.v1
   awei:
-    use: figure.office.awei.v1
+    use: figure.awei.v1
     voice: voice.zh.awei.v1
 locations:
   office:
-    use: set.office.agent-stage.v1
+    use: set.agent_stage.v1
 objects:
   desk:
-    use: prop.office.desk.v1
+    use: prop.desk.v1
   thermos:
-    use: prop.office.thermos.v1
+    use: prop.thermos.v1
   scroll:
-    use: prop.office.scroll.v1
+    use: prop.scroll.v1
   skill_bottle:
-    use: prop.office.skill-bottle.v1
+    use: prop.skill_bottle.v1
   skill_cards:
-    use: prop.office.skill-cards.v1
+    use: prop.skill_cards.v1
   phone:
-    use: prop.office.phone.v1
+    use: prop.phone.v1
   notebook:
-    use: prop.office.notebook.v1
+    use: prop.notebook.v1
   mirror:
-    use: prop.office.mirror.v1
+    use: prop.mirror.v1
   flashlight:
-    use: prop.office.flashlight.v1
+    use: prop.flashlight.v1
   ask_matt_sign:
-    use: prop.office.ask-matt-sign.v1
+    use: prop.ask_matt_sign.v1
   screen:
-    use: dressing.office.computer-screen.v1
+    use: dressing.computer_screen.v1
   keyboard:
-    use: dressing.office.keyboard.v1
+    use: dressing.keyboard.v1
   coffee_cup:
-    use: dressing.office.coffee-cup.v1
+    use: dressing.coffee_cup.v1
   hair_comb:
-    use: dressing.office.hair-comb.v1
+    use: dressing.hair_comb.v1
   ai_standee:
-    use: dressing.office.ai-standee.v1
+    use: dressing.ai_standee.v1
   engine_signs:
-    use: dressing.office.engine-signs.v1
+    use: dressing.engine_signs.v1
   document_trees:
-    use: dressing.office.document-trees.v1
+    use: dressing.document_trees.v1
 scenes:
   - id: opening
     location: office

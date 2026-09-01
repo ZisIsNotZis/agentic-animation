@@ -1,7 +1,7 @@
 import {z} from "zod";
 
 const Id = z.string().regex(/^[a-z][a-z0-9_]*$/);
-const AssetRef = z.string().regex(/^[a-z][a-z0-9-]*(?:\.[a-z0-9-]+)+\.v[1-9]\d*$/);
+const AssetRef = z.string().regex(/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+\.v[1-9]\d*$/);
 const IdPattern = /^[a-z][a-z0-9_]*$/;
 const ProcedurePath = /^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/;
 const Namespace = new Set(["act", "face", "look", "move", "voice", "state", "use", "play", "say"]);

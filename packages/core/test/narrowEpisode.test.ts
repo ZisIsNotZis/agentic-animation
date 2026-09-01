@@ -5,11 +5,11 @@ import {NarrowEpisodeSchema, parseProcedureCall, parseProcedureCalls} from "../s
 const valid = {
   episode: {id: "ai_work", title: "AI 打工奇遇记", language: "zh-CN"},
   actors: {
-    aqiang: {use: "figure.office.aqiang.v1", voice: "voice.zh.aqiang.v1"},
-    awei: {use: "figure.office.awei.v1", voice: "voice.zh.awei.v1"},
+    aqiang: {use: "figure.aqiang.v1", voice: "voice.zh.aqiang.v1"},
+    awei: {use: "figure.awei.v1", voice: "voice.zh.awei.v1"},
   },
-  locations: {office: {use: "set.office.agent-stage.v1"}},
-  objects: {coffee: {use: "prop.office.thermos.v1"}, desk: {use: "prop.office.desk.v1"}},
+  locations: {office: {use: "set.agent_stage.v1"}},
+  objects: {coffee: {use: "prop.thermos.v1"}, desk: {use: "prop.desk.v1"}},
   scenes: [{
     id: "opening", location: "office",
     actors: {aqiang: {facing: "awei"}, awei: {facing: "aqiang"}},

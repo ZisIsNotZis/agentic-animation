@@ -9,7 +9,7 @@ export type PerformanceSceneTheme =
   | "opening-office" | "failure-incident" | "teaching-workshop" | "memory-archive" | "token-control"
   | "refactor-lab" | "quality-lab" | "security-night" | "workflow-command" | "ending-stage";
 
-export interface PerformanceSceneContext { id: string; index: number; location: string; theme: PerformanceSceneTheme; }
+export interface PerformanceSceneContext { id: string; index: number; location: string; theme: PerformanceSceneTheme; sceneSvg?: string; }
 
 const THEME_BY_ID: Record<string, PerformanceSceneTheme> = {
   opening: "opening-office", failure_triad: "failure-incident", teach_ai: "teaching-workshop", memory: "memory-archive",
@@ -29,7 +29,8 @@ export function sceneForFrame(manifest: PerformanceManifest, frame: number): Per
   }) ?? scenes.at(-1);
   if (!scene) return { id: "opening", index: 0, location: "office", theme: "opening-office" };
   const id = String(scene.id);
-  return { id, index: Number.isFinite(scene.index) ? scene.index : scenes.indexOf(scene), location: scene.location || scene.layout || "office", theme: THEME_BY_ID[id] ?? themeForScene(scene.index) };
+  const location = scene.location || scene.layout || "office";
+  return { id, index: Number.isFinite(scene.index) ? scene.index : scenes.indexOf(scene), location, theme: THEME_BY_ID[id] ?? themeForScene(scene.index), sceneSvg: manifest.locationScenes?.[location] };
 }
 
 function themeForScene(index: number): PerformanceSceneTheme {
@@ -40,7 +41,21 @@ function themeForScene(index: number): PerformanceSceneTheme {
 interface StageProps { scene?: PerformanceSceneContext; }
 
 /** Flat, hard-edged scene dressing. It is rendered before props and actors. */
-export const PerformanceStage: React.FC<StageProps> = ({ scene = { id: "opening", index: 0, location: "office", theme: "opening-office" } }) => (
+export const PerformanceStage: React.FC<StageProps> = ({ scene = { id: "opening", index: 0, location: "office", theme: "opening-office" } }) => scene.sceneSvg ? (
+  <svg
+    aria-label={`${scene.location} ${scene.id} background`}
+    data-stage="scene-background"
+    data-scene-id={scene.id}
+    data-scene-theme={scene.theme}
+    data-location={scene.location}
+    data-layer="background"
+    viewBox="0 0 1920 1080"
+    width="1920"
+    height="1080"
+    dangerouslySetInnerHTML={{__html: scene.sceneSvg.replace(/^\s*<svg\b[^>]*>/i, "").replace(/<\/svg>\s*$/i, "")}}
+    style={{position: "absolute", inset: 0, zIndex: 0, display: "block", overflow: "hidden"}}
+  />
+) : (
   <svg aria-label={`${scene.location} ${scene.id} background`} data-stage="scene-background" data-scene-id={scene.id} data-scene-theme={scene.theme} data-location={scene.location} data-layer="background" viewBox="0 0 1920 1080" width="1920" height="1080" style={{ position: "absolute", inset: 0, display: "block", zIndex: 0 }}>
     {SCENE_ART[scene.theme]()}
   </svg>

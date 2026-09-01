@@ -5,7 +5,7 @@
 // the browser. No dependencies — plain node http. Refine what `anim char rig`
 // guessed, then `anim char approve`.
 //
-//   node tools/pivot-editor/server.mjs library/characters/<id>/draft [port]
+//   node tools/pivot-editor/server.mjs library/figure/<id>/draft [port]
 //
 import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";

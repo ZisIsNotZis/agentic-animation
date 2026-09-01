@@ -36,14 +36,14 @@ function episodeIds(): string[] {
     ...Object.values(episode.actors).flatMap((actor) => [actor.use, actor.voice]),
     ...Object.values(episode.locations).map((location) => location.use),
     ...Object.values(episode.objects).map((object) => object.use),
-    "layout.office.desk-talk.v1",
+    "layout.desk_talk.v1",
   ];
 }
 function manifestHash(path: string): string {
   return `sha256:${createHash("sha256").update(readFileSync(path)).digest("hex")}`;
 }
 function cardLabel(asset: (typeof assets)[number]): string {
-  const short = asset.id.replace(/^figure\.office\./, "").replace(/^voice\.zh\./, "").replace(/^set\.office\./, "").replace(/^prop\.office\./, "").replace(/^dressing\.office\./, "").replace(/^layout\.office\./, "").replace(/\.v1$/, "");
+  const short = asset.id.replace(/\.v1$/, "");
   return `${asset.kind.toUpperCase()}  ${short}`;
 }
 async function main(): Promise<void> {

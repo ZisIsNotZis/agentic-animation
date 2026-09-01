@@ -14,7 +14,7 @@ test("AI work adventure declares exactly 23 materialized immutable assets", () =
 });
 
 test("asset directory hashes are stable and include real material", () => {
-  const aqiang = assets.find((asset) => asset.id === "figure.office.aqiang.v1")!;
+  const aqiang = assets.find((asset) => asset.id === "figure.aqiang.v1")!;
   const dir = join(root, aqiang.path);
   const first = hashDirectory(dir);
   const second = hashDirectory(dir);

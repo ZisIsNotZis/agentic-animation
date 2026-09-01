@@ -144,7 +144,7 @@ export async function yamlAudioStage(ctx: StageContext, opts: YamlAudioOptions):
           const durationSec = await ffprobeDuration(outPath);
           measurements.set(takeId, {
             ...measuredTts({ path: relative(paths.dir, outPath), durationSec }),
-            ...(boundaries ? { boundaries } : {}),
+            ...(boundaries ? { boundaries: normalizeBoundaries(boundaries, durationSec) } : {}),
           });
           reuseCount++;
           continue;
@@ -177,7 +177,7 @@ export async function yamlAudioStage(ctx: StageContext, opts: YamlAudioOptions):
       const durationSec = await ffprobeDuration(outPath);
       measurements.set(takeId, {
         ...measuredTts({ path: relative(paths.dir, outPath), durationSec }),
-        ...(boundaries ? { boundaries } : {}),
+        ...(boundaries ? { boundaries: normalizeBoundaries(boundaries, durationSec) } : {}),
       });
       if (!existsSync(cachePath)) copyFileSync(outPath, cachePath);
   }
@@ -292,6 +292,18 @@ function uniformCharacterBoundaries(text: string, durationSec: number): Boundary
       startSec: durationSec * index / chars.length,
       endSec: durationSec * (index + 1) / chars.length,
     };
+  });
+}
+
+/** Providers can round subtitle timestamps past the final decoded WAV sample. */
+function normalizeBoundaries(boundaries: readonly BoundaryAlignment[] | undefined, durationSec: number): BoundaryAlignment[] | undefined {
+  if (!boundaries) return undefined;
+  return boundaries.flatMap((boundary) => {
+    const startSec = Math.min(Math.max(0, boundary.startSec), durationSec);
+    const endSec = Math.min(Math.max(startSec, boundary.endSec), durationSec);
+    return endSec > startSec || boundary.startChar !== undefined || boundary.endChar !== undefined
+      ? [{...boundary, startSec, endSec}]
+      : [];
   });
 }
 

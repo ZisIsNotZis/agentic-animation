@@ -1,0 +1,20 @@
+{
+  "language": "zh-CN",
+  "provider": "edge-tts",
+  "license": "Microsoft service output; runtime provider",
+  "profile": {
+    "register": "威严、共鸣、正式",
+    "pitch": "低",
+    "pace": "慢",
+    "energy": "克制后爆发",
+    "pronunciation": "宗门称谓庄重"
+  },
+  "delivery": {
+    "breathPauses": true,
+    "punchlinePauseMs": 180,
+    "avoidSinging": true
+  },
+  "notes": [
+    "Metadata only; generated audio is never checked in."
+  ]
+}

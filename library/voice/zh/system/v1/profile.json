@@ -1,0 +1,20 @@
+{
+  "language": "zh-CN",
+  "provider": "edge-tts",
+  "license": "Microsoft service output; runtime provider",
+  "profile": {
+    "register": "中性合成播报",
+    "pitch": "平",
+    "pace": "精确",
+    "energy": "无情绪",
+    "pronunciation": "通知切句利落"
+  },
+  "delivery": {
+    "breathPauses": true,
+    "punchlinePauseMs": 180,
+    "avoidSinging": true
+  },
+  "notes": [
+    "Metadata only; generated audio is never checked in."
+  ]
+}
