@@ -83,6 +83,7 @@ export interface SpeechTimingRequest {
   text: string;
   sourceText: string;
   inlineTokens: readonly string[];
+  speed: number;
 }
 
 export interface SpeechBoundary {
@@ -117,6 +118,7 @@ export interface CompileEpisodeOptions {
   procedureResolver?: ProcedureResolver;
   speechTimingProvider?: SpeechTimingProvider;
   speechTiming?: SpeechTimingProvider;
+  voiceSpeed?: number;
 }
 
 export interface ResolvedAsset { instance: string; ref: string; resolved: unknown; }
@@ -158,6 +160,8 @@ export interface SpeechPerformanceEvent {
   start: number;
   end: number;
   text: string;
+  speed: number;
+  boundaries?: readonly SpeechBoundary[];
   interruption?: true;
 }
 
@@ -240,6 +244,8 @@ interface CompileContext {
 const WORLD_SUBJECTS = new Set(["camera", "vfx", "sfx", "music"]);
 const STATE_NAMESPACES = new Set(["face", "look", "voice", "state"]);
 const SILENT_BEAT_SEC = 0.55;
+const DEFAULT_VOICE_SPEED = 1;
+const LOGICAL_STAGE = {width: 1, height: 1} as const;
 
 /** Compile NarrowEpisode source into deterministic renderer-neutral IR. */
 export async function compileEpisode(yamlPath: string, options: CompileEpisodeOptions): Promise<CompiledEpisode> {
@@ -264,13 +270,11 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
   let sequence = 0;
 
   for (const [index, scene] of episode.scenes.entries()) {
-    const speaker = Object.keys(scene.actors)[0];
     const staging = stageScene({
       location: {id: scene.location},
       actors: scene.actors,
       objects: Object.fromEntries(Object.entries(scene.objects).map(([id, placement]) => [id, relationFor(placement)])),
-      ...(speaker ? {speaker} : {}),
-    });
+    }, LOGICAL_STAGE);
     const initial = snapshotState(state, episode);
     const compiled = await compileScene(scene, sceneStart, context, sequence);
     sequence = compiled.nextSequence;
@@ -345,6 +349,7 @@ async function compileScene(
   firstSequence: number,
 ): Promise<{cursor: number; calls: PendingCall[]; events: PerformanceEvent[]; constraints: BindingConstraint[]; nextSequence: number}> {
   let cursor = sceneStart;
+  let voiceSpeed = context.options.voiceSpeed ?? DEFAULT_VOICE_SPEED;
   let sequence = firstSequence;
   const calls: PendingCall[] = [];
   const events: PerformanceEvent[] = [];
@@ -373,10 +378,11 @@ async function compileScene(
             text,
             sourceText: source,
             inlineTokens: splitDialogue(source).filter((item): item is ParsedGroup => "calls" in item).flatMap((item) => item.calls.map((call) => call.raw)),
+            speed: voiceSpeed,
           });
           const start = round(cursor);
           const end = round(start + timing.durationSec);
-          events.push({kind: "speech", subject: speaker, start, end, text});
+          events.push({kind: "speech", subject: speaker, start, end, text, speed: voiceSpeed, ...(timing.boundaries ? {boundaries: timing.boundaries} : {})});
           lastSpeech = {start, end, text, timing, tokens: splitDialogue(source).flatMap((item) => "calls" in item ? item.calls : [])};
           cursor = end;
         }
@@ -389,8 +395,9 @@ async function compileScene(
       let groupEnd = groupStart;
       const groupCalls: PendingCall[] = [];
       for (const call of group.calls) {
+        voiceSpeed = speedAfterCalls([call], voiceSpeed);
         if (call.namespace === "say") {
-          const speech = await compileInterruption(call, speaker, scene, statementIndex, context, groupStart);
+          const speech = await compileInterruption(call, speaker, scene, statementIndex, context, groupStart, voiceSpeed);
           events.push(speech);
           groupEnd = Math.max(groupEnd, speech.end);
           continue;
@@ -532,6 +539,7 @@ async function compileInterruption(
   statementIndex: number,
   context: CompileContext,
   start: number,
+  speed: number,
 ): Promise<SpeechPerformanceEvent> {
   if (call.subject !== speaker) throw new Error(`compileEpisode: actor.say subject must be the statement actor in scene ${scene.id}`);
   const text = call.args[0];
@@ -546,8 +554,19 @@ async function compileInterruption(
     text: text.value,
     sourceText: call.raw,
     inlineTokens: [call.raw],
+    speed,
   });
-  return {kind: "speech", subject: call.subject, start: round(start), end: round(start + timing.durationSec), text: text.value, interruption: true};
+  return {kind: "speech", subject: call.subject, start: round(start), end: round(start + timing.durationSec), text: text.value, speed, ...(timing.boundaries ? {boundaries: timing.boundaries} : {}), interruption: true};
+}
+
+function speedAfterCalls(calls: readonly ProcedureCall[], current: number): number {
+  let speed = current;
+  for (const call of calls) {
+    if (call.namespace !== "voice" || call.terminal !== "speed") continue;
+    const value = call.args[0];
+    if (value?.kind === "number" && Number.isFinite(value.value) && value.value > 0) speed = value.value;
+  }
+  return speed;
 }
 
 function speechMarker(line: SpeechLine, call: ProcedureCall, episodeId: string): number {
@@ -600,7 +619,7 @@ async function resolveSpeechTiming(provider: SpeechTimingProvider, request: Spee
   if (!isRecord(result) || typeof result.durationSec !== "number" || !Number.isFinite(result.durationSec) || result.durationSec < 0) {
     throw new Error(`compileEpisode: invalid speech timing for ${request.lineId}`);
   }
-  return {durationSec: round(result.durationSec), ...(isRecord(result.markers) ? {markers: asNumberRecord(result.markers)} : {})};
+  return {durationSec: round(result.durationSec), ...(isRecord(result.markers) ? {markers: asNumberRecord(result.markers)} : {}), ...(isRecord(result.inline) ? {inline: asNumberRecord(result.inline)} : {}), ...(Array.isArray(result.boundaries) ? {boundaries: result.boundaries as SpeechBoundary[]} : {})};
 }
 
 /** Lifecycle and binding projection deliberately consume generic recipe tracks. */

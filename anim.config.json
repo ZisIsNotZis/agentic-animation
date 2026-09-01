@@ -14,18 +14,19 @@
     "corpus": "ANIM_CORPUS_ROOT_REQUIRED"
   },
   "video": {
-    "width": 1920,
-    "height": 1080,
+    "width": 1280,
+    "height": 720,
     "fps": 24,
     "crf": 20
   },
   "render": {
-    "concurrency": 2,
+    "concurrency": 4,
     "offthreadVideoCacheSizeInBytes": 2147483648
   },
   "tts": {
     "voice": "zh-CN-YunxiaNeural",
-    "lang": "zh"
+    "lang": "zh",
+    "speed": 1.2
   },
   "seed": 1234,
   "allowFluxFamily": false

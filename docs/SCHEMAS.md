@@ -59,6 +59,13 @@ renderer consumes this IR only and evaluates tracks deterministically.
 
 ## Invariants
 
+Runtime defaults are 1280x720 video, four render workers, and TTS speed 1.2.
+`tts.speed` must be finite and greater than zero; inline `voice.speed(...)` calls
+remain local explicit overrides.
+Staging positions, safe areas, and camera centers are normalized logical-canvas
+values. Renderers project them into their output pixel dimensions; they must not
+reinterpret output pixels as authored scene coordinates.
+
 - Every local and terminal resolves uniquely.
 - Required procedure arguments are positional; optional modifiers are kwargs.
 - Subject, rig, capability, parameter value, and object are compatible.

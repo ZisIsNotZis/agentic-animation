@@ -52,6 +52,7 @@ function localBrowser(): string | undefined {
   const candidates = [
     process.env.ANIM_BROWSER,
     "/home/z/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome",
+    join(process.cwd(), "node_modules/.remotion/chrome-headless-shell/linux64/chrome-headless-shell-linux64/chrome-headless-shell"),
   ].filter((p): p is string => Boolean(p));
   return candidates.find((p) => existsSync(p));
 }

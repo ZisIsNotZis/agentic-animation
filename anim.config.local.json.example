@@ -13,5 +13,9 @@
   "render": {
     "_comment": "Lower on a memory-constrained machine; raise cautiously (ARCHITECTURE §11 caps for 24 GB).",
     "concurrency": 2
+  },
+
+  "tts": {
+    "speed": 1.2
   }
 }

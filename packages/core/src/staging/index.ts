@@ -55,7 +55,7 @@ export interface StagingRequest {
 }
 
 export interface StagingOptions {
-  /** Output canvas only; this is not source-authored placement data. */
+  /** Logical canvas dimensions. Values are normalized to 0..1 in the result. */
   width?: number;
   height?: number;
 }
@@ -104,10 +104,14 @@ export interface StagingResult {
   readonly camera: StagedCamera;
 }
 
-const DEFAULT_WIDTH = 1920;
-const DEFAULT_HEIGHT = 1080;
-const SUBTITLE_HEIGHT = 160;
-const SIDE_MARGIN = 80;
+// Staging uses logical canvas percentages; renderers perform pixel projection.
+const DEFAULT_WIDTH = 1;
+const DEFAULT_HEIGHT = 1;
+const SUBTITLE_HEIGHT = 160 / 1080;
+const SIDE_MARGIN = 80 / 1920;
+const ACTOR_HALF_WIDTH = 120 / 1920;
+const ACTOR_HALF_HEIGHT = 125 / 1080;
+const LANE_TOLERANCE = 36 / 1080;
 
 function fail(message: string): never {
   throw new Error(`staging: ${message}`);
@@ -180,6 +184,12 @@ function setupY(setup: string | undefined): number {
   return 0.64;
 }
 
+function actorFootprintScale(actor: ActorSetup, scale: number): number {
+  const setup = actor.setup?.toLowerCase();
+  const setupScale = setup === "background" || setup === "receding" ? 0.82 : setup === "foreground" ? 1.05 : 1;
+  return scale * setupScale * (actor.prominence === "primary" ? 1.05 : actor.prominence === "supporting" ? 0.94 : 1);
+}
+
 function targetNames(focus: StagingFocus | undefined): string[] {
   if (!focus) return [];
   return focus.kind === "action" ? [focus.subject, ...(focus.target ? [focus.target] : [])] : [focus.id];
@@ -213,20 +223,20 @@ function objectPoint(
   const target = targetId ? actors[targetId] ?? objects[targetId] : undefined;
   const targetAt = target?.at;
   const targetFacing = targetId ? actors[targetId]?.facing ?? 1 : 1;
-  const fallback = point(0.5 * width + index * 72, 0.64 * height);
+  const fallback = point(0.5 * width + index * 72 / 1920, 0.64 * height);
 
   switch (relation.relation) {
     case "held-by":
-      if (targetAt) return {at: point(targetAt[0] + targetFacing * 78, targetAt[1] - 125), z: (target.z ?? 40) + 2};
+      if (targetAt) return {at: point(targetAt[0] + targetFacing * 78 / 1920, targetAt[1] - 125 / 1080), z: (target.z ?? 40) + 2};
       break;
     case "near":
-      if (targetAt) return {at: point(targetAt[0] + 115, targetAt[1] - 12), z: (target.z ?? 40) + 4};
+      if (targetAt) return {at: point(targetAt[0] + targetFacing * 115 / 1920, targetAt[1] - 12 / 1080), z: (target.z ?? 40) + 4};
       break;
     case "on":
-      if (targetAt) return {at: point(targetAt[0], targetAt[1] - 58), z: (target.z ?? 40) + 1};
+      if (targetAt) return {at: point(targetAt[0], targetAt[1] - 58 / 1080), z: (target.z ?? 40) + 1};
       break;
     case "in-front-of":
-      if (targetAt) return {at: point(targetAt[0], targetAt[1] + 18), z: (target.z ?? 40) + 10};
+      if (targetAt) return {at: point(targetAt[0], targetAt[1] + 18 / 1080), z: (target.z ?? 40) + 10};
       break;
     case "behind":
       if (targetAt) return {at: point(targetAt[0], targetAt[1]), z: (target.z ?? 40) - 10};
@@ -237,7 +247,7 @@ function objectPoint(
       if (a && b) {
         const first = actors[a] ?? objects[a];
         const second = actors[b] ?? objects[b];
-        if (first && second) return {at: point((first.at[0] + second.at[0]) / 2, Math.max(first.at[1], second.at[1]) - 20), z: 35};
+        if (first && second) return {at: point((first.at[0] + second.at[0]) / 2, Math.max(first.at[1], second.at[1]) - 20 / 1080), z: 35};
       }
       break;
     }
@@ -247,6 +257,43 @@ function objectPoint(
 
 function subjectSafeArea(width: number, height: number): StageRect {
   return {x: SIDE_MARGIN, y: round(height * 0.09), width: width - SIDE_MARGIN * 2, height: round(height * 0.67)};
+}
+
+function avoidActorCollisions(
+  actors: readonly ActorSetup[],
+  points: Readonly<Record<string, StagePoint>>,
+  scale: number,
+  safeArea: StageRect,
+): Record<string, StagePoint> {
+  const footprints = new Map(actors.map((actor) => [actor.id, actorFootprintScale(actor, scale)]));
+  for (const footprint of footprints.values()) {
+    if (safeArea.x + ACTOR_HALF_WIDTH * footprint > safeArea.x + safeArea.width - ACTOR_HALF_WIDTH * footprint ||
+        safeArea.y + ACTOR_HALF_HEIGHT * footprint > safeArea.y + safeArea.height - ACTOR_HALF_HEIGHT * footprint) {
+      fail("impossible composition: actor footprint does not fit in the subject safe area");
+    }
+  }
+
+  const result: Record<string, StagePoint> = {};
+  let previous: {id: string; at: StagePoint} | undefined;
+  const candidates = actors.map((actor) => ({actor, at: points[actor.id]!})).sort((a, b) =>
+    a.at[0] - b.at[0] || a.at[1] - b.at[1] || a.actor.id.localeCompare(b.actor.id));
+  for (const candidate of candidates) {
+    const halfWidth = ACTOR_HALF_WIDTH * footprints.get(candidate.actor.id)!;
+    const halfHeight = ACTOR_HALF_HEIGHT * footprints.get(candidate.actor.id)!;
+    const minX = safeArea.x + halfWidth;
+    const maxX = safeArea.x + safeArea.width - halfWidth;
+    const minY = safeArea.y + halfHeight;
+    const maxY = safeArea.y + safeArea.height - halfHeight;
+    const y = clamp(candidate.at[1], minY, maxY);
+    let x = clamp(candidate.at[0], minX, maxX);
+    if (previous && Math.abs(previous.at[1] - y) <= LANE_TOLERANCE) {
+      x = Math.max(x, previous.at[0] + ACTOR_HALF_WIDTH * (footprints.get(previous.id)! + footprints.get(candidate.actor.id)!));
+    }
+    if (x > maxX) fail("impossible composition: same-lane actors require more horizontal safe area");
+    result[candidate.actor.id] = point(x, y);
+    previous = {id: candidate.actor.id, at: result[candidate.actor.id]!};
+  }
+  return result;
 }
 
 /** Resolve semantic scene intent into deterministic renderer coordinates. */
@@ -291,6 +338,8 @@ export function stageScene(request: StagingRequest, options: StagingOptions = {}
     const y = clamp(entranceY(actor.entrance, setupY(actor.setup)) * height, height * 0.45, height * 0.76);
     actorPoints[actor.id] = point(entranceX(actor.entrance, x / width) * width, y);
   }
+  const safeArea = subjectSafeArea(width, height);
+  Object.assign(actorPoints, avoidActorCollisions(orderedActors, actorPoints, scale, safeArea));
   const emptyObjects: Record<string, StagedObject> = {};
   for (const actor of orderedActors) {
     const fallbackFacing: 1 | -1 = orderedActors.length === 2
@@ -327,15 +376,14 @@ export function stageScene(request: StagingRequest, options: StagingOptions = {}
     };
   }
 
-  const subtitleSafeArea: StageRect = {x: SIDE_MARGIN, y: height - SUBTITLE_HEIGHT - 60, width: width - SIDE_MARGIN * 2, height: SUBTITLE_HEIGHT};
-  const safeArea = subjectSafeArea(width, height);
+  const subtitleSafeArea: StageRect = {x: SIDE_MARGIN, y: 1 - SUBTITLE_HEIGHT - 60 / 1080, width: 1 - SIDE_MARGIN * 2, height: SUBTITLE_HEIGHT};
   const focusTargets = targetNames(request.focus);
-  const compositionTargets = focusTargets.length ? focusTargets : request.speaker ? [request.speaker] : [];
+  const compositionTargets = focusTargets;
   const focusPoints = compositionTargets.map((id) => stagedActors[id]?.at ?? stagedObjects[id]?.at).filter((value): value is StagePoint => Boolean(value));
   const centerX = focusPoints.length ? focusPoints.reduce((sum, value) => sum + value[0], 0) / focusPoints.length : width * (0.5 + bias);
   const framing = request.focus ? "focus" : orderedActors.length === 1 ? "single" : orderedActors.length === 2 ? "two-shot" : "group";
   const camera: StagedCamera = {
-    center: point(clamp(centerX, safeArea.x + safeArea.width * 0.25, safeArea.x + safeArea.width * 0.75), height * 0.43),
+    center: point(clamp(centerX, safeArea.x + safeArea.width * 0.25, safeArea.x + safeArea.width * 0.75), 0.43),
     zoom: request.focus ? 1.04 : 1,
     framing,
     safeArea,

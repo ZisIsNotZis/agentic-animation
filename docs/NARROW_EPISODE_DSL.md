@@ -30,6 +30,10 @@ scenes:
 
 Coordinates, scale, bones, sockets, layouts, and frames are never authored.
 Scene declarations describe relationships; staging resolves composition.
+Staging uses a normalized logical canvas (`x`/`y` from 0 to 1); output pixels
+are a renderer concern. An unfocused scene establishes the complete composition.
+An explicit focus is context-aware: it emphasizes the target while retaining
+other relevant actors, moving subjects, and bound objects when they fit.
 
 ## Calls
 
@@ -102,6 +106,17 @@ Voice state applies to every following chunk:
 `actor.say("...")` is valid only inside braces and creates overlapping speech
 for interruptions. An ellipsis-only statement is silence; every `…` contributes
 the configured standard beat. Ellipses mixed with dialogue remain TTS text.
+
+The committed global TTS speed default is `1.2`. `tts.speed` in config and
+`--voice-speed` on `make`/`render-yaml` override it; a later inline
+`actor.voice.speed(n)` call wins for following chunks. Values must be positive
+and finite. Speed is included in audio cache identity and propagated into
+measured timing, speech events, and renderer lip cadence.
+
+Semantic staging groups actors into inferred `left`, `center`, and `right`
+lanes, separates same-lane footprints in stable actor-ID order, clamps to the
+subject safe area, and fails when the requested composition cannot fit.
+Authors never write coordinates.
 
 ## Hard cutover
 

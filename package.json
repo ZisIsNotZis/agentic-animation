@@ -20,7 +20,8 @@
     "validate:episode-yaml": "tsx tools/validate-narrow-episode.mjs",
     "gen:fixtures": "npm run gen:placeholder -w @anim/studio && npm run gen:testrig -w @anim/studio",
     "pretest": "npm run gen:fixtures",
-    "smoke": "node tools/smoke.mjs"
+    "smoke": "node tools/smoke.mjs",
+    "skill:audit": "node tools/skill-audit.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

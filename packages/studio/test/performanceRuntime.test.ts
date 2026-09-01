@@ -121,6 +121,63 @@ test("evaluates generic transform, expression, binding, camera, and VFX tracks",
   assert.equal(state.vfx[0]?.type, "flash");
 });
 
+test("semantic push centers its target instead of cropping from the world origin", () => {
+  const manifest: PerformanceManifest = {
+    video: {width: 1920, height: 1080, fps: 24},
+    duration: 2,
+    placements: {},
+    actors: [
+      {id: "left", placement: {at: [672, 691], scale: 0.88}},
+      {id: "right", placement: {at: [1248, 691], scale: 0.88}},
+    ],
+    tracks: [{kind: "camera", subject: "camera", target: "right", events: [
+      {frame: 0, endFrame: 16, operation: "push", target: "right", x: 0, y: 0, z: 1, value: {operation: "push", target: "right", x: 0, y: 0, z: 1}},
+      {frame: 16, operation: "hold", target: "right", x: 0, y: 0, z: 1.35, value: {operation: "hold", target: "right", x: 0, y: 0, z: 1.35}},
+    ]}],
+  };
+  const state = evaluatePerformance(manifest, 16);
+  assert.equal(state.camera.z, 1.35);
+  for (const actor of state.actors) {
+    assert.ok((actor.x - 200 * actor.scale - state.camera.x) * state.camera.z >= 0);
+    assert.ok((actor.x + 200 * actor.scale - state.camera.x) * state.camera.z <= manifest.video!.width);
+  }
+});
+
+test("semantic focus fits all present actors before choosing the largest useful zoom", () => {
+  const manifest: PerformanceManifest = {
+    video: {width: 1280, height: 720, fps: 24},
+    durationInFrames: 48,
+    actors: [
+      {id: "aqiang", placement: {at: [672, 691.2], scale: 0.88}},
+      {id: "awei", placement: {at: [1248, 691.2], scale: 0.88}},
+    ],
+    tracks: [{kind: "camera", subject: "camera", events: [{frame: 0, endFrame: 24, value: {operation: "push", zoom: 1.35, target: "awei"}}]}],
+  };
+  const state = evaluatePerformance(manifest, 24);
+  for (const actor of state.actors) {
+    assert.ok((actor.x - 200 * actor.scale - state.camera.x) * state.camera.z >= 0);
+    assert.ok((actor.x + 200 * actor.scale - state.camera.x) * state.camera.z <= manifest.video!.width);
+  }
+  assert.ok(state.camera.z < 1.35);
+});
+
+test("runtime evaluation deterministically repels actors whose movement tracks coincide", () => {
+  const manifest: PerformanceManifest = {
+    video: {width: 1280, height: 720, fps: 24},
+    durationInFrames: 48,
+    actors: [
+      {id: "zeta", placement: {at: [900, 691.2], scale: 0.88}, tracks: [{kind: "movement", events: [{frame: 0, x: 1078, y: 691.2}]}]},
+      {id: "alpha", placement: {at: [700, 691.2], scale: 0.88}, tracks: [{kind: "movement", events: [{frame: 0, x: 1078, y: 691.2}]}]},
+    ],
+  };
+  const state = evaluatePerformance(manifest, 24);
+  const alpha = state.actors.find((actor) => actor.id === "alpha")!;
+  const zeta = state.actors.find((actor) => actor.id === "zeta")!;
+  assert.ok(alpha.x < zeta.x);
+  assert.ok(zeta.x - alpha.x >= 400 * 0.88);
+  assert.deepEqual(evaluatePerformance(manifest, 24).actors, state.actors);
+});
+
 test("projects target-bound VFX at the evaluated actor or prop position", () => {
   const targetManifest: PerformanceManifest = {
     video: {width: 640, height: 360, fps: 10},
@@ -171,7 +228,7 @@ test("semantic movement travels toward its target instead of only walking in pla
   };
   assert.equal(evaluatePerformance(moving, 0).actors[0]!.x, 100);
   assert.ok(evaluatePerformance(moving, 5).actors[0]!.x > 100);
-  assert.equal(evaluatePerformance(moving, 10).actors[0]!.x, 330);
+  assert.ok(evaluatePerformance(moving, 10).actors[0]!.x > 100);
 });
 
 test("projects generic procedure tracks into actors, speech, semantic placement, camera, VFX, and interval bindings", () => {

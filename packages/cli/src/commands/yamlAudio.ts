@@ -49,6 +49,7 @@ export interface YamlAudioOptions {
   reuseDir?: string;
   /** Opt in to network synthesis for exact-text misses. */
   synthesizeUnmatched?: boolean;
+  voiceSpeed?: number;
 }
 
 type AlignmentFile = ReturnType<typeof YamlAudioAlignmentsSchema.parse>;
@@ -68,7 +69,9 @@ export async function yamlAudioStage(ctx: StageContext, opts: YamlAudioOptions):
   if (!existsSync(yamlPath)) throw new Error(`yaml audio: missing ${yamlPath}`);
 
   const episode = await loadNarrowEpisode(yamlPath);
-  const source = yamlAudioSourceFromEpisode(episode);
+  const voiceSpeed = opts.voiceSpeed ?? ctx.config.tts.speed;
+  if (!Number.isFinite(voiceSpeed) || voiceSpeed <= 0) throw new Error("yaml audio: voice speed must be greater than zero");
+  const source = {...yamlAudioSourceFromEpisode(episode), voiceSpeed};
   const alignment = opts.alignment ? readAlignment(opts.alignment) : undefined;
   const measurements = normalizeMeasurements(opts.measurements);
   const reuseDir = opts.reuseDir ?? paths.audioDir;
@@ -77,7 +80,7 @@ export async function yamlAudioStage(ctx: StageContext, opts: YamlAudioOptions):
   let reuseCount = 0;
   mkdirSync(paths.audioDir, { recursive: true });
 
-  for (const chunk of segmentYamlAudio(source)) {
+  for (const chunk of segmentYamlAudio(source, voiceSpeed)) {
       const takeId = chunk.id;
       const cleanedText = cleanTextForSynthesis(chunk.text);
       const voice = source.actors[chunk.actor]?.voice ?? ctx.config.tts.voice;

@@ -20,7 +20,7 @@ test("stages a two-person semantic setup as a large, subtitle-safe two-shot", ()
   assert.equal(result.actors.bob!.facing, -1);
   assert.ok(result.actors.alice!.at[1] < result.camera.subtitleSafeArea.y);
   assert.ok(result.actors.bob!.at[1] < result.camera.subtitleSafeArea.y);
-  assert.deepEqual(result.camera.subtitleSafeArea, {x: 80, y: 860, width: 1760, height: 160});
+  assert.deepEqual(result.camera.subtitleSafeArea, {x: 80 / 1920, y: 1 - 160 / 1080 - 60 / 1080, width: 1 - 160 / 1920, height: 160 / 1080});
 });
 
 test("resolves object relationships and action focus without domain-specific branches", () => {
@@ -56,4 +56,52 @@ test("is deterministic and validates semantic references", () => {
   assert.deepEqual(stageScene(input), stageScene(input));
   assert.throws(() => stageScene({...input, focus: {kind: "actor", id: "missing"}}), /unknown focus target/);
   assert.throws(() => stageScene({...input, actors: [{id: "one"}, {id: "one"}]}), /duplicate actor id/);
+});
+
+test("separates same-lane actors by footprint independently of input order", () => {
+  const first = stageScene({
+    location,
+    actors: [
+      {id: "zeta", entrance: "center", facing: "audience", flip: true, prominence: "primary"},
+      {id: "alpha", entrance: "center", facing: "audience", setup: "seated"},
+    ],
+    objects: [{id: "book", relation: "held-by", target: "alpha"}],
+  });
+  const second = stageScene({
+    location,
+    actors: [
+      {id: "alpha", entrance: "center", facing: "audience", setup: "seated"},
+      {id: "zeta", entrance: "center", facing: "audience", flip: true, prominence: "primary"},
+    ],
+    objects: [{id: "book", relation: "held-by", target: "alpha"}],
+  });
+
+  assert.deepEqual(first, second);
+  assert.ok(Math.abs(first.actors.alpha!.at[0] - first.actors.zeta!.at[0]) >= 211 / 1920);
+  assert.equal(first.actors.zeta!.flip, true);
+  assert.equal(first.actors.zeta!.z, 50);
+  assert.equal(first.objects.book!.target, "alpha");
+  assert.equal(first.objects.book!.at[0], Number((first.actors.alpha!.at[0] + 78 / 1920).toFixed(3)));
+});
+
+test("clamps actor footprints to the subject safe area", () => {
+  const result = stageScene({
+    location,
+    actors: [
+      {id: "left", entrance: "left"},
+      {id: "right", entrance: "right"},
+    ],
+  });
+
+  assert.ok(result.actors.left!.at[0] >= result.camera.safeArea.x + 105 / 1920);
+  assert.ok(result.actors.right!.at[0] <= result.camera.safeArea.x + result.camera.safeArea.width - 105 / 1920);
+  assert.ok(result.actors.left!.at[1] >= result.camera.safeArea.y);
+  assert.ok(result.actors.left!.at[1] <= result.camera.safeArea.y + result.camera.safeArea.height);
+});
+
+test("reports impossible same-lane compositions clearly", () => {
+  assert.throws(
+    () => stageScene({location, actors: Array.from({length: 10}, (_, i) => ({id: `actor-${i}`, entrance: "center" as const}))}),
+    /staging: impossible composition: same-lane actors require more horizontal safe area/,
+  );
 });

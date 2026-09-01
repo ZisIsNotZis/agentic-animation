@@ -26,8 +26,8 @@ export const PathsSchema = z.object({
 export type Paths = z.infer<typeof PathsSchema>;
 
 export const VideoDefaultsSchema = z.object({
-  width: z.number().int().positive().default(1920),
-  height: z.number().int().positive().default(1080),
+  width: z.number().int().positive().default(1280),
+  height: z.number().int().positive().default(720),
   fps: z.number().positive().default(24),
   crf: z.number().int().min(0).max(51).default(20),
 });
@@ -43,6 +43,7 @@ export type RenderLimits = z.infer<typeof RenderLimitsSchema>;
 export const TtsDefaultsSchema = z.object({
   voice: z.string().default("af_heart"),
   lang: z.enum(["en", "hi", "zh"]).default("en"),
+  speed: z.number().finite().positive().default(1.2),
 });
 export type TtsDefaults = z.infer<typeof TtsDefaultsSchema>;
 
