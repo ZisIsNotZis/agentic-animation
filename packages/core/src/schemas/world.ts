@@ -20,5 +20,8 @@ export const WorldSchema = z.object({canvas: CanvasSchema, plugins: z.record(Jso
 export const PluginOrderSchema = z.object({priority: z.number().finite().optional(), before: z.union([Id, z.array(Id)]).optional(), after: z.union([Id, z.array(Id)]).optional()}).strict();
 export const PluginSchema = PluginOrderSchema;
 
+/** Category manifest: plugin order metadata plus category-owned data (e.g. kind, procedures). Unknown keys fail discovery. */
+export const CategoryManifestSchema = PluginOrderSchema.extend({kind: z.literal("category").optional(), procedures: z.array(z.unknown()).optional()});
+
 export type WorldSchemaOutput = z.infer<typeof WorldSchema>;
 export type PluginSchemaOutput = z.infer<typeof PluginOrderSchema>;

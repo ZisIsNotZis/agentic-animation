@@ -40,6 +40,31 @@ test("loadPlugins discovers a new category plugin without editing engine source"
   assert.equal(plugins[0]!.manifest.priority, 5);
 });
 
+test("loadPlugins rejects corrupted or unknown-key category manifests", async () => {
+  const root = await mkdtemp(join(tmpdir(), "anim-plugin-"));
+  await mkdir(join(root, "broken"));
+  await writeFile(join(root, "broken", "plugin.js"), "export default {run(world) { return world; }};");
+  // The string-spread corruption class: valid JSON, digit-keyed characters.
+  const corrupted = Object.fromEntries([...JSON.stringify({priority: 5})].map((ch, i) => [String(i), ch]));
+  await writeFile(join(root, "broken", "manifest.json"), JSON.stringify(corrupted));
+  await assert.rejects(loadPlugins(root), /broken\/manifest\.json is not a valid plugin manifest/);
+
+  await writeFile(join(root, "broken", "manifest.json"), JSON.stringify({priority: 1, wat: true}));
+  await assert.rejects(loadPlugins(root), /not a valid plugin manifest/);
+});
+
+test("manifest-declared priority reorders plugin discovery", async () => {
+  const root = await mkdtemp(join(tmpdir(), "anim-plugin-"));
+  await mkdir(join(root, "alpha"));
+  await mkdir(join(root, "omega"));
+  await writeFile(join(root, "alpha", "plugin.js"), "export default {run(world) { return world; }};");
+  await writeFile(join(root, "alpha", "manifest.json"), JSON.stringify({priority: 100}));
+  await writeFile(join(root, "omega", "plugin.js"), "export default {run(world) { return world; }};");
+  await writeFile(join(root, "omega", "manifest.json"), JSON.stringify({priority: -100}));
+  const plugins = await loadPlugins(root);
+  assert.deepEqual(plugins.map((p) => p.category), ["omega", "alpha"]);
+});
+
 test("loadPlugins rejects a plugin without run and callable members without dispatch opt-in", async () => {
   const noRun = await mkdtemp(join(tmpdir(), "anim-plugin-"));
   await mkdir(join(noRun, "broken"));

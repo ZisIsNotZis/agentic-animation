@@ -10,7 +10,7 @@
 import {readdir, readFile, access} from "node:fs/promises";
 import {join, resolve} from "node:path";
 import {pathToFileURL} from "node:url";
-import {WorldSchema, type WorldSchemaOutput} from "../schemas/world";
+import {CategoryManifestSchema, WorldSchema, type WorldSchemaOutput} from "../schemas/world";
 import type {JsonValue} from "../world/types";
 
 export type RuntimeWorld = WorldSchemaOutput;
@@ -74,9 +74,14 @@ export interface WorldRuntimeOptions extends LoadPluginsOptions {
 const asList = (value: string | readonly string[] | undefined): readonly string[] =>
   value === undefined ? [] : typeof value === "string" ? [value] : value;
 
-async function readManifest(categoryRoot: string): Promise<PluginManifest> {
+async function readManifest(categoryRoot: string, category: string): Promise<PluginManifest> {
   try {
-    return JSON.parse(await readFile(join(categoryRoot, "manifest.json"), "utf8")) as PluginManifest;
+    const raw = JSON.parse(await readFile(join(categoryRoot, "manifest.json"), "utf8"));
+    const parsed = CategoryManifestSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new Error(`library/${category}/manifest.json is not a valid plugin manifest: ${parsed.error.issues[0]?.message ?? "unknown issue"}`);
+    }
+    return parsed.data;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return {};
     throw error;
@@ -106,7 +111,7 @@ export async function loadPlugins(libraryRoot: string, options: LoadPluginsOptio
     if (definition.dispatch !== true && Object.values(definition.members ?? {}).some((member) => typeof member === "function")) {
       throw new Error(`library/${category}/plugin.js exports callable members without dispatch: true`);
     }
-    const manifest = {...await readManifest(categoryRoot)};
+    const manifest = {...await readManifest(categoryRoot, category)};
     plugins.push({category, manifest, definition});
   }
   return orderPlugins(plugins);
