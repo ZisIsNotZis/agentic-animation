@@ -205,5 +205,5 @@ scenes:
     },
   };
   await compileEpisode(path, {registry: typedRegistry, resolver, speechTiming: timing});
-  assert.deepEqual(calls, [{id: "alice.action.slam", subject: "alice"}]);
+  assert.deepEqual(calls, [{id: "action.slam", subject: "alice"}]);
 });

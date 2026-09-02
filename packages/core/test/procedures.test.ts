@@ -3,12 +3,21 @@ import {join} from "node:path";
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {loadAssetRegistry} from "../src/assets/registry";
-import {createProcedureResolver, PROCEDURE_DEFINITIONS, PROCEDURE_IDS} from "../src/procedures";
+import {createProcedureResolver, loadProcedureDefinitions} from "../src/procedures";
+import type {ProcedureCatalog, ProcedureDefinition} from "../src/procedures";
 import {parseProcedureCalls} from "../src/schemas/narrowEpisode";
 import type {ProcedureCall} from "../src/schemas/narrowEpisode";
 import type {ProcedureResolveContext} from "../src/compiler";
 
 const libraryRoot = join(process.cwd(), "library");
+
+let DEFINITIONS: ProcedureCatalog | undefined;
+async function definitions(): Promise<ProcedureCatalog> {
+  return (DEFINITIONS ??= await loadProcedureDefinitions(libraryRoot));
+}
+function definition(id: string): ProcedureDefinition {
+  return DEFINITIONS![id] as ProcedureDefinition;
+}
 
 function context(subject: string, call: ProcedureCall): ProcedureResolveContext {
   return {
@@ -41,11 +50,11 @@ test("has a deterministic authored implementation for every registered procedure
     procedures: Array<{id: string; params: Array<{name: string; type: string}>; subjects: string[]}>;
   };
   const registry = await loadAssetRegistry(libraryRoot);
-  const resolver = createProcedureResolver({registry});
+  const resolver = createProcedureResolver({registry, definitions: await definitions()});
 
   assert.equal(raw.procedures.length, 66);
   assert.equal(new Set(raw.procedures.map((procedure) => procedure.id)).size, 66);
-  assert.deepEqual([...PROCEDURE_IDS].sort(), raw.procedures.map((procedure) => procedure.id).sort());
+  assert.deepEqual(Object.keys(await definitions()).sort(), raw.procedures.map((procedure) => procedure.id).sort());
   for (const procedure of raw.procedures) {
     const id = procedure.id;
     const procedureCall = authoredCall(id, procedure.params.map((param) => sampleArg(param.type)));
@@ -54,7 +63,7 @@ test("has a deterministic authored implementation for every registered procedure
     const second = resolver.resolve(procedureCall, context(subject, procedureCall));
     assert.deepEqual(second, first, id);
     assert.equal(first.performance.id, id);
-    assert.equal(first.durationSec, PROCEDURE_DEFINITIONS[id]!.durationSec);
+    assert.equal(first.durationSec, definition(id)!.durationSec);
     assert.ok(first.performance.phases.length >= 2, id);
     assertRecipeIsConcrete(first.performance.recipe, id);
     assert.deepEqual(first.tracks, first.performance.recipe.tracks, id);
@@ -80,15 +89,15 @@ test("audits every procedure call used by the AI work adventure", async () => {
     }
   }
   assert.equal(calls.size, 65);
-  const resolver = createProcedureResolver();
+  const resolver = createProcedureResolver({definitions: await definitions()});
   for (const procedureCall of calls.values()) {
     const result = resolver.resolve(procedureCall, context(procedureCall.subject, procedureCall));
     assertRecipeIsConcrete(result.performance.recipe, result.performance.id);
   }
 });
 
-test("emits prop lifecycle markers at authored grasp, transfer, and release beats", () => {
-  const resolver = createProcedureResolver();
+test("emits prop lifecycle markers at authored grasp, transfer, and release beats", async () => {
+  const resolver = createProcedureResolver({definitions: await definitions()});
   const pickupCall = authoredCall("prop.pickup", ["Cup"]);
   const pickupResolution = resolver.resolve(pickupCall, context("Alice", pickupCall));
   const pickup = pickupResolution.performance;
@@ -117,8 +126,8 @@ test("emits prop lifecycle markers at authored grasp, transfer, and release beat
   assert.equal(putdown.recipe.tracks.find((track) => track.kind === "object")?.events[0]?.support, "Desk");
 });
 
-test("retains representative body, face, gaze, camera, manga VFX, and audio intent", () => {
-  const resolver = createProcedureResolver();
+test("retains representative body, face, gaze, camera, manga VFX, and audio intent", async () => {
+  const resolver = createProcedureResolver({definitions: await definitions()});
   const resolve = (name: string, args: string[], subject: string) => {
     const procedureCall = authoredCall(name, args);
     return resolver.resolve(procedureCall, context(subject, procedureCall)).performance;
@@ -148,9 +157,9 @@ test("retains representative body, face, gaze, camera, manga VFX, and audio inte
   assert.ok(!music.recipe.tracks.some((track) => track.kind === "sound"));
 });
 
-test("resolves procedure parameters inside the generic recipe without renderer vocabulary", () => {
+test("resolves procedure parameters inside the generic recipe without renderer vocabulary", async () => {
   const call = authoredCall("action.point", ["Bob"]);
-  const result = createProcedureResolver().resolve(call, context("Alice", call));
+  const result = createProcedureResolver({definitions: await definitions()}).resolve(call, context("Alice", call));
   assert.ok(result.tracks.some((track) => track.kind === "bone"));
   assert.equal(result.performance.recipe.tracks.find((track) => track.kind === "bone")?.events[0]?.target, "Bob");
   assert.equal((result.performance.recipe.tracks.find((track) => track.kind === "bone")?.events[0]?.value as {target?: string}).target, "Bob");
@@ -158,7 +167,7 @@ test("resolves procedure parameters inside the generic recipe without renderer v
 
 test("rejects empty and semantically insufficient explicit recipes", () => {
   const call = authoredCall("action.nod");
-  const base = PROCEDURE_DEFINITIONS["action.nod"]!;
+  const base = definition("action.nod");
   const empty = {...base, recipe: {tracks: []}};
   assert.throws(() => createProcedureResolver({definitions: {[base.id]: empty}}).resolve(call, context("Alice", call)), /empty generic recipe/i);
   const insufficient = {...base, recipe: {tracks: [{kind: "bone" as const, events: []}]}};
@@ -180,7 +189,7 @@ function assertRecipeIsConcrete(recipe: {tracks: readonly {kind: string; events:
 
 test("honors the registry contract instead of silently accepting unknown procedures or arity", async () => {
   const registry = await loadAssetRegistry(libraryRoot);
-  const resolver = createProcedureResolver({registry});
+  const resolver = createProcedureResolver({registry, definitions: await definitions()});
   const unknown = authoredCall("action.unknown");
   assert.throws(() => resolver.resolve(unknown, context("Alice", unknown)), /no authored implementation/i);
   const wrong = authoredCall("action.nod", ["Cup"]);

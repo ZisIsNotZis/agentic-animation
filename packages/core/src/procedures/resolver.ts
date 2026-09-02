@@ -1,7 +1,7 @@
 import type {ProcedureManifest} from "../schemas/libraryMeta";
 import type {ProcedureResolution, ProcedureResolveContext} from "../compiler/index";
 import type {ProcedureCall} from "../schemas/narrowEpisode";
-import {PROCEDURE_DEFINITIONS, type ProcedureDefinition, type ProcedureParameter} from "./catalog";
+import type {ProcedureDefinition, ProcedureParameter} from "./types";
 import type {
   AudioIntent,
   BodyIntent,
@@ -296,7 +296,7 @@ export class DeterministicProcedureResolver {
   readonly discovery?: ProcedureDiscovery;
 
   constructor(options: ProcedureResolverOptions = {}) {
-    this.definitions = options.definitions ?? PROCEDURE_DEFINITIONS;
+    this.definitions = options.definitions ?? {};
     this.registry = options.registry;
     this.discovery = options.discovery;
     validateCoverage(this.registry, this.definitions);

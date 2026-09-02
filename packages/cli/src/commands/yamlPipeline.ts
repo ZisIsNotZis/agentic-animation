@@ -5,6 +5,7 @@ import {
   createProcedureResolver,
   hashJson,
   loadAssetRegistry as coreLoadAssetRegistry,
+  loadProcedureDefinitions as coreLoadProcedureDefinitions,
   loadNarrowEpisode,
   readJson,
   synchronizeYamlAudioStarts,
@@ -15,6 +16,7 @@ import {
   resolvePath,
   type AssetRegistry,
   type CompiledEpisode,
+  type ProcedureCatalog,
   type ProcedureResolver,
   type RenderReport,
   type SpeechTimingProvider,
@@ -57,6 +59,7 @@ export interface YamlRenderRequest {
 
 export interface YamlPipelineDependencies {
   loadAssetRegistry?: (libraryRoot: string) => Promise<AssetRegistry>;
+  loadProcedureDefinitions?: (libraryRoot: string) => Promise<ProcedureCatalog>;
   compileEpisode?: typeof coreCompileEpisode;
   prepareAudio?: (
     ctx: StageContext,
@@ -118,7 +121,8 @@ export async function checkYamlEpisode(
 ): Promise<YamlCheckResult> {
   const resolved = await resolveYamlEpisode(ctx, input);
   const registry = await (deps.loadAssetRegistry ?? coreLoadAssetRegistry)(libraryDir(ctx));
-  const checkProcedures = createProcedureResolver({registry});
+  const definitions = await (deps.loadProcedureDefinitions ?? coreLoadProcedureDefinitions)(libraryDir(ctx));
+  const checkProcedures = createProcedureResolver({registry, definitions});
   const compiled = await (deps.compileEpisode ?? coreCompileEpisode)(resolved.path, {
     registry,
     resolver: deps.procedureResolver ?? checkProcedures.resolve.bind(checkProcedures),
@@ -149,7 +153,8 @@ export async function makeYamlEpisode(
     );
   }
   const timing = deps.speechTimingProvider ?? speechTimingFromPreparation(preparation);
-  const procedures = createProcedureResolver({registry});
+  const definitions = await (deps.loadProcedureDefinitions ?? coreLoadProcedureDefinitions)(libraryDir(ctx));
+  const procedures = createProcedureResolver({registry, definitions});
   const procedureResolver = deps.procedureResolver ?? procedures.resolve.bind(procedures);
   const compiled = await (deps.compileEpisode ?? coreCompileEpisode)(resolved.path, {
     registry,

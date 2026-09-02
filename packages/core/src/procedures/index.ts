@@ -1,6 +1,7 @@
 export {DeterministicProcedureResolver, createProcedureResolver, procedureResolver} from "./resolver";
-export {PROCEDURE_DEFINITIONS, PROCEDURE_IDS} from "./catalog";
+export {loadProcedureDefinitions} from "./discovery";
 export type {ProcedureCatalog, ProcedureDefinition, ProcedureParameter, ProcedureDiscovery, ProcedureManifestSource, ProcedurePluginResolver, ProcedureResolverOptions} from "./resolver";
+export type {ProcedureDefinition as AuthoredProcedureDefinition} from "./types";
 export type {
   AudioIntent,
   BodyIntent,

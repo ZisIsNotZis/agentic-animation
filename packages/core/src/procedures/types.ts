@@ -1,3 +1,4 @@
+import type {ProcedureParamType} from "../schemas/libraryMeta";
 import type {ProcedureResolution, ProcedureResolveContext} from "../compiler/index";
 
 export type ProcedureEase = "linear" | "in" | "out" | "io" | "back";
@@ -134,3 +135,29 @@ export type ProcedureResolutionWithPerformance = ProcedureResolution & {
 };
 
 export type ProcedureResolverContext = ProcedureResolveContext;
+
+export interface ProcedureParameter {
+  name: string;
+  type: ProcedureParamType;
+}
+
+export interface ProcedureDefinition {
+  id: string;
+  durationSec: number;
+  subjects: readonly ("actor" | "camera" | "effect" | "sound" | "music")[];
+  params: readonly ProcedureParameter[];
+  phases: readonly [string, string, ProcedureEase][];
+  action: string;
+  parts: readonly string[];
+  trackKind?: "bone" | "movement";
+  emotion?: {name: string; brow: string; eyes: string; mouth: string; intensity: number};
+  gaze?: {target: string; lead: "eyes" | "head" | "whole-body"; hold?: number};
+  camera?: {operation: "push" | "pull" | "hold"; zoom: number; target?: string};
+  vfx?: {style: string; intensity: number; duration?: number; target?: string};
+  audio?: {cue: string; kind: "sound" | "music"; gain: number; duration?: number; loop?: boolean};
+  /** Optional explicit recipe; otherwise the resolver expands the authored intents. */
+  recipe?: ProcedureRecipe;
+  actorState?: {present?: boolean; pose?: string};
+  markers?: Readonly<Record<string, number>>;
+  lifecycle?: {objectParam: string; receiverParam?: string; supportParam?: string; bindAt?: number; releaseAt?: number; settleAt?: number};
+}
