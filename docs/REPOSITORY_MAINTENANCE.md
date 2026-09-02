@@ -41,17 +41,16 @@ State exactly what was and was not verified.
 - Use only the canonical YAML DSL; deprecated authoring forms are rejected.
 - Reference reusable assets by category-relative library path; do not add `id`, `version`, or `implementationKey` to category asset metadata.
 - Scene context belongs in episode locations and world composition, not unrelated asset namespaces.
-- Keep model and license provenance with artifact metadata; path identity is
-  maintained only by the directory and registry index.
+- Keep model and license provenance with asset `manifest.json` metadata; asset
+  identity is its category-relative directory path, and there is no registry index.
 - Do not add no-op or silent fallbacks for missing story requirements.
 - Do not commit secrets or generated outputs unless the owning contract requires them.
 - Episodes are demos until a release explicitly says otherwise.
 
 ## Releases and collaboration
 
-The package is `0.0.0` while the DSL and IR are evolving. Treat schema, DSL,
-asset registry, and renderer-input changes as potentially breaking; document
-them in `DECISIONS.md` and update status evidence. A release should include
+The package is `0.0.0` while the DSL and IR are evolving. Treat schema, DSL, plugin-contract, and renderer-input changes as potentially
+breaking; document them in `DECISIONS.md` and update status evidence. A release should include
 tested artifacts and representative QA, not merely a passing typecheck.
 
 Issues should contain reproduction steps, input, environment, and evidence.

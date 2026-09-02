@@ -14,7 +14,7 @@ renders and record defects by scene and frame.
   zoom or golden-ratio emphasis.
 - Same-lane actors separate deterministically; no unintended overlap, twinning,
   exits, population changes, or broken layer order.
-- Backgrounds, props, bindings, and target-bound VFX retain continuity.
+- Backgrounds, props, bindings, and target-bound effects retain continuity.
 - Poses, gestures, gaze, face, and speech visibly express the authored beat;
   speech alternates deterministic open/closed mouth states.
 - Joints connect, outlines are consistent, expressions remain distinct, and

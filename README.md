@@ -64,11 +64,11 @@ See `docs/PIPELINE.md` for the full flow.
 ## Canonical YAML pipeline
 
 `episode.yml` is the only agent-authored executable script. It binds friendly
-episode-local IDs to versioned assets, declares semantic staging, and places
+episode-local IDs to library assets, declares semantic staging, and places
 typed inline calls at dialogue boundaries:
 
 ```text
-episode.yml -> validated source -> registry + audio timing -> performance IR
+episode.yml -> validated source -> plugin discovery + audio timing -> performance IR
   -> Remotion frames -> QA -> MP4
 ```
 
@@ -85,7 +85,9 @@ for document ownership and conflict precedence.
 - `packages/adapters/*` — one capability each (tts, lipsync, imagegen, music,
   corpus, renderer).
 - `packages/studio` — the Remotion project: puppet runtime + placeholder cast.
-- `library/` — versioned asset library (characters, backgrounds, motions, style).
+- `library/` — category plugins and assets: `library/<category>/plugin.js` owns
+  category semantics, `library/<category>/<name>/` holds each asset; identity
+  is the path (e.g. `action.slam`).
 - `episodes/<slug>/` — per-episode workspaces.
 - `py/` — uv-managed Python sidecars. `vendor/` — pinned binaries. `tools/` — setup + doctor.
 

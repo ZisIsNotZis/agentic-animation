@@ -3,7 +3,7 @@
 ## 1. Inventory the story
 
 Extract cast, locations, interactive objects, recurring expressions/actions,
-camera needs, voice ranges, VFX, SFX, and background layers. Convert narration
+camera needs, voice ranges, effects, sound cues, and background layers. Convert narration
 into playable first-person dialogue. Completion: every visible or audible story
 requirement maps to an existing asset or an explicit asset-production task.
 
@@ -29,7 +29,7 @@ invalid spans, resource conflicts, or legacy fields.
 
 Split dialogue at braces and voice-state changes, synthesize measured chunks,
 assemble canonical voice audio, then schedule calls around those measurements.
-Generate captions and lips from that same timeline. Mix SFX/BGM with dialogue
+Generate captions and lips from that same timeline. Mix sound/BGM with dialogue
 ducking and loudness normalization. Completion: an audio QA report proves text,
 subtitles, lips, and events share one timing source.
 
@@ -67,7 +67,7 @@ Character QA also blocks on connected joints at every sampled pose, consistent
 limb outlines without visible rig markers, readable eye contact, and distinct
 face silhouettes across emotion families. Speech previews must show a
 deterministic open/closed mouth cadence. Scene QA samples every location family,
-checks actor/background layer order, and confirms target-bound VFX are centered
+checks actor/background layer order, and confirms target-bound effects are centered
 on their actor or object rather than the canvas.
 
 ## 7. Benchmark before full render

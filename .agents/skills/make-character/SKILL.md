@@ -7,7 +7,7 @@ description: Create or approve an immutable category puppet for this engine when
 
 Read [docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md),
 [docs/DECISIONS.md](../../../docs/DECISIONS.md), and [docs/SCHEMAS.md](../../../docs/SCHEMAS.md).
-Read [docs/WHOLE_WORLD_PLUGINS.md](../../../docs/WHOLE_WORLD_PLUGINS.md) for category layout and face-rig/overlay ownership.
+Read [docs/WORLD_PLUGIN_CONTRACT.md](../../../docs/WORLD_PLUGIN_CONTRACT.md) for category layout and face-rig/overlay ownership.
 Episodes pin approved assets; drafts do not enter production rendering.
 
 1. Run `npm run anim -- doctor` and confirm the image-generation environment.

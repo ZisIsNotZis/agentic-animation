@@ -23,8 +23,8 @@ scenes:
     objects: {desk: center, coffee: on(desk)}
     script:
       - xiaoming: |
-          这杯咖啡，{xiaoming.act.pick_up(coffee)}不是老板的。
-          {xiaohong.face.shocked(), camera.use.punch_in(xiaohong)}是你的。
+          这杯咖啡，{xiaoming.prop.pickup(coffee)}不是老板的。
+          {xiaohong.emotion.shocked(), camera.punch_in(xiaohong)}是你的。
 ```
 
 Coordinates, scale, bones, sockets, layouts, and frames are never authored in episode YAML.
@@ -36,27 +36,29 @@ other relevant actors, moving subjects, and bound objects when they fit.
 
 ## Calls
 
-A call is a plugin-provided typed terminal path. Fixed namespaces are:
+A call is a category-provided typed terminal resolved by the owning plugin in `library/<category>/plugin.js`. Actor procedures take the actor as subject; world categories are subject-less; objects may act as subjects for prop calls:
 
 ```text
-actor.act.*       timed body or prop interaction
-actor.face.*      persistent facial state
-actor.look.*      persistent gaze constraint
-actor.move.*      semantic locomotion
-actor.voice.*     persistent synthesis state
-object.state.*    object state
-camera.use.*      camera performance
-vfx.use.*         visual effect
-sfx.play.*        sound effect
-actor.say("...") speech interruption intrinsic
+<actor>.action.<terminal>(...)    timed body or prop interaction
+<actor>.emotion.<terminal>(...)   persistent facial state
+<actor>.gaze.<terminal>(...)      persistent gaze constraint
+<actor>.movement.<terminal>(...)  semantic locomotion
+<actor>.voice.<terminal>(...)     persistent synthesis state
+<actor>.prop.<terminal>(...)      prop pickup, putdown, and handover
+<object>.prop.<terminal>(...)     object-subject prop calls
+camera.<terminal>(...)            camera performance
+effect.<terminal>(...)            visual effect
+sound.<terminal>(...)             sound effect
+music.<terminal>(...)             music cue
+<actor>.say("...")                speech interruption intrinsic
 ```
 
-`act.throw` is a category procedure with a fixed schema, never
-`act(operation: string, ...)`. Required domain arguments are positional;
-optional modifiers are keyword arguments:
+For example: `lin.action.slam(desk)`, `lin.emotion.shocked()`, `lin.gaze.at(awei)`, `lin.movement.to(door)`, `lin.prop.pickup(desk)`, `camera.punch_in(lin)`, `effect.ai_glitch(screen)`, `sound.static_buzz()`, `music.ending()`.
+
+Each terminal is a fixed category procedure with a schema owned by the category plugin, never `action(operation: string, ...)`. Required domain arguments are positional; optional modifiers are keyword arguments:
 
 ```yaml
-{aqiang.act.throw(cpu, awei, arc="high", speed=1.4)}
+{aqiang.action.illuminate(flashlight, awei)}
 ```
 
 The parser accepts references, finite numbers, booleans, and quoted strings.
@@ -67,9 +69,9 @@ Calls cannot nest and no JavaScript is evaluated. Keyword order is irrelevant.
 Timed procedures block by convention and use the asset default duration:
 
 ```yaml
-{awei.act.slam(desk)}
-{awei.act.slam(desk, duration=1.2)}
-{awei.act.slam(desk, mode="nonblock")}
+{awei.action.slam(desk)}
+{awei.action.slam(desk, duration=1.2)}
+{awei.action.slam(desk, mode="nonblock")}
 ```
 
 A brace group starts every member concurrently. It blocks for its longest
@@ -79,10 +81,10 @@ Explicit spans use identical normalized calls except for `mode`:
 
 ```yaml
 - aqiang: |
-    接好了！{aqiang.act.throw(cpu, awei, arc="high", mode="begin")}
+    看好了！{aqiang.action.illuminate(flashlight, awei, mode="begin")}
 - awei: |
     你不要过来啊！
-    {aqiang.act.throw(cpu, awei, arc="high", mode="end"), awei.face.shocked()}
+    {aqiang.action.illuminate(flashlight, awei, mode="end"), awei.emotion.shocked()}
 ```
 
 Pair identity is subject + resolved terminal + positional arguments + sorted
@@ -102,13 +104,13 @@ Voice state applies to every following chunk:
     {aqiang.voice.speed(1)}啊，终于！
 ```
 
-`actor.say("...")` is valid only inside braces and creates overlapping speech
+`<actor>.say("...")` is valid only inside braces and creates overlapping speech
 for interruptions. An ellipsis-only statement is silence; every `…` contributes
 the configured standard beat. Ellipses mixed with dialogue remain TTS text.
 
 The committed global TTS speed default is `1.2`. `tts.speed` in config and
 `--voice-speed` on `make`/`render-yaml` override it; a later inline
-`actor.voice.speed(n)` call wins for following chunks. Values must be positive
+`<actor>.voice.speed(n)` call wins for following chunks. Values must be positive
 and finite. Speed is included in audio cache identity and propagated into
 measured timing, speech events, and renderer lip cadence.
 

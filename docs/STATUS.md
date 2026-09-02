@@ -1,32 +1,48 @@
 # Project status
 
-Last reconciled: 2026-09-02. Status: **plugin-host migration incomplete; paused for manual design confirmation**.
+Last reconciled: 2026-09-02. Status: **plugin-host architecture implemented; docs reconciled to [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md)**.
 
-The authoritative scope and sequence are documented in [PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md). No further implementation should start until the user confirms the world contract, taxonomy, lifecycle, ordering, coordinate, and face model.
+The canonical contract is [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md); [PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md) is historical reference for how Steps 1-2 were executed.
 
 ## Done now
 
-- The canonical `World` shape, normalized canvas schema, plugin-chain prototype, deterministic ordering, lifecycle chaining, and focused tests exist.
-- Active episode asset references were migrated to canonical slash paths such as `figure/aqiang`, `voice/zh/aqiang`, and `set/agent_stage`.
-- Active asset directories were moved out of historical `v1` paths and active asset metadata was renamed to `manifest.json`.
-- The smoke fixture was migrated to copy canonical category directories and `npm run smoke` passes.
-- The latest baseline checks passed: `npm run typecheck`; `npm run test:all` with 128 passed, 7 skipped, 0 failed; all three episode validation commands; `npm run skill:audit`; and `git diff --check`.
-- Existing MP4 files were not regenerated.
+- The plugin-host engine is implemented: filesystem discovery of
+  `library/<category>/plugin.js`, `before`/`after`/`priority` ordering with
+  cycle detection, per-frame whole-world plugin chaining, start/tick/stop
+  lifecycle with stable invocation IDs, JSON-only plugin state, and
+  checkpoint/replay support.
+- Procedure semantics live as static members of category plugins; the
+  TypeScript-authored procedure catalog was removed and
+  `loadProcedureDefinitions` discovers plugins.
+- `library/<category>/<name>/manifest.json` asset manifests replaced registry
+  metadata; asset identity is the category-relative path and there is no
+  registry index.
+- The 14 canonical categories exist as plugin categories: `figure`, `voice`,
+  `set`, `prop`, `dressing`, `layout`, `action`, `emotion`, `gaze`, `movement`,
+  `camera`, `effect`, `sound`, `music` (face_rig/face_overlay are reserved in
+  the face model).
+- Episode demos use the plugin-host call grammar: `<actor>.<category>.<terminal>(...)`
+  for actor procedures, subject-less `camera.*`, `effect.*`, `sound.*`,
+  `music.*`, and `<object>.prop.<terminal>(...)` for object subjects.
+- Active episode asset references use canonical slash paths such as
+  `figure/aqiang`, `voice/zh/aqiang`, and `set/agent_stage`, and active asset
+  metadata uses `manifest.json`.
+- Earlier baseline checks that passed: `npm run typecheck`; `npm run test:all`
+  with 128 passed, 7 skipped, 0 failed; all three episode validation commands;
+  `npm run skill:audit`; and `git diff --check`.
 
 ## Not done
 
-- Step 1 has not been manually approved before implementation; this is now the stopping boundary.
-- The engine does not yet discover and execute `library/<category>/plugin.js`; no category plugin files are currently present.
-- The production compiler still depends on `packages/core/src/procedures/catalog.ts` and `packages/core/src/procedures/resolver.ts`.
-- `library/action/manifest.json` is still a centralized procedure manifest rather than plugin-owned category discovery.
-- Semantic action, face, gaze, movement, camera, effect, sound, and music behavior has not been fully moved into category plugins.
-- The full migration has not yet removed all legacy terminology and historical generator/schema concepts from maintained source and tests.
-- The three episodes have not yet been verified through the final plugin-host runtime, and no new video render or final media QA has been performed.
+- Existing MP4 files have not been regenerated against the plugin-host runtime.
+- The three episodes have not yet been fully re-verified through final media QA
+  under the plugin-host runtime.
+- Legacy terminology and historical generator/schema concepts may remain in
+  non-authoritative source, tests, and schema artifacts.
 
 ## Explicitly preserved
 
 Existing checked-in MP4 files remain untouched. Generated audio, video, manifests, screenshots, caches, and temporary QA artifacts remain outside the source change set.
 
-## Next action after confirmation
+## Next
 
-Implement Step 2, then migrate and verify Step 3 exactly as specified in [PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md).
+Re-verify the demo episodes through the plugin-host runtime end to end, regenerate representative renders, and record evidence here.

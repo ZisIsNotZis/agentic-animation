@@ -11,13 +11,14 @@ Read [docs/INDEX.md](../../../docs/INDEX.md) before edits.
 
 1. Inspect category plugin manifests and the episode directory. Reuse approved category assets; route missing puppets to [make-character](../make-character/SKILL.md).
 2. Write or refine the single `episode.yml` with semantic IDs, relationships,
-   direct dialogue, and typed plugin calls. Keep coordinates, plugin manifests, and
-   renderer fields out of source.
+   direct dialogue, and typed plugin calls (`<actor>.<category>.<terminal>(...)`,
+   subject-less `camera.*`/`effect.*`/`sound.*`/`music.*`, `<object>.prop.*`).
+   Keep coordinates, plugin manifests, and renderer fields out of source.
 3. Run `npm run anim -- check episodes/<slug>/episode.yml` and repair every
    error. Unsupported actions and missing assets become explicit work.
 4. Run make/preview. Inspect stills and short clips for containment, camera,
-   acting, gaze, speech mouth state, object continuity, VFX, subtitles, audio,
-   and layer order. Iterate at the owning layer.
+   acting, gaze, speech mouth state, object continuity, effects, subtitles,
+   audio, and layer order. Iterate at the owning layer.
 5. Render only after current visual/audio review; verify final MP4 streams,
    duration, dimensions, captions, loudness, and continuity.
 

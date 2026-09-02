@@ -6,7 +6,8 @@ description: Convert prose, Markdown, or theatrical scripts into canonical episo
 # text-to-episode
 
 Read [docs/NARROW_EPISODE_DSL.md](../../../docs/NARROW_EPISODE_DSL.md),
-[docs/SCHEMAS.md](../../../docs/SCHEMAS.md), [docs/WHOLE_WORLD_PLUGINS.md](../../../docs/WHOLE_WORLD_PLUGINS.md), and category manifests before
+[docs/SCHEMAS.md](../../../docs/SCHEMAS.md),
+[docs/WORLD_PLUGIN_CONTRACT.md](../../../docs/WORLD_PLUGIN_CONTRACT.md), and category manifests before
 writing YAML. This is an authoring workflow, not a second DSL or a generic
 storyboard format.
 

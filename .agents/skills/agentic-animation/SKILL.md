@@ -5,7 +5,7 @@ description: Use for tasks involving episode.yml, the animation engine, assets, 
 
 # agentic-animation
 
-This is the repository skill. Read [AGENTS.md](../../../AGENTS.md), [docs/INDEX.md](../../../docs/INDEX.md), and [docs/WHOLE_WORLD_PLUGINS.md](../../../docs/WHOLE_WORLD_PLUGINS.md) first.
+This is the repository skill. Read [AGENTS.md](../../../AGENTS.md), [docs/INDEX.md](../../../docs/INDEX.md), and [docs/WORLD_PLUGIN_CONTRACT.md](../../../docs/WORLD_PLUGIN_CONTRACT.md) first.
 The authored input is `episode.yml`; ordered category plugins compile its world to renderer-neutral performance IR and Remotion renders that IR.
 
 ## Route the work

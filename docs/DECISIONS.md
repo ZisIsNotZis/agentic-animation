@@ -3,11 +3,11 @@
 ## 2026-08-31 — Episode DSL hard cutover
 
 The repository has one source language: English instance IDs, semantic staging,
-direct dialogue, and registry-generated typed terminal calls inside braces.
+direct dialogue, and plugin-provided typed terminal calls inside braces.
 Legacy `say/run/#cue/at/layout` authoring is removed without compatibility mode.
 All timed procedures block by default; generic scheduling supports nonblocking,
-explicit duration, and normalized begin/end spans. Domain behavior belongs to
-versioned procedure assets rather than compiler action-name switches.
+explicit duration, and normalized begin/end spans. Domain behavior belongs to category plugin procedure definitions rather than
+compiler action-name switches.
 
 > Verified by web research on 2026-07-08. Every choice here must stay clean for
 > a monetized YouTube channel. Re-verify a row before relying on it in a new

@@ -1,12 +1,12 @@
 # System architecture
 
-## Pending redesign
+## Plugin-host architecture
 
-A library-plugin engine redesign is specified in
-[WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md) under the gated plan
-[PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md). It is designed
-but not approved; the seams below describe the current, implemented engine and
-remain authoritative until the plan is approved and executed.
+The plugin-host architecture is implemented. The canonical design contract —
+library layout, categories, world shape, plugin lifecycle, ordering, and state
+rules — is owned by [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md). Read
+it before changing engine behavior; this document describes the module seams
+and data flow around it.
 
 ## Mission
 
@@ -19,7 +19,7 @@ small, semantic, and hard to misuse. Motion is code-driven SVG/rig animation.
 ```text
 approved asset library + episode.yml
   -> source schema and call parser
-  -> registry resolution and compatibility validation
+  -> plugin discovery and validation
   -> segmented TTS and audio-authoritative scheduling
   -> automatic staging and procedure recipe expansion
   -> immutable performance IR
@@ -40,15 +40,17 @@ legacy manifests that contain no location asset.
 `loadEpisode(path): EpisodeSource` owns YAML validation, English instance IDs,
 semantic setup, dialogue segmentation, brace parsing, and legacy errors.
 
-### Registry
+### Plugin library
 
-Resolving an immutable asset or typed terminal owns terminal schemas, defaults,
-subject/rig/capability checks, recipes, and ambiguity errors. More procedures do
-not enlarge the compiler interface.
+Filesystem discovery loads `library/<category>/plugin.js` and orders category
+plugins by their declared `before`/`after`/`priority` metadata. Procedure
+semantics — terminal schemas, defaults, subject checks, parameters, and
+recipes — are static members of the category plugin. More procedures do not
+enlarge the compiler interface; there is no TypeScript-authored catalog.
 
 ### Scheduler
 
-Compiling source + registry + measured speech owns blocking, nonblocking,
+Compiling source + plugin definitions + measured speech owns blocking, nonblocking,
 concurrent groups, spans, state, interruptions, silence, lifecycle, and claims.
 Final audio timing is authoritative for speech, subtitles, lips, and calls.
 
@@ -60,9 +62,10 @@ motivated reframing. Inputs are location, cast, speaker, targets, and actions.
 
 ### Performance
 
-Expanding recipes owns a closed track vocabulary: bones, transforms, expression,
-gaze, movement, socket bindings, object state, camera, VFX, SFX, and lifecycle
-events. Core code never branches on a domain action such as `slam` or `drink`.
+Expanding recipes owns a closed renderer-IR track vocabulary: bones, transforms,
+expression, gaze, movement, socket bindings, object state, camera, effect,
+sound, and lifecycle events. Core code never branches on a domain action such
+as `slam` or `drink`.
 
 ### Renderer
 
@@ -72,16 +75,19 @@ Remotion workers evaluate arbitrary frames independently.
 
 ## Asset library
 
-Every asset is immutable and versioned. Episode instances pin exact IDs.
+Assets are immutable; identity is the category-relative path (`library/action/slam`
+is `action.slam`). Episodes reference assets by path, and filesystem discovery
+finds `library/<category>/plugin.js` plus asset `manifest.json` files — there is
+no registry index or version pinning.
 
 - Figures: layered art, skeleton, pivots, sockets, hand shapes, face/eye/mouth
-  overlays, native orientation, and compatible procedure libraries.
+  overlays, native orientation, and compatible category procedures.
 - Locations: detailed layers, semantic regions, entrances, walkable areas,
   interaction slots, depth bands, and camera compositions.
 - Objects: artwork, states, anchors, sockets, collision, and capabilities.
-- Procedures: typed path, timing, claims, compatible rigs, generic recipe, and
-  optional audiovisual companions.
-- Voices and audiovisual assets: profiles, modifiers, constraints, and QA.
+- Procedures: static definitions exported by each category plugin — subjects,
+  parameters, timing, phases, and generic recipes.
+- Voice and audiovisual assets: profiles, modifiers, constraints, and QA.
 
 Assets are prepared and inspected before scripting. Missing story requirements
 create or upgrade assets before script lock; there are no no-op fallbacks.

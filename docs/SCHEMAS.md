@@ -1,6 +1,7 @@
 # Runtime contracts
 
-The executable schemas and this document describe intended interfaces; the approved plugin contract is in [WHOLE_WORLD_PLUGINS.md](WHOLE_WORLD_PLUGINS.md).
+The executable schemas and this document describe intended interfaces; the
+approved plugin contract is in [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md).
 
 ## Episode source
 
@@ -13,10 +14,15 @@ The executable schemas and this document describe intended interfaces; the appro
 
 ## Category assets and plugins
 
-Each category has `library/<category>/plugin.js`, `manifest.json`, and asset files.
-Manifests describe assets without `id`, `version`, or `implementationKey`; the category-relative path is the identity.
-Plugins own category semantics and whole-world lifecycle hooks; the engine owns discovery, validation, ordering, dispatch, and IR production.
-`world.canvas` is normalized logical geometry and `world.plugins` is the deterministic ordered plugin chain.
+Each category is a plugin: `library/<category>/plugin.js` with an optional
+category `manifest.json` declaring ordering metadata; each asset is
+`library/<category>/<name>/` with a `manifest.json` and its resources.
+Manifests describe assets without `id`, `version`, or `implementationKey`; the
+category-relative path is the identity. Plugins own category semantics and
+whole-world lifecycle hooks; the engine owns filesystem discovery, validation,
+ordering, dispatch, and IR production. `world.canvas` is normalized logical
+geometry and `world.plugins` is deterministic JSON-serializable state keyed by
+category.
 
 ## Parsed call
 
@@ -25,36 +31,30 @@ type Scalar = {kind: "ref"; value: string} | {kind: "string"; value: string}
   | {kind: "number"; value: number} | {kind: "boolean"; value: boolean};
 type ProcedureCall = {
   raw: string; subject: string;
-  namespace: "act"|"face"|"look"|"move"|"voice"|"state"|"use"|"play"|"say";
+  namespace: "action" | "emotion" | "gaze" | "movement" | "voice" | "prop"
+    | "camera" | "effect" | "sound" | "music" | "say";
   terminal: string; path: string; args: Scalar[];
   kwargs: Record<string, Scalar>;
 };
 ```
 
-`mode` and `duration` are compiler-owned kwargs. Other kwargs belong to the
-resolved procedure. Duplicate kwargs and positional arguments after kwargs fail.
+Actor procedures (`action`, `emotion`, `gaze`, `movement`, `voice`, `prop`)
+take the actor as subject; world categories (`camera`, `effect`, `sound`,
+`music`) are subject-less; objects may act as subjects for `prop` calls.
+`say` is an actor-local quoted speech call. `mode` and `duration` are
+compiler-owned kwargs. Other kwargs belong to the resolved procedure.
+Duplicate kwargs and positional arguments after kwargs fail.
 
-## Procedure asset
+## Category plugin procedures
 
-```ts
-type ProcedureAsset = {
-  path: string;
-  owner: "actor"|"object"|"camera"|"vfx"|"sfx";
-  kind: "timed"|"state"|"speech";
-  subjects: string[];
-  positional: Parameter[];
-  modifiers: Record<string, Parameter>;
-  timing?: {defaultDuration: number; scalable: boolean;
-    span?: {enter: Range; sustain: Range; exit: Range}};
-  claims?: {exclusive?: string[]; shared?: string[]};
-  recipe: ProcedureRecipe;
-};
-```
-
-Parameters declare reference/scalar type, capability constraints, enums/ranges,
-and defaults. Recipes contain only generic engine tracks: bone clips, transforms,
-expression, gaze, movement, socket bindings, object state, camera, VFX, SFX,
-and lifecycle events.
+Procedure semantics are static members exported by each category plugin
+(`library/<category>/plugin.js`), keyed by fully-qualified terminal such as
+`action.slam`. A definition declares its subjects, positional parameters and
+modifiers, timing (default duration, span enter/sustain/exit), claims, and a
+recipe built from the closed engine track vocabulary: bone clips, transforms,
+expression, gaze, movement, socket bindings, object state, camera, effect,
+sound, and lifecycle events. There is no TypeScript-authored procedure catalog;
+`loadProcedureDefinitions` discovers plugins.
 
 ## Compiled performance IR
 

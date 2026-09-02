@@ -12,13 +12,12 @@ document owning a contract before changing implementation or an episode.
 ## Design contracts
 
 - [NARROW_EPISODE_DSL.md](NARROW_EPISODE_DSL.md): complete agent-authored YAML language.
-- [SCHEMAS.md](SCHEMAS.md): registry, procedure asset, compiler IR, and validation contracts.
+- [SCHEMAS.md](SCHEMAS.md): source, plugin, compiler IR, and validation contracts.
 - [ARCHITECTURE.md](ARCHITECTURE.md): module seams and runtime data flow.
-- [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md): canonical world/plugin contract for the library-plugin engine redesign (designed, pending approval).
-- [PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md): gated migration plan for the redesign; Step 1 is docs-only and pauses for manual confirmation.
+- [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md): canonical world/plugin contract — library layout, categories, world type, plugin lifecycle, ordering, and state rules.
+- [PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md): historical migration plan; Steps 1-2 are implemented. Kept for reference, superseded by [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md).
 - [PIPELINE.md](PIPELINE.md): assets-first production and QA workflow.
 - [DECISIONS.md](DECISIONS.md): durable technology, licensing, and migration decisions.
-- [HANDOFF.md](HANDOFF.md): current implementation status and executable checks.
 - [schemas/](schemas/): exported JSON Schema artifacts.
 
 ## Precedence
