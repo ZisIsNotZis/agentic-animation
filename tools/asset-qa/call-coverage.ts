@@ -231,13 +231,13 @@ function classesFor(occurrence: InlineCallOccurrence, event: RecordValue | null)
   const {subject, namespace} = occurrence.parsed;
   const tracks = trackRows(event);
   const classes = new Set<string>();
-  if (namespace === "state" || tracks.some((track) => track.kind === "lifecycle")) classes.add("state");
+  if (tracks.some((track) => track.kind === "lifecycle")) classes.add("state");
   if (subject === "camera") classes.add("camera");
-  if (subject === "vfx" || tracks.some((track) => track.kind === "vfx")) classes.add("visual");
-  if (subject === "sfx" || tracks.some((track) => track.kind === "sfx" && trackEvents(track).some((item) => eventValue(item).kind !== "music"))) classes.add("sfx");
+  if (subject === "effect" || tracks.some((track) => track.kind === "vfx")) classes.add("visual");
+  if (subject === "sound" || tracks.some((track) => track.kind === "sfx" && trackEvents(track).some((item) => eventValue(item).kind !== "music"))) classes.add("sfx");
   if (subject === "music" || tracks.some((track) => (track.kind === "sfx" || track.kind === "music") && trackEvents(track).some((item) => eventValue(item).kind === "music"))) classes.add("music");
   if (namespace === "say" || namespace === "voice" || event?.kind === "speech") classes.add("speech");
-  if (namespace !== "state" && namespace !== "say" && subject !== "camera" && subject !== "vfx" && subject !== "sfx" && subject !== "music") classes.add("visual");
+  if (namespace !== "say" && subject !== "camera" && subject !== "effect" && subject !== "sound" && subject !== "music") classes.add("visual");
   return [...classes].sort();
 }
 
@@ -273,25 +273,22 @@ function evaluateRow(occurrence: InlineCallOccurrence, event: RecordValue | null
   else if (subject === "camera") {
     covered = hasCamera;
     if (!covered) reasons.push("camera track has no renderer-consumed x/y/z/rotation key; zoom/operation alone is a no-op");
-  } else if (subject === "vfx") {
+  } else if (subject === "effect") {
     covered = hasVfxTrack;
     if (!covered) reasons.push("vfx track has no renderer-consumed type or style payload");
-  } else if (subject === "sfx" || subject === "music") {
+  } else if (subject === "sound" || subject === "music") {
     covered = cues.some((cue) => cue.kind === (subject === "music" ? "music" : "sfx"));
     if (!covered) reasons.push(`${subject} call has no compiled audible cue`);
-  } else if (namespace === "state") {
-    covered = hasLifecycle;
-    if (!covered) reasons.push("state call has no renderer-consumed lifecycle state event");
-  } else if (namespace === "face") {
+  } else if (namespace === "emotion") {
     covered = hasFace;
-    if (!covered) reasons.push("face call has no renderer-consumed expression event");
-  } else if (namespace === "look") {
+    if (!covered) reasons.push("emotion call has no renderer-consumed expression event");
+  } else if (namespace === "gaze") {
     covered = hasBone || hasBindingTrack;
     if (!hasGaze) reasons.push("gaze call has no compiled gaze track");
     else if (!covered) reasons.push("compiled gaze track is not projected into renderer face/gaze state");
   } else {
-    covered = hasBone || hasBindingTrack;
-    if (!covered) reasons.push("visual call has no renderer-consumed bone/movement or binding event with payload");
+    covered = hasBone || hasBindingTrack || hasLifecycle;
+    if (!covered) reasons.push("visual call has no renderer-consumed bone/movement, binding, or lifecycle event with payload");
   }
   if (covered) reasons.push(`renderer consumes ${rendererTrackKinds.join(", ") || cues.map((cue) => `${cue.kind} cue`).join(", ")}`);
   return {

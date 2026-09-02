@@ -36,32 +36,26 @@ function episodeIds(): string[] {
     ...Object.values(episode.actors).flatMap((actor) => [actor.use, actor.voice]),
     ...Object.values(episode.locations).map((location) => location.use),
     ...Object.values(episode.objects).map((object) => object.use),
-    "layout.desk_talk.v1",
+    "layout/desk_talk",
   ];
 }
 function manifestHash(path: string): string {
   return `sha256:${createHash("sha256").update(readFileSync(path)).digest("hex")}`;
 }
 function cardLabel(asset: (typeof assets)[number]): string {
-  const short = asset.id.replace(/\.v1$/, "");
-  return `${asset.kind.toUpperCase()}  ${short}`;
+  return `${asset.kind.toUpperCase()}  ${asset.id}`;
 }
 async function main(): Promise<void> {
-  const manifest = JSON.parse(readFileSync(join(LIBRARY, "registry", "manifest.json"), "utf8")) as { assets: Array<{ id: string; path: string; hash: string }> };
   const episode = episodeIds();
   if (new Set(episode).size !== 23) fail(`episode references ${new Set(episode).size} unique assets, expected 23`);
   if (assets.length !== 23) fail(`materializer declares ${assets.length} assets, expected 23`);
   const rows: Array<{ id: string; kind: string; path: string; files: number; hash: string }> = [];
   for (const asset of assets) {
-    const row = manifest.assets.find((candidate) => candidate.id === asset.id);
-    if (!row) fail(`missing registry row for ${asset.id}`);
     const dir = join(LIBRARY, asset.path);
     if (!existsSync(dir)) fail(`missing asset directory ${asset.path}`);
     const names = files(dir);
     if (!names.includes("preview.png")) fail(`${asset.id} has no preview.png`);
-    if (row!.path !== asset.path) fail(`${asset.id} registry path is ${row!.path}, expected ${asset.path}`);
     const actual = hashDirectory(dir);
-    if (row!.hash !== actual) fail(`${asset.id} hash is stale: ${row!.hash} != ${actual}`);
     for (const name of names.filter((name) => name.endsWith(".svg"))) {
       const source = readFileSync(join(dir, name), "utf8");
       if (/gradient|filter=|feGaussianBlur|image href=/i.test(source)) fail(`${asset.id}/${name} contains a forbidden gradient/filter/raster reference`);
@@ -72,8 +66,6 @@ async function main(): Promise<void> {
   if (rows.some((row) => !used.has(row.id))) fail("materializer includes an asset not referenced by episode.yml");
   const missing = episode.filter((id) => !rows.some((row) => row.id === id));
   if (missing.length) fail(`episode references missing material: ${missing.join(", ")}`);
-  const manifestText = readFileSync(join(LIBRARY, "registry", "manifest.json"), "utf8");
-  if (manifestText.includes("_placeholder")) fail("registry contains a placeholder reference");
 
   const cards = await Promise.all(assets.map(async (asset) => {
     const preview = await sharp(join(LIBRARY, asset.path, "preview.png"))

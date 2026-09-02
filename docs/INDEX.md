@@ -14,6 +14,8 @@ document owning a contract before changing implementation or an episode.
 - [NARROW_EPISODE_DSL.md](NARROW_EPISODE_DSL.md): complete agent-authored YAML language.
 - [SCHEMAS.md](SCHEMAS.md): registry, procedure asset, compiler IR, and validation contracts.
 - [ARCHITECTURE.md](ARCHITECTURE.md): module seams and runtime data flow.
+- [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md): canonical world/plugin contract for the library-plugin engine redesign (designed, pending approval).
+- [PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md): gated migration plan for the redesign; Step 1 is docs-only and pauses for manual confirmation.
 - [PIPELINE.md](PIPELINE.md): assets-first production and QA workflow.
 - [DECISIONS.md](DECISIONS.md): durable technology, licensing, and migration decisions.
 - [HANDOFF.md](HANDOFF.md): current implementation status and executable checks.

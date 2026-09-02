@@ -241,8 +241,8 @@ interface CompileContext {
   assetCache: Map<string, ResolvedAsset>;
 }
 
-const WORLD_SUBJECTS = new Set(["camera", "vfx", "sfx", "music"]);
-const STATE_NAMESPACES = new Set(["face", "look", "voice", "state"]);
+const WORLD_SUBJECTS = new Set(["camera", "effect", "sound", "music"]);
+const STATE_NAMESPACES = new Set(["emotion", "gaze", "voice", "prop"]);
 const SILENT_BEAT_SEC = 0.55;
 const DEFAULT_VOICE_SPEED = 1;
 const LOGICAL_STAGE = {width: 1, height: 1} as const;
@@ -442,7 +442,7 @@ async function validateCall(context: CompileContext, call: ProcedureCall): Promi
   if (typeof registry === "function" || !registry.validateProcedureCall) return {call, kwargs: {...call.kwargs}};
   const result = await registry.validateProcedureCall({
     subject: call.subject,
-    id: call.path,
+    id: procedureId(call),
     path: call.path,
     args: [...call.args],
     kwargs: {...call.kwargs},
@@ -627,8 +627,8 @@ function applyLifecycle(calls: PendingCall[], state: MutableState): void {
   for (const pending of [...calls].sort((a, b) => a.event.start - b.event.start || a.sequence - b.sequence)) {
     const actor = state.actors.get(pending.event.subject);
     if (actor && pending.resolution.actorState) Object.assign(actor, safeActorState(pending.resolution.actorState));
-    if (actor && pending.event.call.namespace === "face") actor.face = pending.event.call.terminal;
-    if (actor && pending.event.call.namespace === "look") {
+    if (actor && pending.event.call.namespace === "emotion") actor.face = pending.event.call.terminal;
+    if (actor && pending.event.call.namespace === "gaze") {
       const target = pending.event.call.args[0];
       if (target?.kind === "ref") actor.gaze = target.value;
     }

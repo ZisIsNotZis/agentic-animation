@@ -31,7 +31,7 @@ versioned procedure assets rather than compiler action-name switches.
 ## Hard rules
 
 1. **No generative video.** Stills only, pre-production only.
-2. **Model/asset license recorded per artifact** — every `meta.json` in
+2. **Model/asset license recorded per artifact** — every `manifest.json` in
    `library/` names the generating model + its license at generation time.
 3. **No FLUX-family models in the default pipeline** until/unless a BFL
    commercial license is purchased; config guards this.

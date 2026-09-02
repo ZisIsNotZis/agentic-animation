@@ -1,11 +1,12 @@
 import {z} from "zod";
 
 const Id = z.string().regex(/^[a-z][a-z0-9_]*$/);
-const AssetRef = z.string().regex(/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+\.v[1-9]\d*$/);
+const AssetRef = z.string().regex(/^(?:figure|voice|set|prop|dressing|layout)(?:\/[a-z][a-z0-9_]*)+$/);
 const IdPattern = /^[a-z][a-z0-9_]*$/;
 const ProcedurePath = /^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/;
-const Namespace = new Set(["act", "face", "look", "move", "voice", "state", "use", "play", "say"]);
-const WorldSubject = new Set(["camera", "vfx", "sfx", "music"]);
+const ActorNamespaces = new Set(["action", "emotion", "gaze", "movement", "voice", "prop"]);
+const WorldCategories = new Set(["camera", "effect", "sound", "music"]);
+const Namespace = new Set([...ActorNamespaces, ...WorldCategories, "say"]);
 
 export const SchedulingModeSchema = z.enum(["begin", "end", "nonblock"]);
 export type SchedulingMode = z.infer<typeof SchedulingModeSchema>;
@@ -25,7 +26,7 @@ export type Scalar = z.infer<typeof ScalarSchema>;
 export type ProcedureCall = {
   raw: string;
   subject: string;
-  namespace: "act" | "face" | "look" | "move" | "voice" | "state" | "use" | "play" | "say";
+  namespace: "action" | "emotion" | "gaze" | "movement" | "voice" | "prop" | "camera" | "effect" | "sound" | "music" | "say";
   terminal: string;
   path: string;
   args: Scalar[];
@@ -108,11 +109,27 @@ function parseCall(raw: string): ProcedureCall | null {
   const match = source.match(/^([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)\((.*)\)$/s);
   if (!match || !ProcedurePath.test(match[1]!)) return null;
   const segments = match[1]!.split(".");
-  const subject = segments[0]!;
-  const namespace = segments[1]!;
-  if (!Namespace.has(namespace) || (segments.length < 3 && namespace !== "say")) return null;
-  if (namespace === "say" && segments.length !== 2) return null;
-  if (WorldSubject.has(subject) && !((subject === "camera" && namespace === "use") || (subject === "vfx" && namespace === "use") || (subject === "sfx" && namespace === "play") || (subject === "music" && namespace === "play"))) return null;
+  let subject: string;
+  let namespace: string;
+  let terminal: string;
+  if (segments.length === 2) {
+    if (WorldCategories.has(segments[0]!)) {
+      // Subject-less world category call: camera.punch_in(x), sound.static_buzz().
+      subject = segments[0]!;
+      namespace = segments[0]!;
+      terminal = segments[1]!;
+    } else if (segments[1] === "say") {
+      subject = segments[0]!;
+      namespace = "say";
+      terminal = "say";
+    } else return null;
+  } else if (segments.length === 3) {
+    // Subject-qualified category call: lin.action.slam(desk).
+    subject = segments[0]!;
+    namespace = segments[1]!;
+    terminal = segments[2]!;
+    if (!ActorNamespaces.has(namespace) && !WorldCategories.has(namespace)) return null;
+  } else return null;
   const parts = splitArguments(match[2]!.trim());
   if (!parts) return null;
   const args: Scalar[] = [];
@@ -133,7 +150,6 @@ function parseCall(raw: string): ProcedureCall | null {
       args.push(value);
     }
   }
-  const terminal = segments.length === 2 ? "say" : segments.slice(2).join(".");
   return {
     raw: source,
     subject,
@@ -230,11 +246,12 @@ export const NarrowEpisodeSchema = Base.superRefine((episode, ctx) => {
       const actor = Object.keys(statement)[0]!;
       if (!actors.has(actor)) issue(ctx, [...scenePath, "script", statementIndex], `unknown actor: ${actor}`);
       for (const token of inlineTokens(statement[actor]!) ?? []) for (const call of parseProcedureCalls(token) ?? []) {
-        if (!actors.has(call.subject) && !objects.has(call.subject) && !WorldSubject.has(call.subject)) issue(ctx, [...scenePath, "script", statementIndex], `unknown call subject: ${call.subject}`);
-        if (actors.has(call.subject) && call.namespace === "state") issue(ctx, [...scenePath, "script", statementIndex], "state calls require an object subject");
-        if (objects.has(call.subject) && call.namespace !== "state") issue(ctx, [...scenePath, "script", statementIndex], "object calls must use the state namespace");
+        if (!actors.has(call.subject) && !objects.has(call.subject) && !WorldCategories.has(call.subject)) issue(ctx, [...scenePath, "script", statementIndex], `unknown call subject: ${call.subject}`);
+        if (WorldCategories.has(call.subject) && call.subject !== call.namespace) issue(ctx, [...scenePath, "script", statementIndex], "world category calls must be subject-less");
+        if (actors.has(call.subject) && WorldCategories.has(call.namespace)) issue(ctx, [...scenePath, "script", statementIndex], `world category calls do not take an actor subject: ${call.namespace}`);
+        if (objects.has(call.subject) && call.namespace !== "prop") issue(ctx, [...scenePath, "script", statementIndex], "object calls must use the prop namespace");
         if (call.namespace === "say" && (call.subject !== actor || call.args.length !== 1 || call.args[0]!.kind !== "string")) issue(ctx, [...scenePath, "script", statementIndex], "say is an actor-local quoted speech call");
-        for (const arg of [...call.args, ...Object.values(call.kwargs)]) if (arg.kind === "ref" && !actors.has(arg.value) && !objects.has(arg.value) && !WorldSubject.has(arg.value) && arg.value !== "audience") issue(ctx, [...scenePath, "script", statementIndex], `unknown reference: ${arg.value}`);
+        for (const arg of [...call.args, ...Object.values(call.kwargs)]) if (arg.kind === "ref" && !actors.has(arg.value) && !objects.has(arg.value) && !WorldCategories.has(arg.value) && arg.value !== "audience") issue(ctx, [...scenePath, "script", statementIndex], `unknown reference: ${arg.value}`);
       }
     }
   }

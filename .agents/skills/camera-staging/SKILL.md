@@ -7,6 +7,7 @@ description: Diagnose or improve actor staging, camera framing, cropping, overla
 
 Read [docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md),
 [docs/NARROW_EPISODE_DSL.md](../../../docs/NARROW_EPISODE_DSL.md), and the
+[docs/WHOLE_WORLD_PLUGINS.md](../../../docs/WHOLE_WORLD_PLUGINS.md), and the
 current staging/runtime tests before changing code.
 
 ## Contract

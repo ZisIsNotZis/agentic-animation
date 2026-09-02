@@ -21,28 +21,28 @@ type Pt = [number, number];
 type Asset = { id: string; kind: string; path: string };
 
 const assets: Asset[] = [
-  ["figure.aqiang.v1", "figure", "figure/aqiang/v1"], ["figure.awei.v1", "figure", "figure/awei/v1"],
-  ["figure.student_a.v1", "figure", "figure/student_a/v1"], ["figure.student_b.v1", "figure", "figure/student_b/v1"], ["figure.liu.v1", "figure", "figure/liu/v1"],
-  ["figure.elder.v1", "figure", "figure/elder/v1"], ["figure.lin.v1", "figure", "figure/lin/v1"],
-  ["figure.senior.v1", "figure", "figure/senior/v1"], ["figure.system_orb.v1", "figure", "figure/system_orb/v1"],
-  ["voice.zh.aqiang.v1", "voice", "voice/zh/aqiang/v1"], ["voice.zh.awei.v1", "voice", "voice/zh/awei/v1"],
-  ["voice.zh.student_a.v1", "voice", "voice/zh/student_a/v1"], ["voice.zh.student_b.v1", "voice", "voice/zh/student_b/v1"], ["voice.zh.liu.v1", "voice", "voice/zh/liu/v1"],
-  ["voice.zh.elder.v1", "voice", "voice/zh/elder/v1"], ["voice.zh.lin.v1", "voice", "voice/zh/lin/v1"],
-  ["voice.zh.senior.v1", "voice", "voice/zh/senior/v1"], ["voice.zh.system.v1", "voice", "voice/zh/system/v1"],
-  ["set.agent_stage.v1", "set", "set/agent_stage/v1"],
-  ["set.school_corridor.v1", "set", "set/school_corridor/v1"], ["set.school_canteen.v1", "set", "set/school_canteen/v1"],
-  ["set.qingyun_dormitory.v1", "set", "set/qingyun_dormitory/v1"], ["set.qingyun_courtyard.v1", "set", "set/qingyun_courtyard/v1"], ["set.qingyun_arena.v1", "set", "set/qingyun_arena/v1"],
-  ["prop.desk.v1", "prop", "prop/desk/v1"], ["prop.thermos.v1", "prop", "prop/thermos/v1"],
-  ["prop.roasted_sausage.v1", "prop", "prop/roasted_sausage/v1"],
-  ["prop.scroll.v1", "prop", "prop/scroll/v1"], ["prop.skill_bottle.v1", "prop", "prop/skill_bottle/v1"],
-  ["prop.skill_cards.v1", "prop", "prop/skill_cards/v1"], ["prop.phone.v1", "prop", "prop/phone/v1"],
-  ["prop.notebook.v1", "prop", "prop/notebook/v1"], ["prop.mirror.v1", "prop", "prop/mirror/v1"],
-  ["prop.flashlight.v1", "prop", "prop/flashlight/v1"], ["prop.ask_matt_sign.v1", "prop", "prop/ask_matt_sign/v1"],
-  ["dressing.computer_screen.v1", "dressing", "dressing/computer_screen/v1"], ["dressing.keyboard.v1", "dressing", "dressing/keyboard/v1"],
-  ["dressing.coffee_cup.v1", "dressing", "dressing/coffee_cup/v1"], ["dressing.hair_comb.v1", "dressing", "dressing/hair_comb/v1"],
-  ["dressing.ai_standee.v1", "dressing", "dressing/ai_standee/v1"], ["dressing.engine_signs.v1", "dressing", "dressing/engine_signs/v1"],
-  ["dressing.document_trees.v1", "dressing", "dressing/document_trees/v1"],
-  ["layout.desk_talk.v1", "layout", "layout/desk_talk/v1"],
+  ["figure/aqiang", "figure", "figure/aqiang"], ["figure/awei", "figure", "figure/awei"],
+  ["figure/student_a", "figure", "figure/student_a"], ["figure/student_b", "figure", "figure/student_b"], ["figure/liu", "figure", "figure/liu"],
+  ["figure/elder", "figure", "figure/elder"], ["figure/lin", "figure", "figure/lin"],
+  ["figure/senior", "figure", "figure/senior"], ["figure/system_orb", "figure", "figure/system_orb"],
+  ["voice/zh/aqiang", "voice", "voice/zh/aqiang"], ["voice/zh/awei", "voice", "voice/zh/awei"],
+  ["voice/zh/student_a", "voice", "voice/zh/student_a"], ["voice/zh/student_b", "voice", "voice/zh/student_b"], ["voice/zh/liu", "voice", "voice/zh/liu"],
+  ["voice/zh/elder", "voice", "voice/zh/elder"], ["voice/zh/lin", "voice", "voice/zh/lin"],
+  ["voice/zh/senior", "voice", "voice/zh/senior"], ["voice/zh/system", "voice", "voice/zh/system"],
+  ["set/agent_stage", "set", "set/agent_stage"],
+  ["set/school_corridor", "set", "set/school_corridor"], ["set/school_canteen", "set", "set/school_canteen"],
+  ["set/qingyun_dormitory", "set", "set/qingyun_dormitory"], ["set/qingyun_courtyard", "set", "set/qingyun_courtyard"], ["set/qingyun_arena", "set", "set/qingyun_arena"],
+  ["prop/desk", "prop", "prop/desk"], ["prop/thermos", "prop", "prop/thermos"],
+  ["prop/roasted_sausage", "prop", "prop/roasted_sausage"],
+  ["prop/scroll", "prop", "prop/scroll"], ["prop/skill_bottle", "prop", "prop/skill_bottle"],
+  ["prop/skill_cards", "prop", "prop/skill_cards"], ["prop/phone", "prop", "prop/phone"],
+  ["prop/notebook", "prop", "prop/notebook"], ["prop/mirror", "prop", "prop/mirror"],
+  ["prop/flashlight", "prop", "prop/flashlight"], ["prop/ask_matt_sign", "prop", "prop/ask_matt_sign"],
+  ["dressing/computer_screen", "dressing", "dressing/computer_screen"], ["dressing/keyboard", "dressing", "dressing/keyboard"],
+  ["dressing/coffee_cup", "dressing", "dressing/coffee_cup"], ["dressing/hair_comb", "dressing", "dressing/hair_comb"],
+  ["dressing/ai_standee", "dressing", "dressing/ai_standee"], ["dressing/engine_signs", "dressing", "dressing/engine_signs"],
+  ["dressing/document_trees", "dressing", "dressing/document_trees"],
+  ["layout/desk_talk", "layout", "layout/desk_talk"],
 ].map(([id, kind, path]) => ({ id, kind, path }));
 
 const VISEMES = ["A", "B", "C", "D", "E", "F", "G", "H", "X"] as const;
@@ -150,9 +150,9 @@ async function makeFigure(asset: Asset, role: FigureRole): Promise<void> {
   for (const v of VISEMES) await writePng(join(dir, "mouth", `${v}.png`), svg(mouth(v)));
   for (const state of ["open", "half", "closed"] as const) await writePng(join(dir, "eyes", `${state}.png`), svg(eyes(state)));
   await writePng(join(dir, "preview.png"), figurePreview(role));
-  writeJson(join(dir, "puppet.json"), figurePuppet(asset.id.split(".")[1]!));
+  writeJson(join(dir, "puppet.json"), figurePuppet(asset.id.split("/")[1]!));
   writeJson(join(dir, "sockets.json"), { version: 1, coordinateSpace: "design", sockets: { hand_l: [332, 1010], hand_r: [692, 1010], propPickup: [692, 1010], propHold: [746, 918], point: [750, 780], sip: [620, 505] }, notes: ["hand_l and hand_r are independent sprites; prop actions can target these sockets without repainting the figure."] });
-  writeJson(join(dir, "meta.json"), { model: { name: "hand-authored-svg-flat", license: "ours" }, seeds: {}, prompts: {}, date: "2026-08-31", approver: "tools/asset-qa/materialize", grounding: [], notes: ["Deterministic native SVG source rasterized to PNG; reusable articulated figure asset, not a placeholder alias."] });
+  writeJson(join(dir, "manifest.json"), {});
 }
 
 const propLabels: Record<string, { label: string; color: string; shape: string }> = {
@@ -169,10 +169,10 @@ const propLabels: Record<string, { label: string; color: string; shape: string }
 };
 function propSvg(key: string): string { const p = propLabels[key]!; return svg(`${p.shape}${text(p.label, 120, 202, 24, INK)}`, 240, 220); }
 async function makeProp(asset: Asset): Promise<void> {
-  const key = asset.id.replace("prop.", "").replace(".v1", "");
+  const key = asset.id.split("/").at(-1)!;
   const dir = join(LIBRARY, asset.path); const art = key === "roasted_sausage" ? svg(`<path d="M42 120 Q120 45 198 120 Q120 195 42 120Z" fill="#c96a3c" stroke="${INK}" stroke-width="10"/><path d="M62 117 Q120 78 178 117" fill="none" stroke="#f1c978" stroke-width="12"/><path d="M78 92 L92 72 M118 78 L124 56 M158 91 L172 70" stroke="#fff0c4" stroke-width="7"/>${text("烤肠", 120, 218, 24, INK)}`, 240, 240) : propSvg(key);
   writeSvg(join(dir, "art.svg"), art); await writePng(join(dir, "preview.png"), art);
-  writeJson(join(dir, "asset.json"), { source: "art.svg", preview: "preview.png", interaction: { pickup: [120, 108], hold: [120, 84], ground: [120, 174] }, notes: ["Opaque flat-color prop with explicit interaction sockets."] });
+  writeJson(join(dir, "manifest.json"), { source: "art.svg", preview: "preview.png", interaction: { pickup: [120, 108], hold: [120, 84], ground: [120, 174] } });
 }
 
 const dressingLabels: Record<string, { label: string; art: string }> = {
@@ -184,7 +184,7 @@ const dressingLabels: Record<string, { label: string; art: string }> = {
   engine_signs: { label: "引擎牌", art: `<rect x="20" y="38" width="200" height="124" fill="#d95d4f" stroke="${INK}" stroke-width="10"/>${text("ENGINE", 120, 94, 28, PAPER)}${text("原生能力", 120, 132, 22, INK)}` },
   document_trees: { label: "文档树", art: `<path d="M120 166 V72 M120 108 L72 74 M120 120 L172 82" stroke="${WOOD}" stroke-width="12"/><circle cx="68" cy="68" r="32" fill="#76ad72" stroke="${INK}" stroke-width="9"/><circle cx="176" cy="76" r="32" fill="#70a967" stroke="${INK}" stroke-width="9"/><circle cx="120" cy="48" r="35" fill="#8bc27e" stroke="${INK}" stroke-width="9"/><rect x="92" y="166" width="56" height="32" fill="${WOOD}" stroke="${INK}" stroke-width="8"/>` },
 };
-async function makeDressing(asset: Asset): Promise<void> { const key = asset.id.replace("dressing.", "").replace(".v1", ""); const d = dressingLabels[key]!; const art = svg(`${d.art}${text(d.label, 120, 216, 22, INK)}`, 240, 240); const dir = join(LIBRARY, asset.path); writeSvg(join(dir, "art.svg"), art); await writePng(join(dir, "preview.png"), art); writeJson(join(dir, "asset.json"), { source: "art.svg", preview: "preview.png", semanticRole: key, notes: ["Hard-edge dressing; can be placed independently from the set background."] }); }
+async function makeDressing(asset: Asset): Promise<void> { const key = asset.id.split("/").at(-1)!; const d = dressingLabels[key]!; const art = svg(`${d.art}${text(d.label, 120, 216, 22, INK)}`, 240, 240); const dir = join(LIBRARY, asset.path); writeSvg(join(dir, "art.svg"), art); await writePng(join(dir, "preview.png"), art); writeJson(join(dir, "manifest.json"), { source: "art.svg", preview: "preview.png" }); }
 function dormitorySvg(): string { return svg(`<rect width="1920" height="1080" fill="#80684f"/><rect x="80" y="80" width="1760" height="800" fill="#dcc79b" stroke="${INK}" stroke-width="18"/><rect x="190" y="240" width="500" height="360" fill="#a9d3d1" stroke="${INK}" stroke-width="16"/><path d="M190 240 L440 100 L690 240" fill="#b34f4f" stroke="${INK}" stroke-width="16"/><rect x="950" y="580" width="680" height="100" fill="#704631" stroke="${INK}" stroke-width="16"/><path d="M1000 680 V900 M1580 680 V900" stroke="${INK}" stroke-width="24"/><rect x="1380" y="210" width="150" height="220" fill="#f1c969" stroke="${INK}" stroke-width="16"/><path d="M1455 180 V100 M1410 135 H1500" stroke="#e6bd66" stroke-width="20"/>`, 1920, 1080); }
 function courtyardSvg(): string { return svg(`<rect width="1920" height="1080" fill="#9ed4cf"/><path d="M0 620 Q320 420 660 600 T1300 560 T1920 600 V1080 H0Z" fill="#699a78"/><path d="M0 860 Q440 680 960 850 T1920 820 V1080 H0Z" fill="#d7b878"/><circle cx="300" cy="330" r="210" fill="#4c7952" stroke="${INK}" stroke-width="18"/><path d="M300 320 V850 M300 440 L120 330 M300 500 L480 360" stroke="#674b37" stroke-width="34"/><circle cx="980" cy="850" r="210" fill="none" stroke="#74583e" stroke-width="32"/><circle cx="980" cy="850" r="125" fill="none" stroke="#d7c78e" stroke-width="14"/><rect x="1400" y="300" width="360" height="310" fill="#d6bd89" stroke="${INK}" stroke-width="18"/><path d="M1400 300 L1580 180 L1760 300" fill="#9d4f4d" stroke="${INK}" stroke-width="18"/>`, 1920, 1080); }
 function arenaSvg(): string { return svg(`<rect width="1920" height="1080" fill="#526a83"/><path d="M0 360 L420 100 L780 360 L1220 90 L1920 370 V1080 H0Z" fill="#8ba8b1"/><path d="M0 600 H1920 V1080 H0Z" fill="#b18c62"/><path d="M180 1080 L520 600 H1400 L1740 1080Z" fill="#d4b77d" stroke="${INK}" stroke-width="18"/><path d="M520 600 H1400 M640 720 H1280 M760 840 H1160" stroke="#765c45" stroke-width="32"/><circle cx="960" cy="760" r="210" fill="none" stroke="#e7d998" stroke-width="18" stroke-dasharray="36 24"/>`, 1920, 1080); }
@@ -194,24 +194,21 @@ function schoolCanteenSvg(): string { return svg(`<rect width="1920" height="108
 function officeSvg(): string {
   return svg(`<rect width="1920" height="1080" fill="#382c2b"/><rect y="720" width="1920" height="360" fill="#20191a"/><rect x="58" y="110" width="520" height="318" fill="#b9e7e9" stroke="${INK}" stroke-width="18"/><path d="M318 110 V428 M58 269 H578" stroke="#6d4638" stroke-width="16"/><path d="M76 380 Q180 270 268 370 T568 354 V428 H76Z" fill="#79aaa8" stroke="#557b7a" stroke-width="8"/><rect x="748" y="94" width="736" height="296" fill="#b9774d" stroke="${INK}" stroke-width="18"/><rect x="776" y="122" width="680" height="242" fill="#d69a63" stroke="#873f32" stroke-width="12"/>${text("AI 项目作战墙", 1116, 168, 38, PAPER)}<rect x="808" y="202" width="180" height="114" fill="#fff5dc" transform="rotate(-3 898 259)"/>${text("先复述目标", 898, 250, 22, INK)}<rect x="1034" y="206" width="160" height="110" fill="#c8e6d0" transform="rotate(4 1114 261)"/>${text("正例 / 反例", 1114, 258, 21, "#315b4c")}<rect x="1240" y="202" width="176" height="116" fill="#f1c85f" transform="rotate(-2 1328 260)"/>${text("最小权限", 1328, 258, 22, "#674333")}<rect x="92" y="510" width="760" height="46" fill="${WOOD}" stroke="${INK}" stroke-width="10"/><rect x="138" y="556" width="48" height="164" fill="${WOOD}" stroke="${INK}" stroke-width="8"/><rect x="758" y="556" width="48" height="164" fill="${WOOD}" stroke="${INK}" stroke-width="8"/><rect x="1080" y="500" width="690" height="54" fill="${WOOD}" stroke="${INK}" stroke-width="10"/><rect x="1130" y="554" width="48" height="166" fill="${WOOD}" stroke="${INK}" stroke-width="8"/><rect x="1660" y="554" width="48" height="166" fill="${WOOD}" stroke="${INK}" stroke-width="8"/><rect x="0" y="710" width="1920" height="34" fill="#a45f3e"/><rect x="0" y="744" width="1920" height="14" fill="${GOLD}"/>${text("办公区 · Agent 作战台", 88, 66, 36, PAPER, 900, "start")}${text("人定规则 · AI 执行", 1824, 66, 26, "#d9e6d9", 800, "end")}`, 1920, 1080);
 }
-async function makeSet(asset: Asset): Promise<void> { const dir = join(LIBRARY, asset.path); const key = asset.id.replace("set.", "").replace(".v1", ""); const art = key === "qingyun_dormitory" ? dormitorySvg() : key === "qingyun_courtyard" ? courtyardSvg() : key === "qingyun_arena" ? arenaSvg() : key === "school_corridor" ? schoolCorridorSvg() : key === "school_canteen" ? schoolCanteenSvg() : officeSvg(); writeSvg(join(dir, "scene.svg"), art); await writePng(join(dir, "preview.png"), art); writeJson(join(dir, "asset.json"), { source: "scene.svg", preview: "preview.png", coordinateSpace: "1920x1080", layers: ["backdrop", "midground", "floor", "interactive-zones"], safeActorArea: { x: 220, y: 180, width: 1480, height: 720 }, notes: ["Hand-authored environment with replaceable props."] }); }
+async function makeSet(asset: Asset): Promise<void> { const dir = join(LIBRARY, asset.path); const key = asset.id.split("/").at(-1)!; const art = key === "qingyun_dormitory" ? dormitorySvg() : key === "qingyun_courtyard" ? courtyardSvg() : key === "qingyun_arena" ? arenaSvg() : key === "school_corridor" ? schoolCorridorSvg() : key === "school_canteen" ? schoolCanteenSvg() : officeSvg(); writeSvg(join(dir, "scene.svg"), art); await writePng(join(dir, "preview.png"), art); writeJson(join(dir, "manifest.json"), { source: "scene.svg", preview: "preview.png", coordinateSpace: "1920x1080", layers: ["backdrop", "midground", "floor", "interactive-zones"], safeActorArea: { x: 220, y: 180, width: 1480, height: 720 } }); }
 function layoutSvg(): string { return svg(`<rect width="960" height="540" fill="#fff5dc" stroke="${INK}" stroke-width="8"/><rect x="28" y="30" width="904" height="370" fill="#382c2b" stroke="${INK}" stroke-width="8"/><rect x="76" y="90" width="250" height="140" fill="#b9e7e9" stroke="#6d4638" stroke-width="12"/><rect x="108" y="306" width="330" height="22" fill="${WOOD}"/><rect x="522" y="306" width="330" height="22" fill="${WOOD}"/><circle cx="360" cy="246" r="20" fill="#277e83" stroke="${INK}" stroke-width="7"/>${text("阿伟", 360, 282, 20, PAPER)}<circle cx="600" cy="246" r="20" fill="#d95d4f" stroke="${INK}" stroke-width="7"/>${text("阿强", 600, 282, 20, PAPER)}<rect x="442" y="290" width="76" height="32" fill="#a96842" stroke="${INK}" stroke-width="7"/>${text("语义布局 · desk_talk", 480, 470, 28, INK)}`, 960, 540); }
-async function makeLayout(asset: Asset): Promise<void> { const dir = join(LIBRARY, asset.path); const preview = layoutSvg(); writeSvg(join(dir, "preview.svg"), preview); await writePng(join(dir, "preview.png"), preview); writeJson(join(dir, "layout.json"), { coordinateSpace: [1920, 1080], anchors: { desk: [960, 720], awei: [720, 820], aqiang: [1210, 820], screen: [1550, 520], aiStandee: [360, 410], captionSafe: [80, 860, 1760, 160] }, actors: { 阿伟: { anchor: "awei", facing: 1, handSockets: ["hand_l", "hand_r"] }, 阿强: { anchor: "aqiang", facing: -1, handSockets: ["hand_l", "hand_r"] } }, objectPlacements: { 办公桌: { anchor: "desk", z: 20 }, 电脑屏幕: { anchor: [1510, 500], z: 30 }, AI立牌: { anchor: "aiStandee", z: 30 } }, notes: ["Semantic placement separates authored intent from renderer coordinates; interaction uses figure hand sockets."] }); }
-async function makeVoice(asset: Asset, role: FigureRole): Promise<void> { const dir = join(LIBRARY, asset.path); const profiles: Record<string, unknown> = { lin: { register: "低能量、干脆、冷面吐槽", pitch: "中低", pace: "偏慢", energy: "收敛", pronunciation: "短句落点清楚" }, senior: { register: "认真急切、逐渐失控", pitch: "中高", pace: "偏快", energy: "外放", pronunciation: "训练口令清晰" }, elder: { register: "威严、共鸣、正式", pitch: "低", pace: "慢", energy: "克制后爆发", pronunciation: "宗门称谓庄重" }, system: { register: "中性合成播报", pitch: "平", pace: "精确", energy: "无情绪", pronunciation: "通知切句利落" }, aqiang: { register: "稳重干练", pitch: "中低", pace: "中速", energy: "收敛", pronunciation: "清晰" }, awei: { register: "焦虑碎念", pitch: "中高", pace: "偏快", energy: "外放", pronunciation: "口语化" } }; writeJson(join(dir, "profile.json"), { language: "zh-CN", provider: "edge-tts", license: "Microsoft service output; runtime provider", profile: profiles[role] ?? profiles.lin, delivery: { breathPauses: true, punchlinePauseMs: 180, avoidSinging: true }, notes: ["Metadata only; generated audio is never checked in."] }); await writePng(join(dir, "preview.png"), svg(`<rect width="480" height="240" fill="#382c2b"/>${text(role, 240, 112, 42, PAPER)}${text("Edge TTS profile", 240, 164, 25, "#b9e7e9")}`, 480, 240)); }
+async function makeLayout(asset: Asset): Promise<void> { const dir = join(LIBRARY, asset.path); const preview = layoutSvg(); writeSvg(join(dir, "preview.svg"), preview); await writePng(join(dir, "preview.png"), preview); writeJson(join(dir, "manifest.json"), {}); }
+async function makeVoice(asset: Asset, role: FigureRole): Promise<void> { const dir = join(LIBRARY, asset.path); writeJson(join(dir, "manifest.json"), {}); await writePng(join(dir, "preview.png"), svg(`<rect width="480" height="240" fill="#382c2b"/>${text(role, 240, 112, 42, PAPER)}${text("Edge TTS profile", 240, 164, 25, "#b9e7e9")}`, 480, 240)); }
 
 function hashDirectory(dir: string): string { const files: string[] = []; const visit = (current: string): void => { for (const name of readdirSync(current).sort()) { const path = join(current, name); if (statSync(path).isDirectory()) visit(path); else files.push(relative(dir, path).split("\\").join("/")); } }; visit(dir); const hash = createHash("sha256"); for (const file of files) { hash.update(file); hash.update("\0"); hash.update(readFileSync(join(dir, file))); hash.update("\0"); } return `sha256:${hash.digest("hex")}`; }
 async function main(): Promise<void> {
   for (const asset of assets) {
-    if (asset.kind === "figure") await makeFigure(asset, (asset.id.match(/figure\.([^\.]+)\.v/)?.[1] ?? "awei") as FigureRole);
-    else if (asset.kind === "voice") await makeVoice(asset, (asset.id.match(/voice\.zh\.([^\.]+)\.v/)?.[1] ?? "awei") as FigureRole);
+    if (asset.kind === "figure") await makeFigure(asset, (asset.id.split("/")[1] ?? "awei") as FigureRole);
+    else if (asset.kind === "voice") await makeVoice(asset, (asset.id.split("/").at(-1) ?? "awei") as FigureRole);
     else if (asset.kind === "set") await makeSet(asset);
     else if (asset.kind === "prop") await makeProp(asset);
     else if (asset.kind === "dressing") await makeDressing(asset);
     else await makeLayout(asset);
   }
-  const manifestPath = join(LIBRARY, "registry", "manifest.json"); const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { version: number; kind: string; assets: Array<Record<string, unknown>>; procedures: unknown[] };
-  for (const asset of assets) { let row = manifest.assets.find((candidate) => candidate.path === asset.path); if (!row) { row = { capabilities: [`asset.${asset.kind}`], implementationKey: `asset.${asset.kind}`, dependencies: [], path: asset.path, hash: "" }; manifest.assets.push(row); } row.hash = hashDirectory(join(LIBRARY, asset.path)); }
-  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
   process.stdout.write(`materialized ${assets.length} immutable assets\n`);
 }
 if (import.meta.url === `file://${process.argv[1]}`) main().catch((error) => { console.error(error); process.exit(1); });

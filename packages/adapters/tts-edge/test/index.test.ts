@@ -8,12 +8,12 @@ import { edgeVoiceArgs, edgeVoiceCacheIdentity, mapSubtitleBoundaries, parseSubt
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 
 test("maps immutable voice assets to distinct Edge voice, rate, and pitch arguments", () => {
-  const awei = edgeVoiceArgs({ text: "我先试试。", voice: "voice.zh.awei.v1", outPath: "/tmp/awei.wav" });
-  const aqiang = edgeVoiceArgs({ text: "稳一点。", voice: "voice.zh.aqiang.v1", outPath: "/tmp/aqiang.wav" });
+  const awei = edgeVoiceArgs({ text: "我先试试。", voice: "voice/zh/awei", outPath: "/tmp/awei.wav" });
+  const aqiang = edgeVoiceArgs({ text: "稳一点。", voice: "voice/zh/aqiang", outPath: "/tmp/aqiang.wav" });
   assert.deepEqual(awei.slice(0, 6), ["--voice", "zh-CN-YunxiNeural", "--rate=+8%", "--pitch=+2Hz", "--text", "我先试试。"]);
   assert.deepEqual(aqiang.slice(0, 6), ["--voice", "zh-CN-YunyangNeural", "--rate=-6%", "--pitch=-6Hz", "--text", "稳一点。"]);
   assert.notDeepEqual(awei.slice(0, 4), aqiang.slice(0, 4));
-  assert.notEqual(edgeVoiceCacheIdentity("voice.zh.awei.v1"), edgeVoiceCacheIdentity("voice.zh.aqiang.v1"));
+  assert.notEqual(edgeVoiceCacheIdentity("voice/zh/awei"), edgeVoiceCacheIdentity("voice/zh/aqiang"));
 });
 
 test("retries one Edge request internally beyond the old attempt limit", async () => {

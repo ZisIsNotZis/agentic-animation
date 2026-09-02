@@ -104,7 +104,7 @@ function readGenInputs(p: Paths, id: string): GenInputs {
   return parsed.success ? parsed.data : { subject: id.replace(/_/g, " ") };
 }
 
-// --- gen-meta (seeds + prompts, frozen into meta.json on approve) ----------
+// --- gen-meta (seeds + prompts, frozen into manifest.json on approve) ------
 
 const GenMetaSchema = z.object({
   model: z.object({ name: z.string(), license: z.string() }),
@@ -483,7 +483,7 @@ export function charRig(ctx: StageContext, id: string, _opts: Record<string, unk
 }
 
 // ===========================================================================
-// char approve  (draft → v<N> freeze + meta.json + index)
+// char approve  (draft → asset manifest + index)
 // ===========================================================================
 
 export interface CharApproveOptions {
@@ -523,7 +523,7 @@ export function charApprove(ctx: StageContext, id: string, opts: CharApproveOpti
   }
   writeJson(join(versionDir, "puppet.json"), PuppetSchema, { ...puppet, version });
 
-  // meta.json — license hygiene (DECISIONS.md hard rule #2).
+  // manifest.json — license hygiene (DECISIONS.md hard rule #2).
   // Approval is a human gate: the timestamp is legitimate wall-clock metadata,
   // not render-path output. Override with --date for reproducible fixtures.
   const meta: LibraryMeta = {
@@ -535,14 +535,14 @@ export function charApprove(ctx: StageContext, id: string, opts: CharApproveOpti
     grounding: [],
     notes: [],
   };
-  writeJson(join(versionDir, "meta.json"), LibraryMetaSchema, meta);
+  writeJson(join(versionDir, "manifest.json"), LibraryMetaSchema, meta);
 
   regenerateIndex(p.charsRoot);
 
   ctx.log.info(`char approve "${id}"`, { version });
   process.stdout.write(
     `character "${id}" frozen as v${version} at ${versionDir}\n` +
-      `  meta.json records model "${meta.model.name}" (${meta.model.license}), ${Object.keys(meta.seeds).length} seeds.\n` +
+      `  manifest.json records model "${meta.model.name}" (${meta.model.license}), ${Object.keys(meta.seeds).length} seeds.\n` +
       `  episodes may now pin ${id}@v${version}.\n`,
   );
 }

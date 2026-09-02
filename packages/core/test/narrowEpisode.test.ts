@@ -5,17 +5,17 @@ import {NarrowEpisodeSchema, parseProcedureCall, parseProcedureCalls} from "../s
 const valid = {
   episode: {id: "ai_work", title: "AI 打工奇遇记", language: "zh-CN"},
   actors: {
-    aqiang: {use: "figure.aqiang.v1", voice: "voice.zh.aqiang.v1"},
-    awei: {use: "figure.awei.v1", voice: "voice.zh.awei.v1"},
+    aqiang: {use: "figure/aqiang", voice: "voice/zh/aqiang"},
+    awei: {use: "figure/awei", voice: "voice/zh/awei"},
   },
-  locations: {office: {use: "set.agent_stage.v1"}},
-  objects: {coffee: {use: "prop.thermos.v1"}, desk: {use: "prop.desk.v1"}},
+  locations: {office: {use: "set/agent_stage"}},
+  objects: {coffee: {use: "prop/thermos"}, desk: {use: "prop/desk"}},
   scenes: [{
     id: "opening", location: "office",
     actors: {aqiang: {facing: "awei"}, awei: {facing: "aqiang"}},
     objects: {desk: "center", coffee: "on(desk)"},
     script: [
-      {aqiang: "这杯咖啡，{aqiang.act.pick_up(coffee)}它不是老板的。{awei.face.shocked(), camera.use.punch_in(awei)}"},
+      {aqiang: "这杯咖啡，{aqiang.action.pick_up(coffee)}它不是老板的。{awei.emotion.shocked(), camera.punch_in(awei)}"},
     ],
   }],
 };
@@ -34,23 +34,23 @@ test("rejects legacy source fields and renderer fields", () => {
 });
 
 test("parses typed scalars and rejects malformed or nested calls", () => {
-  const call = parseProcedureCall('aqiang.act.throw(cpu, awei, arc="high", speed=1.4, enabled=true)');
+  const call = parseProcedureCall('aqiang.action.throw(cpu, awei, arc="high", speed=1.4, enabled=true)');
   assert.deepEqual(call?.args, [{kind: "ref", value: "cpu"}, {kind: "ref", value: "awei"}]);
   assert.deepEqual(call?.kwargs, {
     arc: {kind: "string", value: "high"},
     speed: {kind: "number", value: 1.4},
     enabled: {kind: "boolean", value: true},
   });
-  assert.deepEqual(parseProcedureCalls("awei.face.shocked(), camera.use.punch_in(awei)")?.map(({path}) => path), ["awei.face.shocked", "camera.use.punch_in"]);
-  assert.equal(parseProcedureCall("aqiang.act.throw(cpu, other.act.pick_up(coffee))"), null);
-  assert.equal(parseProcedureCall("aqiang.act.throw(cpu, arc=\"high\", awei)"), null);
+  assert.deepEqual(parseProcedureCalls("awei.emotion.shocked(), camera.punch_in(awei)")?.map(({path}) => path), ["awei.emotion.shocked", "camera.punch_in"]);
+  assert.equal(parseProcedureCall("aqiang.action.throw(cpu, other.action.pick_up(coffee))"), null);
+  assert.equal(parseProcedureCall("aqiang.action.throw(cpu, arc=\"high\", awei)"), null);
 });
 
 test("rejects unknown references and malformed source calls", () => {
   for (const script of [
     [{aqiang: "{拿起coffee}错。"}],
-    [{aqiang: "{aqiang.act.pick_up(unknown)}"}],
-    [{aqiang: "{aqiang.act.pick_up(coffee, bad=true, other)}"}],
+    [{aqiang: "{aqiang.action.pick_up(unknown)}"}],
+    [{aqiang: "{aqiang.action.pick_up(coffee, bad=true, other)}"}],
   ]) {
     const episode = structuredClone(valid) as any;
     episode.scenes[0].script = script;

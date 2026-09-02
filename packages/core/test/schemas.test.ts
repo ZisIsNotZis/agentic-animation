@@ -11,7 +11,7 @@ import {
 
 test("every manifest schema is registered", () => {
   const names = Object.keys(MANIFEST_SCHEMAS);
-  for (const expected of ["episode", "script", "timeline", "storyboard", "puppet", "episode.build", "narrow-episode"]) {
+  for (const expected of ["episode", "script", "timeline", "storyboard", "puppet", "episode.build", "narrow-episode", "asset-registry"]) {
     assert.ok(names.includes(expected), `missing ${expected}`);
   }
 });

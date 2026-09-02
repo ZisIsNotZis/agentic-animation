@@ -1,12 +1,12 @@
 ---
 name: text-to-episode
-description: Convert arbitrary prose, Markdown, or theatrical scripts into this repository's canonical episode.yml, preserving meaning while mapping scenes, actors, actions, and camera intent to registered assets.
+description: Convert prose, Markdown, or theatrical scripts into canonical episode.yml while preserving meaning and mapping scenes, actors, actions, and camera intent to category assets.
 ---
 
 # text-to-episode
 
 Read [docs/NARROW_EPISODE_DSL.md](../../../docs/NARROW_EPISODE_DSL.md),
-[docs/SCHEMAS.md](../../../docs/SCHEMAS.md), and the asset registry before
+[docs/SCHEMAS.md](../../../docs/SCHEMAS.md), [docs/WHOLE_WORLD_PLUGINS.md](../../../docs/WHOLE_WORLD_PLUGINS.md), and category manifests before
 writing YAML. This is an authoring workflow, not a second DSL or a generic
 storyboard format.
 
@@ -17,7 +17,7 @@ storyboard format.
    camera intent, and timing cues.
 2. Preserve the source's meaning and uncertainty. Assign a speaker only when
    the text establishes one; flag ambiguity instead of inventing it.
-3. Map each requirement to existing versioned assets and typed procedures.
+3. Map each requirement to existing category assets and typed plugin procedures.
    Report missing assets, unsupported actions, and details that cannot be
    represented before proceeding.
 4. Write only canonical `episode.yml`: semantic IDs, relationships, direct

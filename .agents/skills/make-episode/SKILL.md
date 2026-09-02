@@ -9,10 +9,9 @@ For arbitrary source prose, first use [text-to-episode](../text-to-episode/SKILL
 For production, use [production-pipeline](../production-pipeline/SKILL.md).
 Read [docs/INDEX.md](../../../docs/INDEX.md) before edits.
 
-1. Inspect the asset registry and episode directory. Reuse immutable versioned
-   assets; route missing puppets to [make-character](../make-character/SKILL.md).
+1. Inspect category plugin manifests and the episode directory. Reuse approved category assets; route missing puppets to [make-character](../make-character/SKILL.md).
 2. Write or refine the single `episode.yml` with semantic IDs, relationships,
-   direct dialogue, and typed registry calls. Keep coordinates, manifests, and
+   direct dialogue, and typed plugin calls. Keep coordinates, plugin manifests, and
    renderer fields out of source.
 3. Run `npm run anim -- check episodes/<slug>/episode.yml` and repair every
    error. Unsupported actions and missing assets become explicit work.

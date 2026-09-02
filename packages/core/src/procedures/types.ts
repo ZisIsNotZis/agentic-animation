@@ -11,8 +11,8 @@ export type ProcedureTrackKind =
   | "binding"
   | "object"
   | "camera"
-  | "vfx"
-  | "sfx"
+  | "effect"
+  | "sound"
   | "music"
   | "lifecycle";
 
@@ -101,7 +101,7 @@ export interface AudioIntent {
   at: number;
   phase: string;
   cue: string;
-  kind: "sfx" | "music";
+  kind: "sound" | "music";
   gain: number;
   duration: number;
   loop?: boolean;

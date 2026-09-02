@@ -13,18 +13,18 @@ const callEvent = (raw: string, tracks: unknown[]) => ({
 });
 
 test("enumerates every call in concurrent groups in source order", () => {
-  const calls = enumerateInlineCalls(episode("before {alice.face.happy(), camera.use.wide(), sfx.play.hit()} after"));
-  assert.deepEqual(calls.map((call) => call.raw), ["alice.face.happy()", "camera.use.wide()", "sfx.play.hit()"]);
+  const calls = enumerateInlineCalls(episode("before {alice.emotion.happy(), camera.wide(), sound.hit()} after"));
+  assert.deepEqual(calls.map((call) => call.raw), ["alice.emotion.happy()", "camera.wide()", "sound.hit()"]);
   assert.equal(calls[0]!.sourceStart, calls[1]!.sourceStart);
 });
 
 test("requires renderer-effective payloads, not merely track names", () => {
   const result = auditCallCoverage({
-    episode: episode("{alice.act.wave()}{alice.face.happy()}{camera.use.wide()}{sfx.play.hit()}"),
+    episode: episode("{alice.action.wave()}{alice.emotion.happy()}{camera.wide()}{sound.hit()}"),
     performance: {sceneTrack: [{id: "scene", performanceTracks: [{subject: "alice", events: [
-      callEvent("alice.act.wave()", [{kind: "bone", events: [{parts: ["arm_u_r"]}]}]),
-      callEvent("alice.face.happy()", [{kind: "expression", events: [{value: {emotion: "happy"}}]}]),
-    ]}, {subject: "camera", events: [{kind: "call", subject: "camera", start: 1, end: 2, call: {raw: "camera.use.wide()", path: "camera.use.wide"}, tracks: [{kind: "camera", events: [{value: {zoom: 0.7}}]}]}]}, {subject: "sfx", events: [{kind: "call", subject: "sfx", start: 1, end: 2, call: {raw: "sfx.play.hit()", path: "sfx.play.hit"}, tracks: [{kind: "sfx", events: [{value: {cue: "hit", kind: "sfx"}}]}]}]}]}]},
+      callEvent("alice.action.wave()", [{kind: "bone", events: [{parts: ["arm_u_r"]}]}]),
+      callEvent("alice.emotion.happy()", [{kind: "expression", events: [{value: {emotion: "happy"}}]}]),
+    ]}, {subject: "camera", events: [{kind: "call", subject: "camera", start: 1, end: 2, call: {raw: "camera.wide()", path: "camera.wide"}, tracks: [{kind: "camera", events: [{value: {zoom: 0.7}}]}]}]}, {subject: "sound", events: [{kind: "call", subject: "sound", start: 1, end: 2, call: {raw: "sound.hit()", path: "sound.hit"}, tracks: [{kind: "sfx", events: [{value: {cue: "hit", kind: "sound"}}]}]}]}]}]},
   });
   assert.deepEqual(result.summary.uncoveredClasses, ["camera"]);
   assert.equal(result.summary.uncovered, 1);
@@ -34,8 +34,8 @@ test("requires renderer-effective payloads, not merely track names", () => {
 
 test("flags gaze-only calls that are not projected into renderer face state", () => {
   const result = auditCallCoverage({
-    episode: episode("{alice.look.at(bob)}"),
-    performance: {sceneTrack: [{id: "scene", performanceTracks: [{subject: "alice", events: [callEvent("alice.look.at(bob)", [{kind: "gaze", events: [{target: "bob"}]}])]}]}]},
+    episode: episode("{alice.gaze.at(bob)}"),
+    performance: {sceneTrack: [{id: "scene", performanceTracks: [{subject: "alice", events: [callEvent("alice.gaze.at(bob)", [{kind: "gaze", events: [{target: "bob"}]}])]}]}]},
   });
   assert.equal(result.calls[0]!.status, "uncovered");
   assert.match(result.calls[0]!.reason[0]!, /not projected/);
@@ -43,9 +43,9 @@ test("flags gaze-only calls that are not projected into renderer face state", ()
 
 test("classifies mixed procedure effects and supports a top-level compiled track list", () => {
   const result = auditCallCoverage({
-    episode: episode("{alice.face.laughing()}{alice.voice.interrupt(bob)}"),
+    episode: episode("{alice.emotion.laughing()}{alice.voice.interrupt(bob)}"),
     performance: {performanceTracks: [{subject: "alice", events: [
-      callEvent("alice.face.laughing()", [{kind: "expression", events: [{value: {emotion: "laughing"}}]}, {kind: "sfx", events: [{value: {cue: "laugh", kind: "sfx"}}]}]),
+      callEvent("alice.emotion.laughing()", [{kind: "expression", events: [{value: {emotion: "laughing"}}]}, {kind: "sfx", events: [{value: {cue: "laugh", kind: "sound"}}]}]),
       callEvent("alice.voice.interrupt(bob)", [{kind: "bone", events: [{parts: ["head"]}]}]),
     ]}]},
   });
@@ -55,9 +55,9 @@ test("classifies mixed procedure effects and supports a top-level compiled track
 
 test("recognizes compiled music tracks as audible coverage", () => {
   const result = auditCallCoverage({
-    episode: episode("{music.play.ending()}"),
+    episode: episode("{music.ending()}"),
     performance: {performanceTracks: [{subject: "music", events: [
-      {...callEvent("music.play.ending()", [{kind: "music", events: [{value: {cue: "ending-cadence", kind: "music"}}]}]), subject: "music"},
+      {...callEvent("music.ending()", [{kind: "music", events: [{value: {cue: "ending-cadence", kind: "music"}}]}]), subject: "music"},
     ]}]},
   });
   assert.equal(result.calls[0]!.status, "covered");

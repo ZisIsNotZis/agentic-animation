@@ -4,38 +4,20 @@
     "library-meta": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "pattern": "^_?[a-z0-9][a-z0-9_-]*$"
-        },
-        "version": {
-          "type": "integer",
-          "exclusiveMinimum": 0
-        },
-        "kind": {
-          "type": "string",
-          "enum": [
-            "character",
-            "background"
-          ]
-        },
         "model": {
           "type": "object",
           "properties": {
             "name": {
               "type": "string",
-              "minLength": 1
+              "default": ""
             },
             "license": {
               "type": "string",
-              "minLength": 1
+              "default": ""
             }
           },
-          "required": [
-            "name",
-            "license"
-          ],
-          "additionalProperties": false
+          "additionalProperties": false,
+          "default": {}
         },
         "seeds": {
           "type": "object",
@@ -53,11 +35,11 @@
         },
         "date": {
           "type": "string",
-          "minLength": 1
+          "default": ""
         },
         "approver": {
           "type": "string",
-          "minLength": 1
+          "default": ""
         },
         "grounding": {
           "type": "array",
@@ -74,14 +56,6 @@
           "default": []
         }
       },
-      "required": [
-        "id",
-        "version",
-        "kind",
-        "model",
-        "date",
-        "approver"
-      ],
       "additionalProperties": false
     }
   },

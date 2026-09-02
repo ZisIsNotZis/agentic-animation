@@ -1,5 +1,13 @@
 # System architecture
 
+## Pending redesign
+
+A library-plugin engine redesign is specified in
+[WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md) under the gated plan
+[PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md). It is designed
+but not approved; the seams below describe the current, implemented engine and
+remain authoritative until the plan is approved and executed.
+
 ## Mission
 
 Compile one strongly typed, agent-friendly `episode.yml` into a deterministic,

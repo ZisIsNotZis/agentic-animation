@@ -6,13 +6,13 @@ import { STANDARD_PARTS, type StandardPart } from "@anim/core";
  * are the *starting* templates the agent/human refines; nothing here is frozen
  * contract. House-style.json is written by `char new` (marked draft) and read
  * by `char gen` for prompt fragments + the model/license that ends up in
- * meta.json.
+ * manifest.json.
  */
 
 export const HouseStyleSchema = z.object({
   status: z.literal("draft").or(z.literal("approved")).default("draft"),
   version: z.number().int().positive().default(1),
-  /** The generating model + license — copied into every asset's meta.json. */
+  /** The generating model + license — copied into every asset's manifest.json. */
   model: z.object({ name: z.string().min(1), license: z.string().min(1) }),
   style: z.string().min(1),
   /** Prompt fragments prepended to every prompt, by role. */
@@ -197,6 +197,6 @@ ${styleSummary}
 ## Generation notes
 - Anchor first (front-facing devotional icon); human approves before parts.
 - Parts on flat magenta chroma; mouth shapes are head-space overlays (A–H, X).
-- Seeds recorded in draft/gen-meta.json; frozen into v<N>/meta.json on approve.
+- Seeds recorded in draft/gen-meta.json; frozen into the approved figure manifest.
 `;
 }

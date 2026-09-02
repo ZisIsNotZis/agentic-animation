@@ -28,69 +28,55 @@ function sampleArg(type: string): string {
   return "Alice";
 }
 
-function call(raw: string): ProcedureCall {
-  const match = raw.match(/^([^.(]+)\.([^.(]+)\.([^.(]+)\((.*)\)$/);
-  if (!match) throw new Error(`invalid test call: ${raw}`);
-  const [subject, namespace, terminal] = match.slice(1, 4);
-  const args = match[4] ? match[4].split(", ").map((value) => ({kind: "ref" as const, value})) : [];
-  return {raw, subject: subject!, namespace: namespace! as ProcedureCall["namespace"], terminal: terminal!, path: `${subject}.${namespace}.${terminal}`, args, kwargs: {}};
-}
-
 function authoredCall(id: string, args: string[] = []): ProcedureCall {
   const [namespace, ...terminal] = id.split(".");
-  const path = namespace === "camera" || namespace === "vfx" || namespace === "sfx" || namespace === "music"
-    ? `${namespace}.${namespace === "sfx" || namespace === "music" ? "play" : "use"}.${terminal.join(".")}`
-    : `actor.${namespace === "acting" || namespace === "gesture" || namespace === "prop" || namespace === "interaction" ? "act" : namespace === "gaze" ? "look" : namespace === "speech" ? "voice" : namespace}.${terminal.join(".")}`;
-  const parsed = call(`${path}(${args.join(", ")})`);
-  return parsed;
+  const subject = id.startsWith("camera.") || id.startsWith("effect.") || id.startsWith("sound.") || id.startsWith("music.") ? namespace! : "Alice";
+  const path = `${subject}.${id}`;
+  const raw = `${path}(${args.join(", ")})`;
+  return {raw, subject, namespace: namespace! as ProcedureCall["namespace"], terminal: terminal.join("."), path, args: args.map((value) => ({kind: "ref" as const, value})), kwargs: {}};
 }
 
 test("has a deterministic authored implementation for every registered procedure", async () => {
-  const raw = JSON.parse(await readFile(join(libraryRoot, "registry/manifest.json"), "utf8")) as {
+  const raw = JSON.parse(await readFile(join(libraryRoot, "action/manifest.json"), "utf8")) as {
     procedures: Array<{id: string; params: Array<{name: string; type: string}>; subjects: string[]}>;
   };
   const registry = await loadAssetRegistry(libraryRoot);
   const resolver = createProcedureResolver({registry});
 
-  assert.equal(raw.procedures.length, 65);
-  assert.equal(new Set(raw.procedures.map((procedure) => procedure.id)).size, 65);
+  assert.equal(raw.procedures.length, 66);
+  assert.equal(new Set(raw.procedures.map((procedure) => procedure.id)).size, 66);
   assert.deepEqual([...PROCEDURE_IDS].sort(), raw.procedures.map((procedure) => procedure.id).sort());
   for (const procedure of raw.procedures) {
-    const subject = procedure.subjects[0]!;
-    const procedureCall = authoredCall(procedure.id, procedure.params.map((param) => sampleArg(param.type)));
+    const id = procedure.id;
+    const procedureCall = authoredCall(id, procedure.params.map((param) => sampleArg(param.type)));
+    const subject = id.startsWith("camera.") || id.startsWith("effect.") || id.startsWith("sound.") || id.startsWith("music.") ? id.split(".")[0]! : "Alice";
     const first = resolver.resolve(procedureCall, context(subject, procedureCall));
     const second = resolver.resolve(procedureCall, context(subject, procedureCall));
-    assert.deepEqual(second, first, procedure.id);
-    assert.equal(first.performance.id, procedure.id);
-    assert.equal(first.durationSec, PROCEDURE_DEFINITIONS[procedure.id]!.durationSec);
-    assert.ok(first.performance.phases.length >= 2, procedure.id);
-    assertRecipeIsConcrete(first.performance.recipe, procedure.id);
-    assert.deepEqual(first.tracks, first.performance.recipe.tracks, procedure.id);
-    const expectedKinds = procedure.id.startsWith("face.") ? ["expression"]
-      : procedure.id.startsWith("look.") ? ["gaze"]
-        : procedure.id.startsWith("move.") ? ["movement", "transform"]
-          : procedure.id.startsWith("use.") && procedure.subjects[0] === "camera" ? ["camera"]
-            : procedure.id.startsWith("use.") ? ["vfx"]
-              : procedure.id.startsWith("play.") ? [procedure.subjects[0] === "music" ? "music" : "sfx"]
-                : procedure.id.startsWith("voice.") ? ["expression"]
-                  : ["bone"];
-    for (const kind of expectedKinds) assert.ok(first.tracks.some((track) => track.kind === kind), `${procedure.id}: missing ${kind} track`);
+    assert.deepEqual(second, first, id);
+    assert.equal(first.performance.id, id);
+    assert.equal(first.durationSec, PROCEDURE_DEFINITIONS[id]!.durationSec);
+    assert.ok(first.performance.phases.length >= 2, id);
+    assertRecipeIsConcrete(first.performance.recipe, id);
+    assert.deepEqual(first.tracks, first.performance.recipe.tracks, id);
+    const expectedKinds = id.startsWith("emotion.") ? ["expression"]
+      : id.startsWith("gaze.") ? ["gaze"]
+        : id.startsWith("movement.") ? ["movement", "transform"]
+          : id.startsWith("camera.") ? ["camera"]
+            : id.startsWith("effect.") ? ["effect"]
+              : id.startsWith("sound.") ? ["sound"]
+                : id.startsWith("music.") ? ["music"]
+                  : id.startsWith("voice.") ? ["expression"]
+                    : ["bone"];
+    for (const kind of expectedKinds) assert.ok(first.tracks.some((track) => track.kind === kind), `${id}: missing ${kind} track`);
   }
 });
 
 test("audits every procedure call used by the AI work adventure", async () => {
   const episode = await readFile(join(process.cwd(), "episodes/ai-work-adventure/episode.yml"), "utf8");
   const calls = new Map<string, ProcedureCall>();
-  for (const match of episode.matchAll(/(?:[a-z][a-z0-9_]*\.)?(?:face|look|move|act|voice|use|play)\.[a-z][a-z0-9_]*\([^)]*\)/g)) {
+  for (const match of episode.matchAll(/(?:[a-z][a-z0-9_]*\.)?(?:action|emotion|gaze|movement|voice|prop|camera|effect|sound|music)\.[a-z][a-z0-9_]*\([^)]*\)/g)) {
     for (const parsed of parseProcedureCalls(match[0]) ?? []) {
-      const normalized = parsed.subject === "camera" || parsed.subject === "vfx" || parsed.subject === "sfx" || parsed.subject === "music"
-        ? `${parsed.subject}.${parsed.terminal}`
-        : parsed.namespace === "face" ? `face.${parsed.terminal}`
-          : parsed.namespace === "look" ? `gaze.${parsed.terminal}`
-            : parsed.namespace === "move" ? `move.${parsed.terminal}`
-              : parsed.namespace === "voice" ? `speech.${parsed.terminal}`
-                : PROCEDURE_IDS.find((id) => id.endsWith(`.${parsed.terminal}`)) ?? parsed.path;
-      calls.set(normalized, parsed);
+      calls.set(`${parsed.namespace}.${parsed.terminal}`, parsed);
     }
   }
   assert.equal(calls.size, 65);
@@ -138,12 +124,12 @@ test("retains representative body, face, gaze, camera, manga VFX, and audio inte
     return resolver.resolve(procedureCall, context(subject, procedureCall)).performance;
   };
 
-  const gesture = resolve("gesture.slam", ["Cup"], "Alice");
+  const gesture = resolve("action.slam", ["Cup"], "Alice");
   assert.ok(gesture.body.some((event) => event.parts.includes("hand_r") && event.phase === "slam"));
   assert.equal(gesture.vfx[0]!.style, "manga-impact-star");
   assert.equal(gesture.audio[0]!.cue, "desk-slam");
 
-  const face = resolve("face.shocked", [], "Alice");
+  const face = resolve("emotion.shocked", [], "Alice");
   assert.equal(face.expression[0]!.emotion, "shocked");
   assert.equal(face.expression[0]!.mouth, "round-open");
 
@@ -159,11 +145,11 @@ test("retains representative body, face, gaze, camera, manga VFX, and audio inte
   assert.equal(music.audio[0]!.kind, "music");
   assert.equal(music.audio[0]!.cue, "ending-cadence");
   assert.ok(music.recipe.tracks.some((track) => track.kind === "music"));
-  assert.ok(!music.recipe.tracks.some((track) => track.kind === "sfx"));
+  assert.ok(!music.recipe.tracks.some((track) => track.kind === "sound"));
 });
 
 test("resolves procedure parameters inside the generic recipe without renderer vocabulary", () => {
-  const call = authoredCall("gesture.point", ["Bob"]);
+  const call = authoredCall("action.point", ["Bob"]);
   const result = createProcedureResolver().resolve(call, context("Alice", call));
   assert.ok(result.tracks.some((track) => track.kind === "bone"));
   assert.equal(result.performance.recipe.tracks.find((track) => track.kind === "bone")?.events[0]?.target, "Bob");
@@ -171,8 +157,8 @@ test("resolves procedure parameters inside the generic recipe without renderer v
 });
 
 test("rejects empty and semantically insufficient explicit recipes", () => {
-  const call = authoredCall("gesture.nod");
-  const base = PROCEDURE_DEFINITIONS["act.nod"]!;
+  const call = authoredCall("action.nod");
+  const base = PROCEDURE_DEFINITIONS["action.nod"]!;
   const empty = {...base, recipe: {tracks: []}};
   assert.throws(() => createProcedureResolver({definitions: {[base.id]: empty}}).resolve(call, context("Alice", call)), /empty generic recipe/i);
   const insufficient = {...base, recipe: {tracks: [{kind: "bone" as const, events: []}]}};
@@ -195,10 +181,8 @@ function assertRecipeIsConcrete(recipe: {tracks: readonly {kind: string; events:
 test("honors the registry contract instead of silently accepting unknown procedures or arity", async () => {
   const registry = await loadAssetRegistry(libraryRoot);
   const resolver = createProcedureResolver({registry});
-  const unknown = authoredCall("gesture.unknown");
+  const unknown = authoredCall("action.unknown");
   assert.throws(() => resolver.resolve(unknown, context("Alice", unknown)), /no authored implementation/i);
-  const wrong = authoredCall("gesture.nod", ["Cup"]);
+  const wrong = authoredCall("action.nod", ["Cup"]);
   assert.throws(() => resolver.resolve(wrong, context("Alice", wrong)), /expects 0 arguments/i);
-  const wrongSubject = authoredCall("gesture.nod");
-  assert.throws(() => resolver.resolve(wrongSubject, context("camera", wrongSubject)), /does not allow subject/i);
 });

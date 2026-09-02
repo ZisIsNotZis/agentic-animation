@@ -767,7 +767,7 @@ function activeTrackVfx(
   props: readonly EvaluatedProp[],
 ): EvaluatedVfx[] {
   return tracks
-    .filter((track) => track.kind === "vfx")
+    .filter((track) => track.kind === "effect")
     .flatMap((track, trackIndex) => track.events.map((event, eventIndex) => ({track, event, trackIndex, eventIndex})))
     .filter(({event}) => event.active)
     .map(({track, event, trackIndex, eventIndex}) => {
@@ -1021,7 +1021,7 @@ function projectCompiledPerformance(compiled: PerformanceManifest, fps: number):
         });
       }
       if (!event.tracks?.length && performance) {
-        const kind = track.kind === "actor" ? "lifecycle" : track.subject === "camera" ? "camera" : track.subject === "vfx" ? "vfx" : "sfx";
+        const kind = track.kind === "actor" ? "lifecycle" : track.subject === "camera" ? "camera" : track.subject === "effect" ? "effect" : "sound";
         genericTracks.push({kind, subject: track.subject, events: [{frame: startFrame, endFrame, value: performance}]});
       }
       if (track.subject === "camera" && performance?.camera) {

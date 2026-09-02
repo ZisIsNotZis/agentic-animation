@@ -16,35 +16,36 @@ function episodeFile(source: string): string {
 const header = `
 episode: {id: compiler_test, title: Compiler test, language: en}
 actors:
-  alice: {use: figure.test.alice.v1, voice: voice.test.alice.v1}
-  bob: {use: figure.test.bob.v1, voice: voice.test.bob.v1}
+  alice: {use: figure/test/alice, voice: voice/test/alice}
+  bob: {use: figure/test/bob, voice: voice/test/bob}
 locations:
-  room: {use: set.test.room.v1}
+  room: {use: set/test/room}
 objects:
-  cup: {use: prop.test.cup.v1}
-  desk: {use: prop.test.desk.v1}
+  cup: {use: prop/test/cup}
+  desk: {use: prop/test/desk}
 `;
 
 const resolved = new Map<string, ProcedureResolution>();
 const registry = {
   resolveAsset(ref: string) { return {ref}; },
   validateProcedureCall(call: {id: string}) {
-    const id = call.id.split(".").slice(1).join(".");
-    return {procedure: {procedureKind: id.startsWith("face.") ? "state" : "timed", timing: {defaultDuration: resolved.get(id)?.durationSec ?? 0.5, scalable: true}}};
+    const segments = call.id.split(".");
+    const id = segments.length === 2 ? call.id : segments.slice(1).join(".");
+    return {procedure: {procedureKind: id.startsWith("emotion.") ? "state" : "timed", timing: {defaultDuration: resolved.get(id)?.durationSec ?? 0.5, scalable: true}}};
   },
 };
 
 function procedureName(call: ProcedureCall): string { return `${call.namespace}.${call.terminal}`; }
 function resolver(call: ProcedureCall): ProcedureResolution {
   const name = procedureName(call);
-  return resolved.get(name) ?? {durationSec: name === "act.slam" ? 1 : 0.25};
+  return resolved.get(name) ?? {durationSec: name === "action.slam" ? 1 : 0.25};
 }
 const timing = (request: {text: string}) => ({durationSec: request.text.length ? 2 : 0});
 
 test("compiles direct dialogue, concurrent brace groups, and stageScene output", async () => {
   resolved.clear();
-  resolved.set("face.shocked", {durationSec: 0.3});
-  resolved.set("use.punch_in", {durationSec: 0.4});
+  resolved.set("emotion.shocked", {durationSec: 0.3});
+  resolved.set("camera.punch_in", {durationSec: 0.4});
   const path = episodeFile(`${header}
 scenes:
   - id: reveal
@@ -55,7 +56,7 @@ scenes:
     objects: {desk: center, cup: on(desk)}
     script:
       - alice: "hello"
-      - alice: "{bob.face.shocked(), camera.use.punch_in(bob)}"
+      - alice: "{bob.emotion.shocked(), camera.punch_in(bob)}"
 `);
   const compiled = await compileEpisode(path, {registry, resolver, speechTiming: timing});
   const scene = compiled.sceneTrack[0]!;
@@ -69,8 +70,8 @@ scenes:
 
 test("blocks timed calls by default, supports nonblock and duration, and keeps state persistent", async () => {
   resolved.clear();
-  resolved.set("act.slam", {durationSec: 1});
-  resolved.set("face.shocked", {durationSec: 9});
+  resolved.set("action.slam", {durationSec: 1});
+  resolved.set("emotion.shocked", {durationSec: 9});
   const path = episodeFile(`${header}
 scenes:
   - id: timing
@@ -78,8 +79,8 @@ scenes:
     actors: {alice: {facing: audience}}
     objects: {desk: center}
     script:
-      - alice: "{alice.act.slam(desk)}after"
-      - alice: '{alice.act.slam(desk, mode="nonblock"), alice.face.shocked(), alice.act.slam(desk, duration=2)}done'
+      - alice: "{alice.action.slam(desk)}after"
+      - alice: '{alice.action.slam(desk, mode="nonblock"), alice.emotion.shocked(), alice.action.slam(desk, duration=2)}done'
 `);
   const compiled = await compileEpisode(path, {registry, resolver, speechTiming: timing});
   const events = compiled.sceneTrack[0]!.performanceTracks.flatMap((track) => track.events);
@@ -91,7 +92,7 @@ scenes:
 
 test("normalizes and closes a span across dialogue speakers with strict span errors", async () => {
   resolved.clear();
-  resolved.set("act.throw", {durationSec: 0.2});
+  resolved.set("action.throw", {durationSec: 0.2});
   const valid = episodeFile(`${header}
 scenes:
   - id: span
@@ -101,17 +102,17 @@ scenes:
       bob: {facing: alice}
     objects: {cup: center}
     script:
-      - alice: '{alice.act.throw(cup, mode="begin")}'
+      - alice: '{alice.action.throw(cup, mode="begin")}'
       - bob: "holding"
-      - bob: '{alice.act.throw(cup, mode="end")}'
+      - bob: '{alice.action.throw(cup, mode="end")}'
 `);
   const compiled = await compileEpisode(valid, {registry, resolver, speechTiming: timing});
   const span = compiled.performanceTracks.find((track) => track.subject === "alice")!.events.find((event) => event.kind === "call")!;
   assert.deepEqual([span.start, span.end], [0, 2]);
   for (const script of [
-    `      - alice: '{alice.act.throw(cup, mode="end")}'`,
-    `      - alice: '{alice.act.throw(cup, mode="begin")}'\n      - alice: '{alice.act.throw(cup, mode="begin")}'`,
-    `      - alice: '{alice.act.throw(cup, mode="begin", duration=1)}'`,
+    `      - alice: '{alice.action.throw(cup, mode="end")}'`,
+    `      - alice: '{alice.action.throw(cup, mode="begin")}'\n      - alice: '{alice.action.throw(cup, mode="begin")}'`,
+    `      - alice: '{alice.action.throw(cup, mode="begin", duration=1)}'`,
   ]) {
     const invalid = episodeFile(`${header}
 scenes:
@@ -154,7 +155,7 @@ scenes:
     actors: {alice: {facing: audience}}
     objects: {cup: center}
     script:
-      - alice: "first{alice.face.shocked()}second{alice.face.relief()}"
+      - alice: "first{alice.emotion.shocked()}second{alice.emotion.relief()}"
 `);
   await compileEpisode(path, {registry, resolver, speechTimingProvider: (request) => {
       seen.push(request.lineId);
@@ -193,7 +194,7 @@ scenes:
     actors: {alice: {facing: audience}}
     objects: {cup: center}
     script:
-      - alice: "{alice.act.slam(cup, speed=1.5)}"
+      - alice: "{alice.action.slam(cup, speed=1.5)}"
 `);
   const typedRegistry = {
     resolveAsset(ref: string) { return {ref}; },
@@ -204,5 +205,5 @@ scenes:
     },
   };
   await compileEpisode(path, {registry: typedRegistry, resolver, speechTiming: timing});
-  assert.deepEqual(calls, [{id: "alice.act.slam", subject: "alice"}]);
+  assert.deepEqual(calls, [{id: "alice.action.slam", subject: "alice"}]);
 });

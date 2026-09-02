@@ -1,6 +1,23 @@
 {
   "$ref": "#/definitions/narrow-episode",
   "definitions": {
+    "procedure-namespace": {
+      "description": "Canonical procedure call namespaces: actor calls use actor.<namespace>.<terminal>; world categories are subject-less camera.*, effect.*, sound.*, music.*; object calls use prop.",
+      "type": "string",
+      "enum": [
+        "action",
+        "emotion",
+        "gaze",
+        "movement",
+        "voice",
+        "prop",
+        "camera",
+        "effect",
+        "sound",
+        "music",
+        "say"
+      ]
+    },
     "narrow-episode": {
       "type": "object",
       "properties": {
@@ -34,7 +51,7 @@
             "properties": {
               "use": {
                 "type": "string",
-                "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z0-9-]+)+\\.v[1-9]\\d*$"
+                "pattern": "^(?:figure|voice|set|prop|dressing|layout)(?:\\/[a-z][a-z0-9_]*)+$"
               },
               "voice": {
                 "$ref": "#/definitions/narrow-episode/properties/actors/additionalProperties/properties/use"
@@ -145,7 +162,10 @@
                   "type": "object",
                   "additionalProperties": {
                     "type": "string",
-                    "minLength": 1
+                    "minLength": 1,
+                    "x-procedure-namespaces": {
+                      "$ref": "#/definitions/procedure-namespace"
+                    }
                   },
                   "propertyNames": {
                     "pattern": "^[a-z][a-z0-9_]*$"

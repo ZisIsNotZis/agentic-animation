@@ -3,7 +3,6 @@ export {
   loadAssetRegistry,
   loadRegistry,
   parseProcedureManifest,
-  parseRegistryManifest,
 } from "./registry";
 export type {
   AssetRegistry,

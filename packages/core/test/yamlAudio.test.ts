@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {buildYamlAudioPreparation, cleanSpokenText, createYamlAudioCacheKey, segmentYamlAudio, type YamlAudioSource} from "../src/audio";
 
 const source: YamlAudioSource = {
-  episodeId: "demo", actors: {awei: {voice: "voice.zh.aw.v1"}, xiaohong: {voice: "voice.zh.xh.v1"}},
+  episodeId: "demo", actors: {awei: {voice: "voice/zh/aw"}, xiaohong: {voice: "voice/zh/xh"}},
   scenes: [{id: "opening", script: [{actor: "awei", text: "先说 {awei.voice.speed(1.5), awei.say(\"打断\")}重点。然后继续。"}]}],
 };
 
@@ -40,6 +40,6 @@ test("ellipsis-only chunks become configured silence without captions", () => {
 });
 
 test("cache identity includes voice speed", () => {
-  const base = {text: "说话。", voiceAsset: "voice.a.v1", profile: "p", compilerVersion: "v"};
+  const base = {text: "说话。", voiceAsset: "voice/zh/a", profile: "p", compilerVersion: "v"};
   assert.notEqual(createYamlAudioCacheKey({...base, speed: 1}), createYamlAudioCacheKey({...base, speed: 2}));
 });

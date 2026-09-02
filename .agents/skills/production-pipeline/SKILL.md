@@ -1,21 +1,20 @@
 ---
 name: production-pipeline
-description: Run or diagnose this repository's canonical episode.yml production path, including Edge TTS, measured timing, compilation, preview, Remotion rendering, retries, and final media verification.
+description: Run or diagnose the canonical episode.yml path, including Edge TTS, measured timing, compilation, preview, Remotion rendering, retries, and final media verification.
 ---
 
 # production-pipeline
 
 Read [docs/PIPELINE.md](../../../docs/PIPELINE.md),
 [docs/NARROW_EPISODE_DSL.md](../../../docs/NARROW_EPISODE_DSL.md), and
-[docs/SCHEMAS.md](../../../docs/SCHEMAS.md). The only production source is
-`episode.yml`.
+[docs/SCHEMAS.md](../../../docs/SCHEMAS.md), and [docs/WHOLE_WORLD_PLUGINS.md](../../../docs/WHOLE_WORLD_PLUGINS.md).
+The only production source is `episode.yml`; category manifests and plugins are reusable inputs.
 
 ## Loop
 
 1. Inspect config and run `npm run anim -- doctor`. Confirm Edge TTS is the
    configured production adapter and its environment is reachable.
-2. Run `npm run anim -- check <episode.yml>`. Resolve every error at the
-   source, registry, or asset owner; do not add fallbacks.
+2. Run `npm run anim -- check <episode.yml>`. Resolve every error at the source, plugin, manifest, or asset owner; do not add fallbacks.
 3. Run `npm run anim -- make <episode.yml>` with the configured speed. Use
    `--voice-speed <n>` only for an explicit run override; inline
    `actor.voice.speed(n)` wins for following chunks.

@@ -1,50 +1,24 @@
 import { z } from "zod";
 import { IdSchema } from "./common";
 
-export const RegistryAssetIdSchema = z.string().regex(/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+\.v[1-9]\d*$/, "asset id must include an immutable .vN suffix");
+export const RegistryAssetIdSchema = z.string().regex(/^(?:figure|voice|set|prop|dressing|layout)(?:\/[a-z][a-z0-9_]*)+$/, "asset identity must be a canonical library-relative path");
 export type RegistryAssetId = z.infer<typeof RegistryAssetIdSchema>;
 export const ProcedureIdSchema = z.string().regex(/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/, "procedure id must be namespace.name");
 export type ProcedureId = z.infer<typeof ProcedureIdSchema>;
 export const RegistryAssetKindSchema = z.enum(["figure", "voice", "set", "prop", "dressing", "layout"]);
 export type RegistryAssetKind = z.infer<typeof RegistryAssetKindSchema>;
-export const ProcedureSubjectSchema = z.enum(["actor", "camera", "vfx", "sfx", "music"]);
+export const ProcedureSubjectSchema = z.enum(["actor", "camera", "effect", "sound", "music"]);
 export type ProcedureSubject = z.infer<typeof ProcedureSubjectSchema>;
 export const ProcedureParamTypeSchema = z.enum(["actor", "object", "dressing", "entity", "asset", "string", "number", "boolean"]);
 export type ProcedureParamType = z.infer<typeof ProcedureParamTypeSchema>;
 
-const RegistryCommonSchema = z.object({
-  version: z.number().int().positive(),
-  capabilities: z.array(z.string().min(1)).default([]),
-  implementationKey: z.string().min(1),
-  dependencies: z.array(z.string().min(1)).default([]),
-  hash: z.string().regex(/^sha256:[a-f0-9]{64}$/),
-}).strict();
-
 const RegistryAssetCommonSchema = z.object({
   capabilities: z.array(z.string().min(1)).default([]),
-  implementationKey: z.string().min(1),
   dependencies: z.array(z.string().min(1)).default([]),
-  hash: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+  hash: z.string().regex(/^sha256:[a-f0-9]{64}$/).optional(),
 }).strict();
 
-const RegistryAssetPathSchema = z.string().regex(
-  /^(?:(?:figure|set|prop|dressing|layout)\/[a-z][a-z0-9_]*|voice\/zh\/[a-z][a-z0-9_]*)\/v[1-9]\d*$/,
-  "asset path must use canonical lowercase underscore naming",
-);
-
-const RegistryAssetIndexSchema = RegistryAssetCommonSchema.extend({path: RegistryAssetPathSchema}).strict();
-export const RegistryAssetManifestSchema = RegistryAssetIndexSchema.transform((asset, ctx) => {
-  const segments = asset.path.split("/");
-  const versionSegment = segments.at(-1)!;
-  const version = Number(versionSegment.slice(1));
-  const id = asset.path.replaceAll("/", ".");
-  const kind = segments[0]!;
-  if (!RegistryAssetKindSchema.safeParse(kind).success) {
-    ctx.addIssue({code: z.ZodIssueCode.custom, path: ["path"], message: `unsupported asset kind: ${kind}`});
-    return z.NEVER;
-  }
-  return {...asset, id, kind, version: version} as const;
-});
+export const RegistryAssetManifestSchema = RegistryAssetCommonSchema.extend({identity: RegistryAssetIdSchema, kind: RegistryAssetKindSchema}).strict();
 export type RegistryAssetManifest = z.infer<typeof RegistryAssetManifestSchema>;
 export const AssetManifestSchema = RegistryAssetManifestSchema;
 export type AssetManifest = RegistryAssetManifest;
@@ -69,7 +43,7 @@ export const ProcedureAssetSchema = z.object({
   id: ProcedureIdSchema,
   path: ProcedureIdSchema,
   version: z.number().int().positive(),
-  owner: z.enum(["actor", "object", "camera", "vfx", "sfx"]),
+  owner: z.enum(["actor", "object", "camera", "effect", "sound"]),
   kind: z.enum(["timed", "state", "speech"]),
   subjects: z.array(ProcedureSubjectSchema).min(1),
   positional: z.array(ParameterSchema),
@@ -80,11 +54,10 @@ export const ProcedureAssetSchema = z.object({
 }).strict();
 export type ProcedureAsset = z.infer<typeof ProcedureAssetSchema>;
 
-const ProcedureManifestInputSchema = RegistryCommonSchema.extend({
+const ProcedureManifestInputSchema = z.object({
   kind: z.literal("procedure"),
   id: ProcedureIdSchema,
-  path: ProcedureIdSchema.optional(),
-  owner: z.enum(["actor", "object", "camera", "vfx", "sfx", "music"]).optional(),
+  owner: z.enum(["actor", "object", "camera", "effect", "sound", "music"]).optional(),
   procedureKind: z.enum(["timed", "state", "speech"]).optional(),
   subjects: z.array(ProcedureSubjectSchema).min(1),
   positional: z.array(ParameterSchema).default([]),
@@ -97,7 +70,6 @@ const ProcedureManifestInputSchema = RegistryCommonSchema.extend({
 }).strict();
 export const ProcedureManifestSchema = ProcedureManifestInputSchema.transform((manifest) => ({
   ...manifest,
-  path: manifest.path ?? manifest.id,
   owner: manifest.owner ?? (manifest.subjects[0] === "actor" ? "actor" : manifest.subjects[0]),
   procedureKind: manifest.procedureKind ?? "timed",
   positional: manifest.positional.length ? manifest.positional : manifest.params ?? [],
@@ -108,18 +80,16 @@ export const ProcedureManifestSchema = ProcedureManifestInputSchema.transform((m
 });
 export type ProcedureManifest = z.infer<typeof ProcedureManifestSchema>;
 
-export const LibraryRegistrySchema = z.object({version: z.number().int().positive(), kind: z.literal("registry"), assets: z.array(RegistryAssetManifestSchema).default([]), procedures: z.array(ProcedureManifestSchema).default([])}).strict();
-export type LibraryRegistry = z.infer<typeof LibraryRegistrySchema>;
-export const AssetRegistrySchema = LibraryRegistrySchema;
-export type AssetRegistryManifest = LibraryRegistry;
+export const AssetRegistrySchema = z.object({kind: z.literal("registry"), assets: z.array(RegistryAssetManifestSchema).default([]), procedures: z.array(ProcedureManifestSchema).default([])}).strict();
+export type AssetRegistryManifest = z.infer<typeof AssetRegistrySchema>;
 
-export const AssetModelSchema = z.object({name: z.string().min(1), license: z.string().min(1)});
+export const AssetModelSchema = z.object({name: z.string().default(""), license: z.string().default("")});
 export type AssetModel = z.infer<typeof AssetModelSchema>;
 
 export const LibraryMetaSchema = z.object({
-  model: AssetModelSchema,
+  model: AssetModelSchema.default({}),
   seeds: z.record(z.string(), z.number().int()).default({}), prompts: z.record(z.string(), z.string()).default({}),
-  date: z.string().min(1), approver: z.string().min(1), grounding: z.array(z.string()).default([]), notes: z.array(z.string()).default([]),
+  date: z.string().default(""), approver: z.string().default(""), grounding: z.array(z.string()).default([]), notes: z.array(z.string()).default([]),
 }).strict();
 export type LibraryMeta = z.infer<typeof LibraryMetaSchema>;
 export const LibraryIndexEntrySchema = z.object({id: IdSchema, latest: z.number().int().positive(), versions: z.array(z.number().int().positive()).min(1)});

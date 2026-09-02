@@ -1,20 +1,19 @@
 # Episode YAML language
 
-`episode.yml` is the only agent-authored executable stage script. It states
-dramatic intent using friendly English instance IDs. Assets own coordinates,
-rig mechanics, timing defaults, and visual implementation. Chinese is valid
-only inside dialogue and human-facing metadata such as the title.
+`episode.yml` is the only agent-authored executable stage script. It states dramatic intent using friendly English instance names.
+Category plugins own normalized geometry, rig mechanics, timing defaults, and visual implementation.
+Chinese is valid only inside dialogue and human-facing metadata such as the title.
 
 ```yaml
 episode: {id: coffee, title: 咖啡事件, language: zh-CN}
 actors:
-  xiaoming: {use: figure.xiaoming.v1, voice: voice.zh.xiaoming.v1}
-  xiaohong: {use: figure.xiaohong.v1, voice: voice.zh.xiaohong.v1}
+  xiaoming: {use: figure/xiaoming, voice: voice/zh/xiaoming}
+  xiaohong: {use: figure/xiaohong, voice: voice/zh/xiaohong}
 locations:
-  office: {use: set.agent_stage.v1}
+  office: {use: set/agent_stage}
 objects:
-  coffee: {use: prop.office.coffee.v1}
-  desk: {use: prop.desk.v1}
+  coffee: {use: prop/coffee}
+  desk: {use: prop/desk}
 scenes:
   - id: reveal
     location: office
@@ -28,8 +27,8 @@ scenes:
           {xiaohong.face.shocked(), camera.use.punch_in(xiaohong)}是你的。
 ```
 
-Coordinates, scale, bones, sockets, layouts, and frames are never authored.
-Scene declarations describe relationships; staging resolves composition.
+Coordinates, scale, bones, sockets, layouts, and frames are never authored in episode YAML.
+Scene declarations describe relationships; the ordered whole-world plugin chain resolves composition on `world.canvas`.
 Staging uses a normalized logical canvas (`x`/`y` from 0 to 1); output pixels
 are a renderer concern. An unfocused scene establishes the complete composition.
 An explicit focus is context-aware: it emphasizes the target while retaining
@@ -37,7 +36,7 @@ other relevant actors, moving subjects, and bound objects when they fit.
 
 ## Calls
 
-A call is a registry-generated typed terminal path. Fixed namespaces are:
+A call is a plugin-provided typed terminal path. Fixed namespaces are:
 
 ```text
 actor.act.*       timed body or prop interaction
@@ -52,7 +51,7 @@ sfx.play.*        sound effect
 actor.say("...") speech interruption intrinsic
 ```
 
-`act.throw` is a procedure asset with a fixed schema, never
+`act.throw` is a category procedure with a fixed schema, never
 `act(operation: string, ...)`. Required domain arguments are positional;
 optional modifiers are keyword arguments:
 
@@ -116,7 +115,7 @@ measured timing, speech events, and renderer lip cadence.
 Semantic staging groups actors into inferred `left`, `center`, and `right`
 lanes, separates same-lane footprints in stable actor-ID order, clamps to the
 subject safe area, and fails when the requested composition cannot fit.
-Authors never write coordinates.
+Authors never write coordinates; plugins and the engine keep geometry normalized to `0..1`.
 
 ## Hard cutover
 

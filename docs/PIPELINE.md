@@ -9,7 +9,7 @@ requirement maps to an existing asset or an explicit asset-production task.
 
 ## 2. Prepare assets
 
-Build or select immutable versioned assets before script lock. Figures need
+Build or select approved category assets before script lock. Figures need
 native 30-45 degree views, complete rigs, sockets, hand shapes, eye/mouth/face
 sets, and compatible actions. Locations need detailed layers and semantic
 staging metadata. Procedures need typed calls, timing, claims, and recipes.
@@ -39,7 +39,7 @@ terminate or restart the episode build.
 
 ## 5. Compile performance
 
-Resolve staging, procedures, constraints, and generic tracks into immutable IR.
+Discover ordered category plugins, resolve staging, procedures, constraints, and generic tracks into immutable IR.
 Compilation must fail on missing assets, incompatible rigs, overlapping claims,
 impossible ownership, and unmatched spans. Completion: renderer input contains
 all visible body/face/gaze/object/camera/effect tracks and provenance hashes.

@@ -1,0 +1,18 @@
+{
+  "source": "art.svg",
+  "preview": "preview.png",
+  "interaction": {
+    "pickup": [
+      120,
+      108
+    ],
+    "hold": [
+      120,
+      84
+    ],
+    "ground": [
+      120,
+      174
+    ]
+  }
+}

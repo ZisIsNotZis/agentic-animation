@@ -3,7 +3,7 @@
 ## Scope and source of truth
 
 This repository is in active development. Keep public behavior data-driven:
-`episode.yml` is the authored source, versioned library assets own reusable
+`episode.yml` is the authored source, category plugins and manifests own reusable
 craft, the compiler produces performance IR, and Remotion renders that IR.
 Generated manifests, audio, images, and videos are evidence or build outputs,
 not hand-maintained contracts.
@@ -39,10 +39,8 @@ State exactly what was and was not verified.
 ## Content and asset rules
 
 - Use only the canonical YAML DSL; deprecated authoring forms are rejected.
-- Pin reusable assets by canonical library path; runtime derives IDs such as
-  `figure.awei.v1` from `figure/awei/v1`. Do not add identity, kind, or version
-  copies to asset metadata. Scene context belongs in episode locations and set
-  content, not unrelated asset namespaces.
+- Reference reusable assets by category-relative library path; do not add `id`, `version`, or `implementationKey` to category asset metadata.
+- Scene context belongs in episode locations and world composition, not unrelated asset namespaces.
 - Keep model and license provenance with artifact metadata; path identity is
   maintained only by the directory and registry index.
 - Do not add no-op or silent fallbacks for missing story requirements.

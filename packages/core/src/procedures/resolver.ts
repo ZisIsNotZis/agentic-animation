@@ -19,19 +19,6 @@ import type {
   VfxIntent,
 } from "./types";
 
-function procedureId(call: ProcedureCall, definitions?: ProcedureCatalog): string {
-  const typedId = `${call.namespace}.${call.terminal}`;
-  const typed = Object.values(definitions ?? PROCEDURE_DEFINITIONS).find((definition) => definition.id === typedId);
-  if (typed) return typed.id;
-  if (call.subject === "camera" || call.subject === "vfx" || call.subject === "sfx" || call.subject === "music") {
-    return `${call.subject}.${call.terminal}`;
-  }
-  const terminal = call.terminal;
-  const prefix: Record<string, string[]> = {act: ["acting", "gesture", "prop", "interaction"], face: ["face"], look: ["gaze"], move: ["move"], use: ["interaction"], play: ["sfx"], say: ["speech"], state: ["acting"], voice: ["speech"]};
-  const candidates = (prefix[call.namespace] ?? []).flatMap((name) => [`${name}.${terminal}`, `${name}.${terminal.replaceAll("_", "")}`]);
-  return candidates.find((id) => definitions?.[id]) ?? candidates[0] ?? call.path;
-}
-
 export interface ProcedureManifestSource {
   resolveProcedure(id: string): ProcedureManifest;
 }
@@ -39,11 +26,27 @@ export interface ProcedureManifestSource {
 export type ProcedureCatalog = Readonly<Record<string, ProcedureDefinition>>;
 export type {ProcedureDefinition, ProcedureParameter};
 
+/** A category plugin may contribute either a definition catalog or a resolver. */
+export interface ProcedurePluginResolver {
+  readonly category?: string;
+  readonly definitions?: ProcedureCatalog;
+  readonly procedures?: ProcedureCatalog;
+  readonly resolve?: (call: ProcedureCall, context: ProcedureResolverContext) => unknown;
+  readonly resolveProcedure?: (call: ProcedureCall, context: ProcedureResolverContext) => unknown;
+}
+
+export type ProcedureDiscovery =
+  | ProcedurePluginResolver
+  | readonly ProcedurePluginResolver[]
+  | ((call: ProcedureCall, context: ProcedureResolverContext) => unknown);
+
 export interface ProcedureResolverOptions {
   /** The registry is authoritative for which public procedure ids are legal. */
   registry?: ProcedureManifestSource | readonly ProcedureManifest[];
   /** A replacement catalog is useful for tests and future library versions. */
   definitions?: ProcedureCatalog;
+  /** Whole-world plugin seam. Keys are canonical, fully-qualified call paths. */
+  discovery?: ProcedureDiscovery;
 }
 
 function sourceIds(source: ProcedureResolverOptions["registry"]): readonly string[] | undefined {
@@ -52,7 +55,8 @@ function sourceIds(source: ProcedureResolverOptions["registry"]): readonly strin
   return undefined;
 }
 
-function definitionFor(id: string, definitions: ProcedureCatalog): ProcedureDefinition {
+function definitionFor(call: ProcedureCall, definitions: ProcedureCatalog): ProcedureDefinition {
+  const id = `${call.namespace}.${call.terminal}`;
   const definition = definitions[id] ?? Object.values(definitions).find((candidate) => candidate.id === id);
   if (!definition) throw new Error(`procedure resolver has no authored implementation for ${id}`);
   return definition;
@@ -75,10 +79,8 @@ function validateCall(
   if (call.args.length !== definition.params.length) {
     throw new Error(`${id} expects ${definition.params.length} arguments, got ${call.args.length}`);
   }
-  const subjectType = context.subject === "camera" || context.subject === "vfx" || context.subject === "sfx" || context.subject === "music"
-    ? context.subject
-    : "actor";
-  if (!definition.subjects.includes(subjectType)) {
+  const subjectType = definition.subjects.includes(call.subject as ProcedureDefinition["subjects"][number]) ? call.subject : definition.subjects[0];
+  if (!definition.subjects.includes(subjectType as ProcedureDefinition["subjects"][number])) {
     throw new Error(`${id} does not allow subject ${context.subject}`);
   }
   const manifest = registry
@@ -93,10 +95,8 @@ function validateCall(
     })) {
       throw new Error(`procedure ${id} implementation does not match its registry contract`);
     }
-    if (context.subject === "camera" || context.subject === "vfx" || context.subject === "sfx" || context.subject === "music") {
-      if (!manifest.subjects.includes(context.subject)) throw new Error(`${id} does not allow subject ${context.subject}`);
-    } else if (!manifest.subjects.includes("actor")) {
-      throw new Error(`${id} does not allow actor subject ${context.subject}`);
+    if (!manifest.subjects.includes(subjectType as ProcedureManifest["subjects"][number])) {
+      throw new Error(`${id} does not allow subject ${context.subject}`);
     }
   }
 }
@@ -189,32 +189,33 @@ function buildGenericRecipe(
       semanticEvent(definition.durationSec, 0, {operation: "hold", target: key.target, x: 0, y: 0, z: key.zoom, key: "end"}),
     ]});
   }
-  if (vfx.length) tracks.push({kind: "vfx", target: vfx[0]?.target, events: vfx.map((event) => semanticEvent(event.at, event.duration, {effect: event.style, style: event.style, target: event.target, intensity: event.intensity, operation: "apply"}))});
+  if (vfx.length) tracks.push({kind: "effect", target: vfx[0]?.target, events: vfx.map((event) => semanticEvent(event.at, event.duration, {effect: event.style, style: event.style, target: event.target, intensity: event.intensity, operation: "apply"}))});
   if (audio.length) {
-    const kind = audio[0]!.kind === "music" ? "music" : "sfx";
+    const kind = audio[0]!.kind === "music" ? "music" : "sound";
     tracks.push({kind, events: audio.map((event) => semanticEvent(event.at, event.duration, {cue: event.cue, kind: event.kind, gain: event.gain, loop: event.loop ?? false, operation: "play"}))});
   }
   if (definition.actorState) tracks.push({kind: "lifecycle", events: [semanticEvent(0, definition.durationSec, {...definition.actorState, subject, operation: "state"})]});
-  if (["act.handover", "act.pickup", "act.putdown"].includes(definition.id)) tracks.push(...propLifecycleTracks(definition, subject, params));
+  if (definition.lifecycle) tracks.push(...lifecycleTracks(definition, subject, params));
   return {tracks};
 }
 
-function propLifecycleTracks(definition: ProcedureDefinition, subject: string, params: Readonly<Record<string, string>>): ProcedureRecipeTrack[] {
-  const object = definition.id === "act.pickup" ? params.target : params.object;
+function lifecycleTracks(definition: ProcedureDefinition, subject: string, params: Readonly<Record<string, string>>): ProcedureRecipeTrack[] {
+  const lifecycle = definition.lifecycle!;
+  const object = params[lifecycle.objectParam];
   if (!object) return [];
-  const bindAt = definition.markers?.bind ?? definition.markers?.handover ?? 0.58;
-  const releaseAt = definition.markers?.release ?? definition.markers?.handover ?? 0.62;
-  const settleAt = definition.markers?.settle ?? definition.durationSec;
+  const bindAt = lifecycle.bindAt ?? 0.58;
+  const releaseAt = lifecycle.releaseAt ?? 0.62;
+  const settleAt = lifecycle.settleAt ?? definition.durationSec;
   const short = 0.01;
   const bindingEvents: ProcedureRecipeEvent[] = [];
   const objectEvents: ProcedureRecipeEvent[] = [];
   const lifecycleEvents: ProcedureRecipeEvent[] = [];
-  if (definition.id === "act.pickup") {
+  if (lifecycle.receiverParam === undefined && lifecycle.supportParam === undefined) {
     bindingEvents.push(semanticEvent(bindAt, Math.max(short, definition.durationSec - bindAt), {operation: "bind", object, holder: subject, hand: "hand_r"}));
     objectEvents.push(semanticEvent(bindAt, Math.max(short, definition.durationSec - bindAt), {operation: "state", object, status: "held", holder: subject}));
     lifecycleEvents.push(semanticEvent(bindAt, Math.max(short, definition.durationSec - bindAt), {operation: "bind", object, status: "held", holder: subject}));
-  } else if (definition.id === "act.handover") {
-    const receiver = params.target;
+  } else if (lifecycle.receiverParam !== undefined) {
+    const receiver = params[lifecycle.receiverParam];
     bindingEvents.push(
       semanticEvent(releaseAt, short, {operation: "release", object, holder: subject, hand: "hand_r"}),
       semanticEvent(releaseAt + short, Math.max(short, definition.durationSec - releaseAt - short), {operation: "bind", object, holder: receiver, hand: "hand_r"}),
@@ -227,8 +228,8 @@ function propLifecycleTracks(definition: ProcedureDefinition, subject: string, p
       semanticEvent(releaseAt, short, {operation: "release", object, status: "loose"}),
       semanticEvent(releaseAt + short, Math.max(short, definition.durationSec - releaseAt - short), {operation: "bind", object, status: "held", holder: receiver}),
     );
-  } else if (definition.id === "act.putdown") {
-    const support = params.target;
+  } else if (lifecycle.supportParam !== undefined) {
+    const support = params[lifecycle.supportParam];
     bindingEvents.push(semanticEvent(releaseAt, short, {operation: "release", object, holder: subject, hand: "hand_r"}));
     objectEvents.push(semanticEvent(settleAt, Math.max(short, definition.durationSec - settleAt), {operation: "state", object, status: "supported", support}));
     lifecycleEvents.push(
@@ -292,15 +293,19 @@ function makeTracks(performance: ProcedurePerformance): readonly ProcedureTrack[
 export class DeterministicProcedureResolver {
   readonly definitions: ProcedureCatalog;
   readonly registry?: ProcedureManifestSource | readonly ProcedureManifest[];
+  readonly discovery?: ProcedureDiscovery;
 
   constructor(options: ProcedureResolverOptions = {}) {
     this.definitions = options.definitions ?? PROCEDURE_DEFINITIONS;
     this.registry = options.registry;
+    this.discovery = options.discovery;
     validateCoverage(this.registry, this.definitions);
   }
 
   resolve(call: ProcedureCall, context: ProcedureResolverContext): ProcedureResolutionWithPerformance {
-    const definition = definitionFor(procedureId(call, this.definitions), this.definitions);
+    const discovered = resolveDiscovered(this.discovery, call, context);
+    if (discovered !== undefined) return discovered as ProcedureResolutionWithPerformance;
+    const definition = definitionFor(call, this.definitions);
     validateCall(call, context, definition, this.registry);
     const performance = makePerformance(definition, call, context.subject);
     return {
@@ -315,6 +320,22 @@ export class DeterministicProcedureResolver {
   resolveProcedure(call: ProcedureCall, context: ProcedureResolverContext): ProcedureResolution {
     return this.resolve(call, context);
   }
+}
+
+function resolveDiscovered(discovery: ProcedureDiscovery | undefined, call: ProcedureCall, context: ProcedureResolverContext): unknown {
+  if (!discovery) return undefined;
+  if (typeof discovery === "function") return discovery(call, context);
+  const plugins = Array.isArray(discovery) ? discovery : [discovery];
+  for (const plugin of plugins) {
+    const handler = plugin.resolveProcedure ?? plugin.resolve;
+    if (handler) {
+      const result = handler(call, context);
+      if (result !== undefined) return result;
+    }
+    const definition = plugin.definitions?.[call.path] ?? plugin.procedures?.[call.path];
+    if (definition) return makePerformance(definition, call, context.subject);
+  }
+  return undefined;
 }
 
 export function createProcedureResolver(options: ProcedureResolverOptions = {}): DeterministicProcedureResolver {

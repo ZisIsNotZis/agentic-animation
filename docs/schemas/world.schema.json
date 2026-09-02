@@ -1,0 +1,383 @@
+{
+  "$ref": "#/definitions/world",
+  "definitions": {
+    "world": {
+      "type": "object",
+      "properties": {
+        "canvas": {
+          "type": "object",
+          "properties": {
+            "aspect": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "nodes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  },
+                  "kind": {
+                    "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/id"
+                  },
+                  "asset": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*(?:\\/[a-z][a-z0-9_]*)+$"
+                  },
+                  "at": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      {
+                        "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/at/items/0"
+                      }
+                    ]
+                  },
+                  "size": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": [
+                      {
+                        "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/at/items/0"
+                      },
+                      {
+                        "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/at/items/0"
+                      }
+                    ]
+                  },
+                  "layer": {
+                    "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/id"
+                  },
+                  "bind": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "face": {
+                    "type": "object",
+                    "properties": {
+                      "visible": {
+                        "type": "boolean"
+                      },
+                      "rig": {
+                        "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/id"
+                      },
+                      "overlay": {
+                        "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/id"
+                      },
+                      "smile": {
+                        "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/at/items/0"
+                      },
+                      "brow": {
+                        "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/at/items/0"
+                      },
+                      "eyeOpen": {
+                        "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/at/items/0"
+                      },
+                      "lipsPart": {
+                        "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/at/items/0"
+                      },
+                      "gaze": {
+                        "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/at"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "kind",
+                  "asset",
+                  "at",
+                  "size"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "layers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/id"
+                  },
+                  "order": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id",
+                  "order"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "constraints": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "node": {
+                    "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/id"
+                  },
+                  "within": {
+                    "type": "object",
+                    "properties": {
+                      "at": {
+                        "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/at"
+                      },
+                      "size": {
+                        "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/size"
+                      }
+                    },
+                    "required": [
+                      "at",
+                      "size"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "avoid": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/id"
+                    }
+                  }
+                },
+                "required": [
+                  "node"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "tracks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "node": {
+                    "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/id"
+                  },
+                  "move": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "at": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "to": {
+                          "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/at"
+                        },
+                        "duration": {
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "at",
+                        "to"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "gaze": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "at": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "to": {
+                          "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/at"
+                        },
+                        "duration": {
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "at",
+                        "to"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "node"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "camera": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "at": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "center": {
+                    "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/at"
+                  },
+                  "zoom": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "at"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "at": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "name": {
+                    "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/id"
+                  },
+                  "area": {
+                    "$ref": "#/definitions/world/properties/canvas/properties/constraints/items/properties/within"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/definitions/world/properties/canvas/properties/effects/items/properties/params/additionalProperties"
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": {
+                            "$ref": "#/definitions/world/properties/canvas/properties/effects/items/properties/params/additionalProperties"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "at",
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "sound": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "at": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "asset": {
+                    "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/asset"
+                  },
+                  "duration": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "volume": {
+                    "$ref": "#/definitions/world/properties/canvas/properties/nodes/items/properties/at/items/0"
+                  },
+                  "loop": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "at",
+                  "asset"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "captions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "at": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "duration": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "text": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "style": {
+                    "$ref": "#/definitions/world/properties/canvas/properties/effects/items/properties/params"
+                  }
+                },
+                "required": [
+                  "at",
+                  "duration",
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "aspect",
+            "nodes"
+          ],
+          "additionalProperties": false
+        },
+        "plugins": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/world/properties/canvas/properties/effects/items/properties/params/additionalProperties"
+          }
+        }
+      },
+      "required": [
+        "canvas",
+        "plugins"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

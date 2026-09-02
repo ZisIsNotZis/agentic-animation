@@ -9,15 +9,14 @@ import { checkYamlEpisode, makeYamlEpisode, renderYamlEpisode, resolveYamlEpisod
 function fixture(): { root: string; episode: string; ctx: any } {
   const root = mkdtempSync(join(tmpdir(), "anim-yaml-pipeline-"));
   const dir = join(root, "episodes", "demo");
-  mkdirSync(join(root, "library", "registry"), { recursive: true });
-  writeFileSync(join(root, "library", "registry", "manifest.json"), JSON.stringify({ version: 1, kind: "registry", assets: [], procedures: [] }));
+  mkdirSync(join(root, "library"), { recursive: true });
   const episode = join(dir, "episode.yml");
   mkdirSync(dir, { recursive: true });
   writeFileSync(episode, `
 episode: {id: demo, title: Demo, language: en}
-actors: {alice: {use: figure.demo.alice.v1, voice: voice.demo.alice.v1}}
-locations: {room: {use: set.demo.room.v1}}
-objects: {desk: {use: prop.demo.desk.v1}}
+actors: {alice: {use: figure/demo/alice, voice: voice/demo/alice}}
+locations: {room: {use: set/demo/room}}
+objects: {desk: {use: prop/demo/desk}}
 scenes:
   - id: hello
     location: room

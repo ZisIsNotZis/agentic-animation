@@ -1,14 +1,12 @@
 ---
 name: agentic-animation
-description: Use for any task in this repository involving episode.yml, the animation engine, assets, TTS, Remotion rendering, visual QA, or evolving the agent workflow. Route to the smallest local skill and its owning docs.
+description: Use for tasks involving episode.yml, the animation engine, assets, TTS, Remotion, visual QA, or agent workflow; route to the smallest local skill and owning docs.
 ---
 
 # agentic-animation
 
-This is the repository skill. Read [AGENTS.md](../../../AGENTS.md) and
-[docs/INDEX.md](../../../docs/INDEX.md) first. The authored input is
-`episode.yml`; the engine compiles it to renderer-neutral performance IR and
-Remotion renders that IR.
+This is the repository skill. Read [AGENTS.md](../../../AGENTS.md), [docs/INDEX.md](../../../docs/INDEX.md), and [docs/WHOLE_WORLD_PLUGINS.md](../../../docs/WHOLE_WORLD_PLUGINS.md) first.
+The authored input is `episode.yml`; ordered category plugins compile its world to renderer-neutral performance IR and Remotion renders that IR.
 
 ## Route the work
 

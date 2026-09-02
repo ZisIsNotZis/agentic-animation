@@ -18,8 +18,8 @@ const VOICES: VoiceInfo[] = [
 
 /** Immutable library voice IDs are the authoring contract; Edge IDs are delivery details. */
 export const EDGE_VOICE_DELIVERY: Readonly<Record<string, EdgeVoiceDelivery>> = {
-  "voice.zh.awei.v1": { providerVoice: "zh-CN-YunxiNeural", rate: "+8%", pitch: "+2Hz" },
-  "voice.zh.aqiang.v1": { providerVoice: "zh-CN-YunyangNeural", rate: "-6%", pitch: "-6Hz" },
+  "voice/zh/awei": { providerVoice: "zh-CN-YunxiNeural", rate: "+8%", pitch: "+2Hz" },
+  "voice/zh/aqiang": { providerVoice: "zh-CN-YunyangNeural", rate: "-6%", pitch: "-6Hz" },
 };
 
 export function edgeVoiceDelivery(voiceAsset: string): EdgeVoiceDelivery {

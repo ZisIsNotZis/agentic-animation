@@ -1,10 +1,10 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import {readdir, readFile, access} from "node:fs/promises";
+import {join, relative, resolve} from "node:path";
 import {
-  LibraryRegistrySchema,
+  AssetRegistrySchema,
   ProcedureManifestSchema,
   RegistryAssetIdSchema,
-  type LibraryRegistry,
+  type AssetRegistryManifest,
   type ProcedureManifest,
   type ProcedureParamType,
   type RegistryAssetManifest,
@@ -43,37 +43,68 @@ export interface ValidatedProcedureCall {
 }
 
 export interface AssetRegistry {
-  readonly manifest: LibraryRegistry;
+  readonly manifest: AssetRegistryManifest;
   resolveAsset(id: string): RegistryAssetManifest;
   resolveProcedure(id: string): ProcedureManifest;
   validateProcedureCall(call: ProcedureCallInput, locals: RegistryLocals): ValidatedProcedureCall;
 }
 
 export async function loadAssetRegistry(libraryRoot: string): Promise<AssetRegistry> {
-  const manifest = LibraryRegistrySchema.parse(JSON.parse(await readFile(join(libraryRoot, "registry", "manifest.json"), "utf8")));
-  for (const asset of manifest.assets) {
-    if (asset.path.startsWith("/") || asset.path.split("/").includes("..")) throw new Error(`asset path must stay inside library root: ${asset.path}`);
-    if (asset.id !== asset.path.replaceAll("/", ".")) throw new Error(`asset identity must derive from path: ${asset.path}`);
-  }
-  return createAssetRegistry(manifest);
+  const root = resolve(libraryRoot);
+  const assets = await discoverAssets(root);
+  const procedures = await discoverProcedures(root);
+  return createAssetRegistry(AssetRegistrySchema.parse({kind: "registry", assets, procedures}));
 }
 export const loadRegistry = loadAssetRegistry;
 
-export function createAssetRegistry(manifest: LibraryRegistry): AssetRegistry {
-  const assets = new Map(manifest.assets.map((asset) => [asset.id, asset]));
+async function discoverAssets(root: string): Promise<RegistryAssetManifest[]> {
+  const categories = (await readdir(root, {withFileTypes: true})).filter((entry) => entry.isDirectory() && ["figure", "voice", "set", "prop", "dressing", "layout"].includes(entry.name)).map((entry) => entry.name).sort();
+  const assets: RegistryAssetManifest[] = [];
+  const visit = async (directory: string): Promise<void> => {
+    for (const entry of await readdir(directory, {withFileTypes: true})) {
+      if (!entry.isDirectory()) continue;
+      const child = join(directory, entry.name);
+      if (await isAssetDirectory(child)) {
+        const identity = relative(root, child).replaceAll("\\", "/");
+        if (RegistryAssetIdSchema.safeParse(identity).success) assets.push({identity, kind: identity.split("/")[0] as RegistryAssetManifest["kind"], capabilities: [], dependencies: []});
+      } else await visit(child);
+    }
+  };
+  for (const category of categories) await visit(join(root, category));
+  return assets.sort((a, b) => a.identity.localeCompare(b.identity));
+}
+
+async function isAssetDirectory(directory: string): Promise<boolean> {
+  for (const name of ["manifest.json", "puppet.json", "scene.svg"]) {
+    try { await access(join(directory, name)); return true; } catch { /* continue */ }
+  }
+  return false;
+}
+
+async function discoverProcedures(root: string): Promise<ProcedureManifest[]> {
+  try {
+    const raw = JSON.parse(await readFile(join(root, "action", "manifest.json"), "utf8")) as {procedures?: unknown[]};
+    return (raw.procedures ?? []).map((procedure) => ProcedureManifestSchema.parse(procedure));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    return [];
+  }
+}
+
+export function createAssetRegistry(manifest: AssetRegistryManifest): AssetRegistry {
+  const assets = new Map(manifest.assets.map((asset) => [asset.identity, asset]));
   if (assets.size !== manifest.assets.length) throw new Error("duplicate asset id");
   const procedures = new Map(manifest.procedures.map((procedure) => [procedure.id, procedure]));
   if (procedures.size !== manifest.procedures.length) throw new Error("duplicate procedure id");
   const resolveAsset = (id: string): RegistryAssetManifest => {
-    if (!RegistryAssetIdSchema.safeParse(id).success) throw new Error(`immutable asset id required: ${id}`);
-    const asset = assets.get(id);
+    const identity = id;
+    if (!RegistryAssetIdSchema.safeParse(identity).success) throw new Error(`canonical asset path required: ${id}`);
+    const asset = assets.get(identity);
     if (!asset) throw new Error(`unknown asset: ${id}`);
     return asset;
   };
   const resolveProcedure = (id: string): ProcedureManifest => {
-    const procedure = procedures.get(id)
-      ?? procedures.get(typedProcedureId(id))
-      ?? procedures.get(legacyProcedureId(id));
+    const procedure = procedures.get(id);
     if (!procedure) throw new Error(`unknown procedure: ${id}`);
     return procedure;
   };
@@ -136,31 +167,6 @@ function resolveParameter(param: Parameter, value: Scalar, locals: RegistryLocal
   return {name: param.name, type: param.type, value, local, assetId};
 }
 
-function legacyProcedureId(requestedId: string): string {
-  const parts = requestedId.split(".");
-  const typed = parts[0] === "actor" || parts.length >= 3 ? parts.slice(-2) : parts;
-  if (typed.length < 2) return requestedId;
-  const aliases: Record<string, string[]> = {
-    act: ["acting", "gesture", "prop", "interaction"],
-    look: ["gaze"],
-    voice: ["speech"],
-    use: ["interaction"],
-    play: ["sfx", "music"],
-  };
-  return aliases[typed[0]!] ? `${aliases[typed[0]!]![0]}.${typed[1]}` : `${typed[0]}.${typed[1]}`;
-}
-
-function typedProcedureId(requestedId: string): string {
-  const parts = requestedId.split(".");
-  const typed = parts[0] === "actor" || parts.length >= 3 ? parts.slice(-2) : parts;
-  if (typed.length < 2) return requestedId;
-  const aliases: Record<string, string> = {
-    acting: "act", gesture: "act", prop: "act", interaction: "act",
-    gaze: "look", camera: "use", vfx: "use", sfx: "play", music: "play",
-    speech: "voice",
-  };
-  return `${aliases[typed[0]!] ?? typed[0]}.${typed[1]}`;
-}
 
 function validateScalar(param: Parameter, value: Scalar, id: string): void {
   if (param.type === "string" && value.kind !== "string") throw new Error(`${id} expects string modifier ${param.name}`);
@@ -171,8 +177,8 @@ function validateScalar(param: Parameter, value: Scalar, id: string): void {
   if (typeof primitive === "number" && ((param.min !== undefined && primitive < param.min) || (param.max !== undefined && primitive > param.max))) throw new Error(`${id} value for ${param.name} is outside its range`);
 }
 
-function subjectTypeFor(subject: string, locals: RegistryLocals, resolveAsset: (id: string) => RegistryAssetManifest): "actor" | "camera" | "vfx" | "sfx" | "music" {
-  if (subject === "camera" || subject === "vfx" || subject === "sfx" || subject === "music") return subject;
+function subjectTypeFor(subject: string, locals: RegistryLocals, resolveAsset: (id: string) => RegistryAssetManifest): "actor" | "camera" | "effect" | "sound" | "music" {
+  if (subject === "camera" || subject === "effect" || subject === "sound" || subject === "music") return subject;
   const id = localAssetId(locals.actors[subject]);
   if (!id) throw new Error(`unknown procedure subject: ${subject}`);
   if (resolveAsset(id).kind !== "figure") throw new Error(`actor local ${subject} is not a figure asset`);
@@ -180,7 +186,6 @@ function subjectTypeFor(subject: string, locals: RegistryLocals, resolveAsset: (
 }
 
 function localAssetId(value: string | {use: string} | undefined): string | undefined { return typeof value === "string" ? value : value?.use; }
-export function parseRegistryManifest(value: unknown): LibraryRegistry { return LibraryRegistrySchema.parse(value); }
 export function parseProcedureManifest(value: unknown): ProcedureManifest { return ProcedureManifestSchema.parse(value); }
 
 /** Compile-time shape check for callers that pass parsed typed calls. */

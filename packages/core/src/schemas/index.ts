@@ -9,8 +9,9 @@ import { StoryboardSchema } from "./storyboard";
 import { EpisodeBuildSchema } from "./build";
 import { PuppetSchema } from "./puppet";
 import { MotionClipSchema } from "./motion";
-import { LibraryMetaSchema, LibraryIndexSchema, LibraryRegistrySchema } from "./libraryMeta";
+import { LibraryMetaSchema, LibraryIndexSchema, AssetRegistrySchema } from "./libraryMeta";
 import { NarrowEpisodeSchema } from "./narrowEpisode";
+import { WorldSchema, PluginSchema } from "./world";
 
 export * from "./common";
 export * from "./episode";
@@ -24,6 +25,7 @@ export * from "./motion";
 export * from "./config";
 export * from "./libraryMeta";
 export * from "./narrowEpisode";
+export * from "./world";
 
 /**
  * The manifest registry: every checked-in manifest name → its zod schema and
@@ -43,7 +45,9 @@ export const MANIFEST_SCHEMAS = {
   "library-meta": LibraryMetaSchema,
   "library-index": LibraryIndexSchema,
   "narrow-episode": NarrowEpisodeSchema,
-  "library-registry": LibraryRegistrySchema,
+  "asset-registry": AssetRegistrySchema,
+  world: WorldSchema,
+  plugin: PluginSchema,
 } as const satisfies Record<string, z.ZodTypeAny>;
 
 export type ManifestName = keyof typeof MANIFEST_SCHEMAS;

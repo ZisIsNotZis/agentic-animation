@@ -103,7 +103,7 @@ export function buildProgram(): Command {
     );
   char
     .command("approve <id>")
-    .description("freeze draft → v<N>, write meta.json (model + license + seeds), reindex")
+    .description("freeze draft, write manifest.json, and reindex")
     .option("--approver <name>", "who approved this character")
     .option("--date <iso>", "approval date (defaults to ANIM_NOW or now)")
     .action((id: string, opts, command) =>
