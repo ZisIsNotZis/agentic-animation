@@ -96,8 +96,8 @@ test("stdlib helpers write tracks at invocation-local time and return durations"
   assert.equal(kinds.bone!.target, "lin");
   assert.equal((kinds.bone!.events![0] as Record<string, unknown>).phase, "load");
   assert.equal(kinds.expression!.events!.length, 1);
-  assert.equal((kinds.effect!.events![0] as Record<string, unknown>).style, "manga-impact-star");
-  assert.equal(kinds.sound!.events!.length, 1);
+  assert.equal((kinds.vfx!.events![0] as Record<string, unknown>).style, "manga-impact-star");
+  assert.equal(kinds.sfx!.events!.length, 1);
   assert.equal(kinds.camera!.events!.length, 2);
 });
 
@@ -122,7 +122,7 @@ test("end-to-end: factory call returns descriptor; sync run emits the same track
   const result = runInvocationSync(invocation, world0, {id: "action.slam.0", category: "action", asset: "slam"});
   assert.ok(Math.abs(result.elapsedSec - 0.65) < 1e-9);
   const kinds = world0.canvas.tracks.map((t) => t.kind);
-  assert.deepEqual(kinds, ["bone", "effect", "sound", "bone"]);
+  assert.deepEqual(kinds, ["bone", "vfx", "sfx", "bone"]);
   const slamEvent = world0.canvas.tracks[1]!.events![0] as Record<string, unknown>;
   assert.equal(slamEvent.at, 0.325);
   assert.equal((world0.canvas.tracks[2]!.events![0] as Record<string, unknown>).at, 0.325);

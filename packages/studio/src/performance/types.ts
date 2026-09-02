@@ -74,7 +74,7 @@ export interface PerformanceGestureKey {
 
 export type PerformanceTrackKind =
   | "bone" | "transform" | "expression" | "gaze" | "movement" | "binding" | "speech"
-  | "object" | "camera" | "effect" | "sound" | "lifecycle";
+  | "object" | "camera" | "vfx" | "sfx" | "lifecycle";
 
 export interface PerformanceTrackEvent {
   frame?: number;

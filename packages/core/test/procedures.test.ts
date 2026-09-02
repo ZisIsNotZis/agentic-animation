@@ -71,7 +71,7 @@ test("has a deterministic authored implementation for every registered procedure
       : id.startsWith("gaze.") ? ["gaze"]
         : id.startsWith("movement.") ? ["movement", "transform"]
           : id.startsWith("camera.") ? ["camera"]
-            : id.startsWith("effect.") ? ["effect"]
+            : id.startsWith("effect.") ? ["vfx"]
               : id.startsWith("sound.") ? ["sound"]
                 : id.startsWith("music.") ? ["music"]
                   : id.startsWith("voice.") ? ["expression"]
@@ -154,7 +154,7 @@ test("retains representative body, face, gaze, camera, manga VFX, and audio inte
   assert.equal(music.audio[0]!.kind, "music");
   assert.equal(music.audio[0]!.cue, "ending-cadence");
   assert.ok(music.recipe.tracks.some((track) => track.kind === "music"));
-  assert.ok(!music.recipe.tracks.some((track) => track.kind === "sound"));
+  assert.ok(!music.recipe.tracks.some((track) => track.kind === "sfx"));
 });
 
 test("resolves procedure parameters inside the generic recipe without renderer vocabulary", async () => {

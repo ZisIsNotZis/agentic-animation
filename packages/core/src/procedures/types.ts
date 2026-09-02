@@ -12,8 +12,8 @@ export type ProcedureTrackKind =
   | "binding"
   | "object"
   | "camera"
-  | "effect"
-  | "sound"
+  | "vfx"
+  | "sfx"
   | "music"
   | "lifecycle";
 
@@ -102,7 +102,7 @@ export interface AudioIntent {
   at: number;
   phase: string;
   cue: string;
-  kind: "sound" | "music";
+  kind: "sfx" | "music";
   gain: number;
   duration: number;
   loop?: boolean;
@@ -154,7 +154,7 @@ export interface ProcedureDefinition {
   gaze?: {target: string; lead: "eyes" | "head" | "whole-body"; hold?: number};
   camera?: {operation: "push" | "pull" | "hold"; zoom: number; target?: string};
   vfx?: {style: string; intensity: number; duration?: number; target?: string};
-  audio?: {cue: string; kind: "sound" | "music"; gain: number; duration?: number; loop?: boolean};
+  audio?: {cue: string; kind: "sfx" | "music"; gain: number; duration?: number; loop?: boolean};
   /** Optional explicit recipe; otherwise the resolver expands the authored intents. */
   recipe?: ProcedureRecipe;
   actorState?: {present?: boolean; pose?: string};

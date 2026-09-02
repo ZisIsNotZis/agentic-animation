@@ -12,7 +12,7 @@ export async function loadProcedureDefinitions(libraryRoot: string): Promise<Pro
   const plugins = await loadPlugins(libraryRoot);
   const definitions: Record<string, ProcedureDefinition> = {};
   for (const plugin of plugins) {
-    for (const [key, value] of Object.entries(plugin.definition.members ?? {})) {
+    for (const [key, value] of Object.entries(plugin.namespace)) {
       if (typeof value === "function") continue;
       // Members carrying other static data (e.g. cueAssets) are not definitions.
       const record = value as {id?: unknown} | null;
@@ -34,7 +34,7 @@ export async function loadAudioCues(libraryRoot: string): Promise<Record<string,
   const plugins = await loadPlugins(libraryRoot);
   const cues: Record<string, AudioCueAsset> = {};
   for (const plugin of plugins) {
-    const raw = (plugin.definition.members ?? {} as Record<string, unknown>).cueAssets;
+    const raw = (plugin.namespace as Record<string, unknown>).cueAssets;
     if (raw === undefined) continue;
     if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
       throw new Error(`plugin ${plugin.category} member "cueAssets" must be an object of cue entries`);

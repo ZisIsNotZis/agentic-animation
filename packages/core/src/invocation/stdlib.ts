@@ -24,6 +24,10 @@ function now(world: World): number {
   return world.invocation?.localSec ?? 0;
 }
 
+function atOr(world: World, at: number | undefined): number {
+  return at ?? now(world);
+}
+
 function idOf(handle: unknown, what: string): string {
   const id = (handle as {id?: unknown} | null | undefined)?.id;
   if (typeof id !== "string" || !id) throw new Error(`stdlib: ${what} must be a live instance handle (missing id), got ${String(handle)}`);
@@ -32,6 +36,24 @@ function idOf(handle: unknown, what: string): string {
 
 function push(world: World, track: Track): void {
   tracks(world).push(track);
+}
+
+/**
+ * The stdlib primitive: write one semantic track with absolute (invocation-local)
+ * events. Generated resources use this directly; the sugar helpers below build
+ * on the same shape. Events are {at, duration, ...payload}.
+ */
+export function track(
+  world: World,
+  kind: Track["kind"],
+  target: string | undefined,
+  events: ReadonlyArray<Record<string, unknown> & {at: number; duration: number}>,
+): void {
+  push(world, {
+    kind,
+    ...(target === undefined ? {} : {target}),
+    events: events.map((ev) => event(ev.at, ev.duration, ev)),
+  });
 }
 
 /** One body phase over the subject's parts (bone track). Returns durationSec. */
@@ -119,7 +141,7 @@ export function effect(
   opts: {target?: unknown; intensity?: number; duration?: number} = {},
 ): number {
   const duration = opts.duration ?? 0.3;
-  push(world, {kind: "effect", target: opts.target === undefined ? undefined : idOf(opts.target, "effect target"), events: [event(now(world), duration, {effect: style, style, target: opts.target === undefined ? undefined : idOf(opts.target, "effect target"), intensity: opts.intensity ?? 0.7, operation: "apply"})]});
+  push(world, {kind: "vfx", target: opts.target === undefined ? undefined : idOf(opts.target, "effect target"), events: [event(now(world), duration, {effect: style, style, target: opts.target === undefined ? undefined : idOf(opts.target, "effect target"), intensity: opts.intensity ?? 0.7, operation: "apply"})]});
   return duration;
 }
 
@@ -130,50 +152,81 @@ export function cue(
   opts: {kind: "sfx" | "music"; gain?: number; duration?: number; loop?: boolean},
 ): number {
   const duration = opts.duration ?? 0.3;
-  push(world, {kind: opts.kind === "music" ? "music" : "sound", events: [event(now(world), duration, {cue: name, kind: opts.kind, gain: opts.gain ?? 0.7, loop: opts.loop ?? false, operation: "play"})]});
+  push(world, {kind: opts.kind === "music" ? "music" : "sfx", events: [event(now(world), duration, {cue: name, kind: opts.kind, gain: opts.gain ?? 0.7, loop: opts.loop ?? false, operation: "play"})]});
   return duration;
 }
 
-/** Actor presence/pose lifecycle event. Instant (0 duration). */
-export function actorState(world: World, subject: unknown, state: {present?: boolean; pose?: string}): void {
-  push(world, {kind: "lifecycle", events: [event(now(world), 0, {...state, subject: idOf(subject, "actorState subject"), operation: "state"})]});
+/** Actor presence/pose lifecycle event. */
+export function actorState(world: World, subject: unknown, state: {present?: boolean; pose?: string}, durationSec = 0): void {
+  push(world, {kind: "lifecycle", events: [event(now(world), durationSec, {...state, subject: idOf(subject, "actorState subject"), operation: "state"})]});
+}
+
+/** Movement-track event only (no transform pair). Returns durationSec. */
+export function moveEvent(
+  world: World,
+  subject: unknown,
+  name: string,
+  parts: readonly string[],
+  target: unknown,
+  durationSec: number,
+  ease: ProcedureEase = "io",
+): number {
+  if (!(durationSec > 0)) throw new Error(`stdlib.moveEvent "${name}" needs a positive duration`);
+  const targetId = idOf(target, "moveEvent target");
+  push(world, {kind: "movement", target: targetId, events: [event(now(world), durationSec, {action: name, phase: name, parts, ease, target: targetId, operation: "move", mode: "toward-target"})]});
+  return durationSec;
+}
+
+/** The single transform move/arrive key pair for a whole movement invocation. */
+export function transformMove(world: World, subject: unknown, target: unknown, durationSec: number): void {
+  const subjectId = idOf(subject, "transformMove subject");
+  const targetId = idOf(target, "transformMove target");
+  const start = now(world);
+  push(world, {kind: "transform", target: subjectId, events: [
+    event(start, durationSec, {operation: "move", target: targetId, from: "current", to: targetId, progress: 0}),
+    event(start + durationSec, 0, {operation: "arrive", target: targetId, to: targetId, progress: 1}),
+  ]});
 }
 
 const SHORT = 0.01;
 
 /** Bind an object into the subject's hand at the current local time. */
-export function bindObject(world: World, object: unknown, holder: unknown, holdSec: number): number {
+export function bindObject(world: World, object: unknown, holder: unknown, holdSec: number, at?: number): number {
   const o = idOf(object, "bind object");
   const h = idOf(holder, "bind holder");
-  push(world, {kind: "binding", target: o, events: [event(now(world), Math.max(SHORT, holdSec), {operation: "bind", object: o, holder: h, hand: "hand_r"})]});
-  push(world, {kind: "object", target: o, events: [event(now(world), Math.max(SHORT, holdSec), {operation: "state", object: o, status: "held", holder: h})]});
-  push(world, {kind: "lifecycle", events: [event(now(world), Math.max(SHORT, holdSec), {operation: "bind", object: o, status: "held", holder: h})]});
+  const start = atOr(world, at);
+  push(world, {kind: "binding", target: o, events: [event(start, Math.max(SHORT, holdSec), {operation: "bind", object: o, holder: h, hand: "hand_r"})]});
+  push(world, {kind: "object", target: o, events: [event(start, Math.max(SHORT, holdSec), {operation: "state", object: o, status: "held", holder: h})]});
+  push(world, {kind: "lifecycle", events: [event(start, Math.max(SHORT, holdSec), {operation: "bind", object: o, status: "held", holder: h})]});
   return Math.max(SHORT, holdSec);
 }
 
 /** Release a binding now; optionally re-bind to a receiver or settle on support. */
-export function releaseObject(world: World, object: unknown, holder: unknown): number {
+export function releaseObject(world: World, object: unknown, holder: unknown, at?: number): number {
   const o = idOf(object, "release object");
   const h = idOf(holder, "release holder");
-  push(world, {kind: "binding", target: o, events: [event(now(world), SHORT, {operation: "release", object: o, holder: h, hand: "hand_r"})]});
-  push(world, {kind: "object", target: o, events: [event(now(world), SHORT, {operation: "release", object: o, status: "loose", holder: h})]});
-  push(world, {kind: "lifecycle", events: [event(now(world), SHORT, {operation: "release", object: o, status: "loose"})]});
+  const start = atOr(world, at);
+  push(world, {kind: "binding", target: o, events: [event(start, SHORT, {operation: "release", object: o, holder: h, hand: "hand_r"})]});
+  push(world, {kind: "object", target: o, events: [event(start, SHORT, {operation: "release", object: o, status: "loose", holder: h})]});
+  push(world, {kind: "lifecycle", events: [event(start, SHORT, {operation: "release", object: o, status: "loose"})]});
   return SHORT;
 }
 
-export function bindToReceiver(world: World, object: unknown, receiver: unknown, holdSec: number): number {
+export function bindToReceiver(world: World, object: unknown, receiver: unknown, holdSec: number, at?: number): number {
   const o = idOf(object, "receiver object");
   const r = idOf(receiver, "receiver");
-  push(world, {kind: "binding", target: o, events: [event(now(world), Math.max(SHORT, holdSec), {operation: "bind", object: o, holder: r, hand: "hand_r"})]});
-  push(world, {kind: "object", target: o, events: [event(now(world), Math.max(SHORT, holdSec), {operation: "state", object: o, status: "held", holder: r})]});
-  push(world, {kind: "lifecycle", events: [event(now(world), Math.max(SHORT, holdSec), {operation: "bind", object: o, status: "held", holder: r})]});
+  const start = atOr(world, at);
+  push(world, {kind: "binding", target: o, events: [event(start, Math.max(SHORT, holdSec), {operation: "bind", object: o, holder: r, hand: "hand_r"})]});
+  push(world, {kind: "object", target: o, events: [event(start, Math.max(SHORT, holdSec), {operation: "state", object: o, status: "held", holder: r})]});
+  push(world, {kind: "lifecycle", events: [event(start, Math.max(SHORT, holdSec), {operation: "bind", object: o, status: "held", holder: r})]});
   return Math.max(SHORT, holdSec);
 }
 
-export function settleOnSupport(world: World, object: unknown, support: unknown, holdSec: number): number {
+export function settleOnSupport(world: World, object: unknown, support: unknown, holdSec: number, at?: number): number {
   const o = idOf(object, "support object");
   const s = idOf(support, "support");
-  push(world, {kind: "object", target: o, events: [event(now(world), Math.max(SHORT, holdSec), {operation: "state", object: o, status: "supported", support: s})]});
-  push(world, {kind: "lifecycle", events: [event(now(world), Math.max(SHORT, holdSec), {operation: "state", object: o, status: "supported", support: s})]});
+  const start = atOr(world, at);
+  push(world, {kind: "object", target: o, events: [event(start, Math.max(SHORT, holdSec), {operation: "state", object: o, status: "supported", support: s})]});
+  push(world, {kind: "lifecycle", events: [event(start, Math.max(SHORT, holdSec), {operation: "state", object: o, status: "supported", support: s})]});
   return Math.max(SHORT, holdSec);
 }

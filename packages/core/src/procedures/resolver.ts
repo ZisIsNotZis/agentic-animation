@@ -189,9 +189,9 @@ function buildGenericRecipe(
       semanticEvent(definition.durationSec, 0, {operation: "hold", target: key.target, x: 0, y: 0, z: key.zoom, key: "end"}),
     ]});
   }
-  if (vfx.length) tracks.push({kind: "effect", target: vfx[0]?.target, events: vfx.map((event) => semanticEvent(event.at, event.duration, {effect: event.style, style: event.style, target: event.target, intensity: event.intensity, operation: "apply"}))});
+  if (vfx.length) tracks.push({kind: "vfx", target: vfx[0]?.target, events: vfx.map((event) => semanticEvent(event.at, event.duration, {effect: event.style, style: event.style, target: event.target, intensity: event.intensity, operation: "apply"}))});
   if (audio.length) {
-    const kind = audio[0]!.kind === "music" ? "music" : "sound";
+    const kind = audio[0]!.kind === "music" ? "music" : "sfx";
     tracks.push({kind, events: audio.map((event) => semanticEvent(event.at, event.duration, {cue: event.cue, kind: event.kind, gain: event.gain, loop: event.loop ?? false, operation: "play"}))});
   }
   if (definition.actorState) tracks.push({kind: "lifecycle", events: [semanticEvent(0, definition.durationSec, {...definition.actorState, subject, operation: "state"})]});

@@ -110,7 +110,7 @@ test("evaluates generic transform, expression, binding, camera, and VFX tracks",
     props: [{id: "object", at: [0, 0], tracks: [{kind: "binding", events: [{frame: 0, endFrame: 10, actor: "actor", hand: "hand_r"}]}]}],
     tracks: [
       {kind: "camera", subject: "camera", events: [{frame: 0, x: 3, y: 4, z: 2}]},
-      {kind: "effect", subject: "effect", events: [{frame: 2, endFrame: 6, type: "flash"}]},
+      {kind: "vfx", subject: "vfx", events: [{frame: 2, endFrame: 6, type: "flash"}]},
     ],
   };
   const state = evaluatePerformance(generic, 4);
@@ -218,11 +218,11 @@ test("compiled recipe VFX are projected once and preserve full-stage lighting", 
     assets: {actors: {}, objects: {}, layouts: {}},
     sceneTrack: [],
     performanceTracks: [{
-      subject: "effect", kind: "world", events: [{
-        kind: "call", subject: "effect", start: 0, end: 1,
+      subject: "vfx", kind: "world", events: [{
+        kind: "call", subject: "vfx", start: 0, end: 1,
         call: {path: "vfx.lights_down"},
         performance: {style: "lighting-dim", intensity: 0.9},
-        tracks: [{kind: "effect", events: [{at: 0, duration: 1, style: "lighting-dim", intensity: 0.9}]}],
+        tracks: [{kind: "vfx", events: [{at: 0, duration: 1, style: "lighting-dim", intensity: 0.9}]}],
       }],
     }],
     totalDuration: 1,
@@ -326,11 +326,11 @@ test("projects generic procedure tracks into actors, speech, semantic placement,
         }],
       },
       {
-        subject: "effect",
+        subject: "vfx",
         kind: "world",
         events: [{
           kind: "call",
-          subject: "effect",
+          subject: "vfx",
           start: 0.5,
           end: 1,
           source: "cue",
