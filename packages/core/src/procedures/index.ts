@@ -1,5 +1,6 @@
 export {DeterministicProcedureResolver, createProcedureResolver, procedureResolver} from "./resolver";
-export {loadProcedureDefinitions} from "./discovery";
+export {loadAudioCues, loadProcedureDefinitions} from "./discovery";
+export type {AudioCueAsset} from "./discovery";
 export type {ProcedureCatalog, ProcedureDefinition, ProcedureParameter, ProcedureDiscovery, ProcedureManifestSource, ProcedurePluginResolver, ProcedureResolverOptions} from "./resolver";
 export type {ProcedureDefinition as AuthoredProcedureDefinition} from "./types";
 export type {

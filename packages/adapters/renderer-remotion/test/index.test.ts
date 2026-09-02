@@ -1,4 +1,9 @@
 import assert from "node:assert/strict";
+import { join, resolve } from "node:path";
+function repoRoot(): string {
+  return resolve(import.meta.dirname ?? ".", "..", "..", "..", "..");
+}
+
 import { test } from "node:test";
 import { muxArguments, performanceAudioInputs, performanceFramePlan, performanceSubtitles } from "../src/index";
 
@@ -42,18 +47,29 @@ test("performance subtitles keep an already absolute preparation start absolute"
   assert.equal(result, "1\n00:00:02,000 --> 00:00:03,000\nhello\n");
 });
 
-test("extracts recipe audio at absolute event time and resolves catalog cues", () => {
+test("extracts recipe audio at absolute event time and resolves manifest-embedded cues", () => {
+  const cueFile = join(repoRoot(), "library", "music", "cues", "ending-cadence.wav");
   const inputs = performanceAudioInputs({
     video: {width: 320, height: 180, fps: 10},
     timebase: "seconds",
+    audio: {cues: {"ending-cadence": {kind: "music", path: cueFile}}},
     performanceTracks: [{subject: "music", events: [{kind: "call", start: 4, end: 7, tracks: [
       {kind: "music", events: [{at: 1.25, duration: 2.8, value: {cue: "ending-cadence", kind: "music", gain: 0.72}}]},
     ]}]}],
-  } as any, "/tmp/performance.json", "library/audio/catalog.json");
+  } as any, "/tmp/performance.json");
   assert.equal(inputs.length, 1);
   assert.equal(inputs[0]!.startSec, 5.25);
   assert.equal(inputs[0]!.gain, 0.72);
-  assert.match(inputs[0]!.path, /library\/audio\/music\/ending-cadence\.wav$/);
+  assert.equal(inputs[0]!.path, cueFile);
+});
+
+test("fails closed when a manifest has no embedded cue block", () => {
+  assert.throws(() => performanceAudioInputs({
+    video: {width: 320, height: 180, fps: 10},
+    performanceTracks: [{subject: "sfx", events: [{kind: "call", start: 1, end: 2, tracks: [
+      {kind: "sfx", events: [{at: 0, value: {cue: "x", kind: "sfx"}}]},
+    ]}]}],
+  } as any, "/tmp/performance.json"), /manifest\.audio\.cues is missing/);
 });
 
 test("mux arguments include voice and recipe cues with delayed, gained mixing", () => {
@@ -68,11 +84,12 @@ test("mux arguments include voice and recipe cues with delayed, gained mixing", 
   assert.deepEqual(args.slice(-5), ["-movflags", "+faststart", "-t", "8", "out.mp4"]);
 });
 
-test("fails closed when a recipe cue is absent from the catalog", () => {
+test("fails closed when a recipe cue is absent from the embedded cue block", () => {
   assert.throws(() => performanceAudioInputs({
     video: {width: 320, height: 180, fps: 10},
+    audio: {cues: {}},
     performanceTracks: [{subject: "sfx", events: [{kind: "call", start: 1, end: 2, tracks: [
       {kind: "sfx", events: [{at: 0, value: {cue: "not-in-catalog", kind: "sfx"}}]},
     ]}]}],
-  } as any, "/tmp/performance.json", "library/audio/catalog.json"), /missing audio cue/);
+  } as any, "/tmp/performance.json"), /missing audio cue/);
 });

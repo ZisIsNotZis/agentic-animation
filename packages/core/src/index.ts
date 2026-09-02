@@ -12,12 +12,12 @@ export * from "./compiler/index";
 export * from "./assets";
 export * from "./audio";
 export {DeterministicProcedureResolver, createProcedureResolver, procedureResolver} from "./procedures";
-export {loadProcedureDefinitions} from "./procedures";
+export {loadAudioCues, loadProcedureDefinitions} from "./procedures";
 export type {
   AudioIntent, BodyIntent, CameraIntent, ExpressionIntent, GazeIntent,
   ProcedureChannel, ProcedureEase, ProcedurePerformance, ProcedurePhase,
   ProcedureRecipeEvent, ProcedureRecipeTrack, ProcedureTrackKind,
-  ProcedureCatalog, ProcedureResolverContext, ProcedureResolutionWithPerformance, VfxIntent,
+  AudioCueAsset, ProcedureCatalog, ProcedureResolverContext, ProcedureResolutionWithPerformance, VfxIntent,
   ProcedureDefinition, ProcedureParameter,
 } from "./procedures";
 export * from "./staging";

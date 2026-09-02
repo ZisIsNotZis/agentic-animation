@@ -153,15 +153,6 @@ export interface PerformanceAudioInput {
 }
 type UnresolvedPerformanceAudioInput = Omit<PerformanceAudioInput, "path">;
 
-interface AudioCueAsset {
-  kind: "sfx" | "music";
-  path: string;
-}
-
-interface AudioCueCatalog {
-  cues: Record<string, AudioCueAsset>;
-}
-
 function performanceSpeechStarts(manifest: PerformanceManifest): Array<{subject?: string; text?: string; start: number}> {
   const tracks = (manifest as unknown as {performanceTracks?: Array<{subject?: string; events?: Array<{kind?: string; start?: unknown; text?: unknown}>}>}).performanceTracks;
   return (tracks ?? []).flatMap((track) => (track.events ?? [])
@@ -184,33 +175,6 @@ function speechStartForTake(
   return speeches[index]?.start ?? 0;
 }
 
-function readAudioCueCatalog(catalogPath: string): AudioCueCatalog {
-  let value: unknown;
-  try {
-    value = JSON.parse(readFileSync(catalogPath, "utf8"));
-  } catch (err) {
-    throw new Error(`renderer: audio cue catalog ${catalogPath} is not valid JSON — ${(err as Error).message}`);
-  }
-  const cues = value !== null && typeof value === "object" && !Array.isArray(value)
-    ? (value as {cues?: unknown}).cues
-    : undefined;
-  if (cues === null || typeof cues !== "object" || Array.isArray(cues)) {
-    throw new Error(`renderer: audio cue catalog ${catalogPath} must contain a cues object`);
-  }
-  const parsed: Record<string, AudioCueAsset> = {};
-  for (const [cue, raw] of Object.entries(cues as Record<string, unknown>)) {
-    if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-      throw new Error(`renderer: audio cue catalog entry "${cue}" is invalid`);
-    }
-    const entry = raw as {kind?: unknown; path?: unknown};
-    if ((entry.kind !== "sfx" && entry.kind !== "music") || typeof entry.path !== "string" || !entry.path) {
-      throw new Error(`renderer: audio cue catalog entry "${cue}" needs kind and path`);
-    }
-    parsed[cue] = {kind: entry.kind, path: entry.path};
-  }
-  return {cues: parsed};
-}
-
 function performanceTracksForAudio(manifest: PerformanceManifest): Array<{subject?: string; events?: unknown[]}> {
   if (Array.isArray(manifest.performanceTracks) && manifest.performanceTracks.length) return manifest.performanceTracks as Array<{subject?: string; events?: unknown[]}>;
   return (manifest.sceneTrack ?? []).flatMap((scene) => (scene.performanceTracks ?? []) as Array<{subject?: string; events?: unknown[]}>);
@@ -229,7 +193,7 @@ function timedValue(value: unknown, fps: number, timebase: PerformanceManifest["
   return number === undefined ? undefined : timebase === "frames" ? number / fps : number;
 }
 
-function performanceCueInputs(manifest: PerformanceManifest, manifestPath: string, catalogPath?: string): PerformanceAudioInput[] {
+function performanceCueInputs(manifest: PerformanceManifest, manifestPath: string): PerformanceAudioInput[] {
   const fps = manifest.video?.fps ?? 24;
   const timebase = manifest.timebase ?? "seconds";
   const tracks = performanceTracksForAudio(manifest);
@@ -261,21 +225,23 @@ function performanceCueInputs(manifest: PerformanceManifest, manifestPath: strin
   if (!audioTracks.length) return [];
 
   const manifestRecord = manifest as unknown as Record<string, unknown>;
-  const resolvedCatalogPath = catalogPath ?? (typeof manifestRecord.audioCueCatalog === "string"
-    ? resolveManifestPath(manifestPath, manifestRecord.audioCueCatalog)
-    : resolveManifestPath(manifestPath, "../../library/audio/catalog.json"));
-  const catalog = readAudioCueCatalog(resolvedCatalogPath);
+  const audio = recordValue(manifestRecord.audio);
+  const cues = recordValue(audio?.cues);
+  if (!cues) {
+    throw new Error("renderer: manifest.audio.cues is missing — recompile with a make step that embeds plugin-owned cue assets");
+  }
   return audioTracks.map((input) => {
-    const asset = catalog.cues[input.cue!];
-    if (!asset) throw new Error(`renderer: missing audio cue "${input.cue}" in ${resolvedCatalogPath}`);
-    if (asset.kind !== input.kind) throw new Error(`renderer: audio cue "${input.cue}" is catalogued as ${asset.kind}, recipe requires ${input.kind}`);
-    const path = resolveManifestPath(resolvedCatalogPath, asset.path);
+    const raw = cues[input.cue!];
+    const asset = recordValue(raw);
+    if (!asset) throw new Error(`renderer: missing audio cue "${input.cue}" in manifest.audio.cues`);
+    if (asset.kind !== input.kind) throw new Error(`renderer: audio cue "${input.cue}" is embedded as ${asset.kind}, recipe requires ${input.kind}`);
+    const path = resolveManifestPath(manifestPath, typeof asset.path === "string" ? asset.path : "");
     if (!existsSync(path)) throw new Error(`renderer: missing audio cue asset "${input.cue}" at ${path}`);
     return {...input, path};
   });
 }
 
-export function performanceAudioInputs(manifest: PerformanceManifest, manifestPath: string, catalogPath?: string): PerformanceAudioInput[] {
+export function performanceAudioInputs(manifest: PerformanceManifest, manifestPath: string): PerformanceAudioInput[] {
   const source = manifest as PerformanceManifest & {
     audioPath?: unknown;
     audio?: { audioPath?: unknown; path?: unknown; takes?: unknown } | string;
@@ -304,7 +270,7 @@ export function performanceAudioInputs(manifest: PerformanceManifest, manifestPa
   const base = explicit
     ? [{path: resolveManifestPath(manifestPath, explicit), startSec: 0, kind: "speech" as const}]
     : takes;
-  return [...base, ...performanceCueInputs(manifest, manifestPath, catalogPath)];
+  return [...base, ...performanceCueInputs(manifest, manifestPath)];
 }
 
 /** Build the ffmpeg argv separately so timing and every mux input are testable. */

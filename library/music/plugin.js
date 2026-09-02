@@ -43,5 +43,11 @@ export default {
     // Per-frame category behavior. State lives in world.plugins["music"].
     return world;
   },
-  members: definitions,
+  members: { ...definitions, cueAssets: {
+    "ending-cadence": {
+      "kind": "music",
+      "file": "cues/ending-cadence.wav"
+    }
+  },
+  },
 };

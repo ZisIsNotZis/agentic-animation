@@ -52,8 +52,9 @@ function paths(ctx: StageContext, id: string): Paths {
     charsRoot,
     charRoot,
     draft: join(charRoot, "draft"),
-    styleDir: join(libraryRoot, "style"),
-    houseStyle: join(libraryRoot, "style", "house-style.json"),
+    // Character-style tooling config lives with the legacy char pipeline, not in library/.
+    styleDir: join(ctx.rootDir, "tools", "char"),
+    houseStyle: join(ctx.rootDir, "tools", "char", "house-style.json"),
   };
 }
 

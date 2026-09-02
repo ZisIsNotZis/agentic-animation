@@ -1,10 +1,11 @@
 import { existsSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import {
   compileEpisode as coreCompileEpisode,
   createProcedureResolver,
   hashJson,
   loadAssetRegistry as coreLoadAssetRegistry,
+  loadAudioCues as coreLoadAudioCues,
   loadProcedureDefinitions as coreLoadProcedureDefinitions,
   loadNarrowEpisode,
   readJson,
@@ -15,6 +16,7 @@ import {
   YamlAudioPreparationSchema,
   resolvePath,
   type AssetRegistry,
+  type AudioCueAsset,
   type CompiledEpisode,
   type ProcedureCatalog,
   type ProcedureResolver,
@@ -60,6 +62,7 @@ export interface YamlRenderRequest {
 export interface YamlPipelineDependencies {
   loadAssetRegistry?: (libraryRoot: string) => Promise<AssetRegistry>;
   loadProcedureDefinitions?: (libraryRoot: string) => Promise<ProcedureCatalog>;
+  loadAudioCues?: (libraryRoot: string) => Promise<Record<string, AudioCueAsset>>;
   compileEpisode?: typeof coreCompileEpisode;
   prepareAudio?: (
     ctx: StageContext,
@@ -176,7 +179,18 @@ export async function makeYamlEpisode(
   });
   const manifestPath = join(resolved.dir, YAML_PERFORMANCE_MANIFEST_NAME);
   const manifest = performanceManifest(ctx, resolved, compiled, preparation, deps.now?.() ?? stageNow());
-  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
+  // Cue audio is plugin-owned: resolve each cue's file here so the manifest is
+  // self-contained and the renderer never looks up library paths itself.
+  const cueAssets = await (deps.loadAudioCues ?? coreLoadAudioCues)(libraryDir(ctx));
+  const embeddedCues: Record<string, {kind: string; path: string}> = {};
+  for (const [cue, asset] of Object.entries(cueAssets)) {
+    const abs = join(asset.dir, asset.file);
+    if (!existsSync(abs)) throw new Error(`make: audio cue "${cue}" asset missing: ${abs}`);
+    embeddedCues[cue] = {kind: asset.kind, path: relative(resolved.dir, abs).replaceAll("\\", "/")};
+  }
+  const audioRecord = (manifest as Record<string, unknown>).audio;
+  const manifestWithCues = {...manifest, audio: {...(audioRecord ?? {} as Record<string, unknown>), cues: embeddedCues}};
+  writeFileSync(manifestPath, JSON.stringify(manifestWithCues, null, 2) + "\n");
   const result = resultOf(resolved, compiled, preparation.takes.length, {
     audioPath,
     manifestPath,

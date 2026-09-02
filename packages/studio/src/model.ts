@@ -23,7 +23,12 @@ import {
   type ResolvedMove,
 } from "@anim/core";
 import type { Ease } from "./lib/interpolate";
-import { setOptionsWithoutCaption } from "./stages/assemble";
+/** Strip caption-only set options; undefined when nothing remains. */
+export function setOptionsWithoutCaption(opts: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
+  if (!opts) return undefined;
+  const { caption: _caption, ...setOpts } = opts;
+  return Object.keys(setOpts).length > 0 ? setOpts : undefined;
+}
 import type { PerformanceManifest } from "./performance";
 export type { PerformanceManifest } from "./performance";
 

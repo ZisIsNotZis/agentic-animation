@@ -191,7 +191,7 @@ export function briefTemplate(id: string, styleSummary: string): string {
 - **vāhana / companions**: {{}}
 - **known limitations / cautions**: {{}}
 
-## House style (locked — from library/style/house-style.json)
+## House style (locked — from tools/char/house-style.json)
 ${styleSummary}
 
 ## Generation notes
