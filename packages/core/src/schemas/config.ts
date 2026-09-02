@@ -37,6 +37,13 @@ export const RenderLimitsSchema = z.object({
   /** Capped for the 24 GB memory budget (ARCHITECTURE §11). */
   concurrency: z.number().int().positive().default(4),
   offthreadVideoCacheSizeInBytes: z.number().int().positive().default(2 * 1024 * 1024 * 1024),
+  /** Final-delivery encode policy. Defaults to smallest-file AV1 delivery (falls back H.265 > H.264 by availability). */
+  encode: z.object({
+    codec: z.enum(["auto", "av1", "h265", "h264"]).default("auto"),
+    crf: z.number().int().min(0).max(63).optional(),
+    preset: z.union([z.number().int(), z.string()]).optional(),
+    audioBitrate: z.string().optional(),
+  }).passthrough().default({}),
 });
 export type RenderLimits = z.infer<typeof RenderLimitsSchema>;
 

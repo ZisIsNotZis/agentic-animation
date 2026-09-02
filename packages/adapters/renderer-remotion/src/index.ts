@@ -274,13 +274,66 @@ export function performanceAudioInputs(manifest: PerformanceManifest, manifestPa
 }
 
 /** Build the ffmpeg argv separately so timing and every mux input are testable. */
-export function muxArguments(
+/** Final-delivery encoding policy: smallest file at fair quality. */
+export interface EncodePolicy {
+  /** "auto" probes AV1 → H.265 → H.264; a explicit codec is forced. */
+  codec?: "auto" | "av1" | "h265" | "h264";
+  /** Constant-quality factor override (codec-specific defaults). */
+  crf?: number;
+  /** Encoder speed preset override (numeric for SVT-AV1, word for x264/x265). */
+  preset?: number | string;
+  /** Audio bitrate for AAC delivery audio. */
+  audioBitrate?: string;
+}
+
+const DEFAULT_ENCODE: Required<Omit<EncodePolicy, "preset">> & {preset: number | string} = {
+  codec: "auto",
+  crf: 33,
+  preset: 8,
+  audioBitrate: "128k",
+};
+
+let encoderListCache: Promise<string> | undefined;
+
+async function encoderList(): Promise<string> {
+  encoderListCache ??= execa("ffmpeg", ["-hide_banner", "-encoders"]).then(({stdout}) => stdout);
+  return encoderListCache;
+}
+
+/** Best available delivery encoder: AV1 > H.265 > H.264. */
+async function pickEncoder(requested: EncodePolicy["codec"]): Promise<"libsvtav1" | "libx265" | "libx264"> {
+  const encoders = await encoderList();
+  const rank = {av1: "libsvtav1", h265: "libx265", h264: "libx264"} as const;
+  const auto = encoders.includes("libsvtav1") ? "libsvtav1" : encoders.includes("libx265") ? "libx265" : "libx264";
+  if (!requested || requested === "auto") return auto;
+  const wanted = rank[requested];
+  if (encoders.includes(wanted)) return wanted;
+  process.stderr.write(`renderer: ${wanted} unavailable, falling back to ${auto}\n`);
+  return auto;
+}
+
+function videoEncodeArgs(codec: "libsvtav1" | "libx265" | "libx264", encode: EncodePolicy | undefined): string[] {
+  const policy = {...DEFAULT_ENCODE, ...encode};
+  if (codec === "libsvtav1") {
+    // SVT-AV1 constant quality, animation-friendly long GOP, 24fps CFR.
+    return ["-c:v", codec, "-crf", String(policy.crf), "-preset", String(policy.preset), "-g", "240", "-pix_fmt", "yuv420p"];
+  }
+  if (codec === "libx265") {
+    return ["-c:v", codec, "-crf", String(policy.crf ?? 28), "-preset", String(policy.preset === DEFAULT_ENCODE.preset ? "medium" : policy.preset), "-pix_fmt", "yuv420p", "-tag:v", "hvc1"];
+  }
+  return ["-c:v", codec, "-crf", String(policy.crf ?? 20), "-preset", String(policy.preset === DEFAULT_ENCODE.preset ? "medium" : policy.preset), "-pix_fmt", "yuv420p"];
+}
+
+export async function muxArguments(
   videoPath: string,
   audioInputs: PerformanceAudioInput[],
   captionsPath: string | undefined,
   outPath: string,
   durationSec: number,
-): string[] {
+  encode: EncodePolicy | undefined,
+): Promise<string[]> {
+  const requested = encode?.codec ?? "auto";
+  const codec = await pickEncoder(requested);
   const haveAudio = audioInputs.length > 0;
   const haveSrt = captionsPath !== undefined;
   const args: string[] = ["-y", "-v", "error", "-i", videoPath];
@@ -309,8 +362,8 @@ export function muxArguments(
   }
   if (haveSrt) args.push("-map", `${1 + audioInputs.length}:s:0`);
 
-  args.push("-c:v", "copy");
-  if (haveAudio) args.push("-c:a", "aac", "-b:a", "160k");
+  args.push(...videoEncodeArgs(codec, encode));
+  if (haveAudio) args.push("-c:a", "aac", "-b:a", encode?.audioBitrate ?? DEFAULT_ENCODE.audioBitrate);
   if (haveSrt) args.push("-c:s", "mov_text", "-metadata:s:s:0", "language=eng");
   args.push("-movflags", "+faststart", "-t", String(durationSec), outPath);
   return args;
@@ -394,12 +447,13 @@ async function mux(
   captionsPath: string | undefined,
   outPath: string,
   durationSec: number,
+  encode: EncodePolicy | undefined,
 ): Promise<void> {
   const inputs = audioInputs.map((input) => {
     if (!existsSync(input.path)) throw new Error(`renderer: missing audio input ${input.path}`);
     return input;
   });
-  const args = muxArguments(videoPath, inputs, captionsPath && existsSync(captionsPath) ? captionsPath : undefined, outPath, durationSec);
+  const args = await muxArguments(videoPath, inputs, captionsPath && existsSync(captionsPath) ? captionsPath : undefined, outPath, durationSec, encode);
   await execa("ffmpeg", args, { stdio: "inherit" });
 }
 
@@ -451,7 +505,7 @@ const adapter: RendererAdapter = {
           }
         },
       });
-      await mux(silent, audio, subtitlePath, req.outPath, plan.durationSec);
+      await mux(silent, audio, subtitlePath, req.outPath, plan.durationSec, req.encode);
     } finally {
       if (subtitlePath && existsSync(subtitlePath)) unlinkSync(subtitlePath);
       if (existsSync(silent)) unlinkSync(silent);

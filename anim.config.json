@@ -21,7 +21,10 @@
   },
   "render": {
     "concurrency": 4,
-    "offthreadVideoCacheSizeInBytes": 2147483648
+    "offthreadVideoCacheSizeInBytes": 2147483648,
+    "encode": {
+      "codec": "auto"
+    }
   },
   "tts": {
     "voice": "zh-CN-YunxiaNeural",

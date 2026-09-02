@@ -49,6 +49,8 @@ export interface RendererAdapter extends Doctorable {
     duration?: number;
     scale?: number;
     force?: boolean;
+    /** Final-delivery encode override (defaults: best of AV1 > H.265 > H.264, crf 33/28/20, AAC 128k). */
+    encode?: {codec?: "auto" | "av1" | "h265" | "h264"; crf?: number; preset?: number | string; audioBitrate?: string};
   }): Promise<RenderReport>;
 }
 

@@ -1,14 +1,11 @@
-# dependencies
+# --- dependencies -----------------------------------------------------------
 node_modules/
 
-# build / typecheck outputs
-dist/
-**/dist/
-build/
-**/build/
+# --- build outputs and caches ------------------------------------------------
 *.tsbuildinfo
+node_modules/.cache/
 
-# local scratch, temporary workspaces, and generated QA material
+# --- local scratch, temporary workspaces, generated QA material --------------
 .tmp/
 **/.tmp/
 .scratch/
@@ -18,60 +15,48 @@ build/
 **/contact-sheet*.png
 **/asset-contact-sheet.png
 
-# pinned binaries fetched by setup scripts (tools/fetch-rhubarb.sh)
+# --- pinned binaries and per-machine state -----------------------------------
 vendor/*
 !vendor/.gitkeep
-
-# python (uv-managed, per-machine)
 py/.venv/
 py/**/__pycache__/
 py/**/*.pyc
-
-# per-machine config overlay (never committed)
 anim.config.local.json
-
-# heavy-stage lock files (ARCHITECTURE §11) — runtime-only, never committed
 .anim/
 
-# rendered episode outputs — regenerable, kept out of git.
-# keep the dist/ dirs themselves via their .gitkeep.
+# --- generated episode material -----------------------------------------------
+# Hand-authored and AI-authored SOURCES are tracked: episode.yml, library
+# manifests and svg/png assets, audio/*.txt sidecars. Program-GENERATED files
+# are ignored. Video is the one exception: episode deliveries (dist/*.mp4)
+# are published in the repository.
 episodes/*/dist/*
-!episodes/*/dist/.gitkeep
-episodes/*/audio/*.wav
-episodes/*/audio/*.mp3
-episodes/*/build/*.json
-episodes/*/build/stills/*
-# generated timing/build/cue manifests — re-emitted by their producing stage.
+!episodes/*/dist/*.mp4
+episodes/*/audio/*
+!episodes/*/audio/*.txt
+episodes/*/build/
+episodes/*/cues/
 episodes/*/timeline.json
 episodes/*/episode.build.json
-episodes/*/cues/*.json
 episodes/*/performance.json
 episodes/*/golden.json
 
-# stray media at repo root
+# --- generated media everywhere else (library cues, tmp renders) --------------
 /*.mp4
 /*.mov
-
-# Generated media remains ignored by default, except for reviewed episode
-# deliveries explicitly published below.
 *.mov
 *.webm
 *.mkv
+*.avi
 *.wav
 *.mp3
 *.ogg
 *.flac
+*.m4a
+*.aac
 *.srt
 *.vtt
 
-# Reviewed episode renders are intentionally publishable in the repository.
-!episodes/*/dist/
-!episodes/*/dist/*.mp4
-
-# generated episode audio manifests and QA reports
-episodes/*/audio/*.json
-episodes/*/build/*.json
-
-# OS / editor cruft
+# --- OS / editor cruft ---------------------------------------------------------
 .DS_Store
+Thumbs.db
 *.log

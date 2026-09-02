@@ -72,11 +72,11 @@ test("fails closed when a manifest has no embedded cue block", () => {
   } as any, "/tmp/performance.json"), /manifest\.audio\.cues is missing/);
 });
 
-test("mux arguments include voice and recipe cues with delayed, gained mixing", () => {
-  const args = muxArguments("silent.mp4", [
+test("mux arguments include voice and recipe cues with delayed, gained mixing", async () => {
+  const args = await muxArguments("silent.mp4", [
     {path: "voice.wav", startSec: 0, kind: "speech"},
     {path: "hit.wav", startSec: 5.25, durationSec: 0.3, gain: 0.72, kind: "sfx", cue: "hit"},
-  ], undefined, "out.mp4", 8);
+  ], undefined, "out.mp4", 8, undefined);
   assert.deepEqual(args.filter((value) => value === "-i").length, 3);
   const filter = args[args.indexOf("-filter_complex") + 1]!;
   assert.match(filter, /\[2:a\]atrim=duration=0\.3,volume=0\.72,adelay=5250:all=1\[a1\]/);

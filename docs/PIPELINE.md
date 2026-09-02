@@ -90,6 +90,21 @@ dimensions, frame rate, CRF, and thread overrides remain supported. Generated
 audio, video, manifests, screenshots, and render caches stay ignored; all
 temporary QA output belongs under `/tmp`.
 
+## 8. Delivery encoding policy
+
+Goal: smallest file at fair-enough quality. `render-yaml` re-encodes the
+Remotion intermediate in the final mux (never `-c:v copy`):
+
+- 1280x720, constant 24fps (CFR — VFR is rejected for player/editor
+  compatibility), rendered by four Remotion workers (`render.concurrency`).
+- Codec by availability: AV1 (`libsvtav1` crf 33 preset 8, g 240) > H.265
+  (`libx265` crf 28) > H.264 (`libx264` crf 20). `render.encode.codec`
+  forces one; `auto` probes. An NVIDIA RTX 40-series GPU can substitute
+  `av1_nvenc` for long legacy transcodes where CPU speed matters.
+- Audio AAC 128k, MP4 with `+faststart`, subtitles burned as soft `mov_text`
+  tracks. Voice default `tts.speed` 1.2.
+- Existing long-form deliveries may be transcoded in place to this bar.
+
 `anim make episode.yml --voice-speed <n>` and `anim render-yaml episode.yml
 --voice-speed <n>` override the configured `tts.speed` for this canonical run.
 The value must be greater than zero. Inline `voice.speed(...)` calls take

@@ -56,6 +56,7 @@ export interface YamlRenderRequest {
   duration?: number;
   scale?: number;
   force?: boolean;
+  encode?: {codec?: "auto" | "av1" | "h265" | "h264"; crf?: number; preset?: number | string; audioBitrate?: string};
 }
 
 export interface YamlPipelineDependencies {
@@ -272,6 +273,7 @@ async function renderYamlManifest(
     fps: opts.fps ?? ctx.config.video.fps,
     crf: opts.crf ?? ctx.config.video.crf,
     threads: opts.threads ?? ctx.config.render.concurrency,
+    encode: ctx.config.render.encode,
     ...(opts.duration !== undefined ? {duration: opts.duration} : {}),
     ...(opts.scale !== undefined ? {scale: opts.scale} : {}),
     ...(opts.force !== undefined ? {force: opts.force} : {}),
