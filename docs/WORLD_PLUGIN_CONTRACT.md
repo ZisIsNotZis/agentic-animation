@@ -1,26 +1,28 @@
-# World/plugin contract (Step 1 design — pending approval)
+# World/plugin contract
 
-This document is the canonical design for the library-plugin engine redesign in
-[PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md). Until the user approves it, no code migration happens. After approval it owns the contract; implementation changes update this document first.
+Canonical design for the library-plugin engine. Implementation changes update
+this document first. Approved amendments: the original static-definition
+contract, then the evaluated-invocation model below (user-approved).
 
 ## World type
 
 ```ts
 type World = {
-  canvas: Canvas;
-  plugins: Record<string, unknown>;
+  canvas: Canvas;                    // the only renderer-facing area, 0..1 normalized
+  plugins: Record<string, unknown>;  // per-category state; runner-mirrored progress
+  frame: number;                     // absolute frame index
+  seconds: number;                   // frame / fps
+  fps: number;
+  seed: number;
 };
 ```
 
-`canvas` is the only engine/renderer-facing area. It holds normalized `0..1` data for: figures with normalized placement, visibility, layer, and facing; figure parts and generic transforms; rig-driven faces (`face_rig`) and overlay-driven faces (`face_overlay`); props and bindings; sets and dressing; movement; gaze; camera; visual effects; sound and music cues; subtitles/captions; constraints and lifecycle-visible state; deterministic seeds and frame metadata where needed.
-
-`plugins` holds arbitrary JSON-compatible category state keyed by category name. Plugins receive the whole world and may mutate it in place or return a replacement world:
-
-```ts
-world = plugin.run(world, invocation, frameContext);
-```
-
-The engine implements no JSON patches, permissions, ownership enforcement, or category-specific mutation rules. Plugins cooperate correctly on their own. The engine performs only the minimal structural checks needed to continue and render: the world has `canvas` and `plugins` roots, canvas geometry fields are finite numbers in the inclusive `0..1` range, and all values are JSON-serializable.
+`canvas` carries normalized figures, parts, faces, props, sets, dressing,
+movement, gaze, camera, effects, sound/music cues, captions, constraints, and
+lifecycle-visible state. `frame`/`seconds`/`seed` are engine-maintained root
+fields; invocations read time from the world — there is no second context
+object. Plugins mutate the world **in place**. The engine performs only
+minimal structural checks needed to continue and render.
 
 ## Coordinate pipeline
 
@@ -32,110 +34,142 @@ native resource units (SVG viewBox, raster pixels)
   -> renderer pixels
 ```
 
-SVG `viewBox` and raster dimensions remain intrinsic resource data only. All geometry exposed to the engine — positions, sizes, pivots, anchors — is normalized. No absolute authored geometry crosses the plugin seam.
+SVG `viewBox` and raster dimensions remain intrinsic resource data only. All
+geometry crossing the plugin seam is normalized.
 
-## Library taxonomy
+## Library taxonomy and resource folders
 
-Canonical categories, each a plugin category: `figure`, `voice`, `set`, `prop`, `dressing`, `layout`, `action`, `emotion`, `gaze`, `movement`, `camera`, `effect`, `sound`, `music`, plus the face categories `face_rig` and `face_overlay` defined in the Face model below.
+Categories: `figure`, `voice`, `set`, `prop`, `dressing`, `layout`, `action`,
+`emotion`, `gaze`, `movement`, `camera`, `effect`, `sound`, `music` (plus
+reserved `face_rig`, `face_overlay`; see Face model).
 
 ```text
-library/<category>/plugin.js          category plugin implementation
-library/<category>/<name>/            one asset directory
-  manifest.json                       asset metadata (may be empty {})
-  <resources>                         SVG/PNG/JSON resources
+library/<category>/plugin.js            entry: exports the category namespace
+library/<category>/<name>/              one self-contained resource
+  index.js                              code (when the resource is behavior)
+  manifest.json                         metadata (may be empty {})
+  <assets>                              svg/png/wav resources
 ```
 
-Category and asset paths are the sole identities: `library/action/slam` is `action.slam`. There is no `id`, `path`, `version`, `implementationKey`, `aliases`, or hidden translation layer. Empty `manifest.json` files are valid. The category `manifest.json` may additionally declare plugin loading/order metadata (see Ordering). Asset `manifest.json` describes only information that cannot be derived from its path or resources.
+The engine only ever loads `plugin.js`. Each plugin decides how its resource
+folders are interpreted (static ESM imports of sibling `index.js` files are the
+natural form). Every identity is a path: `library/action/slam` is `action.slam`;
+`library/effect/manga-impact-star` likewise. No `id`, `version`,
+`implementationKey`, or `aliases` anywhere. The category manifest may declare
+plugin order metadata (`before`, `after`, `priority`) plus category-owned data.
 
-## Static values, callable members, dynamic dispatch
+## Invocations: descriptor protocol
 
-A manifest field is either a static value (data applied directly to the world) or a callable member (a function exported by `plugin.js` and invoked with a context object). Plugins decide which manifest fields are callable. Dynamic dispatch is optional and must be explicitly opted into by the plugin (e.g. a `dispatch` capability flag in the category manifest); a dispatching plugin receives arbitrary sub-calls and owns validation errors for invalid ones. There is no generic public procedure, script, or program category.
+A brace expression in an episode calls a plugin-exported **factory** with real
+arguments. The call executes immediately and returns an *invocation
+descriptor* — a plain object; it performs no world work yet:
 
-## Lifecycle and invocations
+```ts
+type Invocation = {
+  durationSec?: number;   // required when mode is "block"
+  mode?: "block" | "nonblock";
+  // Authoring default: generator. yield = "world is good, next frame";
+  // return/done = stop. A plain function (world) => boolean | void is
+  // equally valid; returning false ends the invocation.
+  run(world: World): Generator<void, void, void>;
+};
+```
 
-The engine parses a generic invocation lifecycle independent of category semantics:
+Bodies mutate the world in place. Control-flow state lives in generator
+locals; state that must be observable or externally writable is written to
+`world.plugins[category]` from inside the body. The runner mirrors minimal
+progress (`{invocationId, asset, step}` where `step` is a string yield value
+if provided) into `world.plugins[category]` automatically. Early cancellation
+drives `it.return()` so `finally` blocks clean up.
 
-- `start` — once when the invocation begins; `tick` — each frame while active; `stop` — once when it ends.
-- `duration` — declared or scheduled frame span; `null`/absent means the invocation is nonblocking and does not hold the scheduler.
+## Timing
 
-The scheduler computes each invocation's phase per frame and passes it to the owning plugin. Invocations carry stable IDs derived deterministically from the schedule (for example `action.slam.3` where `3` is the deterministic sequence position), never from random or wall-clock sources. Stable IDs make checkpoint/replay and cross-frame state lookup reliable.
+The scheduler reads `durationSec` and `mode` from descriptors and nothing
+else; bodies are opaque to it. Resolution order: call-site override
+(`{...slam(lin, desk), durationSec: 0.9}`) > descriptor's `durationSec` >
+error for blocking invocations. Nonblocking invocations do not hold the
+timeline. Schedule-before-execute: durations never come from running bodies.
 
-## Per-frame chaining
+## Authoring model
 
-Every frame, the engine:
+`episode.yml` stays structurally data: declaration blocks (`actors`,
+`locations`, `objects`) and per-statement script lines whose brace groups
+contain **real JavaScript expressions**. Expressions are evaluated with a
+scope containing: live instance handles (`lin`, `desk`), every plugin
+namespace (`action`, `camera`, ... — the factory functions), and core
+combinators. Statements evaluate to one invocation descriptor or a list
+(comma-separated = concurrent). Arbitrary statements outside braces, entity
+creation inside braces, and references to undeclared instances are errors.
+Safety/sandboxing is explicitly out of scope: authors are trusted.
 
-1. walks the ordered category plugins (see Ordering);
-2. for each plugin, dispatches that category's invocations in deterministic invocation order (schedule order, tie-broken by stable invocation ID);
-3. passes the complete current world to `plugin.run` each time;
-4. chains the result — in-place mutation keeps the reference; a returned replacement world becomes the next input and must satisfy the world contract;
-5. hands the final `world.canvas` to the renderer.
+## Per-frame chaining and ordering
 
-The next plugin always sees the previous plugin's output. A plugin-above-plugin category may intentionally read and modify another plugin's `world.plugins` state; that is sanctioned cooperation, not a violation.
+Every frame the engine walks ordered plugins, starts/drives that frame's
+invocations (schedule order, tie-broken by stable invocation ID derived
+deterministically from the schedule), and chains the resulting world.
+Category order is declared (`before`/`after`/`priority`, lower priority runs
+earlier) with topological sort and cycle detection; filesystem enumeration
+order never matters. Plugin-above-plugin reads of `world.plugins` are
+sanctioned cooperation.
 
-## Ordering
+## Dependencies between plugins
 
-Category order is deterministic and declared. Category manifests may declare `before: string[]`, `after: string[]`, and `priority: number` (lower runs earlier). The engine topologically sorts by `before`/`after`, tie-breaking on `priority`, then category name. Undiscovered categories referenced in `before`/`after` are errors; an ordering cycle is a discovery error listing the cycle. Plugins are loaded once at compile/bundle time; filesystem enumeration order never affects behavior.
+Plugins reference each other through **static ESM imports** of real exports
+(`action/slam` importing `effect/manga-impact-star`). These are ordinary code
+dependencies; the engine and world never resolve names. Strings never carry
+semantic vocabulary across the seam: canvas entries carry resource identities
+(paths) plus concrete normalized geometry — the renderer loads resources
+generically by identity and never interprets category meaning.
 
-## Checkpoint/replay and state rules
+## Validation and replay
 
-Frame-time plugin state must live in `world.plugins[category]` and be either JSON-serializable or deterministically reconstructible from `(world, frameContext)`. Long-running effects (`start` … `tick` … `stop`) keep their state there so any frame can be evaluated independently. The compiler checkpoints the world at schedule-segment boundaries; renderers rebuild a frame's state from the nearest checkpoint plus deterministic ticks. React elements, Remotion objects, functions, class instances, and other non-JSON values must not appear in plugin output; the renderer adapts `world.canvas` into its own primitives.
-
-## Performance guidance
-
-In-place mutation is the default fast path; `run` mutates the world and returns it unchanged by reference. A replacement-world return is fully supported but copies the world, so plugins should reserve it for structural rewrites. The engine never deep-clones between plugins; each plugin owns its state's copy semantics.
+`check`/`make` dry-run: evaluate every brace expression (catching unknown
+instances, missing exports, and argument errors immediately), then drive all
+invocations frame by frame against the world without rendering. A dry run
+that completes with a structurally valid world passes. Replay strategy is
+re-execution: reconstruct descriptors and re-drive bodies from invocation
+start; serializability of in-flight state is not required. Determinism is
+preferred but not contractual; correctness of the produced output is.
 
 ## Failure behavior
 
-- Missing plugin: an invocation references a category with no `library/<category>/plugin.js` — compile-time error naming category, asset, and episode call site.
-- Invalid return: `run` returns a non-object, drops a required root, or contains non-JSON values — error naming the plugin, invocation ID, and frame.
-- Thrown error: propagates and fails compile/render with plugin name, invocation ID, and frame; no silent fallback or partial output.
-- Lifecycle mismatch: `stop` without `start`, an invocation extending past its declared duration without one, or duplicated stable IDs — scheduling errors.
-- Ordering cycle: reported at discovery with the full cycle path.
+- Unknown asset path, unknown instance, missing plugin export, argument
+  mismatch: fail at evaluation (dry-run) with the expression and episode
+  location named.
+- Blocking invocation without resolvable `durationSec`: scheduling error.
+- Thrown body error: fails the run with plugin, invocation, and frame named;
+  no silent fallback.
+- Ordering cycle: discovery error listing the cycle.
 
 ## Face model
 
-Face behavior splits into two category plugins. `face_rig` emits normalized articulated face-part state (eyes, brows, mouth/viseme targets) for figures that declare rig faces. `face_overlay` emits normalized overlay visuals layered onto a compatible face and can suppress the built-in figure face through a generic canvas visibility field or a declared replacement behavior. The figure manifest declares the figure's face capability and normalized head/face geometry. `head` is a fixed face contract, not a configurable face anchor.
-
-## Custom categories
-
-A genuinely new domain adds a directory tree: `library/danmaku/plugin.js`, `library/danmaku/<asset>/manifest.json`, and `library/danmaku/<asset>/resources...`. The category plugin may load any resources it needs and may implement static values, callable values, or explicitly opted-in dynamic dispatch with plugin-owned validation errors. The engine stays category-agnostic.
+`face_rig` emits normalized articulated face-part state; `face_overlay` emits
+overlay visuals and can suppress the built-in figure face via a generic canvas
+visibility field or declared replacement. The figure manifest declares the
+face capability and normalized head/face geometry; `head` is a fixed face
+contract.
 
 ## Exact TypeScript types and runtime loading seam
 
 ```ts
 type JsonValue = null | boolean | number | string | JsonValue[] | { [k: string]: JsonValue };
 
-type LifecyclePhase = 'start' | 'tick' | 'stop';
-
 type Invocation = {
-  id: string;                    // stable, deterministic
-  category: string;              // first path segment, e.g. 'action'
-  asset: string;                 // asset name, e.g. 'slam'
-  phase: LifecyclePhase;
-  durationFrames: number | null; // null = nonblocking
-  localFrame: number;            // frames since start
-  args: JsonValue;               // authored/static or dispatched arguments
+  durationSec?: number;
+  mode?: "block" | "nonblock";
+  run(world: World): Generator<void, void, void>;
 };
 
-type FrameContext = {
-  frame: number;                 // absolute frame index
-  fps: number;
-  seconds: number;
-  seed: number;                  // deterministic seed
-};
+type PluginFactory = (...args: never[]) => Invocation;
 
-type CategoryPlugin = {
-  run(world: World, invocation: Invocation, ctx: FrameContext): World;
-};
+// plugin.js default export: the category namespace
+type CategoryPlugin = Record<string, PluginFactory | JsonValue>;
 
-type LoadedPlugin = {
-  category: string;
-  manifest: JsonValue;           // category manifest (may declare before/after/priority)
-  plugin: CategoryPlugin;
-};
-
-// Runtime seam: filesystem discovery + ESM import.
+// Engine seam
 loadPlugins(libraryRoot: string): Promise<LoadedPlugin[]>;
+type LoadedPlugin = {category: string; manifest: unknown; namespace: CategoryPlugin};
 ```
 
-`plugin.js` files are plain ESM JavaScript with no Node-only APIs so the same file loads in the Node compiler and the browser renderer bundle. Discovery scans `library/*/plugin.js` directly; there is no registry index.
+`plugin.js` files are plain ESM JavaScript loadable by both the Node compiler
+and the browser renderer bundle. Discovery scans `library/*/plugin.js`
+directly; there is no registry index and no TS-authored catalog.
