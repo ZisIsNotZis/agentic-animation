@@ -13,6 +13,9 @@ export * from "./assets";
 export * from "./audio";
 export {DeterministicProcedureResolver, createProcedureResolver, procedureResolver} from "./procedures";
 export {loadAudioCues, loadProcedureDefinitions} from "./procedures";
+export * from "./invocation/runner";
+export * from "./invocation/stdlib";
+export type {CategoryPlugin, Invocation, LoadedPlugin, PluginFactory} from "./invocation/types";
 export type {
   AudioIntent, BodyIntent, CameraIntent, ExpressionIntent, GazeIntent,
   ProcedureChannel, ProcedureEase, ProcedurePerformance, ProcedurePhase,

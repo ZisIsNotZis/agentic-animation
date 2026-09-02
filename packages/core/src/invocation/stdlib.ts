@@ -1,0 +1,179 @@
+import type {ProcedureEase, ProcedureRecipeEvent, ProcedureRecipeTrack} from "../procedures/types";
+import type {World} from "./types";
+
+/**
+ * Authoring stdlib for invocation bodies (docs/WORLD_PLUGIN_CONTRACT.md).
+ * Helpers write semantic track events at invocation-local time into
+ * world.canvas.tracks — the same vocabulary the renderer already consumes.
+ * Each helper returns its duration so bodies `yield helper(...)` to advance
+ * the virtual clock.
+ */
+
+type Track = ProcedureRecipeTrack;
+
+function tracks(world: World): Track[] {
+  if (!Array.isArray(world.canvas.tracks)) world.canvas.tracks = [];
+  return world.canvas.tracks;
+}
+
+function event(at: number, duration: number, value: Record<string, unknown>): ProcedureRecipeEvent {
+  return {...value, at, duration, value} as ProcedureRecipeEvent;
+}
+
+function now(world: World): number {
+  return world.invocation?.localSec ?? 0;
+}
+
+function idOf(handle: unknown, what: string): string {
+  const id = (handle as {id?: unknown} | null | undefined)?.id;
+  if (typeof id !== "string" || !id) throw new Error(`stdlib: ${what} must be a live instance handle (missing id), got ${String(handle)}`);
+  return id;
+}
+
+function push(world: World, track: Track): void {
+  tracks(world).push(track);
+}
+
+/** One body phase over the subject's parts (bone track). Returns durationSec. */
+export function phase(
+  world: World,
+  subject: unknown,
+  name: string,
+  parts: readonly string[],
+  durationSec: number,
+  ease: ProcedureEase = "io",
+  target?: unknown,
+): number {
+  if (!(durationSec > 0)) throw new Error(`stdlib.phase "${name}" needs a positive duration`);
+  const value: Record<string, unknown> = {phase: name, parts, ease};
+  if (target !== undefined) value.target = idOf(target, "phase target");
+  push(world, {kind: "bone", target: idOf(subject, "phase subject"), events: [event(now(world), durationSec, {action: name, phase: name, parts, ...value})]});
+  return durationSec;
+}
+
+/** Walk/movement phase: movement track toward the target plus transform move/arrive keys. */
+export function movePhase(
+  world: World,
+  subject: unknown,
+  name: string,
+  parts: readonly string[],
+  target: unknown,
+  durationSec: number,
+  ease: ProcedureEase = "io",
+): number {
+  if (!(durationSec > 0)) throw new Error(`stdlib.movePhase "${name}" needs a positive duration`);
+  const subjectId = idOf(subject, "movePhase subject");
+  const targetId = idOf(target, "movePhase target");
+  const start = now(world);
+  push(world, {kind: "movement", target: targetId, events: [event(start, durationSec, {action: name, phase: name, parts, ease, target: targetId, operation: "move", mode: "toward-target"})]});
+  push(world, {kind: "transform", target: subjectId, events: [
+    event(start, durationSec, {operation: "move", target: targetId, from: "current", to: targetId, progress: 0}),
+    event(start + durationSec, 0, {operation: "arrive", target: targetId, to: targetId, progress: 1}),
+  ]});
+  return durationSec;
+}
+
+/** Facial expression event. Returns durationSec. */
+export function emotion(
+  world: World,
+  face: {name: string; brow: string; eyes: string; mouth: string; intensity: number},
+  durationSec: number,
+): number {
+  push(world, {kind: "expression", events: [event(now(world), durationSec, {phase: "emotion", name: face.name, emotion: face.name, brow: face.brow, eyes: face.eyes, mouth: face.mouth, intensity: face.intensity})]});
+  return durationSec;
+}
+
+/** Gaze intent toward a target (or "audience"). Returns durationSec. */
+export function gaze(
+  world: World,
+  subject: unknown,
+  target: unknown | "audience",
+  lead: "eyes" | "head" | "whole-body" = "eyes",
+  durationSec = 0.35,
+  hold = 0.25,
+): number {
+  push(world, {kind: "gaze", target: target === "audience" ? "audience" : idOf(target, "gaze target"), events: [event(now(world), durationSec, {phase: "gaze", gaze: {target: target === "audience" ? "audience" : idOf(target, "gaze target"), lead, hold}})]});
+  return durationSec;
+}
+
+/** Camera move: push/pull/hold to a zoom, optionally centered on a target. */
+export function cameraOp(
+  world: World,
+  operation: "push" | "pull" | "hold",
+  zoom: number,
+  target: unknown | undefined,
+  durationSec: number,
+  ease: ProcedureEase = "io",
+): number {
+  push(world, {kind: "camera", target: target === undefined ? undefined : idOf(target, "camera target"), events: [
+    event(now(world), durationSec, {operation, target: target === undefined ? undefined : idOf(target, "camera target"), x: 0, y: 0, z: 1, key: "start", ease}),
+    event(now(world) + durationSec, 0, {operation: "hold", target: target === undefined ? undefined : idOf(target, "camera target"), x: 0, y: 0, z: zoom, key: "end"}),
+  ]});
+  return durationSec;
+}
+
+/** Visual effect overlay event. Returns the effect duration. */
+export function effect(
+  world: World,
+  style: string,
+  opts: {target?: unknown; intensity?: number; duration?: number} = {},
+): number {
+  const duration = opts.duration ?? 0.3;
+  push(world, {kind: "effect", target: opts.target === undefined ? undefined : idOf(opts.target, "effect target"), events: [event(now(world), duration, {effect: style, style, target: opts.target === undefined ? undefined : idOf(opts.target, "effect target"), intensity: opts.intensity ?? 0.7, operation: "apply"})]});
+  return duration;
+}
+
+/** Audio cue event (sound or music). Returns the cue duration. */
+export function cue(
+  world: World,
+  name: string,
+  opts: {kind: "sfx" | "music"; gain?: number; duration?: number; loop?: boolean},
+): number {
+  const duration = opts.duration ?? 0.3;
+  push(world, {kind: opts.kind === "music" ? "music" : "sound", events: [event(now(world), duration, {cue: name, kind: opts.kind, gain: opts.gain ?? 0.7, loop: opts.loop ?? false, operation: "play"})]});
+  return duration;
+}
+
+/** Actor presence/pose lifecycle event. Instant (0 duration). */
+export function actorState(world: World, subject: unknown, state: {present?: boolean; pose?: string}): void {
+  push(world, {kind: "lifecycle", events: [event(now(world), 0, {...state, subject: idOf(subject, "actorState subject"), operation: "state"})]});
+}
+
+const SHORT = 0.01;
+
+/** Bind an object into the subject's hand at the current local time. */
+export function bindObject(world: World, object: unknown, holder: unknown, holdSec: number): number {
+  const o = idOf(object, "bind object");
+  const h = idOf(holder, "bind holder");
+  push(world, {kind: "binding", target: o, events: [event(now(world), Math.max(SHORT, holdSec), {operation: "bind", object: o, holder: h, hand: "hand_r"})]});
+  push(world, {kind: "object", target: o, events: [event(now(world), Math.max(SHORT, holdSec), {operation: "state", object: o, status: "held", holder: h})]});
+  push(world, {kind: "lifecycle", events: [event(now(world), Math.max(SHORT, holdSec), {operation: "bind", object: o, status: "held", holder: h})]});
+  return Math.max(SHORT, holdSec);
+}
+
+/** Release a binding now; optionally re-bind to a receiver or settle on support. */
+export function releaseObject(world: World, object: unknown, holder: unknown): number {
+  const o = idOf(object, "release object");
+  const h = idOf(holder, "release holder");
+  push(world, {kind: "binding", target: o, events: [event(now(world), SHORT, {operation: "release", object: o, holder: h, hand: "hand_r"})]});
+  push(world, {kind: "object", target: o, events: [event(now(world), SHORT, {operation: "release", object: o, status: "loose", holder: h})]});
+  push(world, {kind: "lifecycle", events: [event(now(world), SHORT, {operation: "release", object: o, status: "loose"})]});
+  return SHORT;
+}
+
+export function bindToReceiver(world: World, object: unknown, receiver: unknown, holdSec: number): number {
+  const o = idOf(object, "receiver object");
+  const r = idOf(receiver, "receiver");
+  push(world, {kind: "binding", target: o, events: [event(now(world), Math.max(SHORT, holdSec), {operation: "bind", object: o, holder: r, hand: "hand_r"})]});
+  push(world, {kind: "object", target: o, events: [event(now(world), Math.max(SHORT, holdSec), {operation: "state", object: o, status: "held", holder: r})]});
+  push(world, {kind: "lifecycle", events: [event(now(world), Math.max(SHORT, holdSec), {operation: "bind", object: o, status: "held", holder: r})]});
+  return Math.max(SHORT, holdSec);
+}
+
+export function settleOnSupport(world: World, object: unknown, support: unknown, holdSec: number): number {
+  const o = idOf(object, "support object");
+  const s = idOf(support, "support");
+  push(world, {kind: "object", target: o, events: [event(now(world), Math.max(SHORT, holdSec), {operation: "state", object: o, status: "supported", support: s})]});
+  push(world, {kind: "lifecycle", events: [event(now(world), Math.max(SHORT, holdSec), {operation: "state", object: o, status: "supported", support: s})]});
+  return Math.max(SHORT, holdSec);
+}
