@@ -103,16 +103,31 @@ function parseScalar(raw: string): Scalar | null {
 }
 
 export function inlineTokens(text: string): string[] | null {
+  // Depth- and quote-aware scan: brace groups may contain nested object
+  // literals (e.g. {...action.slam(a, b), durationSec: 1.2}).
   const tokens: string[] = [];
+  let depth = 0;
   let start = -1;
+  let quote: string | undefined;
+  let escaped = false;
   for (let i = 0; i < text.length; i++) {
-    if (text[i] === "{") {
-      if (start >= 0) return null;
-      start = i + 1;
-    } else if (text[i] === "}") {
-      if (start < 0) return null;
-      tokens.push(text.slice(start, i).trim());
-      start = -1;
+    const ch = text[i]!;
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === quote) quote = undefined;
+    } else if ((ch === "'" || ch === '"') && depth > 0) {
+      quote = ch;
+    } else if (ch === "{") {
+      if (depth === 0) start = i + 1;
+      depth++;
+    } else if (ch === "}") {
+      if (depth === 0 || start < 0) return null;
+      depth--;
+      if (depth === 0) {
+        tokens.push(text.slice(start, i).trim());
+        start = -1;
+      }
     }
   }
   return start < 0 ? tokens : null;

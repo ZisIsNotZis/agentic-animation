@@ -1,0 +1,40 @@
+episode:
+  id: showcase_effects
+  title: 展示：特效、灯光与音效
+  language: zh-CN
+
+# Minimal showcase: effect resources layered with sound cues; nonblock lets
+# the glitch run while the actor keeps talking.
+
+actors:
+  awei:
+    use: figure/awei
+    voice: voice/zh/awei
+  aqiang:
+    use: figure/aqiang
+    voice: voice/zh/aqiang
+
+locations:
+  dormitory:
+    use: set/qingyun_dormitory
+
+objects:
+  desk:
+    use: prop/desk
+  screen:
+    use: dressing/computer_screen
+
+scenes:
+  - id: effects
+    location: dormitory
+    actors:
+      awei: {facing: aqiang}
+      aqiang: {facing: awei}
+    objects:
+      desk: center
+      screen: on(desk)
+    script:
+      - awei: "{effect.lights_down()}它又出问题了……"
+      - awei: "{...effect.ai_glitch(screen), mode: \"nonblock\"}你看！表格全乱了！"
+      - aqiang: "{effect.screen_error(screen), sound.error_burst()}这不就是蓝屏吗？"
+      - awei: "{effect.lights_up()}……重启试试？"

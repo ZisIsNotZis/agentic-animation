@@ -37,7 +37,7 @@ export type SyncRunResult = {elapsedSec: number; steps: number};
 export function runInvocationSync(
   descriptor: Invocation,
   world: World,
-  info: {id: string; category: string; asset: string},
+  info: {id: string; category: string; asset: string; declaredSec?: number},
 ): SyncRunResult {
   if (typeof descriptor.run !== "function") {
     throw new InvocationRunError(`${info.category}.${info.asset}: descriptor has no run()`);
@@ -66,9 +66,13 @@ export function runInvocationSync(
     if (!completed) iterator.return?.();
     if (world.invocation?.id === info.id) delete world.invocation;
   }
-  if (durationSec !== null && Math.abs(elapsedSec - durationSec) > DURATION_EPSILON) {
+  // Call-site overrides ({...call, durationSec: x}) change the scheduler's
+  // timing but not the body's internal yields: validate against the
+  // factory-declared duration when the compiler passes declaredSec.
+  const expectedSec = info.declaredSec ?? durationSec;
+  if (expectedSec !== null && Math.abs(elapsedSec - expectedSec) > DURATION_EPSILON) {
     throw new InvocationRunError(
-      `${info.category}.${info.asset}: body elapsed ${elapsedSec.toFixed(3)}s but descriptor declares durationSec ${durationSec}`,
+      `${info.category}.${info.asset}: body elapsed ${elapsedSec.toFixed(3)}s but descriptor declares durationSec ${expectedSec}`,
     );
   }
   return {elapsedSec, steps};

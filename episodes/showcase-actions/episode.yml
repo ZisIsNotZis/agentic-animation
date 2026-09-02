@@ -1,0 +1,37 @@
+episode:
+  id: showcase_actions
+  title: 展示：定时动作与节拍控制
+  language: zh-CN
+
+# Minimal showcase: blocking timed actions, per-call durationSec override,
+# and nonblock layering (the next line starts while the push still plays).
+
+actors:
+  aqiang:
+    use: figure/aqiang
+    voice: voice/zh/aqiang
+  awei:
+    use: figure/awei
+    voice: voice/zh/awei
+
+locations:
+  dormitory:
+    use: set/qingyun_dormitory
+
+objects:
+  desk:
+    use: prop/desk
+
+scenes:
+  - id: actions
+    location: dormitory
+    actors:
+      aqiang: {facing: awei}
+      awei: {facing: aqiang}
+    objects:
+      desk: center
+    script:
+      - aqiang: "{action.slam(aqiang, desk)}你给我过来！"
+      - aqiang: "{...action.slam(aqiang, desk), durationSec: 1.2}听不懂吗！！"
+      - aqiang: "{...action.push(aqiang, awei), mode: \"nonblock\"}出去！"
+      - awei: "{emotion.fearful(awei)}别推我啊！"

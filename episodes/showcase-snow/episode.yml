@@ -1,0 +1,35 @@
+episode:
+  id: showcase_snow
+  title: 展示：雪花飘飘，北风萧萧
+  language: zh-CN
+
+# The special showcase: particle.snow overlays deterministic particle
+# snowfall over everything; music.xuehua loops the pentatonic 《一剪梅》
+# homage as BGM; awei collapses to his knees crying while a long
+# "不啊——" scream plays (edge-tts). Snow and music are nonblock, so the
+# timeline keeps moving underneath them.
+
+actors:
+  awei:
+    use: figure/awei
+    voice: voice/zh/awei
+  lin:
+    use: figure/lin
+    voice: voice/zh/lin
+
+locations:
+  courtyard:
+    use: set/qingyun_courtyard
+
+objects: {}
+
+scenes:
+  - id: snow
+    location: courtyard
+    actors:
+      awei: {facing: audience}
+      lin: {facing: awei}
+    script:
+      - awei: "{music.xuehua({durationSec: 14}), ...particle.snow({count: 120, seed: 7, durationSec: 14}), emotion.desperate(awei)}她的心，就像这雪一样，冷。"
+      - awei: "{...action.collapse(awei), mode: \"nonblock\"}{action.shiver(awei)}不啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊！！！"
+      - lin: "{action.bow(lin), emotion.somber(lin)}节哀。"

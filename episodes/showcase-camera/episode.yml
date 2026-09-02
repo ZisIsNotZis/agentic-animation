@@ -1,0 +1,31 @@
+episode:
+  id: showcase_camera
+  title: 展示：运镜与走位
+  language: zh-CN
+
+# Minimal showcase: camera.punch_in / camera.wide plus semantic locomotion.
+
+actors:
+  lin:
+    use: figure/lin
+    voice: voice/zh/lin
+  awei:
+    use: figure/awei
+    voice: voice/zh/awei
+
+locations:
+  arena:
+    use: set/qingyun_arena
+
+objects: {}
+
+scenes:
+  - id: camera
+    location: arena
+    actors:
+      lin: {facing: awei}
+      awei: {facing: lin}
+    script:
+      - lin: "{movement.to(lin, awei)}站住，别跑！"
+      - awei: "{camera.punch_in(awei), emotion.fearful(awei)}我什么都没干！"
+      - lin: "{camera.wide()}最好是这样。"

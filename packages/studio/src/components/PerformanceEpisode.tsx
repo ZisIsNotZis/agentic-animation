@@ -60,7 +60,11 @@ export const PerformanceFrame: React.FC<{
         style={{
           position: "absolute",
           inset: 0,
-          transformOrigin: "center center",
+          // Camera x/y are the viewport top-left in stage space (see
+          // containCamera), so the transform must scale about the top-left
+          // corner: screen = z*p - (x, y). A center origin would shift the
+          // whole stage and expose the background as black bands.
+          transformOrigin: "0 0",
           transform: `translate(${-camera.x}px, ${-camera.y}px) scale(${camera.z}) rotate(${camera.rotation}deg)`,
           willChange: "transform",
         }}

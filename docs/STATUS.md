@@ -46,3 +46,12 @@ Existing checked-in MP4 files remain untouched. Generated audio, video, manifest
 ## Next
 
 Per-frame plugin-owned canvas behavior (run() bodies beyond identity), then new-episode production on the plugin-host runtime.
+
+## Showcase evidence (evaluated invocations, particle category)
+
+- Seven minimal showcase episodes under `episodes/showcase-*` (docs/SHOWCASES.md): states, action timing overrides, camera/movement, effects+lifecycle, props, voice/music, and the special `showcase-snow`.
+- New `particle` category: `particle.snow({count, seed, durationSec})` — deterministic seeded snowfall rendered by a new `Snowfall` component (vfx style `particle-snow`); `music.xuehua` loops a synthesized pentatonic 《一剪梅》 homage cue (7.25s wav under `library/music/cues/`, gitignored like all library audio — regenerate with any synth or drop in a licensed take).
+- `showcase-snow` verified end-to-end: 14s render, full-bleed frame, BGM + 4.9s edge-tts scream + shiver audible across the timeline (RMS −14 to −16 dB per window, no silent tail), subtitles correct, collapse beat present. Frames inspected manually.
+- Camera fix: the performance camera div scaled about the wrong origin (composition center instead of stage top-left), shrinking the stage inside the frame and exposing black bands around every set; `containCamera` also allowed zooming out past the stage fit. Both fixed (`transformOrigin: "0 0"`, zoom floor + viewport clamped to the stage). liu-secret re-render verified full-bleed; the checked-in golden MP4s predate the fix and still show the old banded framing.
+- Compiler: brace groups now parse nested object literals (`splitDialogue`/`inlineTokens` are depth- and quote-aware); the spread override form `{...call(args), durationSec, mode}` evaluates as real JS with body duration validated against the factory declaration (`declaredSec`).
+- tts-edge retries now log each failed attempt and the final success to stderr.

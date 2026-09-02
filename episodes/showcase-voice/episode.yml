@@ -1,0 +1,33 @@
+episode:
+  id: showcase_voice
+  title: 展示：语速、打断与收尾配乐
+  language: zh-CN
+
+# Minimal showcase: voice.speed state changes the speech rate, voice.interrupt
+# cuts in mid-line, and music.ending closes the episode.
+
+actors:
+  awei:
+    use: figure/awei
+    voice: voice/zh/awei
+  lin:
+    use: figure/lin
+    voice: voice/zh/lin
+
+locations:
+  courtyard:
+    use: set/qingyun_courtyard
+
+objects: {}
+
+scenes:
+  - id: voice
+    location: courtyard
+    actors:
+      awei: {facing: lin}
+      lin: {facing: awei}
+    script:
+      - awei: "{voice.speed(1.5)}我跟你说这个项目特别简单需求特别清晰三天就能做完绝对没有坑。"
+      - lin: "{voice.interrupt(lin, awei), emotion.shocked(lin)}停停停！"
+      - awei: "{voice.speed(1), emotion.embarrassed(awei)}好吧，一周。"
+      - lin: "{music.ending(), emotion.calm(lin)}这才是人话。"

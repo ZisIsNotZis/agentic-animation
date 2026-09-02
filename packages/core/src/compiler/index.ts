@@ -1,5 +1,4 @@
 import {
-  inlineTokens,
   type NarrowEpisode,
   type ProcedureCall,
   type Scalar,
@@ -429,22 +428,46 @@ async function compileScene(
 }
 
 function splitDialogue(source: string): Array<{text: string} | ParsedGroup> {
-  if (!inlineTokens(source)) throw new Error("compileEpisode: unbalanced or nested brace group");
+  // Depth- and quote-aware scan so brace groups may contain nested object
+  // literals (e.g. {...action.slam(a, b), durationSec: 1.2}).
   const result: Array<{text: string} | ParsedGroup> = [];
-  const pattern = /\{([^{}]*)\}/g;
   let cursor = 0;
-  let match: RegExpExecArray | null;
-  while ((match = pattern.exec(source))) {
-    result.push({text: source.slice(cursor, match.index)});
-    const raw = match[1]!.trim();
+  let i = 0;
+  while (i < source.length) {
+    if (source[i] !== "{") {
+      i++;
+      continue;
+    }
+    let depth = 0;
+    let quote: "'" | '"' | undefined;
+    let escaped = false;
+    let j = i;
+    for (; j < source.length; j++) {
+      const ch = source[j]!;
+      if (quote) {
+        if (escaped) escaped = false;
+        else if (ch === "\\") escaped = true;
+        else if (ch === quote) quote = undefined;
+      } else if (ch === "'" || ch === '"') quote = ch;
+      else if (ch === "{") depth++;
+      else if (ch === "}") {
+        depth--;
+        if (depth === 0) break;
+      }
+    }
+    if (j >= source.length) throw new Error("compileEpisode: unbalanced or nested brace group");
+    result.push({text: source.slice(cursor, i)});
+    const raw = source.slice(i + 1, j).trim();
     let expressions: string[];
     try {
-      expressions = splitExpressions(raw);
+      // Override groups (...call(args), key: value) stay one expression.
+      expressions = raw.startsWith("...") ? [raw] : splitExpressions(raw);
     } catch (error) {
       throw new Error(`compileEpisode: invalid procedure group: ${raw} — ${(error as Error).message}`);
     }
     result.push({expressions, raw});
-    cursor = match.index + match[0].length;
+    cursor = j + 1;
+    i = j + 1;
   }
   result.push({text: source.slice(cursor)});
   return result;
@@ -455,18 +478,44 @@ function splitDialogue(source: string): Array<{text: string} | ParsedGroup> {
  * ProcedureCall metadata downstream staging consumes (subject, namespace,
  * terminal, simple args).
  */
-function evaluateCall(context: CompileContext, expression: string): {descriptor: Invocation; call: ProcedureCall} {
-  const callee = calleeOf(expression);
+function evaluateCall(context: CompileContext, expression: string): {descriptor: Invocation; call: ProcedureCall; declaredSec?: number} {
+  const trimmed = expression.trim();
+  // Override form: {...category.terminal(args), durationSec: 1.2, mode: "nonblock"}
+  // (the braces may be omitted inside a brace group). It evaluates as a real
+  // JS object spread; the callee is the first spread part.
+  let calleeSource = trimmed;
+  let evalSource = trimmed;
+  if (trimmed.startsWith("...")) {
+    evalSource = `{${trimmed}}`;
+    calleeSource = splitExpressions(trimmed).map((part) => part.replace(/^\.\.\.\s*/, ""))[0]!;
+  } else if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    if (!/^\.\.\./.test(trimmed.slice(1, -1).trim())) {
+      throw new Error(`compileEpisode: override expressions must start with "...": ${trimmed}`);
+    }
+    calleeSource = splitExpressions(trimmed.slice(1, -1)).map((part) => part.replace(/^\.\.\.\s*/, ""))[0]!;
+  }
+  const callee = calleeOf(calleeSource);
   const segments = callee.split(".");
   if (segments.length !== 2) throw new Error(`compileEpisode: call must be category.terminal(...): ${expression}`);
   const [namespace, terminal] = segments as [string, string];
   const plugin = context.plugins.find((candidate) => candidate.category === namespace);
   if (!plugin) throw new Error(`compileEpisode: unknown plugin category "${namespace}" in ${expression}`);
-  const evaluated = evaluateExpression(expression, context.scope);
+  const evaluated = evaluateExpression(evalSource, context.scope);
   if (!isRecord(evaluated) || typeof (evaluated as {run?: unknown}).run !== "function") {
     throw new Error(`compileEpisode: ${expression} did not return an invocation descriptor`);
   }
-  return {descriptor: evaluated as unknown as Invocation, call: shimCall(expression, namespace, terminal)};
+  // When the call site overrides durationSec, keep the factory-declared value
+  // for body validation (declaredSec) while the scheduler uses the override.
+  let declaredSec: number | undefined;
+  if (evaluated !== null && typeof evaluated === "object" && evalSource !== calleeSource) {
+    const base = evaluateExpression(calleeSource, context.scope);
+    if (isRecord(base) && base.durationSec !== (evaluated as {durationSec?: unknown}).durationSec) {
+      declaredSec = typeof base.durationSec === "number" ? base.durationSec : undefined;
+    }
+  }
+  const call = shimCall(calleeSource, namespace, terminal);
+  call.raw = trimmed;
+  return {descriptor: evaluated as unknown as Invocation, call, declaredSec};
 }
 
 const ACTOR_NAMESPACES = new Set(["action", "emotion", "gaze", "movement", "voice", "prop"]);
@@ -497,7 +546,7 @@ function shimCall(expression: string, namespace: string, terminal: string): Proc
 }
 
 async function makeCall(
-  evaluated: {descriptor: Invocation; call: ProcedureCall},
+  evaluated: {descriptor: Invocation; call: ProcedureCall; declaredSec?: number},
   scene: NarrowEpisode["scenes"][number],
   lastSpeech: SpeechLine | undefined,
   groupStart: number,
@@ -506,7 +555,7 @@ async function makeCall(
   concurrent: boolean,
 ): Promise<PendingCall | undefined> {
   void scene;
-  const {descriptor, call} = evaluated;
+  const {descriptor, call, declaredSec} = evaluated;
   const start = lastSpeech ? speechMarker(lastSpeech, call, context.episode.episode.id) : groupStart;
   const blocking = descriptor.mode !== "nonblock";
   if (blocking && (descriptor.durationSec === undefined || !(descriptor.durationSec >= 0))) {
@@ -514,7 +563,7 @@ async function makeCall(
   }
   const kind = STATE_NAMESPACES.has(call.namespace) ? "state" : "timed";
   const world: World = {canvas: {aspect: 16 / 9, tracks: []}, plugins: {}, frame: 0, seconds: 0, fps: 24, seed: 0};
-  const {elapsedSec} = runInvocationSync(descriptor, world, {id: `${call.path}.${sequence}`, category: call.namespace, asset: call.terminal});
+  const {elapsedSec} = runInvocationSync(descriptor, world, {id: `${call.path}.${sequence}`, category: call.namespace, asset: call.terminal, declaredSec});
   const duration = descriptor.durationSec ?? elapsedSec;
   const tracks = world.canvas.tracks;
   const resolution = {

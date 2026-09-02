@@ -194,7 +194,11 @@ function containCamera(
   const right = Math.max(...visible.map((actor) => actor.x + 200 * actor.scale)) + margin;
   const top = Math.min(...visible.map((actor) => actor.y - 720 * actor.scale)) - margin;
   const bottom = Math.max(...visible.map((actor) => actor.y)) + margin;
-  const zoom = Math.min(camera.z, video.width / Math.max(1, right - left), video.height / Math.max(1, bottom - top));
+  // Never zoom out past the painted stage: below the stage-fit zoom the
+  // 1920x1080 canvas shrinks inside the video frame and the episode
+  // background leaks in as black bands.
+  const fit = Math.min(video.width / CANVAS.width, video.height / CANVAS.height);
+  const zoom = Math.max(fit, Math.min(camera.z, video.width / Math.max(1, right - left), video.height / Math.max(1, bottom - top)));
   const viewportWidth = video.width / zoom;
   const viewportHeight = video.height / zoom;
   const x = right - left <= viewportWidth
@@ -203,7 +207,15 @@ function containCamera(
   const y = bottom - top <= viewportHeight
     ? Math.max(top, Math.min(camera.y, bottom - viewportHeight))
     : top;
-  return {x, y, z: zoom, rotation: camera.rotation};
+  // The viewport must stay inside the painted stage: with zoom at the stage
+  // fit the whole canvas fills the frame, so any stage-boundary-crossing
+  // offset would expose the episode background as black bands.
+  return {
+    x: Math.min(Math.max(x, 0), Math.max(0, CANVAS.width - viewportWidth)),
+    y: Math.min(Math.max(y, 0), Math.max(0, CANVAS.height - viewportHeight)),
+    z: zoom,
+    rotation: camera.rotation,
+  };
 }
 
 function cameraKeyFromEvent(

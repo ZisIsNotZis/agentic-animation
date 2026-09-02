@@ -154,9 +154,12 @@ export async function retryEdgeRequest(
   for (let attempt = 0; ; attempt++) {
     try {
       await run();
+      if (attempt > 0) process.stderr.write(`tts:edge — request succeeded after ${attempt} retry(ies)\n`);
       return;
     } catch (err) {
-      await wait(Math.min(8000, 500 * 2 ** attempt));
+      const delay = Math.min(8000, 500 * 2 ** attempt);
+      process.stderr.write(`tts:edge — request failed (attempt ${attempt + 1}): ${(err as Error).message?.split("\n")[0] ?? "unknown"}; retrying in ${Math.round(delay)}ms\n`);
+      await wait(delay);
     }
   }
 }

@@ -40,8 +40,10 @@ geometry crossing the plugin seam is normalized.
 ## Library taxonomy and resource folders
 
 Categories: `figure`, `voice`, `set`, `prop`, `dressing`, `layout`, `action`,
-`emotion`, `gaze`, `movement`, `camera`, `effect`, `sound`, `music` (plus
-reserved `face_rig`, `face_overlay`; see Face model).
+`emotion`, `gaze`, `movement`, `camera`, `effect`, `particle`, `sound`,
+`music` (plus reserved `face_rig`, `face_overlay`; see Face model).
+Particle resources emit persistent ambient/atmosphere visuals (snow, rain,
+embers) that layer over the scene without blocking the timeline.
 
 ```text
 library/<category>/plugin.js            entry: exports the category namespace

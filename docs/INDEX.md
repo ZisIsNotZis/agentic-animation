@@ -15,6 +15,7 @@ document owning a contract before changing implementation or an episode.
 - [SCHEMAS.md](SCHEMAS.md): source, plugin, compiler IR, and validation contracts.
 - [ARCHITECTURE.md](ARCHITECTURE.md): module seams and runtime data flow.
 - [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md): canonical world/plugin contract — library layout, categories, world type, plugin lifecycle, ordering, and state rules.
+- [SHOWCASES.md](SHOWCASES.md): minimal per-capability showcase episodes (states, actions, camera, effects, props, voice, particle snow).
 - [PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md): historical migration plan; Steps 1-2 are implemented. Kept for reference, superseded by [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md).
 - [PIPELINE.md](PIPELINE.md): assets-first production and QA workflow.
 - [DECISIONS.md](DECISIONS.md): durable technology, licensing, and migration decisions.

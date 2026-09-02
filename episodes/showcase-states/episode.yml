@@ -1,0 +1,32 @@
+episode:
+  id: showcase_states
+  title: 展示：表情、视线与台词
+  language: zh-CN
+
+# Minimal showcase: persistent emotion states, gaze constraints, and the
+# speech intrinsic with subtitles (docs/SHOWCASES.md).
+
+actors:
+  lin:
+    use: figure/lin
+    voice: voice/zh/lin
+  awei:
+    use: figure/awei
+    voice: voice/zh/awei
+
+locations:
+  corridor:
+    use: set/school_corridor
+
+objects: {}
+
+scenes:
+  - id: states
+    location: corridor
+    actors:
+      lin: {facing: awei}
+      awei: {facing: lin}
+    script:
+      - lin: "{gaze.at(lin, awei), emotion.proud(lin)}我昨天一口气做了一百个俯卧撑。"
+      - awei: "{emotion.shocked(awei)}一百个？！"
+      - lin: "{emotion.somber(lin)}做梦的时候。"
