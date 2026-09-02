@@ -2,12 +2,11 @@ import { existsSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import {
   compileEpisode as coreCompileEpisode,
-  createProcedureResolver,
   hashJson,
   loadAssetRegistry as coreLoadAssetRegistry,
   loadAudioCues as coreLoadAudioCues,
-  loadProcedureDefinitions as coreLoadProcedureDefinitions,
   loadNarrowEpisode,
+  loadPlugins as coreLoadPlugins,
   readJson,
   synchronizeYamlAudioStarts,
   segmentYamlAudio,
@@ -17,8 +16,8 @@ import {
   resolvePath,
   type AssetRegistry,
   type AudioCueAsset,
+  type LoadedPlugin,
   type CompiledEpisode,
-  type ProcedureCatalog,
   type ProcedureResolver,
   type RenderReport,
   type SpeechTimingProvider,
@@ -61,7 +60,7 @@ export interface YamlRenderRequest {
 
 export interface YamlPipelineDependencies {
   loadAssetRegistry?: (libraryRoot: string) => Promise<AssetRegistry>;
-  loadProcedureDefinitions?: (libraryRoot: string) => Promise<ProcedureCatalog>;
+  loadPlugins?: (libraryRoot: string) => Promise<LoadedPlugin[]>;
   loadAudioCues?: (libraryRoot: string) => Promise<Record<string, AudioCueAsset>>;
   compileEpisode?: typeof coreCompileEpisode;
   prepareAudio?: (
@@ -124,11 +123,10 @@ export async function checkYamlEpisode(
 ): Promise<YamlCheckResult> {
   const resolved = await resolveYamlEpisode(ctx, input);
   const registry = await (deps.loadAssetRegistry ?? coreLoadAssetRegistry)(libraryDir(ctx));
-  const definitions = await (deps.loadProcedureDefinitions ?? coreLoadProcedureDefinitions)(libraryDir(ctx));
-  const checkProcedures = createProcedureResolver({registry, definitions});
+  const plugins = await (deps.loadPlugins ?? coreLoadPlugins)(libraryDir(ctx));
   const compiled = await (deps.compileEpisode ?? coreCompileEpisode)(resolved.path, {
     registry,
-    resolver: deps.procedureResolver ?? checkProcedures.resolve.bind(checkProcedures),
+    plugins,
     speechTiming: deps.speechTimingProvider ?? dryRunSpeechTiming,
   });
   const result = resultOf(resolved, compiled, spokenTakeCount(resolved));
@@ -148,6 +146,7 @@ export async function makeYamlEpisode(
   validateVoiceSpeed(opts.voiceSpeed, "make");
   const resolved = await resolveYamlEpisode(ctx, input);
   const registry = await (deps.loadAssetRegistry ?? coreLoadAssetRegistry)(libraryDir(ctx));
+  const plugins = await (deps.loadPlugins ?? coreLoadPlugins)(libraryDir(ctx));
   let preparation = await (deps.prepareAudio ?? prepareYamlAudio)(ctx, resolved.path, opts.provider, opts.synthesizeUnmatched, opts.voiceSpeed);
   if (preparation.unmatchedCount) {
     throw new Error(
@@ -156,12 +155,9 @@ export async function makeYamlEpisode(
     );
   }
   const timing = deps.speechTimingProvider ?? speechTimingFromPreparation(preparation);
-  const definitions = await (deps.loadProcedureDefinitions ?? coreLoadProcedureDefinitions)(libraryDir(ctx));
-  const procedures = createProcedureResolver({registry, definitions});
-  const procedureResolver = deps.procedureResolver ?? procedures.resolve.bind(procedures);
   const compiled = await (deps.compileEpisode ?? coreCompileEpisode)(resolved.path, {
     registry,
-    resolver: procedureResolver,
+    plugins,
     speechTiming: timing,
     voiceSpeed: opts.voiceSpeed ?? ctx.config.tts.speed,
   });

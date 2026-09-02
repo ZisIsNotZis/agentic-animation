@@ -8,6 +8,8 @@ import {
   type RegistryLocals,
 } from "../src/assets/registry";
 import { RegistryAssetManifestSchema } from "../src/schemas/libraryMeta";
+import { loadPlugins } from "../src/plugins";
+import { splitExpressions } from "../src/invocation/runner";
 
 const libraryRoot = join(process.cwd(), "library");
 
@@ -47,33 +49,40 @@ test("registers every asset identifier used by the AI work adventure", async () 
   for (const asset of registry.manifest.assets) assert.equal(registry.resolveAsset(asset.identity), asset);
 });
 
-test("resolves every procedure referenced by the AI work adventure", async () => {
-  const registry = await loadAssetRegistry(libraryRoot);
+test("evaluates every brace expression used by the AI work adventure against plugin namespaces", async () => {
+  const plugins = await loadPlugins(libraryRoot);
   const episode = parse(await readFile(join(process.cwd(), "episodes/ai-work-adventure/episode.yml"), "utf8"));
-  const procedures = new Set<string>();
+  const expressions = new Set<string>();
   const visit = (value: unknown): void => {
     if (typeof value === "string") {
-      for (const match of value.matchAll(/[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+\([^)]*\)/g)) {
-        const segments = match[0]!.replace(/\(.*\)$/, "").split(".");
-        const categories = new Set(["action", "emotion", "gaze", "movement", "voice", "prop", "camera", "effect", "sound", "music"]);
-        if (segments.length === 3 && categories.has(segments[1]!)) procedures.add(`${segments[1]}.${segments[2]}`);
-        else if (segments.length === 2 && categories.has(segments[0]!)) procedures.add(segments.join("."));
+      for (const token of (value.match(/\{([^{}]*)\}/g) ?? [])) {
+        try {
+          for (const expression of splitExpressions(token.slice(1, -1))) expressions.add(expression);
+        } catch { /* non-call group */ }
+
       }
-    } else if (Array.isArray(value)) {
-      value.forEach(visit);
-    } else if (value && typeof value === "object") {
-      Object.values(value).forEach(visit);
-    }
+    } else if (Array.isArray(value)) value.forEach(visit);
+    else if (value && typeof value === "object") Object.values(value).forEach(visit);
   };
   visit(episode);
-
-  assert.ok(procedures.size >= 65);
-  for (const id of procedures) {
-    const manifest = registry.resolveProcedure(id);
-    assert.equal(registry.resolveProcedure(manifest.id), manifest);
-    assert.equal(manifest.kind, "procedure");
-    assert.equal(manifest.arity, manifest.params.length);
-    assert.equal(manifest.id, id);
+  assert.ok(expressions.size >= 40);
+  const actors = new Set(Object.keys(episode.actors));
+  const objects = new Set(Object.keys(episode.objects));
+  for (const expression of expressions) {
+    const callee = expression.match(/^([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*\(/)![1]!;
+    const [category, terminal] = callee.split(".") as [string, string];
+    const plugin = plugins.find((candidate) => candidate.category === category);
+    assert.ok(plugin, `${expression}: unknown plugin category`);
+    const scope: Record<string, unknown> = {audience: "audience"};
+    for (const name of [...actors, ...objects]) scope[name] = {id: name};
+    scope[category] = plugin.namespace;
+    let factory: unknown;
+    try {
+      factory = new Function(...Object.keys(scope), `return (${expression});`)(...Object.values(scope));
+    } catch (error) {
+      throw new Error(`${expression}: ${(error as Error).message}`);
+    }
+    assert.equal(typeof (factory as {run?: unknown})?.run, "function", `${expression}: did not return an invocation descriptor`);
   }
 });
 
@@ -83,32 +92,4 @@ test("derives asset identity from canonical paths", async () => {
     assert.equal(asset.identity.split("/")[0], asset.kind);
     assert.ok(!("id" in asset) && !("path" in asset) && !("version" in asset) && !("implementationKey" in asset));
   }
-});
-
-test("validates subject and typed actor, object, and dressing locals", async () => {
-  const registry = await loadAssetRegistry(libraryRoot);
-
-  const result = registry.validateProcedureCall(
-    { subject: "aqiang", id: "prop.pickup", args: ["coffee"] },
-    locals,
-  );
-  assert.equal(result.procedure.id, "prop.pickup");
-  assert.equal(result.args[0]!.assetId, "prop/thermos");
-
-  assert.throws(
-    () => registry.validateProcedureCall({ subject: "aqiang", id: "prop.pickup", args: ["screen"] }, locals),
-    /expects object/i,
-  );
-  assert.throws(
-    () => registry.validateProcedureCall({ subject: "aqiang", id: "action.point", args: ["unknown"] }, locals),
-    /unknown local reference/i,
-  );
-  assert.throws(
-    () => registry.validateProcedureCall({ subject: "aqiang", id: "prop.putdown", args: ["coffee"] }, locals),
-    /arity/i,
-  );
-  assert.throws(
-    () => registry.validateProcedureCall({ subject: "aqiang", id: "camera.punch_in", args: ["aqiang"] }, locals),
-    /subject/i,
-  );
 });

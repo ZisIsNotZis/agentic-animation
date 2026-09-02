@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Canonical YAML smoke test in an isolated temporary project. */
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
@@ -33,6 +33,9 @@ try {
     cpSync(join(ROOT, "library", category), join(library, category), { recursive: true });
   }
   writeFileSync(join(project, "anim.config.json"), JSON.stringify({ paths: { library: "library", episodes: "episodes" }, adapters: { tts: "dir", renderer: "remotion" } }));
+  // Plugin resources import @anim/core/stdlib; resolve the workspace package.
+  mkdirSync(join(project, "node_modules", "@anim"), { recursive: true });
+  symlinkSync(join(ROOT, "packages", "core"), join(project, "node_modules", "@anim", "core"));
   writeFileSync(episodePath, `episode: {id: smoke, title: Canonical smoke, language: en}
 actors: {alice: {use: figure/aqiang, voice: voice/zh/aqiang}}
 locations: {stage: {use: set/agent_stage}}

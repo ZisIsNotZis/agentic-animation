@@ -36,61 +36,33 @@ other relevant actors, moving subjects, and bound objects when they fit.
 
 ## Calls
 
-A call is a category-provided typed terminal resolved by the owning plugin in `library/<category>/plugin.js`. Actor procedures take the actor as subject; world categories are subject-less; objects may act as subjects for prop calls:
+A call is a plugin-exported factory in `library/<category>/<name>/index.js`, re-exported by the category `plugin.js`. Actor procedures take the actor as the first argument; world categories are subject-less:
 
 ```text
-<actor>.action.<terminal>(...)    timed body or prop interaction
-<actor>.emotion.<terminal>(...)   persistent facial state
-<actor>.gaze.<terminal>(...)      persistent gaze constraint
-<actor>.movement.<terminal>(...)  semantic locomotion
-<actor>.voice.<terminal>(...)     persistent synthesis state
-<actor>.prop.<terminal>(...)      prop pickup, putdown, and handover
-<object>.prop.<terminal>(...)     object-subject prop calls
-camera.<terminal>(...)            camera performance
-effect.<terminal>(...)            visual effect
-sound.<terminal>(...)             sound effect
-music.<terminal>(...)             music cue
+action.<name>(actor, ...)         timed body or prop interaction
+emotion.<name>(actor)             persistent facial state
+gaze.<name>(actor, target)        persistent gaze constraint
+movement.<name>(actor, target)    semantic locomotion
+voice.<name>(actor, ...)          voice behavior (e.g. interrupt)
+prop.<name>(actor, object, ...)   pickup, putdown, handover
+camera.<name>(target)             camera performance
+effect.<name>(target)             visual effect
+sound.<name>()                    sound effect
+music.<name>()                    music cue
 <actor>.say("...")                speech interruption intrinsic
 ```
 
-For example: `lin.action.slam(desk)`, `lin.emotion.shocked()`, `lin.gaze.at(awei)`, `lin.movement.to(door)`, `lin.prop.pickup(desk)`, `camera.punch_in(lin)`, `effect.ai_glitch(screen)`, `sound.static_buzz()`, `music.ending()`.
+For example: `action.slam(lin, desk)`, `emotion.shocked(lin)`, `gaze.at(lin, awei)`, `movement.to(lin, door)`, `prop.pickup(lin, desk)`, `camera.punch_in(lin)`, `effect.ai_glitch(screen)`, `sound.static_buzz()`, `music.ending()`.
 
-Each terminal is a fixed category procedure with a schema owned by the category plugin, never `action(operation: string, ...)`. Required domain arguments are positional; optional modifiers are keyword arguments:
-
-```yaml
-{aqiang.action.illuminate(flashlight, awei)}
-```
-
-The parser accepts references, finite numbers, booleans, and quoted strings.
-Calls cannot nest and no JavaScript is evaluated. Keyword order is irrelevant.
-
-## Time
-
-Timed procedures block by convention and use the asset default duration:
+Brace contents are real JavaScript expressions evaluated against live instance handles and the plugin namespaces. Each factory returns an invocation descriptor (`durationSec`, `mode`, generator `run`); the scheduler reads the descriptor, and the generator body drives the world per frame. Timing is overridable per call:
 
 ```yaml
-{awei.action.slam(desk)}
-{awei.action.slam(desk, duration=1.2)}
-{awei.action.slam(desk, mode="nonblock")}
+{action.slam(awei, desk)}
+{...action.slam(awei, desk), durationSec: 1.2}
+{...action.slam(awei, desk), mode: "nonblock"}
 ```
 
-A brace group starts every member concurrently. It blocks for its longest
-blocking member. State calls apply immediately and do not block.
-
-Explicit spans use identical normalized calls except for `mode`:
-
-```yaml
-- aqiang: |
-    看好了！{aqiang.action.illuminate(flashlight, awei, mode="begin")}
-- awei: |
-    你不要过来啊！
-    {aqiang.action.illuminate(flashlight, awei, mode="end"), awei.emotion.shocked()}
-```
-
-Pair identity is subject + resolved terminal + positional arguments + sorted
-kwargs, excluding only `mode`. Defaults are normalized from the procedure
-schema. `duration` is invalid on spans. Duplicate begins, unmatched ends, and
-spans open at scene end are errors. Assets define enter/sustain/exit scaling.
+Blocking calls must declare `durationSec` (their own or via override); unknown instances, missing exports, and argument errors fail at `check`/`make` dry-run, never mid-render.
 
 ## Speech and silence
 

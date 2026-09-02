@@ -2,13 +2,11 @@
 import { ending } from "./ending/index.js";
 
 export default {
-  ending
-};
-
-// Plugin-owned audio cue assets (resolved by make into manifest.audio.cues).
-export const cueAssets = {
-  "ending-cadence": {
-    "kind": "music",
-    "file": "cues/ending-cadence.wav"
-  }
+  ending,
+  cueAssets: {
+    "ending-cadence": {
+      "kind": "music",
+      "file": "cues/ending-cadence.wav"
+    }
+  },
 };

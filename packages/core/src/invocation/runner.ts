@@ -84,3 +84,37 @@ export function buildScope(instances: Record<string, unknown>, plugins: readonly
   for (const plugin of plugins) scope[plugin.category] = plugin.namespace;
   return scope;
 }
+
+/** Callee identity of a brace expression, e.g. "action.slam" from "action.slam(lin, desk)". */
+export function calleeOf(expression: string): string {
+  const match = expression.trim().match(/^([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+)\s*\(/);
+  if (!match) throw new Error(`expression is not a plugin call: ${expression.trim()}`);
+  return match[1]!;
+}
+
+/** Split one brace group into top-level comma-separated expressions. */
+export function splitExpressions(group: string): string[] {
+  const parts: string[] = [];
+  let start = 0;
+  let depth = 0;
+  let quote: "'" | '"' | "`" | undefined;
+  let escaped = false;
+  for (let i = 0; i < group.length; i++) {
+    const ch = group[i]!;
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === quote) quote = undefined;
+    } else if (ch === "'" || ch === '"' || ch === "`") quote = ch;
+    else if (ch === "(" || ch === "[" || ch === "{") depth++;
+    else if (ch === ")" || ch === "]" || ch === "}") depth--;
+    else if (ch === "," && depth === 0) {
+      parts.push(group.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  parts.push(group.slice(start).trim());
+  const result = parts.filter((part) => part.length > 0);
+  if (result.length === 0) throw new Error(`empty brace group: ${group}`);
+  return result;
+}

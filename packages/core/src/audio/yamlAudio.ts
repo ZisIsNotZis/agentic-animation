@@ -1,5 +1,15 @@
 import type { NarrowEpisode } from "../schemas/narrowEpisode";
-import { parseProcedureCall, parseProcedureCalls, type ProcedureCall } from "../schemas/narrowEpisode";
+/** Brace-token classification and callee extraction (expressions, not grammar). */
+const CALLEE = /^([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*\(/;
+function calleePath(token: string): string | null {
+  const match = token.trim().match(CALLEE);
+  return match ? match[1]! : null;
+}
+const SAY = /^([a-z][a-z0-9_]*)\.say\(\s*"((?:\\.|[^"\\])*)"\s*\)$/;
+function sayOf(token: string): {subject: string; text: string} | null {
+  const match = token.trim().match(SAY);
+  return match ? {subject: match[1]!, text: JSON.parse(`"${match[2]!}"`) as string} : null;
+}
 import { hashJson } from "../util/hash";
 import { z } from "zod";
 import { GeneratedBySchema } from "../schemas/common";
@@ -379,7 +389,7 @@ export function cleanSpokenText(source: string): CleanedSpokenText {
     if (close < 0) continue;
     const raw = source.slice(i, close + 1);
     const token = source.slice(i + 1, close).trim();
-    const kind = CUE.test(token) ? "cue" : parseProcedureCalls(token) ? "call" : undefined;
+    const kind = CUE.test(token) ? "cue" : token ? "call" : undefined;
     if (!kind) continue;
 
     appendSegment(source, sourceCursor, i, text, segments);
@@ -454,7 +464,7 @@ export interface YamlAudioSpeechChunk {
   speed: number;
   silence: boolean;
   interruptOf?: string;
-  calls?: readonly { call: ProcedureCall; sourceStart: number; at: "start" | "end" }[];
+  calls?: readonly { name: string; sourceStart: number; at: "start" | "end" }[];
 }
 
 export const DEFAULT_ELLIPSIS_BEAT_SEC = 0.55;
@@ -472,7 +482,7 @@ export function segmentYamlAudio(source: YamlAudioSource, voiceSpeed?: number): 
       let chunkIndex = 0;
       let speed = voiceSpeed ?? 1;
       let interruptionIndex = 0;
-      let pendingEvents: Array<{call: ProcedureCall; sourceStart: number; at: "start" | "end"}> = [];
+      let pendingEvents: Array<{name: string; sourceStart: number}> = [];
       let previousChunk: YamlAudioSpeechChunk | undefined;
       const addText = (sourceStart: number, sourceEnd: number): void => {
         const idChunkIndex = chunkIndex;
@@ -482,7 +492,7 @@ export function segmentYamlAudio(source: YamlAudioSource, voiceSpeed?: number): 
           id: chunkTakeId(scene.id, statementIndex, idChunkIndex), lineId, sceneId: scene.id,
           statementIndex, chunkIndex: idChunkIndex, actor: statement.actor, text,
           sourceText: text, sourceStart, sourceEnd, speed, silence: isEllipsisSilence(text),
-          ...(pendingEvents.length ? {calls: pendingEvents} : {}),
+          ...(pendingEvents.length ? {calls: pendingEvents.map((event) => ({...event, at: "start" as const}))} : {}),
         };
         chunks.push(chunk);
         previousChunk = chunk;
@@ -495,38 +505,36 @@ export function segmentYamlAudio(source: YamlAudioSource, voiceSpeed?: number): 
         addText(cursor, open);
         const close = statement.text.indexOf("}", open + 1);
         if (close < 0) break;
-        const calls = parseProcedureCalls(statement.text.slice(open + 1, close));
-        if (calls) {
-          for (const call of calls) {
-            if (call.namespace === "say") {
-              const value = call.args[0];
-              if (value?.kind !== "string") continue;
+        const group = statement.text.slice(open + 1, close);
+        const speedInGroup = group.match(/voice\.speed\(\s*([0-9.]+)\s*\)/);
+        if (speedInGroup && Number(speedInGroup[1]) > 0) speed = Number(speedInGroup[1]);
+        const says = group.split(",").map((part) => sayOf(part.trim())).filter((say): say is {subject: string; text: string} => say !== null);
+        const groupEvents: Array<{name: string; sourceStart: number; at: "end"}> = [];
+        for (const part of group.split(",")) {
+          const token = part.trim();
+          if (!token || sayOf(token)) continue;
+          const name = CUE.test(token) ? token : calleePath(token);
+          if (name) groupEvents.push({name, sourceStart: open, at: "end"});
+        }
+        if (groupEvents.length) {
+          const anchor = previousChunk;
+          if (anchor) anchor.calls = [...(anchor.calls ?? []), ...groupEvents];
+        }
+        if (says.length) {
+          for (const say of says) {
+            {
+              const value = say.text;
               const id = `${lineId}.interrupt${interruptionIndex++ ? `.${interruptionIndex - 1}` : ""}`;
               chunks.push({
                 id, lineId, sceneId: scene.id, statementIndex, chunkIndex: interruptionIndex,
-                actor: call.subject, text: value.value, sourceText: statement.text,
-                sourceStart: open, sourceEnd: close + 1, speed, silence: isEllipsisSilence(value.value),
+                actor: say.subject, text: say.text, sourceText: statement.text,
+                sourceStart: open, sourceEnd: close + 1, speed, silence: isEllipsisSilence(say.text),
                 interruptOf: lineId,
-                });
-                continue;
+              });
             }
-            pendingEvents.push({call, sourceStart: open, at: "start"});
-            if (call.namespace === "voice" && call.terminal === "speed") {
-              const value = call.args[0];
-              if (value?.kind === "number" && value.value > 0) speed = value.value;
-            }
-          }
-          // Events at a brace boundary belong to the preceding chunk. If the
-          // group starts the line, addText will attach them to the next chunk.
-          if (previousChunk && pendingEvents.length) {
-            previousChunk.calls = [...(previousChunk.calls ?? []), ...pendingEvents.map((event) => ({...event, at: "end" as const}))];
-            pendingEvents = [];
           }
         }
         cursor = close + 1;
-      }
-      if (pendingEvents.length && previousChunk) {
-        previousChunk.calls = [...(previousChunk.calls ?? []), ...pendingEvents.map((event) => ({...event, at: "end" as const}))];
       }
       // A statement containing only calls has no spoken chunk; it still has no
       // TTS work. A final empty segment is intentionally not synthesized.
@@ -603,12 +611,11 @@ export function buildYamlAudioPreparation(
     const prior = lineCursor.get(chunk.lineId) ?? 0;
     const startSec = measured.startSec ?? prior;
     const boundaries = (measured.boundaries ?? []).map((boundary) => ({...boundary}));
-    const eventTiming = chunk.calls?.flatMap((entry) => {
-      const name = entry.call.path;
+    const eventTiming = (chunk.calls ?? []).map((entry) => {
       const cleanStart = entry.at === "start" ? 0 : cleaned.text.length;
-      return [{kind: "call" as const, name, sourceStart: entry.sourceStart, cleanStart,
-        atSec: startSec + (entry.at === "end" ? measured.durationSec : 0)}];
-    }) ?? [];
+      return {kind: "call" as const, name: entry.name, sourceStart: entry.sourceStart, cleanStart,
+        atSec: startSec + (entry.at === "end" ? measured.durationSec : 0)};
+    });
     const timing: PreparedTakeTiming = {
       text: cleaned.text,
       ...(measured.audioPath ? {audioPath: measured.audioPath} : {}),
@@ -752,7 +759,7 @@ function inlineEvents(
 ): PreparedInlineEvent[] {
   return cleaned.removed.map((removed) => {
     const token = removed.raw.slice(1, -1).trim();
-    const name = removed.kind === "cue" ? token : parseProcedureCall(token)?.path;
+    const name = removed.kind === "cue" ? token : calleePath(token);
     if (!name) throw new Error(`yaml audio: invalid inline token at offset ${removed.start}`);
     const atRelative = alignedTimeAtOffset(removed.cleanStart, cleaned.text, boundaries);
     return {

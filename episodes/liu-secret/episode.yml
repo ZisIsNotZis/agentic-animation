@@ -36,10 +36,10 @@ scenes:
       student_a: {facing: student_b}
       student_b: {facing: student_a}
     script:
-      - student_a: "{student_a.gaze.at(student_b), student_a.emotion.secretive(), student_a.action.cover_mouth(student_b)}我告诉你一个秘密。"
-      - student_b: "{student_b.emotion.confused(), student_b.gaze.at(student_a)}什么秘密？"
-      - student_a: "{student_a.emotion.proud(), student_a.action.point(student_b)}柳如烟，昨天居然{student_a.emotion.shocked()}逃学了！{student_a.emotion.proud()}"
-      - student_b: "{student_b.emotion.shocked(), camera.punch_in(student_b)}什么？真的假的？"
+      - student_a: "{gaze.at(student_a, student_b), emotion.secretive(student_a, ), action.cover_mouth(student_a, student_b)}我告诉你一个秘密。"
+      - student_b: "{emotion.confused(student_b, ), gaze.at(student_b, student_a)}什么秘密？"
+      - student_a: "{emotion.proud(student_a, ), action.point(student_a, student_b)}柳如烟，昨天居然{emotion.shocked(student_a, )}逃学了！{emotion.proud(student_a, )}"
+      - student_b: "{emotion.shocked(student_b, ), camera.punch_in(student_b)}什么？真的假的？"
 
   - id: canteen
     location: canteen
@@ -51,10 +51,10 @@ scenes:
       sausage_a: left
       sausage_b: right
     script:
-      - student_a: "{student_a.emotion.secretive(), student_a.gaze.at(student_b)}真的，她还去了小卖部。"
-      - student_b: "{student_b.emotion.skeptical(), student_b.gaze.at(student_a)}她去买学习用品？"
-      - student_a: "{student_a.emotion.proud(), student_a.action.count_two(), student_a.action.present(sausage_a), student_a.action.present(sausage_b)}不，她买了两个烤肠。"
-      - liu: "{liu.emotion.embarrassed(), liu.gaze.at(student_a)}"
+      - student_a: "{emotion.secretive(student_a, ), gaze.at(student_a, student_b)}真的，她还去了小卖部。"
+      - student_b: "{emotion.skeptical(student_b, ), gaze.at(student_b, student_a)}她去买学习用品？"
+      - student_a: "{emotion.proud(student_a, ), action.count_two(student_a, ), action.present(student_a, sausage_a), action.present(student_a, sausage_b)}不，她买了两个烤肠。"
+      - liu: "{emotion.embarrassed(liu, ), gaze.at(liu, student_a)}"
 
   - id: punchline
     location: canteen
@@ -66,6 +66,6 @@ scenes:
       sausage_a: left
       sausage_b: right
     script:
-      - student_b: "{student_b.emotion.shocked(), student_b.action.count_two(), camera.punch_in(student_b)}两个？"
-      - student_b: "{student_b.emotion.desperate(), student_b.action.cover_mouth(student_a)}她堕落得好彻底！"
-      - liu: "{liu.emotion.embarrassed(), liu.action.exit()}"
+      - student_b: "{emotion.shocked(student_b, ), action.count_two(student_b, ), camera.punch_in(student_b)}两个？"
+      - student_b: "{emotion.desperate(student_b, ), action.cover_mouth(student_b, student_a)}她堕落得好彻底！"
+      - liu: "{emotion.embarrassed(liu, ), action.exit(liu, )}"

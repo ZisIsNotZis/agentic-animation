@@ -1,7 +1,8 @@
 import {loadPlugins} from "../plugins";
 import {join} from "node:path";
 import {access} from "node:fs/promises";
-import type {ProcedureCatalog, ProcedureDefinition} from "./resolver";
+import type {ProcedureDefinition} from "./types";
+export type ProcedureCatalog = Record<string, ProcedureDefinition>;
 
 /**
  * Filesystem-discovered procedure definitions: every category plugin's static

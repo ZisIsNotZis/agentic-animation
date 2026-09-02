@@ -1,11 +1,12 @@
 import {
   inlineTokens,
-  parseProcedureCalls,
   type NarrowEpisode,
   type ProcedureCall,
   type Scalar,
 } from "../schemas/narrowEpisode";
 import {loadNarrowEpisode} from "../narrowEpisode/load";
+import {buildScope, calleeOf, evaluateExpression, runInvocationSync, splitExpressions} from "../invocation/runner";
+import type {Invocation, LoadedPlugin, World} from "../invocation/types";
 import {stageScene, type StagingResult} from "../staging";
 
 export type CompilerAssetKind = "actor" | "voice" | "location" | "object";
@@ -37,8 +38,6 @@ export interface EpisodeRegistry {
   resolveAsset?: AssetResolver;
   resolve?: (request: AssetResolveRequest) => unknown | Promise<unknown>;
   assets?: Readonly<Record<string, unknown>>;
-  validateProcedureCall?: (call: any, locals: any) => unknown | Promise<unknown>;
-  resolveProcedure?: (id: string) => unknown;
 }
 
 export interface ProcedureResolveContext {
@@ -114,8 +113,8 @@ export type SpeechTimingProvider =
 
 export interface CompileEpisodeOptions {
   registry: EpisodeRegistry | AssetResolver;
-  resolver?: ProcedureResolver;
-  procedureResolver?: ProcedureResolver;
+  /** Loaded category plugins; brace expressions evaluate against their namespaces. */
+  plugins: LoadedPlugin[];
   speechTimingProvider?: SpeechTimingProvider;
   speechTiming?: SpeechTimingProvider;
   voiceSpeed?: number;
@@ -213,13 +212,13 @@ export interface CompiledEpisode {
   totalDuration: number;
 }
 
-interface ParsedGroup { calls: ProcedureCall[]; raw: string; }
+interface ParsedGroup { expressions: string[]; raw: string; }
 interface SpeechLine {
   start: number;
   end: number;
   text: string;
   timing: SpeechTiming;
-  tokens: ProcedureCall[];
+  tokens: string[];
 }
 interface ValidatedCall {
   call: ProcedureCall;
@@ -236,9 +235,11 @@ interface OpenSpan { key: string; pending: PendingCall; sceneId: string; }
 interface MutableState { actors: Map<string, ActorState>; props: Map<string, PropState>; }
 interface CompileContext {
   episode: NarrowEpisode;
-  options: CompileEpisodeOptions & {resolver: ProcedureResolver; speechTimingProvider: SpeechTimingProvider};
+  options: CompileEpisodeOptions & {speechTimingProvider: SpeechTimingProvider};
   assets: CompiledAssets;
   assetCache: Map<string, ResolvedAsset>;
+  plugins: LoadedPlugin[];
+  scope: Record<string, unknown>;
 }
 
 const WORLD_SUBJECTS = new Set(["camera", "effect", "sound", "music"]);
@@ -252,12 +253,17 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
   const episode = await loadNarrowEpisode(yamlPath);
   const speechTimingProvider = options.speechTimingProvider ?? options.speechTiming;
   if (!speechTimingProvider) throw new Error("compileEpisode: speech timing provider is required");
-  const resolver = options.procedureResolver ?? options.resolver;
-  if (!resolver) throw new Error("compileEpisode: procedure resolver is required");
+  if (!options.plugins?.length) throw new Error("compileEpisode: loaded plugins are required");
 
+  const scope = buildScope(
+    Object.fromEntries([...Object.keys(episode.actors), ...Object.keys(episode.objects)].map((name) => [name, {id: name}])),
+    options.plugins,
+  );
   const context: CompileContext = {
     episode,
-    options: {...options, resolver, speechTimingProvider},
+    options: {...options, speechTimingProvider},
+    plugins: options.plugins,
+    scope,
     assets: {actors: {}, locations: {}, objects: {}},
     assetCache: new Map(),
   };
@@ -354,7 +360,6 @@ async function compileScene(
   const calls: PendingCall[] = [];
   const events: PerformanceEvent[] = [];
   const constraints: BindingConstraint[] = [];
-  const spans = new Map<string, OpenSpan>();
 
   for (const [statementIndex, statement] of scene.script.entries()) {
     const [speaker, source] = Object.entries(statement)[0]!;
@@ -377,13 +382,13 @@ async function compileScene(
             language: context.episode.episode.language,
             text,
             sourceText: source,
-            inlineTokens: splitDialogue(source).filter((item): item is ParsedGroup => "calls" in item).flatMap((item) => item.calls.map((call) => call.raw)),
+            inlineTokens: splitDialogue(source).filter((item): item is ParsedGroup => "expressions" in item).flatMap((item) => item.expressions),
             speed: voiceSpeed,
           });
           const start = round(cursor);
           const end = round(start + timing.durationSec);
           events.push({kind: "speech", subject: speaker, start, end, text, speed: voiceSpeed, ...(timing.boundaries ? {boundaries: timing.boundaries} : {})});
-          lastSpeech = {start, end, text, timing, tokens: splitDialogue(source).flatMap((item) => "calls" in item ? item.calls : [])};
+          lastSpeech = {start, end, text, timing, tokens: splitDialogue(source).flatMap((item) => "expressions" in item ? item.expressions : [])};
           cursor = end;
         }
         chunkIndex++;
@@ -394,17 +399,22 @@ async function compileScene(
       const groupStart = lastSpeech ? round(Math.min(lastSpeech.end, cursor)) : round(cursor);
       let groupEnd = groupStart;
       const groupCalls: PendingCall[] = [];
-      for (const call of group.calls) {
-        voiceSpeed = speedAfterCalls([call], voiceSpeed);
-        if (call.namespace === "say") {
-          const speech = await compileInterruption(call, speaker, scene, statementIndex, context, groupStart, voiceSpeed);
+      for (const expression of group.expressions) {
+        const sayMatch = expression.match(/^([a-z][a-z0-9_]*)\.say\((.*)\)$/s);
+        if (sayMatch) {
+          const speech = await compileInterruption(sayMatch, speaker, scene, statementIndex, context, groupStart, voiceSpeed);
           events.push(speech);
           groupEnd = Math.max(groupEnd, speech.end);
           continue;
         }
-        const validated = await validateCall(context, call);
-        const callStart = lastSpeech ? speechMarker(lastSpeech, call, context.episode.episode.id) : groupStart;
-        const pending = await makeCall(validated, scene, callStart, sequence++, context, group.calls.length > 1, spans);
+        const speedMatch = expression.match(/^voice\.speed\(\s*([0-9.]+)\s*\)$/);
+        if (speedMatch) {
+          const value = Number(speedMatch[1]);
+          if (!(value > 0)) throw new Error(`compileEpisode: voice.speed must be positive in ${expression}`);
+          voiceSpeed = value;
+          continue;
+        }
+        const pending = await makeCall(evaluateCall(context, expression), scene, lastSpeech, groupStart, sequence++, context, group.expressions.length > 1);
         if (!pending) continue;
         groupCalls.push(pending);
         calls.push(pending);
@@ -415,7 +425,6 @@ async function compileScene(
       if (!lastSpeech) cursor = round(groupEnd);
     }
   }
-  for (const span of spans.values()) throw new Error(`compileEpisode: span ${span.key} is open at the end of scene ${scene.id}`);
   return {cursor, calls, events, constraints, nextSequence: sequence};
 }
 
@@ -428,94 +437,130 @@ function splitDialogue(source: string): Array<{text: string} | ParsedGroup> {
   while ((match = pattern.exec(source))) {
     result.push({text: source.slice(cursor, match.index)});
     const raw = match[1]!.trim();
-    const calls = parseProcedureCalls(raw);
-    if (!calls) throw new Error(`compileEpisode: invalid procedure group: ${raw}`);
-    result.push({calls, raw});
+    let expressions: string[];
+    try {
+      expressions = splitExpressions(raw);
+    } catch (error) {
+      throw new Error(`compileEpisode: invalid procedure group: ${raw} — ${(error as Error).message}`);
+    }
+    result.push({expressions, raw});
     cursor = match.index + match[0].length;
   }
   result.push({text: source.slice(cursor)});
   return result;
 }
 
-async function validateCall(context: CompileContext, call: ProcedureCall): Promise<ValidatedCall> {
-  const registry = context.options.registry;
-  if (typeof registry === "function" || !registry.validateProcedureCall) return {call, kwargs: {...call.kwargs}};
-  const result = await registry.validateProcedureCall({
-    subject: call.subject,
-    id: procedureId(call),
-    path: call.path,
-    args: [...call.args],
-    kwargs: {...call.kwargs},
-  }, {actors: context.episode.actors, objects: context.episode.objects});
-  const record = isRecord(result) ? result : {};
-  const procedure = isRecord(record.procedure) ? record.procedure : undefined;
-  const returnedKwargs = isRecord(record.kwargs) ? scalarRecord(record.kwargs) : {};
-  return {call: {...call, kwargs: {...call.kwargs, ...returnedKwargs}}, procedure, kwargs: {...call.kwargs, ...returnedKwargs}};
+/**
+ * Evaluate one brace expression to an invocation descriptor plus the shim
+ * ProcedureCall metadata downstream staging consumes (subject, namespace,
+ * terminal, simple args).
+ */
+function evaluateCall(context: CompileContext, expression: string): {descriptor: Invocation; call: ProcedureCall} {
+  const callee = calleeOf(expression);
+  const segments = callee.split(".");
+  if (segments.length !== 2) throw new Error(`compileEpisode: call must be category.terminal(...): ${expression}`);
+  const [namespace, terminal] = segments as [string, string];
+  const plugin = context.plugins.find((candidate) => candidate.category === namespace);
+  if (!plugin) throw new Error(`compileEpisode: unknown plugin category "${namespace}" in ${expression}`);
+  const evaluated = evaluateExpression(expression, context.scope);
+  if (!isRecord(evaluated) || typeof (evaluated as {run?: unknown}).run !== "function") {
+    throw new Error(`compileEpisode: ${expression} did not return an invocation descriptor`);
+  }
+  return {descriptor: evaluated as unknown as Invocation, call: shimCall(expression, namespace, terminal)};
+}
+
+const ACTOR_NAMESPACES = new Set(["action", "emotion", "gaze", "movement", "voice", "prop"]);
+const SIMPLE_ARG = /^(?:[A-Za-z_$][\w$]*|-?(?:\d+(?:\.\d*)?|\.\d+)|true|false|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')$/;
+
+function shimCall(expression: string, namespace: string, terminal: string): ProcedureCall {
+  const args: Scalar[] = [];
+  const match = expression.trim().match(/^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\(([\s\S]*)\)$/);
+  const argText = match ? match[1]!.trim() : "";
+  const parts = argText ? splitExpressions(argText) : [];
+  if (parts.every((part) => SIMPLE_ARG.test(part))) {
+    for (const part of parts) {
+      if (/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(part)) args.push({kind: "number", value: Number(part)});
+      else if (part === "true" || part === "false") args.push({kind: "boolean", value: part === "true"});
+      else if (/^["']/.test(part)) args.push({kind: "string", value: part.slice(1, -1)});
+      else args.push({kind: "ref", value: part});
+    }
+  }
+  let subject = namespace;
+  if (ACTOR_NAMESPACES.has(namespace)) {
+    const firstRef = args.findIndex((arg) => arg.kind === "ref");
+    if (firstRef >= 0) {
+      subject = (args[firstRef] as {value: string}).value;
+      args.splice(firstRef, 1);
+    }
+  }
+  return {raw: expression.trim(), subject, namespace: namespace as ProcedureCall["namespace"], terminal, path: `${namespace}.${terminal}`, args, kwargs: {}};
 }
 
 async function makeCall(
-  validated: ValidatedCall,
+  evaluated: {descriptor: Invocation; call: ProcedureCall},
   scene: NarrowEpisode["scenes"][number],
-  start: number,
+  lastSpeech: SpeechLine | undefined,
+  groupStart: number,
   sequence: number,
   context: CompileContext,
   concurrent: boolean,
-  spans: Map<string, OpenSpan>,
 ): Promise<PendingCall | undefined> {
-  const call = validated.call;
-  const mode = scalarString(call.kwargs.mode);
-  const durationOverride = scalarNumber(call.kwargs.duration);
-  if (mode && mode !== "begin" && mode !== "end" && mode !== "nonblock") throw new Error(`compileEpisode: invalid mode for ${call.raw}`);
-  if ((mode === "begin" || mode === "end") && durationOverride !== undefined) throw new Error(`compileEpisode: duration is invalid on ${mode} span ${call.raw}`);
-
-  const kind = procedureKind(validated.procedure, call);
-  const resolverCall = {...call, name: procedureId(call)} as ProcedureCall & {name: string};
-  const resolution = await resolveProcedure(context.options.resolver, resolverCall, {
-    sceneId: scene.id,
-    subject: call.subject,
-    source: "inline",
-    start,
-    call,
-    episode: context.episode,
-  });
-  const manifestTiming = isRecord(validated.procedure?.timing) ? validated.procedure.timing : undefined;
-  const manifestDuration = numberValue(manifestTiming?.defaultDuration);
-  const baseDuration = resolution.durationSec ?? resolution.timing?.defaultDuration ?? manifestDuration ?? 0;
-  if (!Number.isFinite(baseDuration) || baseDuration < 0) throw new Error(`compileEpisode: invalid duration for ${call.raw}`);
-  if (durationOverride !== undefined && resolution.timing?.scalable === false) throw new Error(`compileEpisode: ${call.raw} does not support duration override`);
-  const duration = durationOverride ?? baseDuration;
-  if (kind === "state" && durationOverride !== undefined) throw new Error(`compileEpisode: state call ${call.raw} rejects duration`);
-  if ((mode === "begin" || mode === "end") && kind !== "timed") throw new Error(`compileEpisode: ${kind} call ${call.raw} cannot form a span`);
-  const spanKey = normalizedSpanKey(call, validated.kwargs);
-
-  if (mode === "begin") {
-    if (spans.has(spanKey)) throw new Error(`compileEpisode: duplicate span begin ${spanKey}`);
-    const pending: PendingCall = {
-      event: callEvent(call, start, start, concurrent, resolution),
-      resolution,
-      sequence,
-      blocking: false,
-    };
-    spans.set(spanKey, {key: spanKey, pending, sceneId: scene.id});
-    return pending;
+  void scene;
+  const {descriptor, call} = evaluated;
+  const start = lastSpeech ? speechMarker(lastSpeech, call, context.episode.episode.id) : groupStart;
+  const blocking = descriptor.mode !== "nonblock";
+  if (blocking && (descriptor.durationSec === undefined || !(descriptor.durationSec >= 0))) {
+    throw new Error(`compileEpisode: blocking call needs durationSec: ${call.raw}`);
   }
-  if (mode === "end") {
-    const open = spans.get(spanKey);
-    if (!open) throw new Error(`compileEpisode: unmatched span end ${spanKey}`);
-    if (open.sceneId !== scene.id) throw new Error(`compileEpisode: span ${spanKey} crosses scenes`);
-    if (start < open.pending.event.start) throw new Error(`compileEpisode: span ${spanKey} ends before it begins`);
-    open.pending.event.end = round(start);
-    spans.delete(spanKey);
-    return undefined;
-  }
-
+  const kind = STATE_NAMESPACES.has(call.namespace) ? "state" : "timed";
+  const world: World = {canvas: {aspect: 16 / 9, tracks: []}, plugins: {}, frame: 0, seconds: 0, fps: 24, seed: 0};
+  const {elapsedSec} = runInvocationSync(descriptor, world, {id: `${call.path}.${sequence}`, category: call.namespace, asset: call.terminal});
+  const duration = descriptor.durationSec ?? elapsedSec;
+  const tracks = world.canvas.tracks;
+  const resolution = {
+    durationSec: duration,
+    performance: {kind: "procedure" as const, id: call.path, durationSec: duration, params: [], phases: [], body: [], expression: [], gaze: [], camera: [], vfx: [], audio: [], recipe: {tracks}},
+    tracks,
+  };
   const end = round(start + (kind === "state" ? 0 : duration));
   return {
     event: callEvent(call, start, end, concurrent, resolution),
     resolution,
     sequence,
-    blocking: kind !== "state" && mode !== "nonblock",
+    blocking: kind !== "state" && blocking,
   };
+}
+
+async function compileInterruption(
+  sayMatch: RegExpMatchArray,
+  speaker: string,
+  scene: NarrowEpisode["scenes"][number],
+  statementIndex: number,
+  context: CompileContext,
+  start: number,
+  speed: number,
+): Promise<SpeechPerformanceEvent> {
+  void scene;
+  const subject = sayMatch[1]!;
+  const rawArgs = sayMatch[2]!.trim();
+  if (subject !== speaker) throw new Error(`compileEpisode: actor.say subject must be the statement actor in scene ${scene.id}`);
+  if (!/^"(?:\\.|[^"\\])*"$/.test(rawArgs) || Object.keys(rawArgs).length === 0) {
+    throw new Error(`compileEpisode: actor.say requires one quoted string`);
+  }
+  const text = JSON.parse(rawArgs.replace(/^"/, '"').replace(/"$/, '"').replace(/\n/g, "\\n")) as string;
+  const timing = await resolveSpeechTiming(context.options.speechTimingProvider, {
+    sceneId: scene.id,
+    statementIndex,
+    lineId: `${scene.id}.${statementIndex}.interrupt`,
+    actor: subject,
+    voice: context.assets.actors[subject]!.voice.ref,
+    language: context.episode.episode.language,
+    text,
+    sourceText: `${subject}.say(${rawArgs})`,
+    inlineTokens: [`${subject}.say(${rawArgs})`],
+    speed,
+  });
+  return {kind: "speech", subject, start: round(start), end: round(start + timing.durationSec), text, speed, ...(timing.boundaries ? {boundaries: timing.boundaries} : {}), interruption: true};
 }
 
 function callEvent(call: ProcedureCall, start: number, end: number, concurrent: boolean, resolution: ProcedureResolution): CallPerformanceEvent {
@@ -532,32 +577,6 @@ function callEvent(call: ProcedureCall, start: number, end: number, concurrent: 
   };
 }
 
-async function compileInterruption(
-  call: ProcedureCall,
-  speaker: string,
-  scene: NarrowEpisode["scenes"][number],
-  statementIndex: number,
-  context: CompileContext,
-  start: number,
-  speed: number,
-): Promise<SpeechPerformanceEvent> {
-  if (call.subject !== speaker) throw new Error(`compileEpisode: actor.say subject must be the statement actor in scene ${scene.id}`);
-  const text = call.args[0];
-  if (!text || text.kind !== "string" || Object.keys(call.kwargs).length) throw new Error(`compileEpisode: actor.say requires one quoted string and no modifiers`);
-  const timing = await resolveSpeechTiming(context.options.speechTimingProvider, {
-    sceneId: scene.id,
-    statementIndex,
-    lineId: `${scene.id}.${statementIndex}.interrupt`,
-    actor: call.subject,
-    voice: context.assets.actors[call.subject]!.voice.ref,
-    language: context.episode.episode.language,
-    text: text.value,
-    sourceText: call.raw,
-    inlineTokens: [call.raw],
-    speed,
-  });
-  return {kind: "speech", subject: call.subject, start: round(start), end: round(start + timing.durationSec), text: text.value, speed, ...(timing.boundaries ? {boundaries: timing.boundaries} : {}), interruption: true};
-}
 
 function speedAfterCalls(calls: readonly ProcedureCall[], current: number): number {
   let speed = current;

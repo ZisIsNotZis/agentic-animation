@@ -4,13 +4,13 @@ import {buildYamlAudioPreparation, cleanSpokenText, createYamlAudioCacheKey, seg
 
 const source: YamlAudioSource = {
   episodeId: "demo", actors: {awei: {voice: "voice/zh/aw"}, xiaohong: {voice: "voice/zh/xh"}},
-  scenes: [{id: "opening", script: [{actor: "awei", text: "先说 {awei.voice.speed(1.5), awei.say(\"打断\")}重点。然后继续。"}]}],
+  scenes: [{id: "opening", script: [{actor: "awei", text: "先说 {voice.speed(1.5), awei.say(\"打断\")}重点。然后继续。"}]}],
 };
 
 test("cleanSpokenText removes concurrent call groups and preserves spoken text", () => {
   const cleaned = cleanSpokenText(source.scenes[0]!.script[0]!.text);
   assert.equal(cleaned.text, "先说 重点。然后继续。");
-  assert.equal(cleaned.removed[0]!.raw, "{awei.voice.speed(1.5), awei.say(\"打断\")}");
+  assert.equal(cleaned.removed[0]!.raw, "{voice.speed(1.5), awei.say(\"打断\")}");
 });
 
 test("segments at brace boundaries, applies voice state forward, and preserves interruption", () => {

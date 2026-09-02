@@ -3,10 +3,7 @@ import {z} from "zod";
 const Id = z.string().regex(/^[a-z][a-z0-9_]*$/);
 const AssetRef = z.string().regex(/^(?:figure|voice|set|prop|dressing|layout)(?:\/[a-z][a-z0-9_]*)+$/);
 const IdPattern = /^[a-z][a-z0-9_]*$/;
-const ProcedurePath = /^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/;
-const ActorNamespaces = new Set(["action", "emotion", "gaze", "movement", "voice", "prop"]);
 const WorldCategories = new Set(["camera", "effect", "sound", "music"]);
-const Namespace = new Set([...ActorNamespaces, ...WorldCategories, "say"]);
 
 export const SchedulingModeSchema = z.enum(["begin", "end", "nonblock"]);
 export type SchedulingMode = z.infer<typeof SchedulingModeSchema>;
@@ -23,10 +20,11 @@ export const ScalarSchema = z.discriminatedUnion("kind", [
 ]);
 export type Scalar = z.infer<typeof ScalarSchema>;
 
+/** Compiler-shim metadata for one evaluated brace expression. */
 export type ProcedureCall = {
   raw: string;
   subject: string;
-  namespace: "action" | "emotion" | "gaze" | "movement" | "voice" | "prop" | "camera" | "effect" | "sound" | "music" | "say";
+  namespace: string;
   terminal: string;
   path: string;
   args: Scalar[];
@@ -104,76 +102,6 @@ function parseScalar(raw: string): Scalar | null {
   return IdPattern.test(raw) ? {kind: "ref", value: raw} : null;
 }
 
-function parseCall(raw: string): ProcedureCall | null {
-  const source = raw.trim();
-  const match = source.match(/^([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)\((.*)\)$/s);
-  if (!match || !ProcedurePath.test(match[1]!)) return null;
-  const segments = match[1]!.split(".");
-  let subject: string;
-  let namespace: string;
-  let terminal: string;
-  if (segments.length === 2) {
-    if (WorldCategories.has(segments[0]!)) {
-      // Subject-less world category call: camera.punch_in(x), sound.static_buzz().
-      subject = segments[0]!;
-      namespace = segments[0]!;
-      terminal = segments[1]!;
-    } else if (segments[1] === "say") {
-      subject = segments[0]!;
-      namespace = "say";
-      terminal = "say";
-    } else return null;
-  } else if (segments.length === 3) {
-    // Subject-qualified category call: lin.action.slam(desk).
-    subject = segments[0]!;
-    namespace = segments[1]!;
-    terminal = segments[2]!;
-    if (!ActorNamespaces.has(namespace) && !WorldCategories.has(namespace)) return null;
-  } else return null;
-  const parts = splitArguments(match[2]!.trim());
-  if (!parts) return null;
-  const args: Scalar[] = [];
-  const kwargs: Record<string, Scalar> = {};
-  let seenKeyword = false;
-  if (!(parts.length === 1 && !parts[0])) for (const part of parts) {
-    const equals = part.indexOf("=");
-    if (equals >= 0) {
-      const key = part.slice(0, equals).trim();
-      const value = parseScalar(part.slice(equals + 1).trim());
-      if (!IdPattern.test(key) || !value || key in kwargs) return null;
-      seenKeyword = true;
-      kwargs[key] = value;
-    } else {
-      if (seenKeyword) return null;
-      const value = parseScalar(part);
-      if (!value) return null;
-      args.push(value);
-    }
-  }
-  return {
-    raw: source,
-    subject,
-    namespace: namespace as ProcedureCall["namespace"],
-    terminal,
-    path: match[1]!,
-    args,
-    kwargs,
-  };
-}
-
-/** Parse one typed terminal call. Nested calls, expressions, and JavaScript fail closed. */
-export function parseProcedureCall(raw: string): ProcedureCall | null {
-  return parseCall(raw);
-}
-
-/** Parse comma-concurrent members of one brace group. */
-export function parseProcedureCalls(raw: string): ProcedureCall[] | null {
-  const parts = splitConcurrentCalls(raw.trim());
-  if (!parts || parts.length === 0 || parts.some((part) => !part)) return null;
-  const calls = parts.map(parseCall);
-  return calls.every((call): call is ProcedureCall => call !== null) ? calls : null;
-}
-
 export function inlineTokens(text: string): string[] | null {
   const tokens: string[] = [];
   let start = -1;
@@ -201,7 +129,10 @@ const ScriptStatement = z.record(Id, z.string().min(1)).superRefine((item, ctx) 
   if (text === undefined) return;
   const tokens = inlineTokens(text);
   if (!tokens) ctx.addIssue({code: z.ZodIssueCode.custom, message: "unbalanced or nested inline token"});
-  else for (const token of tokens) if (!parseProcedureCalls(token)) ctx.addIssue({code: z.ZodIssueCode.custom, message: `invalid concurrent procedure group: ${token}`});
+  else for (const token of tokens) {
+    const trimmed = token.trim();
+    if (!trimmed || trimmed.startsWith(",") || trimmed.endsWith(",")) ctx.addIssue({code: z.ZodIssueCode.custom, message: `invalid brace expression group: ${token}`});
+  }
 });
 
 const Scene = z.object({
@@ -245,14 +176,6 @@ export const NarrowEpisodeSchema = Base.superRefine((episode, ctx) => {
     for (const [statementIndex, statement] of scene.script.entries()) {
       const actor = Object.keys(statement)[0]!;
       if (!actors.has(actor)) issue(ctx, [...scenePath, "script", statementIndex], `unknown actor: ${actor}`);
-      for (const token of inlineTokens(statement[actor]!) ?? []) for (const call of parseProcedureCalls(token) ?? []) {
-        if (!actors.has(call.subject) && !objects.has(call.subject) && !WorldCategories.has(call.subject)) issue(ctx, [...scenePath, "script", statementIndex], `unknown call subject: ${call.subject}`);
-        if (WorldCategories.has(call.subject) && call.subject !== call.namespace) issue(ctx, [...scenePath, "script", statementIndex], "world category calls must be subject-less");
-        if (actors.has(call.subject) && WorldCategories.has(call.namespace)) issue(ctx, [...scenePath, "script", statementIndex], `world category calls do not take an actor subject: ${call.namespace}`);
-        if (objects.has(call.subject) && call.namespace !== "prop") issue(ctx, [...scenePath, "script", statementIndex], "object calls must use the prop namespace");
-        if (call.namespace === "say" && (call.subject !== actor || call.args.length !== 1 || call.args[0]!.kind !== "string")) issue(ctx, [...scenePath, "script", statementIndex], "say is an actor-local quoted speech call");
-        for (const arg of [...call.args, ...Object.values(call.kwargs)]) if (arg.kind === "ref" && !actors.has(arg.value) && !objects.has(arg.value) && !WorldCategories.has(arg.value) && arg.value !== "audience") issue(ctx, [...scenePath, "script", statementIndex], `unknown reference: ${arg.value}`);
-      }
     }
   }
 });

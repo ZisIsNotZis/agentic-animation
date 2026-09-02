@@ -52,8 +52,7 @@ export interface AssetRegistry {
 export async function loadAssetRegistry(libraryRoot: string): Promise<AssetRegistry> {
   const root = resolve(libraryRoot);
   const assets = await discoverAssets(root);
-  const procedures = await discoverProcedures(root);
-  return createAssetRegistry(AssetRegistrySchema.parse({kind: "registry", assets, procedures}));
+  return createAssetRegistry(AssetRegistrySchema.parse({kind: "registry", assets, procedures: []}));
 }
 export const loadRegistry = loadAssetRegistry;
 

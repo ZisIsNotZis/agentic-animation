@@ -61,24 +61,24 @@ scenes:
       scroll: on(desk)
       screen: right
     script:
-      - awei: "{awei.action.collapse()}"
-      - awei: 各位……你们有没有过这种感觉？就是……你以为你请了个高级助理，结果请回来一个……{awei.action.slam(desk)}人工智障！{awei.emotion.desperate(), camera.punch_in(awei), effect.screen_error(screen), sound.error_burst()}
-      - aqiang: "{aqiang.action.enter()}"
-      - aqiang: "{aqiang.prop.pickup(thermos)}"
-      - aqiang: "{aqiang.gaze.at(awei)}哟，又崩了？"
-      - awei: "{awei.emotion.relief()}{awei.gaze.at(aqiang)}强哥！你可来了！我这项目……{awei.action.point(screen)}它……它又失忆了！我昨天刚跟它说的架构，今天它给我全忘了！还把我数据库表名改了！我现在数据库里有三张表叫 `user`、`users`、`user_info_new_v2_final`！"
-      - aqiang: "{aqiang.action.sip(thermos), aqiang.emotion.calm(), aqiang.gaze.at(awei)}正常。"
+      - awei: "{action.collapse(awei, )}"
+      - awei: 各位……你们有没有过这种感觉？就是……你以为你请了个高级助理，结果请回来一个……{action.slam(awei, desk)}人工智障！{emotion.desperate(awei, ), camera.punch_in(awei), effect.screen_error(screen), sound.error_burst()}
+      - aqiang: "{action.enter(aqiang, )}"
+      - aqiang: "{prop.pickup(aqiang, thermos)}"
+      - aqiang: "{gaze.at(aqiang, awei)}哟，又崩了？"
+      - awei: "{emotion.relief(awei, )}{gaze.at(awei, aqiang)}强哥！你可来了！我这项目……{action.point(awei, screen)}它……它又失忆了！我昨天刚跟它说的架构，今天它给我全忘了！还把我数据库表名改了！我现在数据库里有三张表叫 `user`、`users`、`user_info_new_v2_final`！"
+      - aqiang: "{action.sip(aqiang, thermos), emotion.calm(aqiang, ), gaze.at(aqiang, awei)}正常。"
       - awei: 正常？！这叫正常？！我跟它说"重构一下"，它把我整个项目删了三分之一！我问它为什么，它说"根据最优架构判断，这些代码是冗余的"！冗余？！那是我写了三个月的核心业务逻辑啊！
-      - aqiang: "{aqiang.prop.putdown(thermos, desk)}"
-      - aqiang: "{aqiang.emotion.thoughtful()}阿伟，你知道为什么 90% 的人用 AI 写代码，越用越崩吗？"
-      - awei: "{awei.emotion.confused()}因为……AI 蠢？"
-      - aqiang: "{aqiang.emotion.calm()}不。是因为你把 AI 当神仙，其实它是个……高级打工人。你不给它定规矩，它就给你摸鱼；你不给它划边界，它就给你越界；你让它自由发挥，它就给你……自由落体。"
+      - aqiang: "{prop.putdown(aqiang, thermos, desk)}"
+      - aqiang: "{emotion.thoughtful(aqiang, )}阿伟，你知道为什么 90% 的人用 AI 写代码，越用越崩吗？"
+      - awei: "{emotion.confused(awei, )}因为……AI 蠢？"
+      - aqiang: "{emotion.calm(aqiang, )}不。是因为你把 AI 当神仙，其实它是个……高级打工人。你不给它定规矩，它就给你摸鱼；你不给它划边界，它就给你越界；你让它自由发挥，它就给你……自由落体。"
       - awei: 那……那怎么办？
-      - aqiang: "{aqiang.prop.pickup(scroll)}"
-      - aqiang: "{aqiang.action.unroll(scroll)}今天，哥就给你上一课。这门课，叫——《别让 AI 毁掉你的项目》。{aqiang.action.present(scroll), camera.wide(), sound.paper_snap()}"
+      - aqiang: "{prop.pickup(aqiang, scroll)}"
+      - aqiang: "{action.unroll(aqiang, scroll)}今天，哥就给你上一课。这门课，叫——《别让 AI 毁掉你的项目》。{action.present(aqiang, scroll), camera.wide(), sound.paper_snap()}"
       - awei: 这卷轴……怎么这么长？
       - aqiang: 因为坑多。
-      - aqiang: "{aqiang.prop.putdown(scroll, desk)}"
+      - aqiang: "{prop.putdown(aqiang, scroll, desk)}"
       - aqiang: 来，咱们从头说。
   - id: failure_triad
     location: office
@@ -93,26 +93,26 @@ scenes:
       screen: right
       ai_standee: left
     script:
-      - awei: "{awei.movement.to(desk)}"
-      - awei: "{awei.action.type(keyboard)}帮我写个登录功能……再帮我加个验证码……对了顺便把支付也做了……哦还有那个用户中心也重构一下……"
-      - awei: "{awei.action.point(screen)}哎？怎么不动了？喂？人呢？哦不，机呢？{awei.emotion.confused(), effect.ai_glitch(ai_standee), sound.static_buzz()}"
-      - aqiang: "{aqiang.movement.to(ai_standee)}"
-      - aqiang: "{aqiang.action.point(ai_standee)}你看，它已经被你干懵了。"
+      - awei: "{movement.to(awei, desk)}"
+      - awei: "{action.type(awei, keyboard)}帮我写个登录功能……再帮我加个验证码……对了顺便把支付也做了……哦还有那个用户中心也重构一下……"
+      - awei: "{action.point(awei, screen)}哎？怎么不动了？喂？人呢？哦不，机呢？{emotion.confused(awei, ), effect.ai_glitch(ai_standee), sound.static_buzz()}"
+      - aqiang: "{movement.to(aqiang, ai_standee)}"
+      - aqiang: "{action.point(aqiang, ai_standee)}你看，它已经被你干懵了。"
       - awei: 我就说了几个需求而已啊！
       - aqiang: 几个？你五分钟提了十七个需求，还每个都"顺便"。你这不是写代码，你这是……拼多多砍一刀——永远差一点。
       - awei: 那它也不该崩啊！
-      - aqiang: "{aqiang.action.count_three()}阿伟，所有 AI 翻车，归根结底就三类。第一，人的问题；第二，工作流问题；第三，模型硬上限。"
+      - aqiang: "{action.count_three(aqiang, )}阿伟，所有 AI 翻车，归根结底就三类。第一，人的问题；第二，工作流问题；第三，模型硬上限。"
       - awei: 啥意思？
-      - aqiang: 人的问题——{aqiang.action.point(awei)}需求模糊、没有设计、规则不清、瞎指挥。你自己都不知道要啥，你让 AI 猜？它猜出来的东西，就跟你妈让你"随便买点菜"回来一样——她要的是四菜一汤，你拎了袋土豆。
-      - awei: "{awei.action.scratch_head()}"
+      - aqiang: 人的问题——{action.point(aqiang, awei)}需求模糊、没有设计、规则不清、瞎指挥。你自己都不知道要啥，你让 AI 猜？它猜出来的东西，就跟你妈让你"随便买点菜"回来一样——她要的是四菜一汤，你拎了袋土豆。
+      - awei: "{action.scratch_head(awei, )}"
       - awei: 好像……有点道理。
       - aqiang: 工作流问题——记忆污染、上下文炸掉、技能不触发、模型和工具不匹配。就像你同时开了二十个浏览器标签页，最后自己都不知道哪个是哪个。
       - awei: 那模型硬上限呢？
-      - aqiang: "{aqiang.emotion.somber()}有些复杂逻辑、隐性工程经验，再强的 AI 也无法自主顿悟。就像你让一个从没谈过恋爱的人写情感咨询——理论一套一套的，实操全是灾难。"
+      - aqiang: "{emotion.somber(aqiang, )}有些复杂逻辑、隐性工程经验，再强的 AI 也无法自主顿悟。就像你让一个从没谈过恋爱的人写情感咨询——理论一套一套的，实操全是灾难。"
       - awei: 那……那我岂不是没救了？
-      - aqiang: "{aqiang.action.think(), aqiang.gaze.audience()}有救。真正的 Agent 高手，从来不是会写 prompt，而是——会立规则、会控流程、会堵漏洞、会懂取舍。"
+      - aqiang: "{action.think(aqiang, ), gaze.audience(aqiang, )}有救。真正的 Agent 高手，从来不是会写 prompt，而是——会立规则、会控流程、会堵漏洞、会懂取舍。"
       - awei: 听起来像……居委会大妈？
-      - aqiang: "{aqiang.action.pat(awei)}你懂什么！这叫工程管理！来，进入下一章。"
+      - aqiang: "{action.pat(aqiang, awei)}你懂什么！这叫工程管理！来，进入下一章。"
   - id: teach_ai
     location: office
     actors:
@@ -125,36 +125,36 @@ scenes:
       skill_bottle: on(desk)
       skill_cards: on(desk)
     script:
-      - aqiang: "{aqiang.movement.to(awei)}"
+      - aqiang: "{movement.to(aqiang, awei)}"
       - aqiang: 很多人吐槽 AI 智商不稳定、写代码不合心意。本质是什么？
       - awei: ……它蠢？
-      - aqiang: "{aqiang.action.pat(awei)}是你只给了任务，没给人设、规则、审美和底线！AI 没有自主审美，没有你的工程哲学，它只会复刻你的指令。你给它一张白纸，它就给你画鬼画符。"
+      - aqiang: "{action.pat(aqiang, awei)}是你只给了任务，没给人设、规则、审美和底线！AI 没有自主审美，没有你的工程哲学，它只会复刻你的指令。你给它一张白纸，它就给你画鬼画符。"
       - awei: 那我该怎么给？
-      - aqiang: "{aqiang.prop.pickup(skill_bottle)}"
-      - aqiang: "{aqiang.action.present(skill_bottle)}第一招——自我蒸馏。把你的编码习惯、工程规范、纠错逻辑，全部蒸馏成技能。不要指望 AI 天生懂你的风格，你不教，它就随机发挥。"
-      - aqiang: "{aqiang.prop.handover(skill_bottle, awei)}"
+      - aqiang: "{prop.pickup(aqiang, skill_bottle)}"
+      - aqiang: "{action.present(aqiang, skill_bottle)}第一招——自我蒸馏。把你的编码习惯、工程规范、纠错逻辑，全部蒸馏成技能。不要指望 AI 天生懂你的风格，你不教，它就随机发挥。"
+      - aqiang: "{prop.handover(aqiang, skill_bottle, awei)}"
       - awei: 这……怎么用？喝下去？
-      - awei: "{awei.prop.handover(skill_bottle, aqiang)}"
-      - aqiang: "{aqiang.gaze.at(awei)}这是比喻！你要把你的偏好写进规则里。比如——你喜欢用 TypeScript 还是 JavaScript？你偏好函数式还是面向对象？你对命名的要求是什么？这些都得明明白白告诉它。"
+      - awei: "{prop.handover(awei, skill_bottle, aqiang)}"
+      - aqiang: "{gaze.at(aqiang, awei)}这是比喻！你要把你的偏好写进规则里。比如——你喜欢用 TypeScript 还是 JavaScript？你偏好函数式还是面向对象？你对命名的要求是什么？这些都得明明白白告诉它。"
       - awei: 我……我都随便。
       - aqiang: '"随便"就是 AI 翻车的第一元凶！模糊的默认认知，等于告诉它"你看着办"，它看着办的结果就是——（模仿 AI 语气）"我觉得这个变量名可以叫 `data`，那个也可以叫 `data`，还有那个……也叫 `data` 吧。"'
-      - awei: "{awei.action.shiver()}"
+      - awei: "{action.shiver(awei, )}"
       - awei: 我确实见过这种代码……
-      - aqiang: "{aqiang.prop.putdown(skill_bottle, desk)}"
-      - aqiang: "{aqiang.prop.pickup(skill_cards)}"
-      - aqiang: "{aqiang.action.scatter(skill_cards)}第二招——技能匹配要精准。现在市面上 Skill 多如牛毛，什么 superpowers、Everything、ECC……你是不是全装了？"
-      - awei: "{awei.emotion.excited()}对啊！我装了五十多个！多多益善嘛！"
+      - aqiang: "{prop.putdown(aqiang, skill_bottle, desk)}"
+      - aqiang: "{prop.pickup(aqiang, skill_cards)}"
+      - aqiang: "{action.scatter(aqiang, skill_cards)}第二招——技能匹配要精准。现在市面上 Skill 多如牛毛，什么 superpowers、Everything、ECC……你是不是全装了？"
+      - awei: "{emotion.excited(awei, )}对啊！我装了五十多个！多多益善嘛！"
       - aqiang: 多多益善？我告诉你，Skill 本身是负担，更是安全风险！它会占用上下文 Token、增加模型适配负担、拉高会话复杂度。更致命的是——恶意 Skill 可以直接植入木马、窃取信息、篡改代码。
-      - aqiang: "{aqiang.prop.putdown(skill_cards, desk)}"
-      - awei: "{awei.emotion.fearful()}那……那我岂不是在裸奔？"
+      - aqiang: "{prop.putdown(aqiang, skill_cards, desk)}"
+      - awei: "{emotion.fearful(awei, )}那……那我岂不是在裸奔？"
       - aqiang: 你那不是裸奔，你是在身上挂了五十个定时炸弹还觉得自己穿了铠甲。Skill 配置遵循一个原则——按需极简。可以有，但必须针对性匹配场景，绝对不是越多越好。
       - awei: 那什么样的 Skill 才值得装？
       - aqiang: 只有模型原生缺失的流程性、小众垂直领域。比如标准化软件工程工作流、文本生图文视频能力、前端审美精细化布局专项。除此之外，绝大多数通用 Skill 都没必要堆砌。
-      - awei: "{awei.prop.pickup(skill_cards)}"
-      - awei: "{awei.action.discard(skill_cards)}那……基础安全和代码风格呢？我总得过一遍吧？"
-      - awei: "{awei.prop.putdown(skill_cards, desk)}"
-      - aqiang: "{aqiang.action.dismiss()}不用过度纠结！现代大模型基础能力已经极度成熟，常规格式规范、基础语法错误、简易安全漏洞，AI 基本不会出错。即便有疏漏，后续独立审查也能兜底。你不用逐行盯细节——解放琐碎精力，把脑子用在该用的地方。"
-      - awei: "{awei.action.touch_hair()}我的脑子……好像也不多了。"
+      - awei: "{prop.pickup(awei, skill_cards)}"
+      - awei: "{action.discard(awei, skill_cards)}那……基础安全和代码风格呢？我总得过一遍吧？"
+      - awei: "{prop.putdown(awei, skill_cards, desk)}"
+      - aqiang: "{action.dismiss(aqiang, )}不用过度纠结！现代大模型基础能力已经极度成熟，常规格式规范、基础语法错误、简易安全漏洞，AI 基本不会出错。即便有疏漏，后续独立审查也能兜底。你不用逐行盯细节——解放琐碎精力，把脑子用在该用的地方。"
+      - awei: "{action.touch_hair(awei, )}我的脑子……好像也不多了。"
   - id: memory
     location: office
     actors:
@@ -168,44 +168,44 @@ scenes:
       phone: on(desk)
       document_trees: right
     script:
-      - awei: "{awei.action.tap_head()}"
+      - awei: "{action.tap_head(awei, )}"
       - awei: 强哥！说到健忘，我那个 AI 是真的记不住事！我上午跟它说的约定，下午它就不认了！我现在每次开会都得重新跟它讲一遍项目背景，比跟新员工入职还累！
-      - aqiang: "{aqiang.action.tap_head(), aqiang.gaze.at(awei)}AI 健忘从来不是记忆力差，是你没给它搭建永久记忆，全靠临时上下文兜底。上下文会刷新、会压缩、会丢失——只有文档和规则，才是永恒的。"
+      - aqiang: "{action.tap_head(aqiang, ), gaze.at(aqiang, awei)}AI 健忘从来不是记忆力差，是你没给它搭建永久记忆，全靠临时上下文兜底。上下文会刷新、会压缩、会丢失——只有文档和规则，才是永恒的。"
       - awei: 那我该建什么文档？
-      - aqiang: "{aqiang.prop.pickup(scroll)}"
-      - aqiang: "{aqiang.action.present(scroll)}双层 AGENTS.md 规则体系，强制规范。"
-      - aqiang: "{aqiang.prop.putdown(scroll, desk)}"
-      - awei: "{awei.emotion.confused(), awei.action.point(scroll)}双层？汉堡吗？"
+      - aqiang: "{prop.pickup(aqiang, scroll)}"
+      - aqiang: "{action.present(aqiang, scroll)}双层 AGENTS.md 规则体系，强制规范。"
+      - aqiang: "{prop.putdown(aqiang, scroll, desk)}"
+      - awei: "{emotion.confused(awei, ), action.point(awei, scroll)}双层？汉堡吗？"
       - aqiang: 不理你的梗。全局 AGENTS.md——存放通用编码规范、全局审美、通用工具使用规则，适配所有项目。项目本地 AGENTS.md——存放当前项目专属架构、文件约定、业务约束、权限规则。
       - awei: 那要是两个规则冲突了听谁的？
       - aqiang: 最高优先级铁律——本地规则大于全局规则！就像……国家法律和村规民约，村规不能违反国法，但具体到你们村怎么分地，听村里的。
-      - awei: "{awei.action.nod()}有道理。还有呢？"
+      - awei: "{action.nod(awei, )}有道理。还有呢？"
       - aqiang: 还有一条铁律——任何场景下，代码变更前必须优先更新文档。无例外、无变通。
       - awei: 这么狠？
       - aqiang: 就这么狠。这条规则已经固化进项目 Agent 规则了。你问我为什么？因为人类只改代码、不同步迭代文档，是所有项目架构腐化、后期彻底烂尾的核心根源。
-      - awei: "{awei.prop.pickup(phone)}"
-      - awei: "{awei.action.write(phone)}"
+      - awei: "{prop.pickup(awei, phone)}"
+      - awei: "{action.write(awei, phone)}"
       - aqiang: 接下来，标准化项目记忆目录。开启新项目的核心第一件事，不是写代码，是搭建结构化文档体系。核心保留三类目录——docs、wiki、design。
       - awei: 分别干啥的？
       - aqiang: docs——唯一真相源，正式、权威、不可私自篡改。wiki——项目知识库、问题沉淀、方案记录。design——架构设计、接口定义、技术方案。
-      - awei: 那我以前把所有东西都写在一个 README.md 里……{aqiang.voice.interrupt(awei), aqiang.emotion.skeptical(), camera.punch_in(aqiang)}
+      - awei: 那我以前把所有东西都写在一个 README.md 里……{voice.interrupt(aqiang, awei), emotion.skeptical(aqiang, ), camera.punch_in(aqiang)}
       - aqiang: 你那不是文档，你那是……杂货铺。什么都往里塞，最后找什么都找不到。
-      - awei: "{awei.emotion.embarrassed()}"
+      - awei: "{emotion.embarrassed(awei, )}"
       - aqiang: 还有，给 AI 看的文档，不是人类随笔！必须结构化、高密度、无废话，单文件绝不超过 200 行。流水账文档只会让 AI 提取关键信息失败，变相造成"健忘"。
       - awei: 200 行？那我那种写了三千行的项目说明……
-      - aqiang: "{aqiang.action.pat(awei)}兄弟，你那不是说明，你那是小说。还是没人看的那种。"
+      - aqiang: "{action.pat(aqiang, awei)}兄弟，你那不是说明，你那是小说。还是没人看的那种。"
       - aqiang: 另外，主从 Agent 分工要搞清楚。主 Agent 只做调度、规划、决策、理解你的需求。所有编码、改代码、测试、文档编辑等实操工作，全部丢给子 Agent。
       - awei: 为啥？主 Agent 不能干吗？
       - aqiang: 你让一个总经理去拧螺丝，他拧着拧着就忘了公司战略了。避免主 Agent 上下文被垃圾信息填满，导致核心决策失忆、判断力下降。
-      - awei: "{awei.emotion.relieved()}哦！就像我不能一边写代码一边跟产品经理对线，不然两边都崩！"
-      - aqiang: "{aqiang.emotion.proud()}总算开窍了。最后一条终极原则——单一信息源，杜绝文档漂移。一条信息只存在一个位置，无重复、无冲突、无冗余。"
+      - awei: "{emotion.relieved(awei, )}哦！就像我不能一边写代码一边跟产品经理对线，不然两边都崩！"
+      - aqiang: "{emotion.proud(aqiang, )}总算开窍了。最后一条终极原则——单一信息源，杜绝文档漂移。一条信息只存在一个位置，无重复、无冲突、无冗余。"
       - awei: 啥叫文档漂移？
-      - aqiang: "{aqiang.action.point(document_trees)}文档不是平铺的记事本，是一棵互相关联、互相锚定的树形结构。所有需求变更、方案妥协、临时 workaround，绝对不能简单 append 追加新内容。单次变更必须——修改原有对应节点，同步更新所有关联链路、关联文档、交叉引用。"
+      - aqiang: "{action.point(aqiang, document_trees)}文档不是平铺的记事本，是一棵互相关联、互相锚定的树形结构。所有需求变更、方案妥协、临时 workaround，绝对不能简单 append 追加新内容。单次变更必须——修改原有对应节点，同步更新所有关联链路、关联文档、交叉引用。"
       - awei: 听起来好麻烦……
-      - aqiang: "{aqiang.action.push(document_trees)}麻烦？你现在嫌麻烦，以后就是——项目烂尾，全盘皆输。先全链路更新文档、写清变更原因与取舍逻辑，再动手改代码。这是铁律。"
-      - awei: "{awei.action.nod()}记住了！文档先行，代码殿后！"
-      - awei: "{awei.prop.putdown(phone, desk)}"
-      - aqiang: "{aqiang.emotion.satisfied()}好，下一章，讲点大家最关心的——钱。"
+      - aqiang: "{action.push(aqiang, document_trees)}麻烦？你现在嫌麻烦，以后就是——项目烂尾，全盘皆输。先全链路更新文档、写清变更原因与取舍逻辑，再动手改代码。这是铁律。"
+      - awei: "{action.nod(awei, )}记住了！文档先行，代码殿后！"
+      - awei: "{prop.putdown(awei, phone, desk)}"
+      - aqiang: "{emotion.satisfied(aqiang, )}好，下一章，讲点大家最关心的——钱。"
   - id: token
     location: office
     actors:
@@ -220,52 +220,52 @@ scenes:
       engine_signs: right
       document_trees: left
     script:
-      - awei: "{awei.action.count_money()}"
+      - awei: "{action.count_money(awei, )}"
       - awei: 说到钱……强哥，我上个月的 API 账单……三千八！我工资才多少啊！我都不知道我干了啥！
       - aqiang: 大部分人 Token 超标，不是写代码太多，是无效重试、重复加载、频繁改配置、反复返工造成的隐形消耗。你是不是经常中途换模型、换工具、换 Skill？
-      - awei: "{awei.emotion.embarrassed(), awei.action.count_money()}我……我就试了十几个模型而已……"
-      - aqiang: "{aqiang.action.count_three(), camera.wide()}每次配置变更都会直接清空缓存、触发全量重计算，Token 消耗直接翻倍！你这不是试模型，你这是在给 API 公司送 KPI。"
+      - awei: "{emotion.embarrassed(awei, ), action.count_money(awei, )}我……我就试了十几个模型而已……"
+      - aqiang: "{action.count_three(aqiang, ), camera.wide()}每次配置变更都会直接清空缓存、触发全量重计算，Token 消耗直接翻倍！你这不是试模型，你这是在给 API 公司送 KPI。"
       - awei: 那我该怎么省钱？
-      - aqiang: "{aqiang.prop.pickup(thermos)}"
-      - aqiang: "{aqiang.action.slam(desk)}第一招——高低配模型分层，极致性价比。高智商旗舰模型，只做顶层规划、方案评审、复杂决策。中低端廉价模型，全权负责编码、测试、修改、格式化等重复实操工作。"
-      - aqiang: "{aqiang.prop.putdown(thermos, desk)}"
+      - aqiang: "{prop.pickup(aqiang, thermos)}"
+      - aqiang: "{action.slam(aqiang, desk)}第一招——高低配模型分层，极致性价比。高智商旗舰模型，只做顶层规划、方案评审、复杂决策。中低端廉价模型，全权负责编码、测试、修改、格式化等重复实操工作。"
+      - aqiang: "{prop.putdown(aqiang, thermos, desk)}"
       - awei: 哦！就像……大厨只负责调味，切菜洗菜交给学徒？
       - aqiang: 对。第二招——缓存是省钱核心，千万别乱改配置。不要在任务中途随意更换工具、MCP、技能集合！
-      - awei: "{awei.prop.pickup(notebook)}"
+      - awei: "{prop.pickup(awei, notebook)}"
       - awei: 那……那个 Caveman 呢？我听说它能省很多钱？
-      - aqiang: "{aqiang.action.slam(desk)}Caveman？！我跟你说，这是个深坑！"
+      - aqiang: "{action.slam(aqiang, desk)}Caveman？！我跟你说，这是个深坑！"
       - awei: 怎……怎么了？
       - aqiang: 很多人把 Caveman 当省钱神器，实际中短期会话里基本负收益！必须严格区分 Caveman Skill 和 Caveman Engine，二者都有致命坑点！
       - awei: 您说您说……
       - aqiang: Caveman Skill，号称节省输出——但 AI 最贵的开销从来是 Reasoning 思考 Token，而非最终输出文本！它完全省不下推理成本，反而新增巨额开销：Skill 自身加载常驻占用 1000+ Token，还会让模型额外消耗思考算力适配输出规约，越开越费！
       - awei: 那 Caveman Engine 呢？不是说能省输入吗？
-      - aqiang: "{aqiang.emotion.somber()}输入缓存看似减少重复文档投喂，但其压缩、切片、缓存重组逻辑，会破坏模型原生输出状态分布，打乱上下文语义连贯性，导致模型理解偏差、逻辑断层、细节丢失。直观表现就是——AI 莫名变蠢、逻辑飘移、细节翻车。"
-      - awei: "{awei.action.close(notebook)}那……到底开不开？"
+      - aqiang: "{emotion.somber(aqiang, )}输入缓存看似减少重复文档投喂，但其压缩、切片、缓存重组逻辑，会破坏模型原生输出状态分布，打乱上下文语义连贯性，导致模型理解偏差、逻辑断层、细节丢失。直观表现就是——AI 莫名变蠢、逻辑飘移、细节翻车。"
+      - awei: "{action.close(awei, notebook)}那……到底开不开？"
       - aqiang: 绝大多数日常开发、中短期迭代 Session，建议直接关闭。仅超长期、超大上下文、大批量重复输出的专属任务，才有可能微弱回本。普通场景属于典型——捡芝麻，丢西瓜。
-      - awei: "{awei.action.dismiss()}把 Caveman 的开关关掉。"
-      - awei: "{awei.prop.putdown(notebook, desk)}"
-      - aqiang: "{aqiang.action.present(engine_signs)}接下来，模型引擎取舍。不同调用引擎没有绝对好坏，只有成本与稳定性的残酷取舍。"
+      - awei: "{action.dismiss(awei, )}把 Caveman 的开关关掉。"
+      - awei: "{prop.putdown(awei, notebook, desk)}"
+      - aqiang: "{action.present(aqiang, engine_signs)}接下来，模型引擎取舍。不同调用引擎没有绝对好坏，只有成本与稳定性的残酷取舍。"
       - awei: 我用的是第三方引擎，便宜是真便宜……
       - aqiang: 第三方引擎，极致便宜，是批量机械干活的性价比首选。但致命短板——服务质量不稳定、常态化限速、突发 429 限流拒绝服务、高峰期直接打不通。你是不是经常遇到"请稍后重试"？
-      - awei: "{awei.action.nod()}对对对！我每次都以为是我网坏了！"
+      - awei: "{action.nod(awei, )}对对对！我每次都以为是我网坏了！"
       - aqiang: 原生官方 Token API，无硬性小时额度、无频繁限流、响应稳定、速度更快，但单价更高。模型快速模式，提速明显，但 Token 消耗 1.5 倍，适合紧急赶工。
       - awei: 那第三方引擎有没有什么要注意的？
-      - aqiang: "{aqiang.emotion.secretive()}第三方引擎最大隐形深坑——默认全是丐版。"
+      - aqiang: "{emotion.secretive(aqiang, )}第三方引擎最大隐形深坑——默认全是丐版。"
       - awei: 丐版？
       - aqiang: 不要迷信第三方标注的模型名，没明确写全参数、精度的，一律按缩水丐版对待。比如 Qwen3.5，未标注规格默认是 35B-A3B 小参版，而非满血 200B+ 版本。即使标注满血，默认多为 Q4 低精度量化，而非 FP8 高精度版本。
-      - awei: "{awei.emotion.shocked()}这……这不是虚假宣传吗？！"
+      - awei: "{emotion.shocked(awei, )}这……这不是虚假宣传吗？！"
       - aqiang: 所以你看，便宜没好货，好货不便宜。最终取舍铁律——简单机械迭代、大批量重复任务，用便宜第三方引擎；核心方案评审、复杂逻辑推理、关键代码生成，必须上原生满血 API，别为省钱翻车返工。
       - awei: 那原生 API 有没有省钱技巧？
       - aqiang: 错峰避峰。官方模型存在明显峰谷价差与流量拥堵，白天高峰期不仅贵、还容易排队降速。日常开发可以反向作息——高峰期停手休息，低谷时段集中批量跑任务。
       - awei: 那我是不是该……凌晨三点起来写代码？
-      - aqiang: "{aqiang.action.pat(awei)}你那叫熬夜，不叫错峰。合理规划就行。还有一个隐藏深坑——自动压缩等于隐形烧钱。"
+      - aqiang: "{action.pat(aqiang, awei)}你那叫熬夜，不叫错峰。合理规划就行。还有一个隐藏深坑——自动压缩等于隐形烧钱。"
       - awei: 自动压缩不是省钱的吗？
       - aqiang: 短期微利、长期巨亏。Session 上下文本身就是最高风险存储：Agent 窗口崩溃、会话丢失、Resume 失败、Resume 回退旧版本，都会让你投入海量 Token 推理出的架构结论、取舍逻辑、踩坑经验直接清零。
       - awei: 我有一次 Resume 之后，AI 把我上周的需求当成这周的了……
       - aqiang: 还有会话指令残留污染。废弃指令、失败计划、旧追问会隐性驻留上下文，让模型左右兼容、逻辑分裂，越写越飘。重大迭代务必开新 Session，不要恋栈旧会话垃圾。
       - awei: 那……什么才是靠谱的长期记忆？
-      - aqiang: "{aqiang.action.point(document_trees)}所有高价值信息、QuickStart、已知问题、Roadmap、架构约束，全部沉淀树形文档。不靠会话兜底，只靠结构化文档永久确权。"
-      - awei: "{awei.action.nod()}文档，yyds！"
+      - aqiang: "{action.point(aqiang, document_trees)}所有高价值信息、QuickStart、已知问题、Roadmap、架构约束，全部沉淀树形文档。不靠会话兜底，只靠结构化文档永久确权。"
+      - awei: "{action.nod(awei, )}文档，yyds！"
   - id: refactor_minimal
     location: office
     actors:
@@ -277,9 +277,9 @@ scenes:
       desk: center
       mirror: on(desk)
     script:
-      - awei: "{awei.action.stand()}"
+      - awei: "{action.stand(awei, )}"
       - awei: 强哥！我有个想法！我想把整个项目重构一遍！用最新的架构！全部重写！一定特别优雅！
-      - aqiang: "{aqiang.action.cover_mouth(awei)}你疯了？！"
+      - aqiang: "{action.cover_mouth(aqiang, awei)}你疯了？！"
       - awei: 怎么了？重构不好吗？
       - aqiang: AI 全域重构是顶级毁项目操作！模型会无差别覆盖正确逻辑、隐性契约、边界容错，产出新旧混杂的"半重构屎山"，债务比完全重写更难修复！
       - awei: 有……有这么严重？
@@ -287,7 +287,7 @@ scenes:
       - awei: 下……下辈子？！
       - aqiang: AI 把 delivery_time 字段的默认值改成了 `never`。
       - awei: 那……那我该怎么改代码？
-      - aqiang: "{aqiang.action.point(mirror), aqiang.emotion.somber()}只允许增量修改，大规模重构必须交给独立子 Agent，全程人工 Diff 校验。记住——先规划后执行，拒绝即兴开发。"
+      - aqiang: "{action.point(aqiang, mirror), emotion.somber(aqiang, )}只允许增量修改，大规模重构必须交给独立子 Agent，全程人工 Diff 校验。记住——先规划后执行，拒绝即兴开发。"
       - awei: 啥叫先规划后执行？
       - aqiang: 信息一次性完整披露，实现渐进落地；文档全量前置且持续最新，实现代码增量迭代。能一次性讲清的需求、边界、架构约束、取舍逻辑，绝不分批追加。
       - awei: 我就喜欢想到啥说啥……
@@ -296,7 +296,7 @@ scenes:
       - aqiang: 还有，禁止提前抽象。没有足够业务迭代经验，所有提前抽象都是自作聪明。只会浪费 Token、增加代码复杂度、拖慢开发进度。
       - awei: 可我听说优秀的程序员都善于抽象啊？
       - aqiang: 优秀的程序员抽象的是已经验证过的模式，你那是……还没学会走路就想跑马拉松，结果摔了个狗吃屎还觉得自己姿势优雅。
-      - awei: "{awei.gaze.at(aqiang)}那……正确的开发模式是啥？"
+      - awei: "{gaze.at(awei, aqiang)}那……正确的开发模式是啥？"
       - aqiang: 垂直切片开发，唯一靠谱的 Agent 迭代模式。标准流程——设计文档 → 原型草稿 → 最小可用 v1 → 迭代优化。先跑通完整业务链路，再优化细节，拒绝碎片化开发。
       - awei: 就像……先把房子骨架搭起来，再装修？
       - aqiang: 对。你不能先把客厅装修完了再想卧室放哪。
@@ -305,20 +305,20 @@ scenes:
       - awei: 可 AI 写代码那么快，多写点不好吗？
       - aqiang: 代码越多，Bug 越多，维护成本越高。AI 造轮子、瞎迭代非标需求不仅耗时耗 Token，还会堆积大量隐性 Bug，远不如复用成熟开源方案、做极简刚需落地靠谱。
       - awei: 那我怎么知道哪些需求是伪需求？
-      - aqiang: "{aqiang.prop.pickup(mirror)}"
-      - aqiang: "{aqiang.prop.handover(mirror, awei)}"
+      - aqiang: "{prop.pickup(aqiang, mirror)}"
+      - aqiang: "{prop.handover(aqiang, mirror, awei)}"
       - aqiang: 用这个。
       - awei: 这是……
       - aqiang: 自我审视。主动砍掉多余功能、冗余设计、麻烦的伪需求。每次加功能前问自己三个问题——不做会死吗？有现成方案吗？能不能以后再做？
-      - awei: "{awei.action.present(mirror)}不做会死吗？……好像不会。有现成方案吗？……有。能不能以后再做？……能。那我不做了！"
-      - awei: "{awei.prop.putdown(mirror, desk)}"
-      - aqiang: "{aqiang.emotion.satisfied()}开窍了。最后，善用官方工具。/goal、/plan、/loop 等标准化工具是兜底神器。模型会随机降智、抽风，不要赌 AI 全程稳定，用工具锁住流程，规避随机翻车。"
+      - awei: "{action.present(awei, mirror)}不做会死吗？……好像不会。有现成方案吗？……有。能不能以后再做？……能。那我不做了！"
+      - awei: "{prop.putdown(awei, mirror, desk)}"
+      - aqiang: "{emotion.satisfied(aqiang, )}开窍了。最后，善用官方工具。/goal、/plan、/loop 等标准化工具是兜底神器。模型会随机降智、抽风，不要赌 AI 全程稳定，用工具锁住流程，规避随机翻车。"
       - awei: 就像……给 AI 戴上紧箍咒？
       - aqiang: 对。你以为它是孙悟空，其实它有时候是猪八戒，有时候是沙和尚，偶尔还是……白龙马。
       - awei: 白龙马咋了？
       - aqiang: 只会走，不会说话，你让它干啥它干啥，但它不知道为啥干。
-      - awei: "{awei.action.laugh()}"
-      - aqiang: "{aqiang.action.laugh()}"
+      - awei: "{action.laugh(awei, )}"
+      - aqiang: "{action.laugh(aqiang, )}"
   - id: quality
     location: office
     actors:
@@ -330,12 +330,12 @@ scenes:
       desk: center
       screen: right
     script:
-      - awei: "{awei.movement.to(aqiang)}"
+      - awei: "{movement.to(awei, aqiang)}"
       - awei: 强哥，你帮我看看这段代码。测试全过了，但一上线就崩……
-      - aqiang: "{aqiang.action.point(screen)}你这测试……断言呢？"
+      - aqiang: "{action.point(aqiang, screen)}你这测试……断言呢？"
       - awei: 啥断言？
       - aqiang: 你的测试用例，只有 `expect(true).toBe(true)`？！
-      - awei: "{awei.emotion.embarrassed()}它……它至少能跑通啊！"
+      - awei: "{emotion.embarrassed(awei, )}它……它至少能跑通啊！"
       - aqiang: AI 写的代码，天生自带"假性正确"，看着能跑、全是隐性坑。想要低 Bug，必须搭建多层校验、互相制衡的质检体系。
       - awei: 咋搭建？
       - aqiang: 第一关——前置校验，方案评审大于代码纠错。所有开发前，先评审方案完整性、边界场景、异常处理。方案错了，代码写得再完美也是废品。
@@ -352,10 +352,10 @@ scenes:
       - awei: 第三关？
       - aqiang: 独立第三方 Code Review，拒绝自审自判。严禁编码 Agent 自审自查，自身存在极强思维偏见，根本无法发现内生漏洞。必须 spawn 独立第三方审查子 Agent 做隔离评审。
       - awei: 那……人工 Review 呢？我每次都认真看的！
-      - aqiang: "{aqiang.gaze.at(awei)}你真的看懂了吗？"
+      - aqiang: "{gaze.at(aqiang, awei)}你真的看懂了吗？"
       - awei: ……有的地方……不太懂……
       - aqiang: 正式合规项目可以保留人工 Code Review 流程，但绝大多数短期个人/小团队项目，人工 Review 基本是自我欺骗。很多时候 AI 产出的代码技术栈偏冷门、逻辑复杂，我们自己其实根本看不懂，只是假装看过、草草过关。
-      - awei: "{awei.emotion.embarrassed()}"
+      - awei: "{emotion.embarrassed(awei, )}"
       - aqiang: 与其硬撑无效自查，不如务实兜底——放弃低效人类逐行审码，强制让 AI 把代码讲明白。用通俗解读工具拆解逻辑、风险、适用边界，远比自我感动式 Review 靠谱。
       - awei: 那第四关？
       - aqiang: 强制溯源。写完代码必须追问——这段代码的作用、适用场景、已知风险、边界短板。逼出隐性问题，避免埋雷。
@@ -365,12 +365,12 @@ scenes:
       - aqiang: 人机双测。AI 只能校验代码逻辑，无法感知用户体验、业务合理性。必须自己上手当用户，实测功能，补齐 AI 的认知盲区。
       - awei: 我上次让 AI 做了个登录页，它把"登录"按钮放在了屏幕最下面，得滚动三屏才能看到……
       - aqiang: 你看，AI 觉得没问题，但用户会觉得——这按钮是在跟我玩捉迷藏吗？
-      - awei: "{awei.emotion.laughing()}还有第六关吗？"
+      - awei: "{emotion.laughing(awei, )}还有第六关吗？"
       - aqiang: 灰度发布加分级问题处理。小问题迭代修复，核心问题立即整改，长期问题归档文档统一优化，避免 Bug 堆积导致项目失控。
       - awei: 那……短期项目也需要这么多关吗？
       - aqiang: 2 年内的短期项目，全套自动化校验走完后，无需人工逐行 Review。多层校验后仍存在的问题，人工审查也大概率无法发现，纯纯浪费精力。
-      - awei: "{awei.emotion.relieved()}那还好，我还以为要九九八十一关呢……"
-      - aqiang: "{aqiang.action.pat(awei)}你以为取经呢？"
+      - awei: "{emotion.relieved(awei, )}那还好，我还以为要九九八十一关呢……"
+      - aqiang: "{action.pat(aqiang, awei)}你以为取经呢？"
   - id: pitfalls
     location: office
     actors:
@@ -382,31 +382,31 @@ scenes:
       desk: center
       flashlight: on(desk)
     script:
-      - aqiang: "{aqiang.prop.pickup(flashlight)}"
-      - aqiang: 接下来，要说的这些坑……99% 的开发者都踩过，且网上几乎没有完整总结……{aqiang.emotion.somber(), awei.emotion.fearful(), effect.lights_down(), aqiang.action.illuminate(flashlight, awei)}
+      - aqiang: "{prop.pickup(aqiang, flashlight)}"
+      - aqiang: 接下来，要说的这些坑……99% 的开发者都踩过，且网上几乎没有完整总结……{emotion.somber(aqiang, ), emotion.fearful(awei, ), effect.lights_down(), action.illuminate(aqiang, flashlight, awei)}
       - awei: 你……你别吓我……
       - aqiang: 第一个坑——Agent 与 Git 的博弈。
       - awei: Git 咋了？我天天用。
       - aqiang: Agent 会乱提交、乱写 commit、强行合并冲突、危险 rebase。铁律——Agent 只改代码，人类掌控 commit、merge、rebase、回滚。
       - awei: 我上次让 AI 帮我提交，它写的 commit message 是"update"……
       - aqiang: 那算好的。我见过 AI 写的 commit message——"一些修改"、"修复了一些问题"、"可能修好了"、"应该没问题了吧"。
-      - awei: "{awei.emotion.laughing()}这也太真实了……"
+      - awei: "{emotion.laughing(awei, )}这也太真实了……"
       - aqiang: 并行开发用 git worktree 隔离文件，但谨记——文件隔离不等于逻辑隔离，并行任务必须提前解耦，否则会出现隐性架构冲突。
       - awei: 第二个坑呢？
       - aqiang: 权限安全大坑。严格管控子 Agent 权限——禁止随意执行 Shell、修改核心配置、变更 CI/环境变量、引入陌生三方依赖。架构扩容、新增依赖、目录结构调整必须人类审批。
       - awei: 我给了它全部权限……省事嘛……
       - aqiang: 你这不是省事，你这是把家门钥匙给了一个陌生人，还告诉他"家里没人，随便拿"。
-      - awei: "{awei.action.raise_hand(), awei.emotion.fearful()}那……Auto Mode 呢？"
+      - awei: "{action.raise_hand(awei, ), emotion.fearful(awei, )}那……Auto Mode 呢？"
       - aqiang: 官方模型优先使用 Auto Mode，依靠官方安全分类器自动区分高低风险操作，兼顾效率与安全。但 Auto Mode 仅适配官方高阶模型，非官方引擎易风控失效；存在漏报概率，不可完全替代人工兜底。
       - awei: 第三个坑？
       - aqiang: 人的认知负荷陷阱。Agentic Coding 不是全自动躺平！你依然需要审核规划、校验文档、排查 Bug、纠正 Agent 错误。极小修改直接手写，复杂项目再上 Agent 工作流，别杀鸡用牛刀。
       - awei: 我上次改一个变量名，启动了全套 Agent 工作流，规划、评审、编码、测试、Review……花了两个小时，改了一个字母。
-      - aqiang: "{aqiang.action.pat(awei)}你那不是效率，你那是……用大炮打蚊子，打完还得写一份两千字的作战报告。"
-      - awei: "{awei.emotion.laughing()}第四个坑？"
+      - aqiang: "{action.pat(aqiang, awei)}你那不是效率，你那是……用大炮打蚊子，打完还得写一份两千字的作战报告。"
+      - awei: "{emotion.laughing(awei, )}第四个坑？"
       - aqiang: 长期记忆污染坑。长期记忆不是越多越好！陈旧方案、废弃代码、错误试错记录不清理，会持续干扰 AI 判断，导致输出错乱，必须定期归档、清理无效记忆。
       - awei: 就像……手机相册里存了三年的截图，从来没删过，找东西全靠翻？
-      - aqiang: 对。你那不是记忆，你那是垃圾场。{awei.emotion.relief(), effect.lights_up(), sound.light_switch()}
-      - aqiang: "{aqiang.prop.putdown(flashlight, desk)}"
+      - aqiang: 对。你那不是记忆，你那是垃圾场。{emotion.relief(awei, ), effect.lights_up(), sound.light_switch()}
+      - aqiang: "{prop.putdown(aqiang, flashlight, desk)}"
   - id: workflow
     location: office
     actors:
@@ -418,7 +418,7 @@ scenes:
       desk: center
       ask_matt_sign: on(desk)
     script:
-      - awei: "{awei.action.check_watch()}"
+      - awei: "{action.check_watch(awei, )}"
       - awei: 强哥，说了这么多，那到底怎么才能快啊？我项目 deadline 快到了！
       - aqiang: 想快？第一招——并行子 Agent 提速，但只做解耦任务。
       - awei: 并行？我开十个 Agent 一起干，是不是快十倍？
@@ -443,12 +443,12 @@ scenes:
       - awei: 这……也太复杂了吧？
       - aqiang: 所以有取舍铁律——这套体系流程重、规范严、耗时久，短期小项目、个人快速迭代完全没必要，徒增流程负担。但多人协作、长期迭代、正式交付项目，这套工作流能彻底解决 AI 开发无规范、易失控、难交接的致命问题。
       - awei: 那我记不住这么多怎么办？
-      - aqiang: "{aqiang.prop.pickup(ask_matt_sign)}"
-      - aqiang: "{aqiang.action.present(ask_matt_sign)}不懂就问这个。它已经完整蒸馏了整套工程思维、取舍标准、流程范式、工具适配经验。你只需描述当前项目阶段、遇到的卡点、想要达成的目标，它会自动路由出当下最优技能组合、正确执行顺序、对应规范流程。"
-      - aqiang: "{aqiang.prop.handover(ask_matt_sign, awei)}"
+      - aqiang: "{prop.pickup(aqiang, ask_matt_sign)}"
+      - aqiang: "{action.present(aqiang, ask_matt_sign)}不懂就问这个。它已经完整蒸馏了整套工程思维、取舍标准、流程范式、工具适配经验。你只需描述当前项目阶段、遇到的卡点、想要达成的目标，它会自动路由出当下最优技能组合、正确执行顺序、对应规范流程。"
+      - aqiang: "{prop.handover(aqiang, ask_matt_sign, awei)}"
       - awei: 这么神奇？
-      - aqiang: "{aqiang.gaze.audience(), camera.punch_in(aqiang)}新手入门、老手避坑、防止流程跑偏的最强导航工具。"
-      - awei: "{awei.prop.putdown(ask_matt_sign, desk)}"
+      - aqiang: "{gaze.audience(aqiang, ), camera.punch_in(aqiang)}新手入门、老手避坑、防止流程跑偏的最强导航工具。"
+      - awei: "{prop.putdown(awei, ask_matt_sign, desk)}"
   - id: ending
     location: office
     actors:
@@ -460,27 +460,27 @@ scenes:
       desk: center
       thermos: on(desk)
     script:
-      - aqiang: "{aqiang.movement.to(awei)}"
+      - aqiang: "{movement.to(aqiang, awei)}"
       - awei: 强哥，听你说了这么多……我突然有个问题。
       - aqiang: 你说。
       - awei: 既然 AI 这么能干，那……我们程序员是不是迟早要被取代？
-      - aqiang: "{aqiang.emotion.thoughtful()}Agentic Coding 无法让人 100% 躺平，但可以实现渐进式人力解放。不存在完全全自动的 AI 工程体系，追求无脑托管只会被项目反噬。"
+      - aqiang: "{emotion.thoughtful(aqiang, )}Agentic Coding 无法让人 100% 躺平，但可以实现渐进式人力解放。不存在完全全自动的 AI 工程体系，追求无脑托管只会被项目反噬。"
       - awei: 那我们的价值在哪？
       - aqiang: 真正的成长，是持续试错、总结、驯化模型——分清 AI 能做、做好、做不好、绝对不能做的边界。随着模型迭代和个人经验沉淀，逐步剥离所有机械编码工作，人类最终只保留——架构决策、产品定义、规则体系、最终兜底的核心价值。
-      - awei: "{awei.emotion.thoughtful()}也就是说……AI 负责干活，我们负责……定规矩？"
-      - aqiang: "{aqiang.gaze.audience()}对。你以为你是在写代码，其实你是在——管理一个越来越聪明的团队。你的角色，从执行者变成了规则制定者、架构决策者、最终兜底人。"
+      - awei: "{emotion.thoughtful(awei, )}也就是说……AI 负责干活，我们负责……定规矩？"
+      - aqiang: "{gaze.audience(aqiang, )}对。你以为你是在写代码，其实你是在——管理一个越来越聪明的团队。你的角色，从执行者变成了规则制定者、架构决策者、最终兜底人。"
       - awei: 那……我该从哪开始？
-      - aqiang: "{aqiang.prop.pickup(thermos)}"
-      - aqiang: "{aqiang.prop.handover(thermos, awei)}"
-      - aqiang: "{aqiang.action.count_three(), aqiang.action.present(thermos)}从今天开始，先做三件事。第一，给你的项目建一个 AGENTS.md，把你的规则写进去。第二，下次改代码之前，先更新文档。第三，别再装五十个 Skill 了，按需极简。"
-      - awei: "{awei.action.nod()}我记住了！"
-      - aqiang: "{aqiang.gaze.audience()}各位，Agentic Coding 的终极意义，不是让 AI 取代人类，而是让人类从机械重复中解放出来，去做真正有创造力、有判断力、有温度的事。"
-      - awei: "{awei.action.raise_hand()}强哥！我还有最后一个问题！"
+      - aqiang: "{prop.pickup(aqiang, thermos)}"
+      - aqiang: "{prop.handover(aqiang, thermos, awei)}"
+      - aqiang: "{action.count_three(aqiang, ), action.present(aqiang, thermos)}从今天开始，先做三件事。第一，给你的项目建一个 AGENTS.md，把你的规则写进去。第二，下次改代码之前，先更新文档。第三，别再装五十个 Skill 了，按需极简。"
+      - awei: "{action.nod(awei, )}我记住了！"
+      - aqiang: "{gaze.audience(aqiang, )}各位，Agentic Coding 的终极意义，不是让 AI 取代人类，而是让人类从机械重复中解放出来，去做真正有创造力、有判断力、有温度的事。"
+      - awei: "{action.raise_hand(awei, )}强哥！我还有最后一个问题！"
       - aqiang: 你说。
-      - awei: 那……我的头发还能长回来吗？{awei.action.collapse(), aqiang.action.laugh(), camera.punch_in(awei)}
-      - aqiang: "{aqiang.action.pat(awei)}这个……AI 也救不了你。"
-      - aqiang: 谢谢大家！记住——人定规则，Agent 托管，渐进解放，杜绝摆烂！{aqiang.action.bow(), awei.action.bow(), music.ending(), effect.lights_down()}
+      - awei: 那……我的头发还能长回来吗？{action.collapse(awei, ), action.laugh(aqiang, ), camera.punch_in(awei)}
+      - aqiang: "{action.pat(aqiang, awei)}这个……AI 也救不了你。"
+      - aqiang: 谢谢大家！记住——人定规则，Agent 托管，渐进解放，杜绝摆烂！{action.bow(aqiang, ), action.bow(awei, ), music.ending(), effect.lights_down()}
       - awei: 别让 AI 毁掉你的项目！
-      - awei: "{awei.prop.putdown(thermos, desk)}"
-      - aqiang: "{aqiang.action.exit()}"
-      - awei: "{awei.action.exit()}"
+      - awei: "{prop.putdown(awei, thermos, desk)}"
+      - aqiang: "{action.exit(aqiang, )}"
+      - awei: "{action.exit(awei, )}"
