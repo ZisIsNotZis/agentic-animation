@@ -16,3 +16,5 @@ export function push(subject, target) {
     },
   };
 }
+
+export default push;

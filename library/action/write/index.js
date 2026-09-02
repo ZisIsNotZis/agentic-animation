@@ -15,3 +15,5 @@ export function write(subject, target) {
     },
   };
 }
+
+export default write;

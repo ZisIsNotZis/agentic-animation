@@ -15,3 +15,5 @@ export function screen_error(target) {
     },
   };
 }
+
+export default screen_error;

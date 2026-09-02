@@ -15,3 +15,5 @@ export function secretive(subject) {
     },
   };
 }
+
+export default secretive;

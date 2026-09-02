@@ -14,3 +14,5 @@ export function count_three(subject) {
     },
   };
 }
+
+export default count_three;

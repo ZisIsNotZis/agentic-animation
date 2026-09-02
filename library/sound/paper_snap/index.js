@@ -14,3 +14,5 @@ export function paper_snap() {
     },
   };
 }
+
+export default paper_snap;

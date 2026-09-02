@@ -1,12 +1,5 @@
-// effect category plugin (docs/WORLD_PLUGIN_CONTRACT.md): namespace of resource factories.
-import { ai_glitch } from "./ai_glitch/index.js";
-import { lights_down } from "./lights_down/index.js";
-import { lights_up } from "./lights_up/index.js";
-import { screen_error } from "./screen_error/index.js";
+// effect category plugin (docs/WORLD_PLUGIN_CONTRACT.md): the namespace is
+// enumerated from this category's child resources at load time.
+import { enumerateResources } from "@anim/core/stdlib";
 
-export default {
-  ai_glitch,
-  lights_down,
-  lights_up,
-  screen_error
-};
+export default await enumerateResources(import.meta.url);

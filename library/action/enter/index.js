@@ -15,3 +15,5 @@ export function enter(subject) {
     },
   };
 }
+
+export default enter;

@@ -14,3 +14,5 @@ export function wide() {
     },
   };
 }
+
+export default wide;

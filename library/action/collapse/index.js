@@ -15,3 +15,5 @@ export function collapse(subject) {
     },
   };
 }
+
+export default collapse;

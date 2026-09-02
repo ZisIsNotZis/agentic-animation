@@ -15,3 +15,5 @@ export function audience(subject) {
     },
   };
 }
+
+export default audience;

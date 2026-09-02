@@ -17,3 +17,5 @@ export function pickup(subject, target) {
     },
   };
 }
+
+export default pickup;

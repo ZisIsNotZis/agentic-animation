@@ -16,3 +16,5 @@ export function to(subject, target) {
     },
   };
 }
+
+export default to;

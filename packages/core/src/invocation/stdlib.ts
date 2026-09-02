@@ -1,5 +1,8 @@
 import type {ProcedureEase, ProcedureRecipeEvent, ProcedureRecipeTrack} from "../procedures/types";
 import type {World} from "./types";
+import {readdirSync, accessSync} from "node:fs";
+import {dirname, join} from "node:path";
+import {fileURLToPath, pathToFileURL} from "node:url";
 
 /**
  * Authoring stdlib for invocation bodies (docs/WORLD_PLUGIN_CONTRACT.md).
@@ -229,4 +232,37 @@ export function settleOnSupport(world: World, object: unknown, support: unknown,
   push(world, {kind: "object", target: o, events: [event(start, Math.max(SHORT, holdSec), {operation: "state", object: o, status: "supported", support: s})]});
   push(world, {kind: "lifecycle", events: [event(start, Math.max(SHORT, holdSec), {operation: "state", object: o, status: "supported", support: s})]});
   return Math.max(SHORT, holdSec);
+}
+
+/**
+ * Enumerate a category's child resource directories: each child's index.js
+ * default export becomes a namespace entry. Folders without index.js are
+ * skipped (asset-only resources); a broken index.js fails the load.
+ */
+export async function enumerateResources(categoryUrl: string): Promise<Record<string, unknown>> {
+  const dir = dirname(fileURLToPath(categoryUrl));
+  const namespace: Record<string, unknown> = {};
+  for (const entry of readdirSync(dir, {withFileTypes: true}).sort((a, b) => a.name.localeCompare(b.name))) {
+    if (!entry.isDirectory()) continue;
+    const index = join(dir, entry.name, "index.js");
+    try {
+      accessSync(index);
+    } catch {
+      continue; // asset-only resource folder
+    }
+    const mod = await import(pathToFileURL(index).href);
+    namespace[entry.name] = (mod as {default?: unknown}).default ?? mod;
+  }
+  return namespace;
+}
+
+/** Enumerate audio cue files in a category subfolder into cueAssets data. */
+export function enumerateCueAssets(categoryUrl: string, kind: "sfx" | "music", subDir = "cues"): Record<string, {kind: "sfx" | "music"; file: string}> {
+  const dir = join(dirname(fileURLToPath(categoryUrl)), subDir);
+  const cues: Record<string, {kind: "sfx" | "music"; file: string}> = {};
+  for (const entry of readdirSync(dir, {withFileTypes: true}).sort((a, b) => a.name.localeCompare(b.name))) {
+    if (!entry.isFile() || !/\.(?:wav|mp3|ogg)$/.test(entry.name)) continue;
+    cues[entry.name.replace(/\.[^.]+$/, "")] = {kind, file: `${subDir}/${entry.name}`};
+  }
+  return cues;
 }

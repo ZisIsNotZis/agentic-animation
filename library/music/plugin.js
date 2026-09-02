@@ -1,12 +1,8 @@
-// music category plugin (docs/WORLD_PLUGIN_CONTRACT.md): namespace of resource factories.
-import { ending } from "./ending/index.js";
+// music category plugin (docs/WORLD_PLUGIN_CONTRACT.md): the namespace is
+// enumerated from this category's child resources at load time.
+import { enumerateCueAssets, enumerateResources } from "@anim/core/stdlib";
 
 export default {
-  ending,
-  cueAssets: {
-    "ending-cadence": {
-      "kind": "music",
-      "file": "cues/ending-cadence.wav"
-    }
-  },
+  ...(await enumerateResources(import.meta.url)),
+  cueAssets: enumerateCueAssets(import.meta.url, "music"),
 };

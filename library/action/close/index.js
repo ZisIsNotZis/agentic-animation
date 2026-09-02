@@ -15,3 +15,5 @@ export function close(subject, target) {
     },
   };
 }
+
+export default close;

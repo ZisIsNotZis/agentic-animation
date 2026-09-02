@@ -14,3 +14,5 @@ export function nod(subject) {
     },
   };
 }
+
+export default nod;

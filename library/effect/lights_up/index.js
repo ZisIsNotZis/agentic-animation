@@ -15,3 +15,5 @@ export function lights_up() {
     },
   };
 }
+
+export default lights_up;

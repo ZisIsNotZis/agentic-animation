@@ -14,3 +14,5 @@ export function punch_in(target) {
     },
   };
 }
+
+export default punch_in;

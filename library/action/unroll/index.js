@@ -15,3 +15,5 @@ export function unroll(subject, target) {
     },
   };
 }
+
+export default unroll;

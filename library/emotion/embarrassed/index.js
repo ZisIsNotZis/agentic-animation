@@ -15,3 +15,5 @@ export function embarrassed(subject) {
     },
   };
 }
+
+export default embarrassed;

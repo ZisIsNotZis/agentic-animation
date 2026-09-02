@@ -14,3 +14,5 @@ export function raise_hand(subject) {
     },
   };
 }
+
+export default raise_hand;

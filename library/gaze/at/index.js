@@ -15,3 +15,5 @@ export function at(subject, target) {
     },
   };
 }
+
+export default at;

@@ -15,3 +15,5 @@ export function excited(subject) {
     },
   };
 }
+
+export default excited;

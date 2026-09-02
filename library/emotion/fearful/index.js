@@ -15,3 +15,5 @@ export function fearful(subject) {
     },
   };
 }
+
+export default fearful;

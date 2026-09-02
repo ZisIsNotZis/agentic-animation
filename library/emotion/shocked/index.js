@@ -16,3 +16,5 @@ export function shocked(subject) {
     },
   };
 }
+
+export default shocked;

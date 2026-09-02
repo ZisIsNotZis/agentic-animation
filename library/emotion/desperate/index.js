@@ -15,3 +15,5 @@ export function desperate(subject) {
     },
   };
 }
+
+export default desperate;

@@ -14,3 +14,5 @@ export function ending() {
     },
   };
 }
+
+export default ending;

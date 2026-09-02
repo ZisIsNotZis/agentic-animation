@@ -14,3 +14,5 @@ export function check_watch(subject) {
     },
   };
 }
+
+export default check_watch;

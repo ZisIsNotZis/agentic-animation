@@ -16,3 +16,5 @@ export function discard(subject, target) {
     },
   };
 }
+
+export default discard;

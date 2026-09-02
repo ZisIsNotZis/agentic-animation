@@ -16,3 +16,5 @@ export function laugh(subject) {
     },
   };
 }
+
+export default laugh;

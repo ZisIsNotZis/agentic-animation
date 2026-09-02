@@ -15,3 +15,5 @@ export function exit(subject) {
     },
   };
 }
+
+export default exit;

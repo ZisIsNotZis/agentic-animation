@@ -14,3 +14,5 @@ export function bow(subject) {
     },
   };
 }
+
+export default bow;

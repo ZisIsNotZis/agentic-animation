@@ -15,3 +15,5 @@ export function relief(subject) {
     },
   };
 }
+
+export default relief;

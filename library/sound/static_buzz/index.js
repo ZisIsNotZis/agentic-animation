@@ -15,3 +15,5 @@ export function static_buzz() {
     },
   };
 }
+
+export default static_buzz;

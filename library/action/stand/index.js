@@ -15,3 +15,5 @@ export function stand(subject) {
     },
   };
 }
+
+export default stand;

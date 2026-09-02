@@ -15,3 +15,5 @@ export function proud(subject) {
     },
   };
 }
+
+export default proud;

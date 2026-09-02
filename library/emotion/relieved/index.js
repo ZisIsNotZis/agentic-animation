@@ -15,3 +15,5 @@ export function relieved(subject) {
     },
   };
 }
+
+export default relieved;

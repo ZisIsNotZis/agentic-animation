@@ -15,3 +15,5 @@ export function calm(subject) {
     },
   };
 }
+
+export default calm;

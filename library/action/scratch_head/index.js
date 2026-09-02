@@ -15,3 +15,5 @@ export function scratch_head(subject) {
     },
   };
 }
+
+export default scratch_head;

@@ -1,10 +1,5 @@
-// prop category plugin (docs/WORLD_PLUGIN_CONTRACT.md): namespace of resource factories.
-import { handover } from "./handover/index.js";
-import { pickup } from "./pickup/index.js";
-import { putdown } from "./putdown/index.js";
+// prop category plugin (docs/WORLD_PLUGIN_CONTRACT.md): the namespace is
+// enumerated from this category's child resources at load time.
+import { enumerateResources } from "@anim/core/stdlib";
 
-export default {
-  handover,
-  pickup,
-  putdown
-};
+export default await enumerateResources(import.meta.url);

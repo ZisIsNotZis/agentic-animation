@@ -1,8 +1,5 @@
-// camera category plugin (docs/WORLD_PLUGIN_CONTRACT.md): namespace of resource factories.
-import { punch_in } from "./punch_in/index.js";
-import { wide } from "./wide/index.js";
+// camera category plugin (docs/WORLD_PLUGIN_CONTRACT.md): the namespace is
+// enumerated from this category's child resources at load time.
+import { enumerateResources } from "@anim/core/stdlib";
 
-export default {
-  punch_in,
-  wide
-};
+export default await enumerateResources(import.meta.url);

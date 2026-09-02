@@ -15,3 +15,5 @@ export function satisfied(subject) {
     },
   };
 }
+
+export default satisfied;

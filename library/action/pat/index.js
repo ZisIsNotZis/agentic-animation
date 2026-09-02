@@ -14,3 +14,5 @@ export function pat(subject, target) {
     },
   };
 }
+
+export default pat;

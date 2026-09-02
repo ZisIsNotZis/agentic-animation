@@ -16,3 +16,5 @@ export function slam(subject, target) {
     },
   };
 }
+
+export default slam;

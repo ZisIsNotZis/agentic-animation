@@ -15,3 +15,5 @@ export function lights_down() {
     },
   };
 }
+
+export default lights_down;

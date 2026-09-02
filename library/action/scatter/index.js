@@ -16,3 +16,5 @@ export function scatter(subject, target) {
     },
   };
 }
+
+export default scatter;

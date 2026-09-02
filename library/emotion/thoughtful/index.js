@@ -15,3 +15,5 @@ export function thoughtful(subject) {
     },
   };
 }
+
+export default thoughtful;

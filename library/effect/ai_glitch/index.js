@@ -15,3 +15,5 @@ export function ai_glitch(target) {
     },
   };
 }
+
+export default ai_glitch;

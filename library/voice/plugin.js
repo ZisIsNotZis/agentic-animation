@@ -1,6 +1,5 @@
-// voice category plugin (docs/WORLD_PLUGIN_CONTRACT.md): namespace of resource factories.
-import { interrupt } from "./interrupt/index.js";
+// voice category plugin (docs/WORLD_PLUGIN_CONTRACT.md): the namespace is
+// enumerated from this category's child resources at load time.
+import { enumerateResources } from "@anim/core/stdlib";
 
-export default {
-  interrupt
-};
+export default await enumerateResources(import.meta.url);

@@ -14,3 +14,5 @@ export function light_switch() {
     },
   };
 }
+
+export default light_switch;

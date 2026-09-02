@@ -15,3 +15,5 @@ export function tap_head(subject) {
     },
   };
 }
+
+export default tap_head;

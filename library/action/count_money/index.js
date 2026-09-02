@@ -14,3 +14,5 @@ export function count_money(subject) {
     },
   };
 }
+
+export default count_money;

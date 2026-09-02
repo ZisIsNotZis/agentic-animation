@@ -15,3 +15,5 @@ export function error_burst() {
     },
   };
 }
+
+export default error_burst;

@@ -15,3 +15,5 @@ export function sip(subject, target) {
     },
   };
 }
+
+export default sip;

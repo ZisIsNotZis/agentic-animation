@@ -17,3 +17,5 @@ export function putdown(subject, object, target) {
     },
   };
 }
+
+export default putdown;

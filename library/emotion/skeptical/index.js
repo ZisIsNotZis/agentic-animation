@@ -15,3 +15,5 @@ export function skeptical(subject) {
     },
   };
 }
+
+export default skeptical;

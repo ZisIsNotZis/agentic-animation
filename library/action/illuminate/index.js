@@ -17,3 +17,5 @@ export function illuminate(subject, object, target) {
     },
   };
 }
+
+export default illuminate;

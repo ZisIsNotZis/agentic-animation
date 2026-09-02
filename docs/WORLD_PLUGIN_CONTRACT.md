@@ -45,15 +45,20 @@ reserved `face_rig`, `face_overlay`; see Face model).
 
 ```text
 library/<category>/plugin.js            entry: exports the category namespace
-library/<category>/<name>/              one self-contained resource
+library/<category>/<name>/              one self-contained resource (convention)
   index.js                              code (when the resource is behavior)
   manifest.json                         metadata (may be empty {})
   <assets>                              svg/png/wav resources
 ```
 
-The engine only ever loads `plugin.js`. Each plugin decides how its resource
-folders are interpreted (static ESM imports of sibling `index.js` files are the
-natural form). Every identity is a path: `library/action/slam` is `action.slam`;
+The engine only ever loads `plugin.js`. Every `plugin.js` must derive its
+namespace dynamically — enumerating its own children or loading by its own
+rules. Hardcoded resource lists in `plugin.js` are prohibited. The
+subdirectory layout above is a library convention, not an engine guarantee:
+plugins may resolve resources any way they implement, including *virtual*
+resources that do not physically exist (for example fetched or generated at
+load/use time) — the plugin hands over real factories and data regardless.
+Every identity is a path: `library/action/slam` is `action.slam`;
 `library/effect/manga-impact-star` likewise. No `id`, `version`,
 `implementationKey`, or `aliases` anywhere. The category manifest may declare
 plugin order metadata (`before`, `after`, `priority`) plus category-owned data.
@@ -170,6 +175,8 @@ loadPlugins(libraryRoot: string): Promise<LoadedPlugin[]>;
 type LoadedPlugin = {category: string; manifest: unknown; namespace: CategoryPlugin};
 ```
 
-`plugin.js` files are plain ESM JavaScript loadable by both the Node compiler
-and the browser renderer bundle. Discovery scans `library/*/plugin.js`
-directly; there is no registry index and no TS-authored catalog.
+`plugin.js` files execute in the compiler (Node); they may use `node:fs` and
+top-level await to enumerate their own children. Renderer-facing data crosses
+only through the manifest — the renderer never imports plugin code. Discovery
+scans `library/*/plugin.js` directly; there is no registry index and no
+TS-authored catalog.

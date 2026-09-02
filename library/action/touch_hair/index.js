@@ -14,3 +14,5 @@ export function touch_hair(subject) {
     },
   };
 }
+
+export default touch_hair;

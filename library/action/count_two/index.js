@@ -14,3 +14,5 @@ export function count_two(subject) {
     },
   };
 }
+
+export default count_two;

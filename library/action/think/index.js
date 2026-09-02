@@ -15,3 +15,5 @@ export function think(subject) {
     },
   };
 }
+
+export default think;

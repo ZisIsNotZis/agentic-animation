@@ -18,3 +18,5 @@ export function handover(subject, object, target) {
     },
   };
 }
+
+export default handover;

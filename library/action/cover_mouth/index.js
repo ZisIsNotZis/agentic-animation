@@ -15,3 +15,5 @@ export function cover_mouth(subject, target) {
     },
   };
 }
+
+export default cover_mouth;

@@ -16,3 +16,5 @@ export function present(subject, target) {
     },
   };
 }
+
+export default present;

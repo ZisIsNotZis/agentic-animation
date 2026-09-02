@@ -15,3 +15,5 @@ export function interrupt(subject, target) {
     },
   };
 }
+
+export default interrupt;

@@ -14,3 +14,5 @@ export function dismiss(subject) {
     },
   };
 }
+
+export default dismiss;

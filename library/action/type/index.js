@@ -15,3 +15,5 @@ export function type(subject, target) {
     },
   };
 }
+
+export default type;

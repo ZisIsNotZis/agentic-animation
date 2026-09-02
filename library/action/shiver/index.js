@@ -16,3 +16,5 @@ export function shiver(subject) {
     },
   };
 }
+
+export default shiver;

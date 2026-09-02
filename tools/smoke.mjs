@@ -32,6 +32,7 @@ try {
   for (const category of ["figure", "voice", "set", "prop", "action"]) {
     cpSync(join(ROOT, "library", category), join(library, category), { recursive: true });
   }
+  writeFileSync(join(project, "package.json"), JSON.stringify({ type: "module" }));
   writeFileSync(join(project, "anim.config.json"), JSON.stringify({ paths: { library: "library", episodes: "episodes" }, adapters: { tts: "dir", renderer: "remotion" } }));
   // Plugin resources import @anim/core/stdlib; resolve the workspace package.
   mkdirSync(join(project, "node_modules", "@anim"), { recursive: true });

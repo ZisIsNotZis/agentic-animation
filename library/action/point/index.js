@@ -15,3 +15,5 @@ export function point(subject, target) {
     },
   };
 }
+
+export default point;

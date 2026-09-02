@@ -15,3 +15,5 @@ export function confused(subject) {
     },
   };
 }
+
+export default confused;
