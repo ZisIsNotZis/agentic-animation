@@ -1,0 +1,42 @@
+name: smoke
+
+# Cheap CI gate: it proves the toolkit's TypeScript compiles, the core unit
+# tests pass, and an episode's manifests validate end-to-end — WITHOUT any
+# models, GPU, ffmpeg, or a real render (none of which exist on CI runners).
+# The full render loop is exercised locally via `npm run smoke` (ARCHITECTURE §12).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Newer pushes cancel in-flight runs on the same ref.
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Core unit tests
+        run: npm test
+
+      # The smoke script creates an isolated canonical episode.yml under /tmp.
+      # No legacy authoring commands, models, GPU, or render are required.
+      - name: Canonical YAML smoke
+        run: npm run smoke
