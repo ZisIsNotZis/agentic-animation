@@ -31,13 +31,13 @@ The canonical contract is [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md); 
   with 128 passed, 7 skipped, 0 failed; all three episode validation commands;
   `npm run skill:audit`; and `git diff --check`.
 
-## Not done
+## Step 3 verification evidence (plugin-host runtime)
 
-- Existing MP4 files have not been regenerated against the plugin-host runtime.
-- The three episodes have not yet been fully re-verified through final media QA
-  under the plugin-host runtime.
-- Legacy terminology and historical generator/schema concepts may remain in
-  non-authoritative source, tests, and schema artifacts.
+- All three episodes validate and pass `anim check` (liu-secret 3 scenes/10 takes, bailan-system 10/167, ai-work-adventure 10/268).
+- All three compile fresh performance manifests under /tmp; manifests show paired lifecycle events and normalized staging/camera geometry with no out-of-range values.
+- The canonical pipeline reaches and completes the Remotion input stage: a 2-second `render-yaml` of liu-secret rendered 48 frames in /tmp. Frames were inspected manually and match the checked-in golden MP4 scene (school corridor, correct actors and staging) after fixing the renderer to resolve location scenes from `resolved.identity`.
+- `npm run typecheck`; `npm run test:all` 140 passed, 7 skipped, 0 failed; `npm run smoke`; `npm run validate:episode-yaml`; `npm run skill:audit`; `git diff --check` all pass.
+- Checked-in MP4s are byte-identical to HEAD (never regenerated).
 
 ## Explicitly preserved
 
@@ -45,4 +45,4 @@ Existing checked-in MP4 files remain untouched. Generated audio, video, manifest
 
 ## Next
 
-Re-verify the demo episodes through the plugin-host runtime end to end, regenerate representative renders, and record evidence here.
+Per-frame plugin-owned canvas behavior (run() bodies beyond identity), then new-episode production on the plugin-host runtime.
