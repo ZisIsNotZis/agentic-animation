@@ -99,13 +99,14 @@ function readPerformanceManifest(manifestPath: string): PerformanceManifest {
 }
 
 function preloadLocationScenes(manifestPath: string, manifest: PerformanceManifest): PerformanceManifest {
-  const assets = manifest.assets as {locations?: Record<string, {resolved?: {path?: unknown}}>} | undefined;
+  const assets = manifest.assets as {locations?: Record<string, {resolved?: {identity?: unknown; path?: unknown}}>} | undefined;
   const locations = assets?.locations;
   if (!locations) return manifest;
   const libraryRoot = resolve(dirname(manifestPath), "..", "..", "library");
   const locationScenes: Record<string, string> = {};
   for (const [instance, entry] of Object.entries(locations)) {
-    const assetPath = entry.resolved?.path;
+    // The identity is the canonical library-relative asset directory.
+    const assetPath = typeof entry.resolved?.identity === "string" ? entry.resolved.identity : entry.resolved?.path;
     if (typeof assetPath !== "string") continue;
     const scenePath = resolve(libraryRoot, assetPath, "scene.svg");
     if (scenePath.startsWith(`${libraryRoot}/`) && existsSync(scenePath)) {
