@@ -31,3 +31,19 @@ one expression: `{...action.slam(aqiang, desk), durationSec: 1.2}` or
 `{...action.push(aqiang, awei), mode: "nonblock"}`. The scheduler uses the
 overridden timing; the generator body still validates against its own
 factory-declared duration.
+
+## Guarantees exercised by these episodes
+
+- **Real displacement**: `action.push` writes a transform track with a dx/dy
+  delta so the target actually staggers backward; `movement.to` eases the
+  mover toward its target. Only `transform` tracks project position —
+  movement tracks are leg choreography and never move actors.
+- **Teleport lint**: `make` scans the manifest for implausible per-frame
+  actor jumps (>260px) and prints loud `[make] teleport warning: ...` lines.
+- **Props exist**: scene-staged objects are projected into the manifest
+  (position, scale, procedural art) — a declared object is always visible.
+- **Persistent emotions**: expression events hold until the next expression;
+  `emotion.crying` adds tears to the face rig.
+- **One brace parser**: dialogue, schema validation, compiler, and audio
+  synthesis all share the same depth-aware group scan — nested object
+  arguments never leak into spoken text or subtitles.

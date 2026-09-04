@@ -68,7 +68,9 @@ let bundlePromise: Promise<string> | undefined;
 /** Bundle the studio once per process; the bundle is build-independent. */
 async function serveUrl(): Promise<string> {
   if (!bundlePromise) {
-    bundlePromise = bundle({ entryPoint: studioEntry() });
+    // enableCaching: false — the persistent cache has served stale component
+    // code after source changes, silently rendering outdated frames.
+    bundlePromise = bundle({ entryPoint: studioEntry(), enableCaching: false });
   }
   return bundlePromise;
 }

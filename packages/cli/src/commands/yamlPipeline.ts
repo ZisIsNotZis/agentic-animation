@@ -28,6 +28,8 @@ import type { StageContext } from "../runtime/context";
 import { assembleYamlAudio, yamlAudioStage } from "./yamlAudio";
 import { stageNow } from "./audioSupport";
 
+import { detectTeleports, describeTeleports } from "@anim/studio";
+
 export const YAML_PERFORMANCE_MANIFEST_NAME = "performance.json";
 export const YAML_AUDIO_ARTIFACT_NAME = "yaml-audio.json";
 
@@ -194,6 +196,10 @@ export async function makeYamlEpisode(
     totalDuration: compiled.totalDuration,
   });
   process.stdout.write(`make: wrote ${manifestPath} (${compiled.totalDuration.toFixed(3)}s)\n`);
+  // Shift-left defect detection: loud teleport warnings right after compile.
+  for (const line of describeTeleports(detectTeleports(manifestWithCues as never))) {
+    process.stderr.write(`[make] ${line}\n`);
+  }
   return result;
 }
 

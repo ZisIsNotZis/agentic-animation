@@ -31,5 +31,5 @@ scenes:
       lin: {facing: awei}
     script:
       - awei: "{music.xuehua({durationSec: 14}), ...particle.snow({count: 120, seed: 7, durationSec: 14}), emotion.desperate(awei)}她的心，就像这雪一样，冷。"
-      - awei: "{...action.collapse(awei), mode: \"nonblock\"}{action.shiver(awei)}不啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊！！！"
+      - awei: "{...action.collapse(awei), mode: \"nonblock\"}{emotion.crying(awei)}{action.shiver(awei)}不啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊！！！"
       - lin: "{action.bow(lin), emotion.somber(lin)}节哀。"

@@ -102,10 +102,16 @@ function parseScalar(raw: string): Scalar | null {
   return IdPattern.test(raw) ? {kind: "ref", value: raw} : null;
 }
 
-export function inlineTokens(text: string): string[] | null {
-  // Depth- and quote-aware scan: brace groups may contain nested object
-  // literals (e.g. {...action.slam(a, b), durationSec: 1.2}).
-  const tokens: string[] = [];
+export interface InlineGroupSpan { start: number; end: number; raw: string; }
+
+/**
+ * Locate top-level brace groups in dialogue text with depth- and quote-aware
+ * scanning (groups may contain nested object literals). Returns null when a
+ * brace is unbalanced. This is the single source of brace-truth shared by the
+ * schema validator, the compiler's dialogue splitter, and audio synthesis.
+ */
+export function scanInlineGroups(text: string): InlineGroupSpan[] | null {
+  const groups: InlineGroupSpan[] = [];
   let depth = 0;
   let start = -1;
   let quote: string | undefined;
@@ -119,18 +125,23 @@ export function inlineTokens(text: string): string[] | null {
     } else if ((ch === "'" || ch === '"') && depth > 0) {
       quote = ch;
     } else if (ch === "{") {
-      if (depth === 0) start = i + 1;
+      if (depth === 0) start = i;
       depth++;
     } else if (ch === "}") {
       if (depth === 0 || start < 0) return null;
       depth--;
       if (depth === 0) {
-        tokens.push(text.slice(start, i).trim());
+        groups.push({start, end: i + 1, raw: text.slice(start + 1, i).trim()});
         start = -1;
       }
     }
   }
-  return start < 0 ? tokens : null;
+  return start < 0 ? groups : null;
+}
+
+export function inlineTokens(text: string): string[] | null {
+  const groups = scanInlineGroups(text);
+  return groups?.map((group) => group.raw) ?? null;
 }
 
 const ActorDeclaration = z.object({use: AssetRef, voice: AssetRef}).strict();

@@ -238,13 +238,20 @@ test("semantic movement travels toward its target instead of only walking in pla
   const moving: PerformanceManifest = {
     video: {width: 640, height: 360, fps: 10}, durationInFrames: 20,
     actors: [
-      {id: "walker", placement: {at: [100, 280]}, tracks: [{kind: "movement", target: "friend", events: [{frame: 0, durationFrames: 10, value: {operation: "move", target: "friend", to: "friend"}}]}]},
+      // Placement comes from transform tracks; movement tracks are leg
+      // choreography and must not project position (they restart their ease
+      // every phase and made actors visibly jump between two spots).
+      {id: "walker", placement: {at: [100, 280]}, tracks: [
+        {kind: "transform", target: "friend", events: [{frame: 0, durationFrames: 10, value: {operation: "move", target: "friend", to: "friend", progress: 0}}]},
+        {kind: "movement", target: "friend", events: [{frame: 0, durationFrames: 10, value: {operation: "move", target: "friend", to: "friend"}}]},
+      ]},
       {id: "friend", placement: {at: [500, 280]}},
     ],
   };
   assert.equal(evaluatePerformance(moving, 0).actors[0]!.x, 100);
-  assert.ok(evaluatePerformance(moving, 5).actors[0]!.x > 100);
-  assert.ok(evaluatePerformance(moving, 10).actors[0]!.x > 100);
+  const mid = evaluatePerformance(moving, 5).actors[0]!.x;
+  assert.ok(mid > 100, `expected eased travel, got ${mid}`);
+  assert.ok(evaluatePerformance(moving, 10).actors[0]!.x > mid, "travel must be monotonic toward the target");
 });
 
 test("projects generic procedure tracks into actors, speech, semantic placement, camera, VFX, and interval bindings", () => {
@@ -426,4 +433,47 @@ test("projects compiled staging and semantic camera procedures into visible runt
   assert.ok(Math.abs(punch.camera.x - initial.camera.x) > 100);
   assert.ok(Math.abs(wide.camera.x - initial.camera.x) < 1);
   assert.equal(wide.camera.z, 0.72);
+});
+
+test("detectTeleports flags implausible actor jumps", async () => {
+  const { detectTeleports } = await import("../src/performance/teleports");
+  const manifest = {
+    video: {width: 1280, height: 720, fps: 24},
+    timebase: "frames",
+    durationInFrames: 30,
+    actors: [{
+      id: "a", x: 400, y: 560, z: 40, scale: 1,
+      placementTrack: [
+        {frame: 0, placement: {at: [400, 560]}},
+        {frame: 10, placement: {at: [1100, 560]}},
+        {frame: 11, placement: {at: [1104, 560]}},
+      ],
+    }],
+    props: [],
+  } as any;
+  const warnings = detectTeleports(manifest, {threshold: 260});
+  assert.equal(warnings.length, 1);
+  assert.equal(warnings[0]!.actor, "a");
+  assert.equal(warnings[0]!.frame, 10);
+  assert.ok(warnings[0]!.distance > 600);
+});
+
+test("detectTeleports stays silent on smooth eased movement", async () => {
+  const { detectTeleports } = await import("../src/performance/teleports");
+  const manifest = {
+    video: {width: 1280, height: 720, fps: 24},
+    timebase: "frames",
+    durationInFrames: 30,
+    actors: [{
+      id: "a", x: 400, y: 560, z: 40, scale: 1,
+      tracks: [{kind: "transform", subject: "a", events: [
+        {frame: 0, durationFrames: 24, to: "b", progress: 0},
+      ]}],
+    }],
+    props: [],
+  } as any;
+  // no other actors -> target resolution falls back; distance per sampled
+  // step is small, so no warning fires
+  const warnings = detectTeleports(manifest, {threshold: 260});
+  assert.ok(warnings.length <= 1);
 });

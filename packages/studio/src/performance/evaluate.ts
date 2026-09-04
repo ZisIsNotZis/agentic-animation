@@ -280,8 +280,11 @@ function targetPoint(target: unknown, manifest: PerformanceManifest, fallback: [
 }
 
 function genericPlacement(tracks: readonly EvaluatedTrack[], frame: number, fallback: PerformancePlacement, manifest: PerformanceManifest): PerformancePlacement {
+  // Only transform tracks carry placement. Movement tracks describe leg
+  // choreography phases; letting them project position restarted the ease at
+  // every phase boundary and made actors visibly jump between two spots.
   const event = tracks
-    .filter((track) => track.kind === "transform" || track.kind === "movement")
+    .filter((track) => track.kind === "transform")
     .flatMap((track) => track.events)
     .filter((item) => trackEventStart(item) <= frame)
     .sort((a, b) => trackEventStart(a) - trackEventStart(b))
@@ -290,10 +293,15 @@ function genericPlacement(tracks: readonly EvaluatedTrack[], frame: number, fall
   const value = eventValue(event);
   const nested = asRecord(value.value);
   const transform = nested ?? value;
+  // Displacement deltas (dx/dy) move the subject relative to its staged
+  // position — how push shoves its target without knowing stage coordinates.
+  const hasDelta = typeof transform.dx === "number" || typeof transform.dy === "number";
   const destination = targetPoint(transform.to ?? transform.target, manifest, fallback.at ?? [0, 0]);
   const start = fallback.at ?? [fallback.x ?? 0, fallback.y ?? 0];
-  const end = destination ? [destination[0] + (destination[0] >= start[0] ? -170 : 170), destination[1]] as [number, number] : undefined;
   const eased = event.progress * event.progress * (3 - 2 * event.progress);
+  const end = hasDelta
+    ? [start[0] + (Number(transform.dx) || 0), start[1] + (Number(transform.dy) || 0)] as [number, number]
+    : destination ? [destination[0] + (destination[0] >= start[0] ? -170 : 170), destination[1]] as [number, number] : undefined;
   const travelled = end ? [start[0] + (end[0] - start[0]) * eased, start[1] + (end[1] - start[1]) * eased] as [number, number] : undefined;
   const point = pointOf(transform.at) ?? pointOf(transform.position) ?? pointOf(transform.to) ?? travelled;
   const position = point ?? (typeof transform.x === "number" || typeof transform.y === "number"
@@ -687,17 +695,36 @@ function applyGenericBindings(
   frame: number,
 ): EvaluatedProp[] {
   const byId = new Map(props.map((prop) => [prop.id, prop]));
-  for (const event of tracks.filter((track) => track.kind === "binding").flatMap((track) => track.events).filter((event) => trackEventStart(event) <= frame)) {
+  // Chronological bind/release state: the newest event wins, a release
+  // detaches the prop (it returns to its staged position).
+  let bound: {propId: string; actorId: string; hand: string; offset: [number, number]} | null = null;
+  const events = tracks
+    .filter((track) => track.kind === "binding")
+    .flatMap((track) => track.events)
+    .filter((event) => trackEventStart(event) <= frame)
+    .sort((a, b) => trackEventStart(a) - trackEventStart(b));
+  for (const event of events) {
     const value = eventValue(event);
-    const prop = byId.get(String(value.prop ?? value.object ?? event.target ?? ""));
-    const actor = actors.get(String(value.actor ?? value.actorId ?? value.holder ?? event.subject ?? ""));
-    const hand = actor?.anchors[String(value.hand ?? value.socket ?? "hand_r")];
-    if (!prop || !actor || !hand) continue;
-    const offset = pointOf(value.offset) ?? [0, 0];
-    prop.x = actor.x + hand[0] * actor.scale + offset[0];
-    prop.y = actor.y + hand[1] * actor.scale + offset[1];
-    prop.rotation += actor.rotation;
-    prop.scale *= actor.scale;
+    if (String(value.operation ?? "bind") === "release") {
+      bound = null;
+      continue;
+    }
+    const propId = String(value.prop ?? value.object ?? event.target ?? "");
+    const actorId = String(value.actor ?? value.actorId ?? value.holder ?? event.subject ?? "");
+    const hand = String(value.hand ?? value.socket ?? "hand_r");
+    if (!byId.has(propId) || !actors.has(actorId)) continue;
+    bound = {propId, actorId, hand, offset: pointOf(value.offset) ?? [0, 0]};
+  }
+  if (bound) {
+    const prop = byId.get(bound.propId);
+    const actor = actors.get(bound.actorId);
+    const hand = actor?.anchors[bound.hand];
+    if (prop && actor && hand) {
+      prop.x = actor.x + hand[0] * actor.scale + bound.offset[0];
+      prop.y = actor.y + hand[1] * actor.scale + bound.offset[1];
+      prop.rotation += actor.rotation;
+      prop.scale *= actor.scale;
+    }
   }
   return props;
 }
@@ -879,12 +906,17 @@ function resolvedAssetForInstance(assets: UnknownRecord | undefined, group: stri
 
 function assetAnchors(asset: UnknownRecord | undefined): Record<string, [number, number]> {
   const anchors = asRecord(asset?.anchors) ?? asRecord(asset?.sockets);
-  return Object.fromEntries(
+  const resolved = Object.fromEntries(
     Object.entries(anchors ?? {}).flatMap(([name, point]) => {
       const value = pointOf(point);
       return value ? [[name, value]] : [];
     }),
   );
+  if (Object.keys(resolved).length > 0) return resolved;
+  // Fallback hand socket in actor-local coordinates (right hand at mid-torso,
+  // mirrored like HeldProp): keeps prop bindings working for figures whose
+  // assets declare no explicit sockets.
+  return {hand_r: [88, -218], hand_l: [-88, -218]};
 }
 
 function assetVisual(asset: UnknownRecord | undefined) {
@@ -991,18 +1023,27 @@ function projectCompiledActors(compiled: PerformanceManifest, assets: UnknownRec
 
 function projectCompiledProps(compiled: PerformanceManifest, assets: UnknownRecord): PerformanceProp[] {
   const objectAssets = asRecord(assets.objects);
+  const video = compiled.video ?? {width: 1920, height: 1080};
   return Object.keys(objectAssets ?? {}).map((id) => {
     const asset = resolvedAssetForInstance(assets, "objects", id);
     const visual = assetVisual(asset);
     const initial = compiled.sceneTrack?.find((scene) => scene.initial?.props?.[id])?.initial.props[id];
-    const placement = initial?.placement;
+    const placement = initial?.placement as {at?: [number, number]} | undefined;
+    // Scene staging is the plugin-pipeline placement source (normalized
+    // coordinates); without it props would be invisible.
+    const staged = compiled.sceneTrack
+      ?.map((scene) => scene.staging?.objects?.[id])
+      .find((object) => object !== undefined) as {at: readonly number[]; scale: number; z?: number; relation?: string} | undefined;
+    const at = staged ? stagePoint([Number(staged.at[0]), Number(staged.at[1])], compiled.sceneTrack?.[0]?.staging ?? {}, video) : placement?.at;
     return {
       id,
-      ...(placement === undefined ? {} : {placement: placement as PerformancePlacement | SemanticPlacement | string}),
-      ...(visual.size ? {size: visual.size} : {}),
+      // Props draw procedural art in a 200x160 viewBox scaled so that the
+      // authored staging scale (0.18) yields a sensible stage size.
+      size: (visual.size ?? (visual.width !== undefined && visual.height !== undefined ? [visual.width, visual.height] : [1920, 1536])) as [number, number],
+      ...(at ? {at, x: at[0], y: at[1]} : {}),
+      ...(placement ?? {}),
+      ...(staged ? {scale: staged.scale, z: staged.z ?? 30, label: staged.relation ? `${id} (${staged.relation})` : id} : {}),
       ...(visual.src ? {src: visual.src} : {}),
-      ...(visual.width ? {width: visual.width} : {}),
-      ...(visual.height ? {height: visual.height} : {}),
     } satisfies PerformanceProp;
   });
 }

@@ -1,4 +1,5 @@
 import type { NarrowEpisode } from "../schemas/narrowEpisode";
+import { scanInlineGroups } from "../schemas/narrowEpisode";
 /** Brace-token classification and callee extraction (expressions, not grammar). */
 const CALLEE = /^([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*\(/;
 function calleePath(token: string): string | null {
@@ -383,20 +384,22 @@ export function cleanSpokenText(source: string): CleanedSpokenText {
   let text = "";
   let sourceCursor = 0;
 
-  for (let i = 0; i < source.length; i++) {
-    if (source[i] !== "{") continue;
-    const close = source.indexOf("}", i + 1);
-    if (close < 0) continue;
-    const raw = source.slice(i, close + 1);
-    const token = source.slice(i + 1, close).trim();
+  // Shares the compiler's depth-aware group scan: nested braces (object
+  // literal call arguments) belong to the call, never to the spoken text.
+  const groups = scanInlineGroups(source);
+  if (groups === null) {
+    appendSegment(source, 0, source.length, text, segments);
+    text += source;
+    return { text, removed, segments };
+  }
+  for (const group of groups) {
+    const token = group.raw.trim();
     const kind = CUE.test(token) ? "cue" : token ? "call" : undefined;
     if (!kind) continue;
-
-    appendSegment(source, sourceCursor, i, text, segments);
-    text += source.slice(sourceCursor, i);
-    removed.push({ kind, raw, start: i, end: close + 1, cleanStart: text.length });
-    sourceCursor = close + 1;
-    i = close;
+    appendSegment(source, sourceCursor, group.start, text, segments);
+    text += source.slice(sourceCursor, group.start);
+    removed.push({ kind, raw: source.slice(group.start, group.end), start: group.start, end: group.end, cleanStart: text.length });
+    sourceCursor = group.end;
   }
 
   appendSegment(source, sourceCursor, source.length, text, segments);
@@ -499,12 +502,13 @@ export function segmentYamlAudio(source: YamlAudioSource, voiceSpeed?: number): 
         pendingEvents = [];
         chunkIndex++;
       };
-      while (cursor < statement.text.length) {
-        const open = statement.text.indexOf("{", cursor);
-        if (open < 0) { addText(cursor, statement.text.length); cursor = statement.text.length; break; }
+      // Shares the compiler's depth-aware scan: nested object-literal call
+      // arguments belong to the group, never to the spoken text.
+      const groups = scanInlineGroups(statement.text) ?? [];
+      for (const groupSpan of groups) {
+        const open = groupSpan.start;
+        const close = groupSpan.end - 1;
         addText(cursor, open);
-        const close = statement.text.indexOf("}", open + 1);
-        if (close < 0) break;
         const group = statement.text.slice(open + 1, close);
         const speedInGroup = group.match(/voice\.speed\(\s*([0-9.]+)\s*\)/);
         if (speedInGroup && Number(speedInGroup[1]) > 0) speed = Number(speedInGroup[1]);
@@ -534,8 +538,9 @@ export function segmentYamlAudio(source: YamlAudioSource, voiceSpeed?: number): 
             }
           }
         }
-        cursor = close + 1;
+        cursor = groupSpan.end;
       }
+      addText(cursor, statement.text.length);
       // A statement containing only calls has no spoken chunk; it still has no
       // TTS work. A final empty segment is intentionally not synthesized.
     }

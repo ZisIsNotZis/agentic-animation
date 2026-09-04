@@ -13,6 +13,13 @@ test("cleanSpokenText removes concurrent call groups and preserves spoken text",
   assert.equal(cleaned.removed[0]!.raw, "{voice.speed(1.5), awei.say(\"打断\")}");
 });
 
+test("cleanSpokenText strips nested object-literal calls with the depth-aware scan", () => {
+  const cleaned = cleanSpokenText("{music.xuehua({durationSec: 14}), ...particle.snow({count: 120})}雪花飘飘，北风萧萧。");
+  assert.equal(cleaned.text, "雪花飘飘，北风萧萧。");
+  assert.equal(cleaned.removed.length, 1);
+  assert.equal(cleaned.removed[0]!.kind, "call");
+});
+
 test("segments at brace boundaries, applies voice state forward, and preserves interruption", () => {
   const chunks = segmentYamlAudio(source);
   assert.deepEqual(chunks.map(({id, text, speed}) => ({id, text, speed})), [
