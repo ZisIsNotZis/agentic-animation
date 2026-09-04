@@ -7,6 +7,7 @@ import {loadNarrowEpisode} from "../narrowEpisode/load";
 import {buildScope, calleeOf, evaluateExpression, runInvocationSync, splitExpressions} from "../invocation/runner";
 import type {Invocation, LoadedPlugin, World} from "../invocation/types";
 import {stageScene, type StagingResult} from "../staging";
+import {bakeSceneMotor} from "../motor";
 
 export type CompilerAssetKind = "actor" | "voice" | "location" | "object";
 
@@ -200,6 +201,7 @@ export interface CompiledScene {
   final: EpisodeState;
   performanceTracks: PerformanceTrack[];
   activeBindingConstraints: BindingConstraint[];
+  motor?: ReturnType<typeof bakeSceneMotor>;
 }
 
 export interface CompiledEpisode {
@@ -288,6 +290,7 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
     const duration = round(Math.max(0, compiled.cursor - sceneStart, ...compiled.calls.map((item) => item.event.end - sceneStart)));
     const end = round(sceneStart + duration);
     const final = snapshotState(state, episode);
+    const sceneTracks = buildTracks(compiled.events, episode);
     scenes.push({
       id: scene.id,
       index,
@@ -299,8 +302,14 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
       staging,
       initial,
       final,
-      performanceTracks: buildTracks(compiled.events, episode),
+      performanceTracks: sceneTracks,
       activeBindingConstraints: constraints.filter((item) => item.start < end && item.end > sceneStart),
+      motor: bakeSceneMotor({
+        durationSec: duration,
+        actors: Object.fromEntries(Object.entries(staging.actors).map(([id, staged]) => [id, {at: staged.at, facing: staged.facing === -1 ? -1 : 1}])),
+        objects: Object.fromEntries(Object.entries(staging.objects).map(([id, staged]) => [id, {at: staged.at}])),
+        tracks: sceneTracks as never,
+      }),
     });
     sceneStart = end;
   }

@@ -130,6 +130,9 @@ function repelActors(actors: readonly EvaluatedActor[]): EvaluatedActor[] {
     if (Math.abs(left.y - right.y) > 80) continue;
     const required = 200 * left.scale + 200 * right.scale;
     if (left.id === right.id) continue;
+    // Motor-driven positions are physical (docs/WORLD_PUPPET_MOTOR.md):
+    // the solver already enforces separation, so never nudge them.
+    if ((left as {motor?: unknown}).motor || (right as {motor?: unknown}).motor) continue;
     if (right.x - left.x >= required || (left.x === right.x && left.id !== right.id)) {
       if (left.x === right.x && left.id !== right.id) {
         left.x -= required / 2;
@@ -829,7 +832,29 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
   const normalized = normalizePerformanceManifest({ ...manifest, timebase: manifest.timebase ?? "seconds" });
   const safeFrame = Number.isFinite(frame) ? Math.max(0, Math.floor(frame)) : 0;
   const tracks = (normalized.tracks ?? []).flatMap((track) => evaluateTracks([track], safeFrame));
-  const actors = repelActors((normalized.actors ?? []).map((actor) => actorState(actor, normalized, safeFrame, tracksForSubject(tracks, actor.id))));
+  const rawActors = (normalized.actors ?? []).map((actor) => actorState(actor, normalized, safeFrame, tracksForSubject(tracks, actor.id)));
+  // Motor-driven actors follow baked trajectories exactly (docs/WORLD_PUPPET_MOTOR.md):
+  // their positions are physical and must not be repelled or eased.
+  const motorScenes = (manifest as {sceneTrack?: Array<{start?: number; motor?: {actors?: Record<string, Array<Record<string, unknown>>>}}>}).sceneTrack ?? [];
+  const motorFps = normalized.video?.fps ?? 24;
+  const activeMotorScene = motorScenes.find((scene) => {
+    const start = Math.round((scene.start ?? 0) * motorFps);
+    const end = Math.round(((scene.start ?? 0) + 1) * motorFps);
+    return safeFrame >= start && safeFrame < Math.max(end, (scene.motor?.actors ? Object.values(scene.motor.actors)[0]?.length ?? 0 : 0) + start);
+  });
+  const motorFrameFor = (id: string): Record<string, unknown> | undefined => {
+    const frames = activeMotorScene?.motor?.actors?.[id];
+    if (!frames?.length) return undefined;
+    const local = Math.max(0, Math.min(safeFrame - Math.round((activeMotorScene!.start ?? 0) * motorFps), frames.length - 1));
+    return frames[local];
+  };
+  const actors = repelActors(
+    rawActors.map((actor) => {
+      const motor = motorFrameFor(actor.id) as {x?: number; lean?: number; walk?: number; facing?: number; reach?: [number, number]; contact?: boolean} | undefined;
+      if (!motor || typeof motor.x !== "number") return actor;
+      return {...actor, x: motor.x, lean: motor.lean ?? 0, walk: motor.walk ?? 0, facing: (motor.facing ?? (actor.flip ? -1 : 1)) as 1 | -1, flip: (motor.facing ?? (actor.flip ? -1 : 1)) === -1, reach: motor.reach as [number, number] | undefined, contact: motor.contact === true, motor: true as const};
+    }),
+  );
   const actorById = new Map(actors.map((actor) => [actor.id, actor]));
   const props = (normalized.props ?? normalized.objects ?? []).map((prop) => {
     const projected = {...prop, tracks: [...(prop.tracks ?? []), ...tracksForSubject(tracks, prop.id)]};

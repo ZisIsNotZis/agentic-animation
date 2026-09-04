@@ -358,6 +358,16 @@ export interface EvaluatedActor {
   present: boolean;
   pose?: string;
   expression: EvaluatedExpression;
+  /** Present when the actor follows a baked motor trajectory (docs/WORLD_PUPPET_MOTOR.md). */
+  motor?: boolean;
+  /** Torso lean in degrees from the motor (reaction + gait). */
+  lean?: number;
+  /** Walk cycle phase 0..1. */
+  walk?: number;
+  facing?: 1 | -1;
+  /** World-space hand position while reaching/exerting. */
+  reach?: [number, number];
+  contact?: boolean;
   gesture?: EvaluatedGesture;
   anchors: Record<string, [number, number]>;
   src?: string;

@@ -14,6 +14,7 @@ document owning a contract before changing implementation or an episode.
 - [NARROW_EPISODE_DSL.md](NARROW_EPISODE_DSL.md): complete agent-authored YAML language.
 - [SCHEMAS.md](SCHEMAS.md): source, plugin, compiler IR, and validation contracts.
 - [ARCHITECTURE.md](ARCHITECTURE.md): module seams and runtime data flow.
+- [WORLD_PUPPET_MOTOR.md](WORLD_PUPPET_MOTOR.md): physical motion model — support/contact/reaction invariants, compile-time motor simulation, trajectory bake format.
 - [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md): canonical world/plugin contract — library layout, categories, world type, plugin lifecycle, ordering, and state rules.
 - [SHOWCASES.md](SHOWCASES.md): minimal per-capability showcase episodes (states, actions, camera, effects, props, voice, particle snow).
 - [PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md): historical migration plan; Steps 1-2 are implemented. Kept for reference, superseded by [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md).
