@@ -161,6 +161,8 @@ export interface SpeechPerformanceEvent {
   text: string;
   speed: number;
   boundaries?: readonly SpeechBoundary[];
+  /** Rhubarb viseme cues, scene-absolute seconds (docs/WORLD_PUPPET_MOTOR.md). */
+  mouth?: ReadonlyArray<{start: number; end: number; viseme: string}>;
   interruption?: true;
 }
 

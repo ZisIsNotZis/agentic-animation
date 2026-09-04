@@ -99,3 +99,20 @@ test("props slide under force and stop by friction", () => {
   const tail = thermos.slice(-12).map((frame) => frame.x);
   assert.equal(new Set(tail).size, 1, "prop must come to rest (friction)");
 });
+
+test("pursuit stops at adjacency — actors never overlap", () => {
+  const scene: MotorScene = {
+    ...baseScene,
+    durationSec: 3,
+    actors: [
+      { ...baseScene.actors[0]!, intents: [{ at: 0, duration: 3, intent: "move", target: "awei" }] },
+      baseScene.actors[1]!,
+    ],
+  };
+  const trajectory = simulateScene(scene);
+  const frames = trajectory.actors.aqiang!;
+  const minGap = Math.min(...frames.map((frame, index) => Math.abs(trajectory.actors.awei![index]!.x - frame.x)));
+  assert.ok(minGap >= 380, `actors overlapped: minimum gap ${Math.round(minGap)}px`);
+  const finalGap = Math.abs(trajectory.actors.awei!.at(-1)!.x - frames.at(-1)!.x);
+  assert.ok(finalGap <= 450, `pursuit should halt near the target, gap ${Math.round(finalGap)}`);
+});

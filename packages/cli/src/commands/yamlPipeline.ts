@@ -23,7 +23,7 @@ import {
   type SpeechTimingProvider,
   type YamlAudioPreparationArtifact,
 } from "@anim/core";
-import type { RendererAdapter } from "@anim/core";
+import type { LipsyncAdapter, RendererAdapter } from "@anim/core";
 import type { StageContext } from "../runtime/context";
 import { assembleYamlAudio, yamlAudioStage } from "./yamlAudio";
 import { stageNow } from "./audioSupport";
@@ -177,6 +177,8 @@ export async function makeYamlEpisode(
     inputs: { episode: resolved.episode, provider: opts.provider ?? ctx.config.adapters.tts, starts, totalDuration: compiled.totalDuration },
   });
   const manifestPath = join(resolved.dir, YAML_PERFORMANCE_MANIFEST_NAME);
+  await attachMouthCues(ctx, resolved, preparation);
+  attachSpeechMouth(compiled, preparation);
   const manifest = performanceManifest(ctx, resolved, compiled, preparation, deps.now?.() ?? stageNow());
   // Cue audio is plugin-owned: resolve each cue's file here so the manifest is
   // self-contained and the renderer never looks up library paths itself.
@@ -339,6 +341,70 @@ function performanceManifest(
       inputHash: hashJson({episode: resolved.episode, audio: preparation}),
     },
   };
+}
+
+/**
+ * Correlate take-level viseme cues with compiled speech events (same pairing
+ * rule as speechStarts: per scene, takes in order zip speech events by start
+ * time) and rewrite the top-level performance tracks with scene-absolute
+ * `mouth` cue lists the renderer can consume.
+ */
+function attachSpeechMouth(compiled: CompiledEpisode, preparation: YamlAudioPreparationArtifact): void {
+  const takesByScene = new Map<string, typeof preparation.takes>();
+  for (const take of preparation.takes) {
+    if (!take.mouth?.length) continue;
+    const list = takesByScene.get(take.sceneId) ?? [];
+    list.push(take);
+    takesByScene.set(take.sceneId, list);
+  }
+  if (!takesByScene.size) return;
+  for (const scene of compiled.sceneTrack) {
+    const takes = takesByScene.get(scene.id);
+    if (!takes?.length) continue;
+    const speech = scene.performanceTracks
+      .flatMap((track) => track.events)
+      .filter((event): event is Extract<typeof event, {kind: "speech"}> => event.kind === "speech")
+      .sort((a, b) => a.start - b.start);
+    for (const [index, event] of speech.entries()) {
+      const take = takes[index];
+      if (!take?.mouth?.length) continue;
+      const shift = event.start;
+      const mouth = take.mouth.map((cue) => ({start: shift + cue.start, end: shift + cue.end, viseme: cue.viseme}));
+      for (const track of compiled.performanceTracks) {
+        if (track.subject !== event.subject) continue;
+        for (const candidate of track.events) {
+          if (candidate.kind !== "speech") continue;
+          if (Math.abs(candidate.start - shift) > 0.05) continue;
+          (candidate as {mouth?: typeof mouth}).mouth = mouth;
+        }
+      }
+    }
+  }
+}
+
+/** Rhubarb viseme analysis: attach per-take mouth cues for lip sync. */
+async function attachMouthCues(ctx: StageContext, resolved: ResolvedEpisode, preparation: YamlAudioPreparationArtifact): Promise<void> {
+  const lipsyncId = ctx.config.adapters.lipsync as string | undefined;
+  if (!lipsyncId || lipsyncId === "none") return;
+  const adapter = ctx.registry.find("lipsync", lipsyncId) as (LipsyncAdapter & { analyze?: unknown }) | undefined;
+  if (!adapter?.analyze) return;
+  const audioDir = join(resolved.dir, "audio");
+  let analyzed = 0;
+  for (const take of preparation.takes) {
+    if (take.silence) continue;
+    const wav = join(audioDir, `yaml-${take.id.replace(/[^a-zA-Z0-9._-]/g, "_")}.wav`);
+    if (!existsSync(wav)) continue;
+    try {
+      const cues = await adapter.analyze({ audioPath: wav, dialogText: take.text });
+      if (cues.length) {
+        (take as { mouth?: unknown }).mouth = cues;
+        analyzed++;
+      }
+    } catch (error) {
+      process.stderr.write(`lipsync:${lipsyncId} — take ${take.id}: ${(error as Error).message?.split("\n")[0] ?? "unknown"}\n`);
+    }
+  }
+  if (analyzed) process.stdout.write(`lipsync:${lipsyncId} — analyzed ${analyzed} take(s)\n`);
 }
 
 function speechStarts(preparation: YamlAudioPreparationArtifact, compiled: CompiledEpisode): Record<string, number> {

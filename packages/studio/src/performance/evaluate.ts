@@ -699,8 +699,12 @@ function applyGenericBindings(
 ): EvaluatedProp[] {
   const byId = new Map(props.map((prop) => [prop.id, prop]));
   // Chronological bind/release state: the newest event wins, a release
-  // detaches the prop (it returns to its staged position).
+  // detaches the prop (it returns to its staged position). A fresh bind
+  // eases the prop from wherever it was into the hand across the event's
+  // duration — no teleport snap (docs/WORLD_PUPPET_MOTOR.md).
   let bound: {propId: string; actorId: string; hand: string; offset: [number, number]} | null = null;
+  let lift: {fromX: number; fromY: number; progress: number} | null = null;
+  let lastBindEvent = "";
   const events = tracks
     .filter((track) => track.kind === "binding")
     .flatMap((track) => track.events)
@@ -710,12 +714,21 @@ function applyGenericBindings(
     const value = eventValue(event);
     if (String(value.operation ?? "bind") === "release") {
       bound = null;
+      lift = null;
       continue;
     }
     const propId = String(value.prop ?? value.object ?? event.target ?? "");
     const actorId = String(value.actor ?? value.actorId ?? value.holder ?? event.subject ?? "");
     const hand = String(value.hand ?? value.socket ?? "hand_r");
     if (!byId.has(propId) || !actors.has(actorId)) continue;
+    const eventKey = `${propId}:${actorId}:${trackEventStart(event)}`;
+    if (eventKey !== lastBindEvent) {
+      const prop = byId.get(propId)!;
+      lift = {fromX: prop.x, fromY: prop.y, progress: event.progress};
+      lastBindEvent = eventKey;
+    } else if (lift) {
+      lift.progress = event.progress;
+    }
     bound = {propId, actorId, hand, offset: pointOf(value.offset) ?? [0, 0]};
   }
   if (bound) {
@@ -723,8 +736,16 @@ function applyGenericBindings(
     const actor = actors.get(bound.actorId);
     const hand = actor?.anchors[bound.hand];
     if (prop && actor && hand) {
-      prop.x = actor.x + hand[0] * actor.scale + bound.offset[0];
-      prop.y = actor.y + hand[1] * actor.scale + bound.offset[1];
+      const handX = actor.x + hand[0] * actor.scale + bound.offset[0];
+      const handY = actor.y + hand[1] * actor.scale + bound.offset[1];
+      if (lift && lift.progress < 1) {
+        const eased = lift.progress * lift.progress * (3 - 2 * lift.progress);
+        prop.x = lift.fromX + (handX - lift.fromX) * eased;
+        prop.y = lift.fromY + (handY - lift.fromY) * eased;
+      } else {
+        prop.x = handX;
+        prop.y = handY;
+      }
       prop.rotation += actor.rotation;
       prop.scale *= actor.scale;
     }
@@ -760,7 +781,13 @@ function projectVfxTarget(
   const actor = targetId ? actors.find((candidate) => candidate.id === targetId) : undefined;
   const prop = targetId ? props.find((candidate) => candidate.id === targetId) : undefined;
   const authoredPosition = pointOf(value.targetPosition) ?? pointOf(value.position);
-  const position = actor
+  // Explicit bind point: anchor the effect to a body socket (e.g. the hand
+  // doing the action) instead of the body center.
+  const bindName = typeof value.bind === "string" ? value.bind : undefined;
+  const bindAnchor = actor && bindName ? actor.anchors?.[bindName] : undefined;
+  const position = bindAnchor
+    ? [actor!.x + bindAnchor[0] * actor!.scale, actor!.y + bindAnchor[1] * actor!.scale] as [number, number]
+    : actor
     ? [actor.x, actor.y - 360 * actor.scale] as [number, number]
     : prop
       ? [prop.x, prop.y] as [number, number]
@@ -823,6 +850,9 @@ function activeTrackVfx(
         progress: event.progress,
         ...value,
         ...(value.target === undefined && track.target ? {target: track.target} : {}),
+        // Emotion/actor-category vfx without an explicit target bind to the
+        // acting subject — the effect originates at the actor, not screen center.
+        ...(value.target === undefined && !track.target && track.subject && value.bind === undefined ? {target: track.subject} : {}),
       } satisfies EvaluatedVfx, actors, props, value);
     });
 }
@@ -1011,7 +1041,7 @@ function projectCompiledActors(compiled: PerformanceManifest, assets: UnknownRec
     const tracks: PerformanceGenericTrack[] = [];
     for (const event of compiled.performanceTracks?.find((track) => track.subject === id)?.events ?? []) {
       if (event.kind === "speech") {
-        tracks.push({kind: "speech", events: [{frame: Math.round(event.start * fps), endFrame: Math.round(event.end * fps), text: event.text, speed: event.speed, ...(event.boundaries ? {boundaries: event.boundaries} : {})}]});
+        tracks.push({kind: "speech", events: [{frame: Math.round(event.start * fps), endFrame: Math.round(event.end * fps), text: event.text, speed: event.speed, ...(event.boundaries ? {boundaries: event.boundaries} : {}), ...(event.mouth ? {mouth: event.mouth} : {})}]});
         continue;
       }
       if (event.kind !== "call") continue;

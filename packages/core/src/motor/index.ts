@@ -70,12 +70,14 @@ const DT = 1 / 120;
 const SUBSTEPS = Math.round(1 / (FPS * DT));
 /** Walk speed in stage px/s. */
 const WALK_SPEED = 420;
-/** Contact distance between hand point and target body center. */
-const CONTACT_RANGE = 130;
+/** Actor visual half-width (the drawn puppet is ~400px at scale 1). */
+const BODY_HALF_WIDTH = 200;
+/** Hand extension beyond the body center when reaching. */
+const ARM_REACH = 260;
+/** Contact: hand within this distance of the target body center. */
+const CONTACT_RANGE = 240;
 /** Standing hand height above ground (chest line). */
 const HAND_HEIGHT = -320;
-/** Body radius for contact tests. */
-const BODY_RADIUS = 90;
 /** Ground friction deceleration for sliding props (px/s²). */
 const PROP_FRICTION = 900;
 /** Reaction lean per unit of applied force (degrees). */
@@ -171,8 +173,8 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       const targetX = targetActor?.x ?? targetProp?.x;
       if (targetX === undefined) { pendingForces.splice(i, 1); continue; }
       const direction = Math.sign(targetX - actor.x) || 1;
-      const handX = actor.x + direction * (BODY_RADIUS + 40);
-      const inContact = Math.abs(handX - targetX) <= CONTACT_RANGE + BODY_RADIUS / 2;
+      const handX = actor.x + direction * ARM_REACH;
+      const inContact = Math.abs(handX - targetX) <= CONTACT_RANGE;
       // Reach phase: track the target and step into contact range — the
       // approach always completes before any force can exist (I2).
       actor.reach = { tx: targetX, target: force.target, contact: inContact && now >= force.start };
@@ -227,6 +229,23 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         state.stagger = 0;
         state.lean *= 0.9;
         if (!state.reach) state.walkPhase = 0;
+      }
+      // Body separation (I1): two actors cannot share ground. A mover stops
+      // at adjacency — the script says "run at", not "overlap with", so
+      // pursuit halts at the other body's edge.
+      for (const other of actors.values()) {
+        if (other.id === state.id) continue;
+        const gap = Math.abs(other.x - state.x);
+        const required = BODY_HALF_WIDTH * 2;
+        if (gap >= required) continue;
+        if (state.moveTarget !== null) {
+          const dir = Math.sign(state.moveTarget - state.x) || state.facing;
+          const limit = other.x - dir * required;
+          if ((state.moveTarget - limit) * dir > 0) state.moveTarget = limit;
+        }
+        const push = (required - gap) / 2;
+        const dir = Math.sign(state.x - other.x) || state.facing;
+        state.x += dir * push * DT * 8;
       }
     }
 

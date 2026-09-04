@@ -1,6 +1,7 @@
 import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { execa } from "execa";
 import {
   MouthCueSchema,
@@ -111,7 +112,10 @@ function resolveBinary(): string | null {
   if (process.env.RHUBARB_PATH && existsSync(process.env.RHUBARB_PATH)) {
     return resolve(process.env.RHUBARB_PATH);
   }
-  const vendored = resolve(process.cwd(), "vendor", "rhubarb", "rhubarb");
+  // Resolve the vendored copy relative to this adapter (the CLI may run
+  // from an isolated project cwd, not the repository root).
+  const here = fileURLToPath(new URL("../../../..", import.meta.url));
+  const vendored = resolve(here, "vendor", "rhubarb", "rhubarb");
   if (existsSync(vendored)) return vendored;
   return whichSync("rhubarb");
 }

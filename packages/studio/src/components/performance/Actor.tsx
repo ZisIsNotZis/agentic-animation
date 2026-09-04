@@ -36,7 +36,22 @@ export function deriveActorPose(actor: EvaluatedActor): ActorPose {
   for (const semantic of semanticEvents(actor)) {
     const {text, progress: p} = semantic; const amount = clamp(number(semantic.value.intensity, 1), 0, 1); const eased = easeOut(p) * amount; const action = actionOf(text); const sides = eachSide(semantic); const hand = handFor(text, amount);
     if (semantic.trackKind === "gaze" || semantic.event.kind === "gaze" || /gaze|look|eyeline|attention|speaker|target/.test(text)) gaze = gazeDirection(semantic.value, text, gaze);
-    if (semantic.trackKind === "speech" || semantic.event.kind === "speech" || "text" in semantic.value || "line" in semantic.value) {speechActive = true; const start = eventStart(semantic.event); const end = number(semantic.event.endFrame, start + 18); const sampleFrame = start + p * Math.max(18, end - start); const speed = Math.max(0.01, number(semantic.value.speed, 1)); speechOpen = (Math.floor(sampleFrame * speed / 5) + roleFor(actor.id)) % 2 === 0; mouthOpen = speechOpen ? Math.max(mouthOpen, 10 + 12 * amount) : 0}
+    if (semantic.trackKind === "speech" || semantic.event.kind === "speech" || "text" in semantic.value || "line" in semantic.value) {speechActive = true; const start = eventStart(semantic.event); const end = number(semantic.event.endFrame, start + 18); const sampleFrame = start + p * Math.max(18, end - start); const speed = Math.max(0.01, number(semantic.value.speed, 1));
+      // Rhubarb viseme cues (docs/WORLD_PUPPET_MOTOR.md): real mouth shapes
+      // when analysis exists; the alternating flap remains the fallback.
+      const mouthCues = semantic.value.mouth as ReadonlyArray<{start: number; end: number; viseme: string}> | undefined;
+      if (Array.isArray(mouthCues) && mouthCues.length) {
+        const sampleSec = (sampleFrame - start) / 24;
+        const cue = mouthCues.find((cue) => sampleSec >= cue.start && sampleSec < cue.end) ?? (sampleSec < mouthCues[0]!.start ? mouthCues[0]! : undefined);
+        const viseme = cue?.viseme ?? "X";
+        const openness: Record<string, number> = {A: 1, E: 0.78, H: 0.6, C: 0.5, G: 0.42, D: 0.34, F: 0.28, L: 0.22, B: 0.1, X: 0};
+        mouthOpen = Math.max(mouthOpen, (openness[viseme] ?? 0.4) * 34 * amount);
+        speechOpen = (openness[viseme] ?? 0) > 0.15;
+      } else {
+        speechOpen = (Math.floor(sampleFrame * speed / 5) + roleFor(actor.id)) % 2 === 0;
+        mouthOpen = speechOpen ? Math.max(mouthOpen, 10 + 12 * amount) : 0;
+      }
+    }
     if (action === "walk") {const stride = alternating(p, 2) * Math.max(amount, .75); legLeft.upper += 25 * stride; legRight.upper -= 25 * stride; legLeft.lower -= 14 * stride; legRight.lower += 14 * stride; torsoTilt -= 4 * stride; headTilt += 2 * stride}
     else if (action === "bow") {torsoTilt += 29 * bell(p) * Math.max(amount, .7); torsoY += 24 * easeOut(p); torsoScaleY -= .1 * eased; headTilt += 12 * bell(p); headY += 10 * eased; legLeft.upper -= 18 * eased; legRight.upper += 18 * eased}
     else if (action === "nod") {const nod = bell(p); headTilt += 18 * nod; headY += 7 * nod; gaze[1] += 8 * nod}

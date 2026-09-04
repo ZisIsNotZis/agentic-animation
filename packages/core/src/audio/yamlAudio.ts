@@ -321,6 +321,8 @@ export const PreparedYamlAudioTakeSchema = z.object({
   profile: z.string().min(1),
   compilerVersion: z.string().min(1),
   cacheKey: z.string().regex(/^[a-f0-9]{64}$/),
+  /** Rhubarb viseme cues, take-relative seconds (docs/WORLD_PUPPET_MOTOR.md lip sync). */
+  mouth: z.array(z.object({start: z.number().finite().nonnegative(), end: z.number().finite().nonnegative(), viseme: z.string().min(1)})).optional(),
   sourceText: z.string(),
   text: z.string(),
   silence: z.boolean(),
