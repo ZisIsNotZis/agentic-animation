@@ -1,4 +1,5 @@
 import { ease } from "../lib/interpolate";
+import { circleOverlapsBox, solveSkeleton, type Skeleton } from "@anim/core";
 import type {
   EvaluatedActor,
   EvaluatedCamera,
@@ -599,6 +600,16 @@ function actorState(
     ? {name: String(expressionValue.name ?? expressionValue.emotion), ...expressionValue} as PerformanceExpression
     : undefined;
   const transformed = genericPlacement(tracks, frame, placement, manifest);
+  const solvedRest = actor.skeleton ? solveSkeleton(actor.skeleton, {facing: transformed.flip === true ? -1 : 1}) : undefined;
+  const handRadius = solvedRest ? (solvedRest.hands.hand_r?.radius ?? 26) * (transformed.scale ?? 1) : undefined;
+  const cx = (actor.skeleton?.space.width ?? 400) / 2;
+  const ground = actor.skeleton?.space.height ?? 720;
+  const fkAnchors: Record<string, [number, number]> | undefined = solvedRest
+    ? {
+        hand_r: [Math.round(solvedRest.hands.hand_r!.center[0] - cx), Math.round(solvedRest.hands.hand_r!.center[1] - ground)],
+        hand_l: [Math.round(solvedRest.hands.hand_l!.center[0] - cx), Math.round(solvedRest.hands.hand_l!.center[1] - ground)],
+      }
+    : undefined;
   // Orientation (45-degree facing): the newest semantic event that carries an
   // explicit `orientation` value wins; default full-front.
   const ORIENTATIONS = ["front", "front-left", "front-right", "back-left", "back-right"];
@@ -615,6 +626,8 @@ function actorState(
     scale: numberOr(transformed.scale, 1),
     rotation: numberOr(transformed.rotation, 0),
     flip: transformed.flip === true,
+    ...(actor.skeleton === undefined ? {} : {skeleton: actor.skeleton}),
+    ...(handRadius === undefined ? {} : {handRadius: Math.round(handRadius * 100) / 100}),
     ...(orientation === undefined ? {} : {orientation}),
     z: numberOr(actor.z, 0),
     present: lifecyclePresent ?? present ?? actor.present !== false,
@@ -623,7 +636,7 @@ function actorState(
     gesture: gestureAt(actor, frame),
     tracks,
     anchors: Object.fromEntries(
-      Object.entries({ ...actor.sockets, ...actor.anchors }).map(([name, point]) => [name, [point[0], point[1]]]),
+      Object.entries({...actor.sockets, ...actor.anchors, ...(fkAnchors ?? {})}).map(([name, point]) => [name, [point[0], point[1]]]),
     ),
     ...((actor.src ?? visual?.src ?? (typeof asset?.src === "string" ? asset.src : undefined)) === undefined ? {} : { src: actor.src ?? visual?.src ?? asset?.src as string }),
     ...((actor.width ?? visual?.width ?? (typeof asset?.width === "number" ? asset.width : undefined)) === undefined ? {} : { width: actor.width ?? visual?.width ?? asset?.width as number }),
@@ -640,8 +653,6 @@ function smoothstep(t: number): number {
 const LIFT_FRAMES = 9;
 /** Frames a released prop falls to its staged spot (~0.33s at 24fps). */
 const DROP_FRAMES = 8;
-/** Grab: the hand must come this close before the prop starts following it. */
-export const GRAB_RADIUS = 120;
 /** Frames for the grip to seat the prop fully into the hand after a grab. */
 const GRAB_SEAT_FRAMES = 6;
 
@@ -760,6 +771,7 @@ function projectedProp(prop: PerformanceProp, pos: {x: number; y: number; rotati
     scale: pos.scale,
     z: numberOr(prop.z, 0),
     size: prop.size ? [prop.size[0], prop.size[1]] : [prop.width ?? 64, prop.height ?? 64],
+    ...(prop.base === undefined ? {} : {base: prop.base}),
     ...(prop.src === undefined ? {} : {src: prop.src}),
     tracks,
   };
@@ -772,12 +784,12 @@ function handAtFrame(
   handName: string,
   at: number,
   offset: [number, number],
-): {x: number; y: number; rotation: number; scale: number} | undefined {
+): {x: number; y: number; rotation: number; scale: number; radius?: number} | undefined {
   const holder = actorAtFrame(holderId, at);
   if (!holder) return undefined;
   // While reaching (grab/push), the motor's reach point IS the hand.
   if (holder.reach) {
-    return {x: holder.reach[0] + offset[0], y: holder.reach[1] + offset[1], rotation: holder.rotation, scale: holder.scale};
+    return {x: holder.reach[0] + offset[0], y: holder.reach[1] + offset[1], rotation: holder.rotation, scale: holder.scale, radius: holder.handRadius};
   }
   const anchor = holder.anchors[handName];
   if (!anchor) return undefined;
@@ -786,6 +798,7 @@ function handAtFrame(
     y: holder.y + anchor[1] * holder.scale + offset[1],
     rotation: holder.rotation,
     scale: holder.scale,
+    radius: holder.handRadius,
   };
 }
 
@@ -830,12 +843,14 @@ function propPlacementAt(
   if (!isRelease) {
     // Grab semantics (docs/WORLD_PUPPET_MOTOR.md): the prop does not move by
     // magic. It stays wherever it physically is until the binding hand
-    // actually arrives (within GRAB_RADIUS), and from the grab frame on it
+    // actually arrives (hand circle overlapping the prop box), and from the grab frame on it
     // follows that hand exactly, keeping the grip offset it was grabbed with.
     if (!handNow) return stagedPropPosition(prop, frame);
     const handPosAt = (t: number) => context?.actorAtFrame
       ? handAtFrame(context.actorAtFrame, holderId, handName, t, offset)
       : handNow;
+    // Hand circle radius from the holder's declared skeleton (FK rest hand).
+    const handRadiusAt = (t: number): number => handPosAt(t)?.radius ?? 26;
     const prevAt = (t: number) => propPlacementAt(prop, events, index, actors, context, t);
     let grabFrame = -1;
     let gripOffset: {x: number; y: number} | null = null;
@@ -845,7 +860,12 @@ function propPlacementAt(
       const propT: {x: number; y: number} = grabFrame >= 0
         ? {x: handT.x + gripOffset!.x, y: handT.y + gripOffset!.y}
         : prevAt(t);
-      if (grabFrame < 0 && Math.hypot(handT.x - propT.x, handT.y - propT.y) <= GRAB_RADIUS) {
+      const [pw, ph] = prop.size ?? [64, 64];
+      const touches = circleOverlapsBox(
+        {center: [handT.x, handT.y], radius: handRadiusAt(t)},
+        {a: [propT.x - pw / 2, propT.y - ph], b: [propT.x + pw / 2, propT.y]},
+      );
+      if (grabFrame < 0 && touches) {
         grabFrame = t;
         gripOffset = {x: propT.x - handT.x, y: propT.y - handT.y};
       }
@@ -1093,7 +1113,7 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
     const def = (normalized.actors ?? []).find((candidate) => candidate.id === actorId);
     if (!def) return undefined;
     const base = actorState(def, normalized, at, tracksForSubject(tracks, actorId));
-    const motor = motorFrameAt(actorId, at) as {x?: number; facing?: number; lean?: number; walk?: number; reach?: [number, number]; contact?: boolean} | undefined;
+    const motor = motorFrameAt(actorId, at) as {x?: number; facing?: number; lean?: number; walk?: number; reach?: [number, number]; contact?: boolean; waist?: number} | undefined;
     if (!motor || typeof motor.x !== "number") return base;
     return {
       ...base,
@@ -1103,13 +1123,14 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
       ...(motor.walk === undefined ? {} : {walk: motor.walk}),
       ...(motor.reach === undefined ? {} : {reach: motor.reach}),
       ...(motor.contact === undefined ? {} : {contact: motor.contact}),
+      ...(motor.waist === undefined ? {} : {waist: motor.waist}),
     };
   };
   const actors = repelActors(
     rawActors.map((actor) => {
-      const motor = motorFrameFor(actor.id) as {x?: number; lean?: number; walk?: number; facing?: number; reach?: [number, number]; contact?: boolean} | undefined;
+      const motor = motorFrameFor(actor.id) as {x?: number; lean?: number; walk?: number; facing?: number; reach?: [number, number]; contact?: boolean; waist?: number} | undefined;
       if (!motor || typeof motor.x !== "number") return actor;
-      return {...actor, x: motor.x, lean: motor.lean ?? 0, walk: motor.walk ?? 0, facing: (motor.facing ?? (actor.flip ? -1 : 1)) as 1 | -1, flip: (motor.facing ?? (actor.flip ? -1 : 1)) === -1, reach: motor.reach as [number, number] | undefined, contact: motor.contact === true, motor: true as const};
+      return {...actor, x: motor.x, lean: motor.lean ?? 0, walk: motor.walk ?? 0, facing: (motor.facing ?? (actor.flip ? -1 : 1)) as 1 | -1, flip: (motor.facing ?? (actor.flip ? -1 : 1)) === -1, reach: motor.reach as [number, number] | undefined, contact: motor.contact === true, waist: motor.waist ?? 0, motor: true as const};
     }),
   );
   const actorById = new Map(actors.map((actor) => [actor.id, actor]));
@@ -1260,6 +1281,20 @@ function compiledStateTracks(compiled: PerformanceManifest, actorId: string, fps
   return {placements, expressions, presents, poses};
 }
 
+/** Declared placement data (base line + support surfaces) for a resolved prop. */
+function propPlacementOf(asset: UnknownRecord | undefined): {base: number; supports: Array<{name: string; x: [number, number]; y: number}>} | undefined {
+  const use = asRecord(asset?.use) ?? {};
+  const resolved = asRecord(use.resolved) ?? {};
+  return resolved.placement as {base: number; supports: Array<{name: string; x: [number, number]; y: number}>} | undefined;
+}
+
+/** The declared skeleton for a resolved figure asset, if any. */
+function skeletonOf(asset: UnknownRecord | undefined): Skeleton | undefined {
+  const use = asRecord(asset?.use) ?? {};
+  const resolved = asRecord(use.resolved) ?? {};
+  return resolved.skeleton as Skeleton | undefined;
+}
+
 function projectCompiledActors(compiled: PerformanceManifest, assets: UnknownRecord, fps: number): PerformanceActor[] {
   const actorAssets = asRecord(assets.actors);
   return Object.keys(actorAssets ?? {}).map((id) => {
@@ -1292,6 +1327,7 @@ function projectCompiledActors(compiled: PerformanceManifest, assets: UnknownRec
       id,
       placement: stateTracks.placements[0]?.placement,
       anchors: assetAnchors(asset),
+      ...(skeletonOf(asset) === undefined ? {} : {skeleton: skeletonOf(asset)}),
       ...(stateTracks.placements.length ? {placementTrack: stateTracks.placements} : {}),
       ...(expressions.length ? {expressionTrack: expressions} : {}),
       ...(tracks.length ? {tracks} : {}),
@@ -1329,6 +1365,7 @@ function projectCompiledProps(compiled: PerformanceManifest, assets: UnknownReco
       // authored staging scale (0.18) yields a sensible stage size.
       size: (visual.size ?? (visual.width !== undefined && visual.height !== undefined ? [visual.width, visual.height] : [1920, 1536])) as [number, number],
       ...(at ? {at, x: at[0], y: at[1]} : {}),
+      ...(propPlacementOf(asset) === undefined ? {} : {base: propPlacementOf(asset)!.base, supports: propPlacementOf(asset)!.supports}),
       ...(placementRecord ?? {}),
       ...(staged ? {scale: staged.scale, z: staged.z ?? 30, label: staged.relation ? `${id} (${staged.relation})` : id} : {}),
       ...(visual.src ? {src: visual.src} : {}),

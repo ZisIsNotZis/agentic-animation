@@ -24,7 +24,7 @@ export const PerformanceProp: React.FC<{ prop: EvaluatedProp }> = ({ prop }) => 
       data-prop-label={prop.label}
       data-prop-kind={kind}
       data-prop-bound={bound ? "true" : "false"}
-      style={{ position: "absolute", left: prop.x - width / 2, top: prop.y - height / 2, width, height, transformOrigin: "center center", transform: `rotate(${prop.rotation}deg) scale(${prop.scale})`, zIndex: prop.z }}
+      style={{ position: "absolute", left: prop.x - width / 2, top: prop.y - height * ((prop.base ?? 160) / 160), width, height, transformOrigin: `${width / 2}px ${height * ((prop.base ?? 160) / 160)}px`, transform: `rotate(${prop.rotation}deg) scale(${prop.scale})`, zIndex: prop.z }}
     >
       <svg aria-label={prop.label ?? prop.id} viewBox="0 0 200 160" width="100%" height="100%" style={{ overflow: "visible" }}>
         <title>{prop.label ?? prop.id}</title>

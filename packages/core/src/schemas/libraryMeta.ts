@@ -18,7 +18,46 @@ const RegistryAssetCommonSchema = z.object({
   hash: z.string().regex(/^sha256:[a-f0-9]{64}$/).optional(),
 }).strict();
 
-export const RegistryAssetManifestSchema = RegistryAssetCommonSchema.extend({identity: RegistryAssetIdSchema, kind: RegistryAssetKindSchema}).strict();
+export const SkeletonSchema = z.object({
+  version: z.literal(1),
+  space: z.object({width: z.number().positive(), height: z.number().positive()}).strict(),
+  joints: z.record(z.string(), z.tuple([z.number(), z.number()])),
+  parts: z.record(z.string(), z.unknown()),
+  arm: z.object({upper: z.number().positive(), fore: z.number().positive(), handRadius: z.number().positive()}).strict(),
+  waist: z.object({pitchMax: z.number()}).strict(),
+}).strict();
+export type Skeleton = z.infer<typeof SkeletonSchema>;
+
+export const SupportSurfaceSchema = z.object({
+  name: z.string().min(1).default("top"),
+  /** Art-space x range of the surface. */
+  x: z.tuple([z.number(), z.number()]),
+  /** Art-space y of the surface (objects stand with their base on this line). */
+  y: z.number(),
+}).strict();
+export type SupportSurface = z.infer<typeof SupportSurfaceSchema>;
+
+export const PropPlacementSchema = z.object({
+  /** Art-space y of the prop's base line (bottom-center anchor). */
+  base: z.number(),
+  /** Declared art size (stage px before staging scale). */
+  size: z.tuple([z.number(), z.number()]).default([200, 160]),
+  /** Desired rendered width on the 1920 stage; scale derives from this. */
+  stageWidth: z.number().positive().default(320),
+  /** Declared support surfaces (furniture). */
+  supports: z.array(SupportSurfaceSchema).default([]),
+}).strict();
+export const SetManifestSchema = z.object({
+  supports: z.array(SupportSurfaceSchema).default([]),
+}).partial().strip();
+export type PropPlacement = z.infer<typeof PropPlacementSchema>;
+
+// The generic manifest is open (passthrough): category-specific content
+// (figure skeleton, prop placement, set supports) is validated by its own
+// schema when read; the registry index tolerates all of them.
+export const RegistryAssetManifestSchema = RegistryAssetCommonSchema.extend({identity: RegistryAssetIdSchema, kind: RegistryAssetKindSchema}).passthrough();
+export const FigureAssetManifestSchema = RegistryAssetCommonSchema.extend({identity: RegistryAssetIdSchema, kind: RegistryAssetKindSchema, skeleton: SkeletonSchema}).strict();
+export const PropAssetManifestSchema = RegistryAssetCommonSchema.extend({identity: RegistryAssetIdSchema, kind: RegistryAssetKindSchema, placement: PropPlacementSchema}).strict();
 export type RegistryAssetManifest = z.infer<typeof RegistryAssetManifestSchema>;
 export const AssetManifestSchema = RegistryAssetManifestSchema;
 export type AssetManifest = RegistryAssetManifest;

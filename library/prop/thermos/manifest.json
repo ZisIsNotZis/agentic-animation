@@ -14,5 +14,14 @@
       120,
       174
     ]
+  },
+  "placement": {
+    "base": 132,
+    "size": [
+      200,
+      160
+    ],
+    "supports": [],
+    "stageWidth": 150
   }
 }

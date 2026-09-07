@@ -24,4 +24,4 @@ export type {
   ProcedureDefinition, ProcedureParameter,
 } from "./procedures";
 export * from "./staging";
-export * from "./motor/figureGeometry";
+export * from "./motor/skeleton";

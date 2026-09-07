@@ -321,7 +321,9 @@ export function stageScene(request: StagingRequest, options: StagingOptions = {}
     }
   }
   for (const object of objects) {
-    if (object.target && !allIds.has(object.target)) fail(`unknown relation target for ${object.id}: ${object.target}`);
+    // "on(X)" targets may name a DECLARED support surface on the set (not an
+    // object) — the compiler's support-surface pass is the authority.
+    if (object.target && object.relation !== "on" && !allIds.has(object.target)) fail(`unknown relation target for ${object.id}: ${object.target}`);
     if (object.relation === "between" && (!object.between || object.between.some((id) => !allIds.has(id)))) {
       fail(`between relation for ${object.id} needs two known targets`);
     }

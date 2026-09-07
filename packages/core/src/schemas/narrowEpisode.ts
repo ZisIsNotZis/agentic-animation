@@ -196,8 +196,9 @@ export const NarrowEpisodeSchema = Base.superRefine((episode, ctx) => {
     }
     for (const [object, placement] of Object.entries(scene.objects)) {
       if (!objects.has(object)) issue(ctx, [...scenePath, "objects", object], `unknown object: ${object}`);
-      const support = placement.match(/^on\(([a-z][a-z0-9_]*)\)$/)?.[1];
-      if (support && !objects.has(support)) issue(ctx, [...scenePath, "objects", object], `unknown support object: ${support}`);
+      // `on(X)` targets resolve against DECLARED support surfaces at compile
+      // time (set/prop manifests) — undeclared surfaces fail there with a
+      // precise error, so the schema does not restrict the name here.
     }
     for (const [statementIndex, statement] of scene.script.entries()) {
       const actor = Object.keys(statement)[0]!;

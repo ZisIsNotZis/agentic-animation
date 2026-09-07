@@ -29,7 +29,7 @@ scenes:
       lin: {facing: awei}
       awei: {facing: lin}
     objects:
-      thermos: center
+      thermos: on(counter)
     script:
       - lin: "{prop.pickup(lin, thermos)}你的保温杯，捡到了。"
       - lin: "{prop.handover(lin, thermos, awei)}给。"

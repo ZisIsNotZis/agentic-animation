@@ -1,6 +1,6 @@
 import React from "react";
 import type {EvaluatedActor, EvaluatedProp, EvaluatedTrackEvent} from "../../performance";
-import {HAND_REST, solveArmIK} from "@anim/core/figureGeometry";
+import {solveArmIK, solveSkeleton} from "@anim/core/skeleton";
 
 
 import {BackView, QuarterFrontView} from "./views45";
@@ -97,33 +97,65 @@ export const PerformanceActor: React.FC<{actor: EvaluatedActor; props: Evaluated
       pose.legRight.lower -= Math.max(0, -swing) * 0.9;
       pose.torsoY += Math.abs(Math.sin(phase * Math.PI * 2)) * 6;
     }
-    if (actor.reach) {
-      // Two-bone IK onto the motor's reach point: the drawn hand lands on
-      // the same world point the physics uses (grab, push, carry).
+    if (actor.reach && sk) {
+      // Two-bone IK onto the motor's reach point, solved in the rest frame
+      // (the FK then composes the waist pitch) — the drawn hand lands on the
+      // same world point the physics uses (grab, push, carry).
+      const facing = (flipped ? -1 : 1) as 1 | -1;
       const dir = (actor.facing ?? (actor.reach[0] >= actor.x ? 1 : -1)) as 1 | -1;
-      const designX = ((actor.reach[0] - actor.x) / actor.scale) * (actor.flip ? -1 : 1);
-      // figureGeometry works in ground-relative y-up (handOffset convention).
-      const designY = (actor.y - actor.reach[1]) / actor.scale;
-      const ik = solveArmIK({x: designX, y: -designY}, 1);
+      const designX = space.width / 2 + ((actor.reach[0] - actor.x) / actor.scale) * (flipped ? -1 : 1);
+      const designY = space.height - (actor.y - actor.reach[1]) / actor.scale;
+      const W = sk.joints.waist ?? [space.width / 2, space.height * 0.71];
+      const S = sk.joints.shoulder_r ?? [space.width / 2 + 60, space.height * 0.4];
+      const E = sk.joints.elbow_r ?? [S[0] + 32, S[1] + 122];
+      const H0 = sk.joints.hand_r ?? [E[0], E[1] + 104];
+      const unrot = (p: [number, number]): [number, number] => {
+        const r = (-waistPitch * facing * Math.PI) / 180;
+        const dx = p[0] - W[0];
+        const dy = p[1] - W[1];
+        return [W[0] + dx * Math.cos(r) - dy * Math.sin(r), W[1] + dx * Math.sin(r) + dy * Math.cos(r)];
+      };
+      const g = unrot([designX, designY]);
+      const fold = (p: [number, number]): [number, number] => [space.width / 2 + (p[0] - space.width / 2) * (flipped ? -1 : 1), p[1]];
+      const Sf = fold(S);
+      const ik = solveArmIK(
+        {x: Sf[0] + (g[0] - fold(S)[0]), y: Sf[1] + (g[1] - fold(S)[1])},
+        {
+          upper: sk.arm.upper,
+          fore: sk.arm.fore,
+          shoulder: Sf,
+          upperDir: [fold(E)[0] - Sf[0], fold(E)[1] - Sf[1]],
+          foreDir: [fold(H0)[0] - fold(E)[0], fold(H0)[1] - fold(E)[1]],
+        },
+        1,
+      );
       pose.armRight.upper = ik.upper;
       pose.armRight.lower = ik.lower;
       pose.armRight.hand = actor.contact ? "fist" : "rest";
       pose.torsoTilt += dir * 6;
     }
   }
-  const activeProp = props.find((prop) => Math.hypot(prop.x - actor.x, prop.y - actor.y) < 300); const label = actor.id.length > 8 ? actor.id.slice(0, 8) : actor.id; const baseX = actor.x - 200 * actor.scale; // The transform scales about the div's bottom edge (origin 200px 720px),
+  // Forward kinematics from the declared skeleton: the drawn joints are THE
+  // physics joints (docs/WORLD_PUPPET_MOTOR.md Slice 1).
+  const sk = actor.skeleton;
+  const space = sk?.space ?? {width: 400, height: 720};
+  const waistPitch = pose.torsoTilt + (actor.motor ? actor.waist ?? 0 : 0);
+  const solved = sk
+    ? solveSkeleton(sk, {waistPitch, facing: (flipped ? -1 : 1) as 1 | -1, armR: pose.armRight, armL: pose.armLeft})
+    : undefined;
+  const activeProp = props.find((prop) => Math.hypot(prop.x - actor.x, prop.y - actor.y) < 300); const label = actor.id.length > 8 ? actor.id.slice(0, 8) : actor.id; const baseX = actor.x - (space.width / 2) * actor.scale; // The transform scales about the div's bottom edge (origin 200px 720px),
 // which keeps the design ground line at top + 720 — so the div top must be
 // actor.y - 720 (UNSCALED) for the drawn feet to stand exactly on the
 // actor's physics ground. Scaling the offset here would sink every figure
 // 720*(1-scale) px below its ground, and hands would never meet bodies.
-const baseY = actor.y - 720;
+const baseY = actor.y - space.height;
   // 45-degree facing: diagonal orientations render the quarter-front or back
   // view (left/right = mirror); absent orientation keeps the full-front figure.
   const orientation = actor.orientation ?? "front";
   const diagSide = orientation.endsWith("-left") ? -1 : 1;
   const flipped = orientation === "front" ? actor.flip : diagSide === -1;
   const view45 = orientation.startsWith("back-") ? <BackView role={role} label={label} /> : orientation.startsWith("front-") ? <QuarterFrontView role={role} label={label} /> : null;
-  return <div data-actor-id={actor.id} data-expression={actor.expression.name} data-face-family={faceFamily(expression)} data-track-count={actor.tracks.length} data-pose={actor.pose} data-slam-peak={pose.slamPeak} data-speech-active={speaking} data-speech-open={pose.speechOpen} style={{position: "absolute", left: baseX, top: baseY, width: 400, height: 720, background: debugDiv ? "rgba(255,0,0,0.07)" : undefined, transformOrigin: "200px 720px", transform: `scale(${actor.scale * (flipped ? -1 : 1)}, ${actor.scale}) rotate(${actor.rotation}deg)`, zIndex: actor.z, overflow: "visible"}}>{view45 ?? <svg aria-label={`actor ${label}`} viewBox="0 0 400 720" width="400" height="720" style={{overflow: "visible"}}>{debugDiv ? <g><rect x="0" y="0" width="400" height="720" fill="none" stroke="#ff0000" strokeWidth="6" /><line x1="0" y1="709" x2="400" y2="709" stroke="#00ff00" strokeWidth="6" /></g> : null}<ellipse cx="200" cy="704" rx="108" ry="16" fill="#120f15" opacity=".58" /><Leg side="left" pose={pose.legLeft} role={role} /><Leg side="right" pose={pose.legRight} role={role} /><g aria-label="articulated torso" transform={`translate(0 ${pose.torsoY}) rotate(${pose.torsoTilt} 200 390) scale(1 ${pose.torsoScaleY})`}><path d="M124 270Q200 242 276 270L300 512Q200 554 100 512Z" fill={ROBES[role]} stroke={INK} strokeWidth="10" /><path d="M150 278L200 350L250 278" fill={DARKS[role]} stroke={INK} strokeWidth="8" /><path d="M140 482Q200 510 260 482" fill="none" stroke="#f2c14e" strokeWidth="12" /><rect x="176" y="482" width="48" height="50" rx="8" fill="#f2c14e" stroke={INK} strokeWidth="8" /><Arm side="left" role={role} pose={pose.armLeft} /><Arm side="right" role={role} pose={pose.armRight} /><g aria-label="articulated head and neck" transform={`translate(0 ${pose.headY}) rotate(${pose.headTilt} 200 205)`}><path aria-label="neck connection" d="M174 244Q200 232 226 244L230 326Q200 337 170 326Z" fill={SKIN} stroke={INK} strokeWidth="9" /><circle cx="200" cy="182" r="94" fill={SKIN} stroke={INK} strokeWidth="10" /><path d="M110 180Q114 70 200 68Q286 70 290 180L258 146L236 110L214 142L190 104L164 142L140 112Z" fill={HAIR} stroke={INK} strokeWidth="10" /><Face expression={expression} pose={pose} /></g></g>{activeProp && pose.armRight.hand !== "rest" ? <HeldProp label={activeProp.label ?? activeProp.id} x={200 + HAND_REST.x} y={720 + HAND_REST.y} /> : null}{pose.slamPeak ? <SlamImpact /> : null}<g transform={flipped ? "translate(400 0) scale(-1 1)" : undefined}><text x="200" y="690" textAnchor="middle" fill="#fff0c4" stroke={INK} strokeWidth="5" paintOrder="stroke" fontSize="18" fontWeight="900" fontFamily="Arial, 'Noto Sans CJK SC, sans-serif">{label}</text></g></svg>}</div>}
+  return <div data-actor-id={actor.id} data-expression={actor.expression.name} data-face-family={faceFamily(expression)} data-track-count={actor.tracks.length} data-pose={actor.pose} data-slam-peak={pose.slamPeak} data-speech-active={speaking} data-speech-open={pose.speechOpen} style={{position: "absolute", left: baseX, top: baseY, width: 400, height: 720, background: debugDiv ? "rgba(255,0,0,0.07)" : undefined, transformOrigin: "200px 720px", transform: `scale(${actor.scale * (flipped ? -1 : 1)}, ${actor.scale}) rotate(${actor.rotation}deg)`, zIndex: actor.z, overflow: "visible"}}>{view45 ?? <svg aria-label={`actor ${label}`} viewBox="0 0 400 720" width="400" height="720" style={{overflow: "visible"}}>{debugDiv ? <g><rect x="0" y="0" width="400" height="720" fill="none" stroke="#ff0000" strokeWidth="6" /><line x1="0" y1="709" x2="400" y2="709" stroke="#00ff00" strokeWidth="6" /></g> : null}<ellipse cx="200" cy="704" rx="108" ry="16" fill="#120f15" opacity=".58" /><Leg side="left" pose={pose.legLeft} role={role} /><Leg side="right" pose={pose.legRight} role={role} /><g aria-label="articulated torso" transform={`translate(0 ${pose.torsoY}) rotate(${waistPitch} ${sk?.joints.waist?.[0] ?? 200} ${sk?.joints.waist?.[1] ?? 512}) scale(1 ${pose.torsoScaleY})`}><path d="M124 270Q200 242 276 270L300 512Q200 554 100 512Z" fill={ROBES[role]} stroke={INK} strokeWidth="10" /><path d="M150 278L200 350L250 278" fill={DARKS[role]} stroke={INK} strokeWidth="8" /><path d="M140 482Q200 510 260 482" fill="none" stroke="#f2c14e" strokeWidth="12" /><rect x="176" y="482" width="48" height="50" rx="8" fill="#f2c14e" stroke={INK} strokeWidth="8" /><Arm side="left" role={role} pose={pose.armLeft} /><Arm side="right" role={role} pose={pose.armRight} /><g aria-label="articulated head and neck" transform={`translate(0 ${pose.headY}) rotate(${pose.headTilt} 200 205)`}><path aria-label="neck connection" d="M174 244Q200 232 226 244L230 326Q200 337 170 326Z" fill={SKIN} stroke={INK} strokeWidth="9" /><circle cx="200" cy="182" r="94" fill={SKIN} stroke={INK} strokeWidth="10" /><path d="M110 180Q114 70 200 68Q286 70 290 180L258 146L236 110L214 142L190 104L164 142L140 112Z" fill={HAIR} stroke={INK} strokeWidth="10" /><Face expression={expression} pose={pose} /></g></g>{activeProp && pose.armRight.hand !== "rest" ? <HeldProp label={activeProp.label ?? activeProp.id} x={200 + HAND_REST.x} y={720 + HAND_REST.y} /> : null}{pose.slamPeak ? <SlamImpact /> : null}<g transform={flipped ? "translate(400 0) scale(-1 1)" : undefined}><text x="200" y="690" textAnchor="middle" fill="#fff0c4" stroke={INK} strokeWidth="5" paintOrder="stroke" fontSize="18" fontWeight="900" fontFamily="Arial, 'Noto Sans CJK SC, sans-serif">{label}</text></g></svg>}</div>}
 
 const Leg: React.FC<{side: Side; pose: ActorLegPose; role: number}> = ({side, pose, role}) => {const left = side === "left"; const hip = left ? 158 : 242; const knee = left ? 146 : 254; const foot = left ? 116 : 284; return <g aria-label={`${side} articulated leg`} transform={`rotate(${pose.upper} ${hip} 500)`}><path d={`M${hip} 500L${knee} 610`} stroke={DARKS[role]} strokeWidth={LIMB_OUTLINE} strokeLinecap="round" /><path d={`M${hip} 500L${knee} 610`} stroke="#294052" strokeWidth={LIMB_FILL} strokeLinecap="round" /><g transform={`rotate(${pose.lower} ${knee} 610)`}><path d={`M${knee} 610L${foot} 682`} stroke={DARKS[role]} strokeWidth={LIMB_OUTLINE} strokeLinecap="round" /><path d={`M${knee} 610L${foot} 682`} stroke="#294052" strokeWidth={LIMB_FILL} strokeLinecap="round" /><ellipse cx={foot - (left ? 18 : -18)} cy="690" rx="50" ry="19" fill="#5d3b4c" stroke={INK} strokeWidth="8" /></g></g>}
 const Arm: React.FC<{side: Side; role: number; pose: ActorArmPose}> = ({side, role, pose}) => {const left = side === "left"; const shoulder = left ? 140 : 260; const elbow = left ? 108 : 292; const mirror = left ? 1 : -1; return <g aria-label={`${side} articulated arm`} transform={`rotate(${pose.upper} ${shoulder} 286)`}><path d={`M${shoulder} 286L${elbow} 408`} stroke={DARKS[role]} strokeWidth={LIMB_OUTLINE} strokeLinecap="round" /><path d={`M${shoulder} 286L${elbow} 408`} stroke={ROBES[role]} strokeWidth={LIMB_FILL} strokeLinecap="round" /><g transform={`rotate(${pose.lower} ${elbow} 408)`}><path d={`M${elbow} 408L${elbow} 512`} stroke={DARKS[role]} strokeWidth={LIMB_OUTLINE} strokeLinecap="round" /><path d={`M${elbow} 408L${elbow} 512`} stroke="#d18b5b" strokeWidth={LIMB_FILL} strokeLinecap="round" /><Hand x={elbow} y={512} mirror={mirror} shape={pose.hand} /></g></g>}

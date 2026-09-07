@@ -1,6 +1,9 @@
 import {readdir, readFile, access} from "node:fs/promises";
 import {join, relative, resolve} from "node:path";
 import {
+  FigureAssetManifestSchema,
+  PropAssetManifestSchema,
+  SetManifestSchema,
   AssetRegistrySchema,
   ProcedureManifestSchema,
   RegistryAssetIdSchema,
@@ -65,7 +68,51 @@ async function discoverAssets(root: string): Promise<RegistryAssetManifest[]> {
       const child = join(directory, entry.name);
       if (await isAssetDirectory(child)) {
         const identity = relative(root, child).replaceAll("\\", "/");
-        if (RegistryAssetIdSchema.safeParse(identity).success) assets.push({identity, kind: identity.split("/")[0] as RegistryAssetManifest["kind"], capabilities: [], dependencies: []});
+        if (RegistryAssetIdSchema.safeParse(identity).success) {
+          const base: RegistryAssetManifest = {identity, kind: identity.split("/")[0] as RegistryAssetManifest["kind"], capabilities: [], dependencies: []};
+          // Figure resources carry their skeleton as data (joints, part
+          // shapes, reach, waist) — the engine stays figure-agnostic.
+          if (base.kind === "prop") {
+            // Prop resources declare their base line and support surfaces.
+            try {
+              const raw = JSON.parse(await readFile(join(child, "manifest.json"), "utf8")) as {placement?: unknown};
+              if (raw.placement !== undefined) {
+                const {placement} = PropAssetManifestSchema.parse({...base, placement: raw.placement});
+                (base as {placement?: unknown}).placement = placement;
+              }
+            } catch (error) {
+              if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+                throw new Error(`prop ${identity}: invalid manifest placement: ${(error as Error).message}`);
+              }
+            }
+          }
+          if (base.kind === "set") {
+            // Set resources declare support surfaces in their own space.
+            try {
+              const raw = JSON.parse(await readFile(join(child, "manifest.json"), "utf8")) as {supports?: unknown};
+              if (raw.supports !== undefined) {
+                const {supports} = SetManifestSchema.parse({supports: raw.supports});
+                (base as {supports?: unknown}).supports = supports;
+              }
+            } catch (error) {
+              if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+                throw new Error(`set ${identity}: invalid manifest supports: ${(error as Error).message}`);
+              }
+            }
+          }
+          if (base.kind === "figure") {
+            try {
+              const raw = JSON.parse(await readFile(join(child, "skeleton.json"), "utf8")) as unknown;
+              const {skeleton} = FigureAssetManifestSchema.parse({...base, skeleton: raw});
+              (base as {skeleton?: unknown}).skeleton = skeleton;
+            } catch (error) {
+              if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+                throw new Error(`figure ${identity}: invalid skeleton.json: ${(error as Error).message}`);
+              }
+            }
+          }
+          assets.push(base);
+        }
       } else await visit(child);
     }
   };

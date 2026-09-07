@@ -1,4 +1,4 @@
-import type { CompiledEpisode, CompiledScene, PerformanceEvent, PerformanceTrack } from "@anim/core";
+import type { CompiledEpisode, CompiledScene, PerformanceEvent, PerformanceTrack, Skeleton } from "@anim/core";
 import type { Ease } from "../lib/interpolate";
 
 export interface PerformanceVideo {
@@ -128,6 +128,8 @@ export interface PerformanceVisual {
 
 export interface PerformanceActor {
   id: string;
+  /** Declared figure skeleton (joints/parts/arm/waist) — see figure skeleton.json. */
+  skeleton?: Skeleton;
   placement?: PerformancePlacement | SemanticPlacement | string;
   semanticPlacement?: PerformancePlacement | SemanticPlacement | string;
   at?: [number, number];
@@ -207,6 +209,10 @@ export interface PerformancePropBinding {
 export interface PerformanceProp {
   id: string;
   label?: string;
+  /** Art-space y of the prop's base line (bottom-center anchor). */
+  base?: number;
+  /** Declared support surfaces in art space (furniture). */
+  supports?: Array<{name: string; x: [number, number]; y: number}>;
   at?: [number, number];
   position?: [number, number];
   placement?: PerformancePlacement | SemanticPlacement | string;
@@ -374,6 +380,12 @@ export interface EvaluatedActor {
   orientation?: "front" | "front-left" | "front-right" | "back-left" | "back-right";
   /** World-space hand position while reaching/exerting. */
   reach?: [number, number];
+  /** Declared figure skeleton (threaded to the renderer for FK painting). */
+  skeleton?: Skeleton;
+  /** Hand circle radius in stage px (skeleton-derived). */
+  handRadius?: number;
+  /** Motor-driven waist pitch in degrees (0 = upright). */
+  waist?: number;
   contact?: boolean;
   gesture?: EvaluatedGesture;
   anchors: Record<string, [number, number]>;
@@ -395,6 +407,8 @@ export interface EvaluatedTrackEvent extends PerformanceTrackEvent {
 
 export interface EvaluatedProp {
   id: string;
+  /** Art-space y of the base line (bottom-center anchor; default = art bottom). */
+  base?: number;
   label?: string;
   x: number;
   y: number;

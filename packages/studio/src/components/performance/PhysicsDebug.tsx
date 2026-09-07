@@ -5,9 +5,7 @@
 // can see exactly where contact should happen.
 import React from "react";
 import type {EvaluatedActor, EvaluatedProp, PerformanceFrameState} from "../../performance";
-import {GRAB_RADIUS} from "../../performance/evaluate";
-
-const DEBUG_GRAB_RADIUS = GRAB_RADIUS;
+const DEBUG_GRAB_RADIUS = 120; // legacy visual guide; the real gate is hand-circle vs prop box
 
 const FIGURE = {w: 400, h: 720};
 const TORSO = {half: 100, top: 512, bottom: 242}; // design-px above ground

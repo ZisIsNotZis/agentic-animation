@@ -76,6 +76,26 @@ same numbers, so force cannot conduct without the drawn hand touching the
 drawn body. Changing a drawing dimension changes the physics with it.
 Actor bind anchors (`hand_r`/`hand_l`) derive from `HAND_REST` too.
 
+## Slice 1 — one body, real touch (shipped)
+
+- **Skeleton data**: every figure declares `skeleton.json` (joints, part
+  shapes — torso box, head circle, limb capsules, hand circles — arm lengths,
+  waist pivot and pitch limit). The engine has NO figure numbers: the generic
+  FK lives in `packages/core/src/motor/skeleton.ts` (`solveSkeleton`,
+  `solveArmIK`, `circleOverlapsBox`), the registry validates and carries the
+  data, and the compiler threads it into motor + renderer.
+- **Ground alignment invariant**: an actor's drawn feet stand exactly on
+  `actor.y`; props render bottom-center anchored at their declared base line
+  (`placement.base`). Position math and transforms must agree with these two
+  rules — this was the root cause of every "hand never touches" defect.
+- **Reach as force**: a prop approach walks to the object, then the WAIST
+  bends (motor bakes per-frame `waist` pitch) while the arm extends — hand+waist
+  must genuinely reach, or the make-time gate fails (`no support surface` /
+  unreachable). No remote grab radius: grab = hand circle ∩ object box.
+- **Support surfaces**: furniture/set manifests declare
+  `supports: [{name, x, y}]`; `on(X)` places the object's base on the surface
+  (compile error if undeclared). Releases drop back onto the surface.
+
 ## Debug overlay
 
 `ANIM_DEBUG_PHYSICS=1 render-yaml …` draws the engine's beliefs onto the

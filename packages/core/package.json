@@ -9,7 +9,7 @@
     "./schemas": "./src/schemas/index.ts",
     "./adapters": "./src/adapters/index.ts",
     "./stdlib": "./src/invocation/stdlib.ts",
-    "./figureGeometry": "./src/motor/figureGeometry.ts"
+    "./skeleton": "./src/motor/skeleton.ts"
   },
   "types": "./src/index.ts",
   "dependencies": {

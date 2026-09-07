@@ -34,11 +34,15 @@ export interface MotorActorInput {
   facing: 1 | -1;
   /** Staging scale — the sim shares the renderer's body geometry. */
   scale: number;
+  /** Declared figure skeleton (joints, part shapes, arm lengths, waist). */
+  skeleton?: Skeleton;
   intents: MotorIntent[];
 }
 
 export interface MotorPropInput {
   id: string;
+  /** Stage-space footprint [w, h]; the box anchors at (x, y) as base-center. */
+  size: [number, number];
   x: number;
   y: number;
   intents: MotorIntent[];
@@ -67,25 +71,69 @@ export interface MotorTrajectory {
   props: Record<string, MotorPropFrame[]>;
 }
 
-import { BODY_HALF_WIDTH as BODY_HALF_DESIGN, FIGURE_BOX, HAND_PUSH, HAND_REST, REACH_PUSH } from "./figureGeometry";
+import { circleOverlapsBox, solveSkeleton } from "./skeleton";
+import type { Skeleton } from "../schemas/libraryMeta";
 
 const FPS = 24;
 const DT = 1 / 120;
 const SUBSTEPS = Math.round(1 / (FPS * DT));
 /** Walk speed in stage px/s. */
 const WALK_SPEED = 420;
-/**
- * Body half-width comes from the drawn figure (figureGeometry SSOT): the
- * physics body IS the drawn silhouette (robe spans 100..300 of the 400px
- * design box), not an invented box.
- */
-const BODY_HALF_WIDTH = (FIGURE_BOX.width - 2 * BODY_HALF_DESIGN) / 2;
-/** Contact margin: the drawn hand tip touches the target's silhouette edge. */
-const CONTACT_MARGIN = 14;
 /** Ground friction deceleration for sliding props (px/s²). */
 const PROP_FRICTION = 900;
 /** Reaction lean per unit of applied force (degrees). */
 const REACTION_LEAN = 14;
+
+/** Per-actor body geometry, all derived from the declared skeleton. */
+interface ActorBody {
+  /** Torso half-width in design px (torso box). */
+  halfWidth: number;
+  /** Torso top/bottom design y. */
+  torsoTop: number;
+  torsoBottom: number;
+  /** Full arm reach in design px (upper + fore + hand radius). */
+  armReach: number;
+  /** Hand circle radius in design px. */
+  handRadius: number;
+  /** Max waist pitch in deg. */
+  pitchMax: number;
+  /** Waist pivot (design). */
+  waist: [number, number];
+  /** Ground-to-waist distance in design px. */
+  groundToWaist: number;
+  /** Shoulder offset from the waist pivot (design, facing-right frame). */
+  shoulderFromWaist: [number, number];
+}
+
+function bodyOf(skeleton: Skeleton): ActorBody {
+  const torso = skeleton.parts.torso as {box?: [[number, number], [number, number]]} | undefined;
+  if (!torso?.box) throw new Error("motor: figure skeleton lacks a torso box part");
+  const shoulder = skeleton.joints.shoulder_r;
+  const waist = skeleton.joints.waist;
+  if (!shoulder || !waist) throw new Error("motor: figure skeleton lacks shoulder_r/waist joints");
+  return {
+    halfWidth: Math.abs(torso.box[1][0] - torso.box[0][0]) / 2,
+    torsoTop: Math.min(torso.box[0][1], torso.box[1][1]),
+    torsoBottom: Math.max(torso.box[0][1], torso.box[1][1]),
+    armReach: skeleton.arm.upper + skeleton.arm.fore + skeleton.arm.handRadius,
+    handRadius: skeleton.arm.handRadius,
+    pitchMax: skeleton.waist.pitchMax,
+    waist,
+    groundToWaist: skeleton.space.height - waist[1],
+    shoulderFromWaist: [shoulder[0] - waist[0], shoulder[1] - waist[1]],
+  };
+}
+
+/** World-space shoulder for an actor at a waist pitch (generic waist FK). */
+function shoulderAt(x: number, groundY: number, scale: number, facing: 1 | -1, body: ActorBody, pitchDeg: number): [number, number] {
+  const wx = x + facing * body.waist[0] * scale;
+  const wy = groundY - body.groundToWaist * scale;
+  const d: [number, number] = [facing * body.shoulderFromWaist[0] * scale, body.shoulderFromWaist[1] * scale];
+  const r = ((facing * pitchDeg) * Math.PI) / 180;
+  const c = Math.cos(r);
+  const s = Math.sin(r);
+  return [wx + d[0] * c - d[1] * s, wy + d[0] * s + d[1] * c];
+}
 
 function smoothstep01(t: number): number {
   return t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
@@ -98,6 +146,10 @@ interface ActorState {
   facing: 1 | -1;
   groundY: number;
   scale: number;
+  body: ActorBody;
+  skeleton: Skeleton | undefined;
+  /** Current waist pitch in deg (0 = upright). */
+  waist: number;
   walkPhase: number;
   lean: number;
   /** Motor-driven destination while a move intent is active. */
@@ -117,6 +169,7 @@ interface PropState {
   x: number;
   y: number;
   vx: number;
+  size: [number, number];
 }
 
 export interface MotorScene {
@@ -137,10 +190,11 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     scene.actors.map((actor) => [actor.id, {
       id: actor.id, x: actor.x, vx: 0, facing: actor.facing, groundY: actor.groundY, scale: actor.scale,
       walkPhase: 0, lean: 0, moveTarget: null, reach: null, grab: null, stagger: 0,
+      body: bodyOf(actor.skeleton as Skeleton), skeleton: actor.skeleton, waist: 0,
     }]),
   );
   const props = new Map<string, PropState>(
-    scene.props.map((prop) => [prop.id, { id: prop.id, x: prop.x, y: prop.y, vx: 0 }]),
+    scene.props.map((prop) => [prop.id, { id: prop.id, x: prop.x, y: prop.y, vx: 0, size: prop.size }]),
   );
 
   // Intent queues per actor, in start order.
@@ -168,7 +222,9 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             // Moves at props halt at the prop's edge: pick up, do not walk through.
             const isProp = !actors.has(intent.target!) && scene.props.some((prop) => prop.id === intent.target);
             const dir = Math.sign(tx - state.x) || state.facing;
-            state.moveTarget = isProp ? tx - dir * BODY_HALF_WIDTH * state.scale : tx;
+            // Grab approaches stand close (hand reaches down over the object);
+            // other moves halt at body adjacency.
+            state.moveTarget = isProp ? tx - dir * state.body.halfWidth * state.scale * 0.3 : tx;
             state.grabTarget = isProp ? intent.target! : null;
           } else {
             state.moveTarget = state.x;
@@ -176,8 +232,8 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         } else if (intent.intent === "push") {
           const tx = intent.target !== undefined ? scene.resolveX(intent.target) : undefined;
           if (tx !== undefined) {
-            state.reach = { tx, ty: state.groundY + HAND_PUSH.y, target: intent.target!, contact: false };
-            state.stagger += 0; // reaction applied during force below
+            const shoulderY = state.groundY - (state.body.groundToWaist + (state.body.waist[1] - state.body.torsoTop) * 0.45) * state.scale;
+            state.reach = { tx, ty: shoulderY, target: intent.target!, contact: false };
             pendingForces.push({ actor: id, target: intent.target!, start: now + (intent.reach ?? 0.35), sec: intent.forceSec ?? 0.25, force: clamp(intent.force ?? 0.7, 0.1, 1) });
           }
         }
@@ -194,20 +250,46 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       const targetX = targetActor?.x ?? targetProp?.x;
       if (targetX === undefined) { pendingForces.splice(i, 1); continue; }
       const direction = Math.sign(targetX - actor.x) || 1;
-      const handX = actor.x + direction * HAND_PUSH.x * actor.scale;
-      const targetScale = targetActor?.scale ?? 1;
-      const inContact = Math.abs(handX - targetX) <= BODY_HALF_WIDTH * targetScale + CONTACT_MARGIN * actor.scale;
+      // Part contact (Slice 1): the hand circle — extended from the waist-
+      // FK shoulder toward the target's torso center — must overlap the
+      // target's torso box. Force conducts through touching parts only.
+      const targetBody = targetActor?.body;
+      const aim: [number, number] = targetActor
+        ? [targetX, targetActor.groundY - (targetBody!.groundToWaist + ((targetBody!.waist[1] - targetBody!.torsoTop) * 0.5)) * targetActor.scale]
+        : targetProp
+          ? [targetX, targetProp.y - targetProp.size[1] / 2]
+          : [targetX, actor.groundY];
+      const shoulder = shoulderAt(actor.x, actor.groundY, actor.scale, direction as 1 | -1, actor.body, actor.waist);
+      const aimDx = aim[0] - shoulder[0];
+      const aimDy = aim[1] - shoulder[1];
+      const aimD = Math.hypot(aimDx, aimDy) || 1;
+      const ext = Math.min(aimD, actor.body.armReach * actor.scale);
+      const hand: [number, number] = [shoulder[0] + (aimDx / aimD) * ext, shoulder[1] + (aimDy / aimD) * ext];
+      const handCircle = {center: hand, radius: actor.body.handRadius * actor.scale};
+      const targetTorso = targetBody && targetActor
+        ? {
+            a: [targetX - targetBody.halfWidth * targetActor.scale, targetActor.groundY - (targetBody.groundToWaist + (targetBody.waist[1] - targetBody.torsoTop)) * targetActor.scale] as [number, number],
+            b: [targetX + targetBody.halfWidth * targetActor.scale, targetActor.groundY - targetBody.groundToWaist * targetActor.scale] as [number, number],
+          }
+        : targetProp
+          ? {
+              a: [targetProp.x - targetProp.size[0] / 2, targetProp.y - targetProp.size[1]] as [number, number],
+              b: [targetProp.x + targetProp.size[0] / 2, targetProp.y] as [number, number],
+            }
+          : undefined;
+      const inContact = targetTorso !== undefined && circleOverlapsBox(handCircle, targetTorso);
       // Reach phase: track the target and step into contact range — the
       // approach always completes before any force can exist (I2).
-      actor.reach = { tx: targetX, ty: actor.groundY + HAND_PUSH.y, target: force.target, contact: inContact && now >= force.start };
+      actor.reach = { tx: hand[0], ty: hand[1], target: force.target, contact: inContact && now >= force.start };
+      actor.facing = direction as 1 | -1;
+      // Reach phase: step into contact range — the approach always completes
+      // before any force can exist (I2).
       if (!inContact) {
-        actor.facing = direction as 1 | -1;
         actor.x += direction * WALK_SPEED * DT;
         actor.walkPhase = (actor.walkPhase + DT * 2.2) % 1;
         continue;
       }
-      actor.facing = direction as 1 | -1;
-      if (now < force.start) continue; // braced and in range, waiting
+      if (now < force.start) continue; // braced and in contact range, waiting
       if (force.applied !== undefined && force.applied >= force.sec) { pendingForces.splice(i, 1); continue; }
       force.applied = (force.applied ?? 0) + DT;
       if (force.applied >= force.sec) { pendingForces.splice(i, 1); continue; }
@@ -226,31 +308,58 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
 
     // Actor integration.
     for (const state of actors.values()) {
-      // Grab trajectory (docs/WORLD_PUPPET_MOTOR.md): reach down to the
-      // object, grip, then stand up with it. The reach point lands exactly
-      // on the object and returns exactly to the carry anchor, so the
-      // renderer's hand-follow is continuous throughout.
+      // Grab trajectory (docs/WORLD_PUPPET_MOTOR.md): the waist bends just
+      // enough to bring the object within arm reach, the arm extends onto it,
+      // then the figure straightens up carrying it. The baked reach point is
+      // the FK hand position throughout, so the renderer's hand-follow is
+      // continuous and the drawn hand IS the grabbing hand.
       if (state.grab) {
         state.grab.t += DT;
-        const anchorX = state.x + state.facing * HAND_REST.x * state.scale;
-        const anchorY = state.groundY + HAND_REST.y * state.scale;
         const t = state.grab.t;
-        const point = t < 0.25
-          ? { x: state.grab.x, y: state.grab.y }
-          : t < 0.7
-            ? (() => {
-                const k = smoothstep01((t - 0.25) / 0.45);
-                return { x: state.grab!.x + (anchorX - state.grab!.x) * k, y: state.grab!.y + (anchorY - state.grab!.y) * k };
-              })()
-            : null;
-        if (point) {
-          state.reach = { tx: point.x, ty: point.y, target: state.grab.propId, contact: true };
+        const body = state.body;
+        const k = state.scale;
+        const target: [number, number] = [state.grab.x, state.grab.y];
+        const BEND = 0.35, GRIP = 0.5, RISE = 1.0;
+        // Smallest waist pitch that puts the object within arm reach.
+        const reachablePitch = (): number => {
+          for (let p = 0; p <= body.pitchMax; p += 5) {
+            const s = shoulderAt(state.x, state.groundY, k, state.facing, body, p);
+            if (Math.hypot(target[0] - s[0], target[1] - s[1]) <= body.armReach * k) return p;
+          }
+          return body.pitchMax;
+        };
+        const need = reachablePitch();
+        if (t < BEND) {
+          state.waist = need * smoothstep01(t / BEND);
+        } else if (t < GRIP) {
+          state.waist = need;
+        } else if (t < RISE) {
+          state.waist = need * (1 - smoothstep01((t - GRIP) / (RISE - GRIP)));
         } else {
+          state.waist = 0;
           state.grab = null;
           state.reach = null;
         }
+        if (state.grab) {
+          const shoulder = shoulderAt(state.x, state.groundY, k, state.facing, body, state.waist);
+          const rest = solveSkeleton(state.skeleton as Skeleton, {});
+          const restHand = rest.hands.hand_r?.center ?? [state.skeleton!.space.width / 2, state.skeleton!.space.height * 0.71];
+          const carry: [number, number] = [
+            state.x + state.facing * (restHand[0] - state.skeleton!.space.width / 2) * k,
+            state.groundY - (state.skeleton!.space.height - restHand[1]) * k,
+          ];
+          const d = Math.hypot(target[0] - shoulder[0], target[1] - shoulder[1]);
+          const ext = Math.min(d, body.armReach * k);
+          const hand: [number, number] = t < GRIP
+            ? [shoulder[0] + ((target[0] - shoulder[0]) / (d || 1)) * ext, shoulder[1] + ((target[1] - shoulder[1]) / (d || 1)) * ext]
+            : [
+                target[0] + (carry[0] - target[0]) * smoothstep01((t - GRIP) / (RISE - GRIP)),
+                target[1] + (carry[1] - target[1]) * smoothstep01((t - GRIP) / (RISE - GRIP)),
+              ];
+          state.reach = { tx: hand[0], ty: hand[1], target: state.grab.propId, contact: t >= BEND && t < RISE };
+        }
       }
-      // Balance recovery: stagger momentum decays through foot friction.
+      // Pursuit: walk toward an active move target (planted-feet walk).
       if (state.moveTarget !== null) {
         const distance = state.moveTarget - state.x;
         if (Math.abs(distance) <= WALK_SPEED * DT) {
@@ -288,7 +397,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       for (const other of actors.values()) {
         if (other.id === state.id) continue;
         const gap = Math.abs(other.x - state.x);
-        const required = BODY_HALF_WIDTH * (state.scale + other.scale);
+        const required = state.body.halfWidth * state.scale + other.body.halfWidth * other.scale;
         if (gap >= required) continue;
         if (state.moveTarget !== null) {
           const dir = Math.sign(state.moveTarget - state.x) || state.facing;
@@ -323,6 +432,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           lean: Math.round(state.lean * 100) / 100,
           facing: state.facing,
           walk: Math.round(state.walkPhase * 1000) / 1000,
+          ...(state.waist ? {waist: Math.round(state.waist * 100) / 100} : {}),
           ...(state.reach ? {
             reach: [Math.round(state.reach.tx * 100) / 100, Math.round(state.reach.ty * 100) / 100],
             ...(state.reach.contact ? { contact: true } : {}),
@@ -345,8 +455,8 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
 export interface MotorSceneSource {
   durationSec: number;
   /** Normalized staging positions keyed by instance id. */
-  actors: Record<string, {at: readonly [number, number]; facing?: number}>;
-  objects: Record<string, {at: readonly [number, number]}>;
+  actors: Record<string, {at: readonly [number, number]; facing?: number; scale?: number; skeleton?: Skeleton}>;
+  objects: Record<string, {at: readonly [number, number]; size?: [number, number]; scale?: number}>;
   /** Scene performance tracks (motor intents live here, subject-keyed). */
   tracks: Array<{subject?: string; events?: Array<{start?: number; end?: number; tracks?: Array<{kind?: string; events?: Array<Record<string, unknown>>}>}>}>;
 }
@@ -363,7 +473,7 @@ export function bakeSceneMotor(
   const actorInputs: MotorActorInput[] = [];
   const intentsByActor = new Map<string, MotorIntent[]>();
   for (const [id, staged] of Object.entries(source.actors ?? {})) {
-    actorInputs.push({id, x: staged.at[0] * video.width, groundY: staged.at[1] * video.height, facing: staged.facing === -1 ? -1 : 1, scale: (staged as {scale?: number}).scale ?? 1, intents: []});
+    actorInputs.push({id, x: staged.at[0] * video.width, groundY: staged.at[1] * video.height, facing: staged.facing === -1 ? -1 : 1, scale: staged.scale ?? 1, skeleton: staged.skeleton, intents: []});
     intentsByActor.set(id, []);
   }
   for (const track of source.tracks ?? []) {
@@ -397,7 +507,7 @@ export function bakeSceneMotor(
   return simulateScene({
     durationSec: source.durationSec,
     actors: actorInputs,
-    props: Object.entries(source.objects ?? {}).map(([id, staged]) => ({id, x: staged.at[0] * video.width, y: staged.at[1] * video.height, intents: []})),
+    props: Object.entries(source.objects ?? {}).map(([id, staged]) => ({id, x: staged.at[0] * video.width, y: staged.at[1] * video.height, size: staged.size ?? [80, 120] as [number, number], intents: []})),
     resolveX: (id) => {
       const actor = source.actors?.[id];
       if (actor) return actor.at[0] * video.width;
