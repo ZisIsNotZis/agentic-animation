@@ -65,6 +65,51 @@ track(world, "motor", subject.id, [{ at: 0, duration: 0.85, intent: "push", targ
 `action.push` and `movement.to` are thin wrappers over these. Force magnitude
 is stylized (a nudge), not newtons — the invariants are what matter.
 
+## Body geometry SSOT (drawn = collider)
+
+`packages/core/src/motor/figureGeometry.ts` is the single source of truth for
+the puppet body: shoulder joint, arm segment vectors, hand radius, torso
+half-width, and pose angles (e.g. `PUSH_ARM`). The renderer's SVG rotates its
+arm segments by exactly those angles, so the drawn hand lands where the
+forward-kinematics `handOffset()` says; the motor's contact test uses the
+same numbers, so force cannot conduct without the drawn hand touching the
+drawn body. Changing a drawing dimension changes the physics with it.
+Actor bind anchors (`hand_r`/`hand_l`) derive from `HAND_REST` too.
+
+## Prop placement (one authority)
+
+`propState` in `packages/studio/src/performance/evaluate.ts` is the only code
+that places held props. Events chain recursively: a bind lifts the prop from
+wherever it physically was when the bind started (staged spot, mid-drop, or
+another hand), the prop then follows the hand, and only an explicit
+`release` event drops it — an expired bind keeps holding. Lift and drop
+windows scale with travel distance (`~30px per frame`, clamped 9-24 frames),
+so no hand-to-hand transfer ever exceeds continuous speed. `make` runs
+`detectPropDiscontinuities` (studio) after every compile and prints a
+`[make] sudden-move warning` per per-frame jump > 60px (holder-turn anchor
+swings are excluded); `scripts/keypoints.mts` dumps raw per-frame positions.
+
+## 45-degree facing (orientation)
+
+Requirement: two people should look at each other diagonally instead of both
+staring into the camera; the camera view is "front".
+
+- Considered a new library type (`figure45`): rejected — it duplicates the
+  figure concept, and every consumer (poses, motor, labels) would need a
+  second branch; one thing, one name.
+- Considered per-figure view assets in `library/figure/*`: rejected for now —
+  the performance renderer draws figures procedurally, so library view
+  assets would be dead data for this renderer.
+- **Chosen: orientation as a semantic on the actor state, rendered by
+  procedural view variants.** `EvaluatedActor.orientation` is one of
+  `front` (default), `front-left`, `front-right`, `back-left`,
+  `back-right`; the diagonal values render `QuarterFrontView` /
+  `BackView` (packages/studio/src/components/performance/views45.tsx,
+  same 400x720 box and proportions), left/right selects the mirror.
+  Authored via `pose.orient(subject, "front-left")` (library/pose/orient),
+  which emits a bone event carrying `orientation`. A real puppet-figure
+  with view assets can slot into the same semantic later.
+
 ## Slices
 
 1. **Core + walk** — balance, foot planting, locomotion. Feet never glide.

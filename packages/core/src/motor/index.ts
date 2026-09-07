@@ -67,19 +67,21 @@ export interface MotorTrajectory {
   props: Record<string, MotorPropFrame[]>;
 }
 
+import { BODY_HALF_WIDTH as BODY_HALF_DESIGN, FIGURE_BOX, HAND_PUSH, REACH_PUSH } from "./figureGeometry";
+
 const FPS = 24;
 const DT = 1 / 120;
 const SUBSTEPS = Math.round(1 / (FPS * DT));
 /** Walk speed in stage px/s. */
 const WALK_SPEED = 420;
-/** Actor visual half-width (the drawn puppet is ~400px at scale 1). */
-const BODY_HALF_WIDTH = 200;
-/** Hand extension beyond body center when the arm is extended (px at scale 1). */
-const ARM_REACH = 286;
-/** Contact margin: hand inside the target's body silhouette. */
-const CONTACT_MARGIN = 60;
-/** Standing hand height above ground (chest line). */
-const HAND_HEIGHT = -320;
+/**
+ * Body half-width comes from the drawn figure (figureGeometry SSOT): the
+ * physics body IS the drawn silhouette (robe spans 100..300 of the 400px
+ * design box), not an invented box.
+ */
+const BODY_HALF_WIDTH = (FIGURE_BOX.width - 2 * BODY_HALF_DESIGN) / 2;
+/** Contact margin: the drawn hand tip touches the target's silhouette edge. */
+const CONTACT_MARGIN = 14;
 /** Ground friction deceleration for sliding props (px/s²). */
 const PROP_FRICTION = 900;
 /** Reaction lean per unit of applied force (degrees). */
@@ -183,7 +185,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       const targetX = targetActor?.x ?? targetProp?.x;
       if (targetX === undefined) { pendingForces.splice(i, 1); continue; }
       const direction = Math.sign(targetX - actor.x) || 1;
-      const handX = actor.x + direction * ARM_REACH * actor.scale;
+      const handX = actor.x + direction * HAND_PUSH.x * actor.scale;
       const targetScale = targetActor?.scale ?? 1;
       const inContact = Math.abs(handX - targetX) <= BODY_HALF_WIDTH * targetScale + CONTACT_MARGIN * actor.scale;
       // Reach phase: track the target and step into contact range — the
@@ -283,7 +285,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           facing: state.facing,
           walk: Math.round(state.walkPhase * 1000) / 1000,
           ...(state.reach ? {
-            reach: [Math.round((state.reach.tx + (state.x - state.reach.tx) * 0.55) * 100) / 100, state.groundY + HAND_HEIGHT],
+            reach: [Math.round((state.reach.tx + (state.x - state.reach.tx) * 0.55) * 100) / 100, state.groundY + HAND_PUSH.y],
             ...(state.reach.contact ? { contact: true } : {}),
           } : {}),
         });
@@ -334,7 +336,10 @@ export function bakeSceneMotor(
         for (const item of recipe.events ?? []) {
           const intent = (item.value ?? item) as Record<string, unknown>;
           if (intent.intent !== "move" && intent.intent !== "push") continue;
-          intentsByActor.get(subject)!.push({
+          // An intent may drive an actor other than the invoking subject
+          // (e.g. a handover walks the RECEIVER to the giver).
+          const driven = typeof intent.actor === "string" && intentsByActor.has(intent.actor) ? intent.actor : subject;
+          intentsByActor.get(driven)!.push({
             at: Number(event.start ?? 0) + Number(intent.at ?? 0),
             duration: Number(intent.duration ?? event.end ?? 1),
             intent: intent.intent as "move" | "push",

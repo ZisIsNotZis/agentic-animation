@@ -365,6 +365,13 @@ export interface EvaluatedActor {
   /** Walk cycle phase 0..1. */
   walk?: number;
   facing?: 1 | -1;
+  /**
+   * Presented body orientation (docs/WORLD_PUPPET_MOTOR.md §45-degree facing):
+   * "front" is the full camera-facing figure; the four diagonals render the
+   * quarter-front / back views so characters can face each other naturally.
+   * Left/right selects the mirror. Absent = "front".
+   */
+  orientation?: "front" | "front-left" | "front-right" | "back-left" | "back-right";
   /** World-space hand position while reaching/exerting. */
   reach?: [number, number];
   contact?: boolean;

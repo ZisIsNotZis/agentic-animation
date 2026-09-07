@@ -31,6 +31,10 @@ scenes:
     objects:
       desk: center
     script:
+      # 45-degree facing: the two turn diagonally toward each other before
+      # the dialogue, so neither stares flat into the camera.
+      - aqiang: "{pose.orient(aqiang, \"front-right\")}"
+      - awei: "{pose.orient(awei, \"front-left\")}出门啊！"
       - aqiang: "{action.slam(aqiang, desk)}你给我过来！"
       - aqiang: "{...action.slam(aqiang, desk), durationSec: 1.2}听不懂吗！！"
       - aqiang: "{...action.push(aqiang, awei), mode: \"nonblock\"}出去！"

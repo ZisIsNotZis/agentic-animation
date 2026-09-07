@@ -131,3 +131,58 @@ export function describeCameraOverflows(warnings: CameraOverflowWarning[]): stri
     `camera overflow warning: key at frame ${warning.frame} (z=${warning.z.toFixed(2)}, viewport top-left ${Math.round(warning.x)},${Math.round(warning.y)}) leaves the background: ${warning.overflow} — the renderer clamps, but fix the camera intent`,
   );
 }
+
+export interface PropDiscontinuityWarning {
+  frame: number;
+  id: string;
+  from: [number, number];
+  to: [number, number];
+  delta: number;
+}
+
+/**
+ * Shift-left check: a prop or actor that jumps more than `threshold` px in a
+ * single frame. Real objects move continuously — a jump means something
+ * teleported (a snap placement, a missing approach). Cheap: pure manifest
+ * evaluation, no rendering.
+ */
+export function detectPropDiscontinuities(
+  manifest: PerformanceManifest,
+  options: {threshold?: number} = {},
+): PropDiscontinuityWarning[] {
+  const threshold = options.threshold ?? 60;
+  const normalized = normalizePerformanceManifest({...manifest, timebase: manifest.timebase ?? "seconds"});
+  const fps = normalized.video?.fps ?? 24;
+  const frames = normalized.durationInFrames ?? Math.round((normalized.totalDuration ?? 0) * fps);
+  const warnings: PropDiscontinuityWarning[] = [];
+  let previous = new Map<string, {x: number; y: number}>();
+  let previousFlips = new Map<string, boolean>();
+  for (let frame = 0; frame < frames; frame++) {
+    const state = evaluatePerformance(normalized, frame);
+    const current = new Map<string, {x: number; y: number}>();
+    let flipped = false;
+    for (const actor of state.actors) {
+      current.set(actor.id, {x: actor.x, y: actor.y});
+      if (previous.has(actor.id) && previousFlips.get(actor.id) !== actor.flip) flipped = true;
+    }
+    for (const prop of state.props) current.set(prop.id, {x: prop.x, y: prop.y});
+    const previousFlipsNow = new Map(state.actors.map((actor) => [actor.id, actor.flip]));
+    for (const [id, at] of current) {
+      const before = previous.get(id);
+      if (!before) continue;
+      const delta = Math.hypot(at.x - before.x, at.y - before.y);
+      // A holder turning around swings its hand anchor to the mirrored side —
+      // a rig artifact, not a teleport.
+      if (delta > threshold && !flipped) warnings.push({frame, id, from: [before.x, before.y], to: [at.x, at.y], delta});
+    }
+    previous = current;
+    previousFlips = previousFlipsNow;
+  }
+  return warnings;
+}
+
+export function describePropDiscontinuities(warnings: PropDiscontinuityWarning[]): string[] {
+  return warnings.map((warning) =>
+    `sudden-move warning: ${warning.id} jumps ${Math.round(warning.delta)}px at frame ${warning.frame} (${Math.round(warning.from[0])},${Math.round(warning.from[1])} -> ${Math.round(warning.to[0])},${Math.round(warning.to[1])}) — objects must move continuously`,
+  );
+}

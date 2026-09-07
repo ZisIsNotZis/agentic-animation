@@ -599,6 +599,15 @@ function actorState(
     ? {name: String(expressionValue.name ?? expressionValue.emotion), ...expressionValue} as PerformanceExpression
     : undefined;
   const transformed = genericPlacement(tracks, frame, placement, manifest);
+  // Orientation (45-degree facing): the newest semantic event that carries an
+  // explicit `orientation` value wins; default full-front.
+  const ORIENTATIONS = ["front", "front-left", "front-right", "back-left", "back-right"];
+  const orientation = tracks
+    .flatMap((track) => track.events)
+    .filter((event) => event.active)
+    .map((event) => eventValue(event).orientation)
+    .filter((value): value is string => typeof value === "string" && ORIENTATIONS.includes(value))
+    .at(-1) as EvaluatedActor["orientation"] | undefined;
   return {
     id: actor.id,
     x: transformed.at?.[0] ?? transformed.x ?? 0,
@@ -606,6 +615,7 @@ function actorState(
     scale: numberOr(transformed.scale, 1),
     rotation: numberOr(transformed.rotation, 0),
     flip: transformed.flip === true,
+    ...(orientation === undefined ? {} : {orientation}),
     z: numberOr(actor.z, 0),
     present: lifecyclePresent ?? present ?? actor.present !== false,
     ...(lifecyclePose ?? pose ?? actor.pose) === undefined ? {} : {pose: lifecyclePose ?? pose ?? actor.pose},
@@ -621,63 +631,258 @@ function actorState(
   };
 }
 
-function propState(prop: PerformanceProp, actors: Map<string, EvaluatedActor>, frame: number): EvaluatedProp {
-  const base = prop.at ?? prop.position ?? [0, 0];
-  let x = base[0];
-  let y = base[1];
-  let rotation = numberOr(prop.rotation, 0);
-  let scale = numberOr(prop.scale, 1);
-  const tracks = evaluateTracks(prop.tracks, frame);
-  const transform = eventsAt(tracks, "transform", frame).at(-1) ?? eventsAt(tracks, "movement", frame).at(-1);
-  if (transform) {
-    const value = eventValue(transform);
-    x = numberOr(value.x as number | undefined, x);
-    y = numberOr(value.y as number | undefined, y);
-    rotation = numberOr(value.rotation as number | undefined, rotation);
-    scale = numberOr(value.scale as number | undefined, scale);
+/** Ease-in-out curve for lift/drop windows (smoothstep). */
+function smoothstep(t: number): number {
+  return t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+}
+
+/** Frames the hand takes to close around a prop and lift it (~0.375s at 24fps). */
+const LIFT_FRAMES = 9;
+/** Frames a released prop falls to its staged spot (~0.33s at 24fps). */
+const DROP_FRAMES = 8;
+
+/**
+ * Physical held-prop placement — the ONE authority for where a bound prop is
+ * (docs/WORLD_PUPPET_MOTOR.md). Continuity is unconditional:
+ * - bind start: the prop eases from its staged position into the hand over
+ *   LIFT_FRAMES (the holder walks to the prop first via motor intents, so
+ *   the hand is adjacent when the lift begins — no teleport);
+ * - held: the prop follows the hand exactly;
+ * - release: the prop eases from the hand to its staged position over
+ *   DROP_FRAMES (a drop, not a snap back).
+ */
+function applyHeldMotion(
+  pos: {x: number; y: number; rotation: number; scale: number},
+  stagedAtBind: {x: number; y: number; rotation: number; scale: number},
+  stagedNow: {x: number; y: number; rotation: number; scale: number},
+  interval: {t0: number; t1: number},
+  handNow: {x: number; y: number; rotation: number; scale: number} | undefined,
+  handAtRelease: {x: number; y: number; rotation: number; scale: number} | undefined,
+  frame: number,
+): void {
+  if (frame < interval.t1) {
+    if (!handNow) return;
+    if (frame < interval.t0 + LIFT_FRAMES) {
+      const eased = smoothstep((frame - interval.t0) / LIFT_FRAMES);
+      pos.x = stagedAtBind.x + (handNow.x - stagedAtBind.x) * eased;
+      pos.y = stagedAtBind.y + (handNow.y - stagedAtBind.y) * eased;
+    } else {
+      pos.x = handNow.x;
+      pos.y = handNow.y;
+    }
+    pos.rotation += handNow.rotation;
+    pos.scale *= handNow.scale;
+  } else if (handAtRelease && frame < interval.t1 + DROP_FRAMES) {
+    const eased = smoothstep((frame - interval.t1) / DROP_FRAMES);
+    pos.x = handAtRelease.x + (stagedNow.x - handAtRelease.x) * eased;
+    pos.y = handAtRelease.y + (stagedNow.y - handAtRelease.y) * eased;
+    pos.rotation += handAtRelease.rotation;
+    pos.scale *= handAtRelease.scale;
   }
+  // Past the drop window: the staged position (already the fallback).
+}
+
+function propState(
+  prop: PerformanceProp,
+  actors: Map<string, EvaluatedActor>,
+  frame: number,
+  context?: {actorAtFrame?: (actorId: string, at: number) => EvaluatedActor | undefined},
+): EvaluatedProp {
+  const stagedNow = stagedPropPosition(prop, frame);
+  const tracks = evaluateTracks(prop.tracks, frame);
   const position = latestPositionKey(prop.positionTrack, frame);
   if (position) {
-    [x, y] = positionPoint(position, [x, y]);
-    rotation = numberOr(position.rotation, rotation);
-    scale = numberOr(position.scale, scale);
+    [stagedNow.x, stagedNow.y] = positionPoint(position, [stagedNow.x, stagedNow.y]);
+    stagedNow.rotation = numberOr(position.rotation, stagedNow.rotation);
+    stagedNow.scale = numberOr(position.scale, stagedNow.scale);
   }
-  const bindingEvent = tracks
-    .filter((track) => track.kind === "binding")
-    .flatMap((track) => track.events)
-    .filter((event) => trackEventStart(event) <= frame && frame < trackEventEnd(event, trackEventStart(event)))
-    .at(-1);
-  const bindingValue = bindingEvent ? eventValue(bindingEvent) : undefined;
-  const genericBinding: PerformanceConstraint | undefined = bindingEvent && bindingValue ? {
-    actor: String(bindingValue.actor ?? bindingValue.actorId ?? bindingValue.holder ?? bindingEvent.subject ?? ""),
-    hand: String(bindingValue.hand ?? bindingValue.socket ?? "hand_r"),
-    offset: pointOf(bindingValue.offset),
-  } : undefined;
-  const binding = prop.boundTo ?? prop.constraint ?? prop.bind;
-  const activeBinding = binding && intervalActive(binding, frame) ? binding : genericBinding;
-  if (activeBinding) {
-    const actor = actors.get(activeBinding.actor ?? activeBinding.actorId ?? "");
-    const hand = actor?.anchors[activeBinding.hand ?? activeBinding.socket ?? ""];
-    if (actor && hand) {
-      x = actor.x + hand[0] * actor.scale + (activeBinding.offset?.[0] ?? 0);
-      y = actor.y + hand[1] * actor.scale + (activeBinding.offset?.[1] ?? 0);
-      rotation += actor.rotation;
-      scale *= actor.scale;
-      if (actor.flip) x -= hand[0] * actor.scale * 2;
-    }
+  // Binding events govern placement. Events chain recursively: a bind lifts
+  // the prop from wherever it actually was when the bind started (staged,
+  // mid-drop, or another hand) — so handovers and quick re-binds stay
+  // physically continuous (docs/WORLD_PUPPET_MOTOR.md).
+  const bindingTracks = tracks.filter((track) => track.kind === "binding");
+  if (bindingTracks.some((track) => track.events.length)) {
+    const events = bindingTracks
+      .flatMap((track) => track.events)
+      .sort((a, b) => trackEventStart(a) - trackEventStart(b));
+    const pos = propPlacementAt(prop, events, events.length, actors, context, frame);
+    return projectedProp(prop, pos, tracks);
+  }
+  // Declarative bind (boundTo / constraint / bind) — perpetual or interval
+  // hand attachment, placed through the same physical continuity.
+  const declared = prop.boundTo ?? prop.constraint ?? prop.bind;
+  if (declared && intervalActive(declared, frame)) {
+    const t0 = numberOr(declared.startFrame, numberOr(declared.start, 0));
+    const t1 = numberOr(declared.endFrame, numberOr(declared.end, Number.POSITIVE_INFINITY));
+    const holderId = String(declared.actor ?? declared.actorId ?? declared.holder ?? "");
+    const handName = String(declared.hand ?? declared.socket ?? "hand_r");
+    const offset = pointOf(declared.offset) ?? [0, 0];
+    const holderNow = actors.get(holderId);
+    const anchorNow = holderNow?.anchors[handName];
+    const handNow = holderNow && anchorNow ? {
+      x: holderNow.x + (holderNow.flip ? -anchorNow[0] : anchorNow[0]) * holderNow.scale + offset[0],
+      y: holderNow.y + anchorNow[1] * holderNow.scale + offset[1],
+      rotation: holderNow.rotation,
+      scale: holderNow.scale,
+    } : context?.actorAtFrame ? handAtFrame(context.actorAtFrame, holderId, handName, frame, offset) : undefined;
+    const handAtRelease = Number.isFinite(t1) && context?.actorAtFrame
+      ? handAtFrame(context.actorAtFrame, holderId, handName, Math.max(t0, t1 - 1), offset)
+      : undefined;
+    const pos = {...stagedNow};
+    applyHeldMotion(pos, stagedPropPosition(prop, t0), stagedNow, {t0, t1}, handNow, handAtRelease, frame);
+    return projectedProp(prop, pos, tracks);
   }
   return {
     id: prop.id,
-    ...(prop.label === undefined ? {} : { label: prop.label }),
-    x,
-    y,
-    rotation,
-    scale,
+    ...(prop.label === undefined ? {} : {label: prop.label}),
+    x: stagedNow.x,
+    y: stagedNow.y,
+    rotation: stagedNow.rotation,
+    scale: stagedNow.scale,
     z: numberOr(prop.z, 0),
     size: prop.size ? [prop.size[0], prop.size[1]] : [prop.width ?? 64, prop.height ?? 64],
-    ...(prop.src === undefined ? {} : { src: prop.src }),
+    ...(prop.src === undefined ? {} : {src: prop.src}),
     tracks,
   };
+}
+
+function projectedProp(prop: PerformanceProp, pos: {x: number; y: number; rotation: number; scale: number}, tracks: EvaluatedTrack[]): EvaluatedProp {
+  return {
+    id: prop.id,
+    ...(prop.label === undefined ? {} : {label: prop.label}),
+    x: pos.x,
+    y: pos.y,
+    rotation: pos.rotation,
+    scale: pos.scale,
+    z: numberOr(prop.z, 0),
+    size: prop.size ? [prop.size[0], prop.size[1]] : [prop.width ?? 64, prop.height ?? 64],
+    ...(prop.src === undefined ? {} : {src: prop.src}),
+    tracks,
+  };
+}
+
+/** Hand world position for a holder evaluated at an arbitrary frame. */
+function handAtFrame(
+  actorAtFrame: (actorId: string, at: number) => EvaluatedActor | undefined,
+  holderId: string,
+  handName: string,
+  at: number,
+  offset: [number, number],
+): {x: number; y: number; rotation: number; scale: number} | undefined {
+  const holder = actorAtFrame(holderId, at);
+  const anchor = holder?.anchors[handName];
+  if (!holder || !anchor) return undefined;
+  return {
+    x: holder.x + (holder.flip ? -anchor[0] : anchor[0]) * holder.scale + offset[0],
+    y: holder.y + anchor[1] * holder.scale + offset[1],
+    rotation: holder.rotation,
+    scale: holder.scale,
+  };
+}
+
+/**
+ * Physical prop placement under a chain of binding events (newest first).
+ * `limit` bounds the event prefix considered, so the recursive "where was
+ * the prop when this bind started" lookup always terminates.
+ */
+function propPlacementAt(
+  prop: PerformanceProp,
+  events: ReturnType<typeof evaluateTracks>[number]["events"],
+  limit: number,
+  actors: Map<string, EvaluatedActor>,
+  context: {actorAtFrame?: (actorId: string, at: number) => EvaluatedActor | undefined} | undefined,
+  frame: number,
+): {x: number; y: number; rotation: number; scale: number} {
+  let index = -1;
+  for (let i = 0; i < limit; i++) {
+    if (trackEventStart(events[i]!) <= frame) index = i;
+  }
+  if (index < 0) return stagedPropPosition(prop, frame);
+  const event = events[index]!;
+  const value = eventValue(event);
+  const t0 = trackEventStart(event);
+  const t1 = trackEventEnd(event, t0);
+  const holderId = String(value.actor ?? value.actorId ?? value.holder ?? event.subject ?? "");
+  const handName = String(value.hand ?? value.socket ?? "hand_r");
+  const offset = pointOf(value.offset) ?? [0, 0];
+  const holderNow = actors.get(holderId);
+  const anchorNow = holderNow?.anchors[handName];
+  const handNow = holderNow && anchorNow
+    ? {
+        x: holderNow.x + (holderNow.flip ? -anchorNow[0] : anchorNow[0]) * holderNow.scale + offset[0],
+        y: holderNow.y + anchorNow[1] * holderNow.scale + offset[1],
+        rotation: holderNow.rotation,
+        scale: holderNow.scale,
+      }
+    : context?.actorAtFrame
+      ? handAtFrame(context.actorAtFrame, holderId, handName, frame, offset)
+      : undefined;
+  const isRelease = String(value.operation ?? "bind") === "release";
+  if (!isRelease) {
+    // Bound: ease from the previous physical position into the hand, then
+    // follow it. An expired bind keeps the prop in the holder's hand — only
+    // an explicit release event puts it down.
+    if (!handNow) return stagedPropPosition(prop, frame);
+    // The lift window scales with the actual travel distance so long
+    // hand-to-hand transfers stay smooth (deterministic per frame).
+    const liftFrom = propPlacementAt(prop, events, index, actors, context, t0);
+    const liftFrames = Math.max(LIFT_FRAMES, Math.min(24, Math.round(Math.hypot(handNow.x - liftFrom.x, handNow.y - liftFrom.y) / 30)));
+    const pos = frame < t0 + liftFrames
+      ? (() => {
+          const eased = smoothstep((frame - t0) / liftFrames);
+          return {
+            x: liftFrom.x + (handNow.x - liftFrom.x) * eased,
+            y: liftFrom.y + (handNow.y - liftFrom.y) * eased,
+            rotation: liftFrom.rotation,
+            scale: liftFrom.scale,
+          };
+        })()
+      : {x: handNow.x, y: handNow.y, rotation: liftFrom.rotation, scale: liftFrom.scale};
+    pos.rotation += handNow.rotation;
+    pos.scale *= handNow.scale;
+    return pos;
+  }
+  // Explicit release: the prop falls from the hand toward its staged
+  // position over DROP_FRAMES.
+  const handAtLoose = context?.actorAtFrame
+    ? handAtFrame(context.actorAtFrame, holderId, handName, Math.max(t0, t1 - 1), offset)
+    : handNow;
+  const stagedNow = stagedPropPosition(prop, frame);
+  if (handAtLoose) {
+    const dropFrames = Math.max(DROP_FRAMES, Math.min(20, Math.round(Math.hypot(stagedNow.x - handAtLoose.x, stagedNow.y - handAtLoose.y) / 30)));
+    if (frame < t1 + dropFrames) {
+      const eased = smoothstep((frame - t1) / dropFrames);
+      return {
+        x: handAtLoose.x + (stagedNow.x - handAtLoose.x) * eased,
+        y: handAtLoose.y + (stagedNow.y - handAtLoose.y) * eased,
+        rotation: stagedNow.rotation + handAtLoose.rotation,
+        scale: stagedNow.scale * handAtLoose.scale,
+      };
+    }
+  }
+  return stagedNow;
+}
+
+/** The prop's own placement (staging + transform/position tracks, no bindings). */
+function stagedPropPosition(prop: PerformanceProp, frame: number): {x: number; y: number; rotation: number; scale: number} {
+  const base = prop.at ?? prop.position ?? [0, 0];
+  const staged = {x: base[0], y: base[1], rotation: numberOr(prop.rotation, 0), scale: numberOr(prop.scale, 1)};
+  const stagedTracks = evaluateTracks(prop.tracks, frame);
+  const transform = eventsAt(stagedTracks, "transform", frame).at(-1) ?? eventsAt(stagedTracks, "movement", frame).at(-1);
+  if (transform) {
+    const value = eventValue(transform);
+    staged.x = numberOr(value.x as number | undefined, staged.x);
+    staged.y = numberOr(value.y as number | undefined, staged.y);
+    staged.rotation = numberOr(value.rotation as number | undefined, staged.rotation);
+    staged.scale = numberOr(value.scale as number | undefined, staged.scale);
+  }
+  const position = latestPositionKey(prop.positionTrack, frame);
+  if (position) {
+    [staged.x, staged.y] = positionPoint(position, [staged.x, staged.y]);
+    staged.rotation = numberOr(position.rotation, staged.rotation);
+    staged.scale = numberOr(position.scale, staged.scale);
+  }
+  return staged;
 }
 
 function tracksForSubject(tracks: readonly PerformanceGenericTrack[], subject: string): PerformanceGenericTrack[] {
@@ -689,100 +894,29 @@ function applyManifestConstraints(
   constraints: PerformanceConstraint[] | undefined,
   actors: Map<string, EvaluatedActor>,
   frame: number,
+  context?: {actorAtFrame?: (actorId: string, at: number) => EvaluatedActor | undefined; fps?: number},
 ): EvaluatedProp[] {
   if (!constraints?.length) return props;
+  const fps = context?.fps ?? 24;
   const byId = new Map(props.map((prop) => [prop.id, prop]));
   for (const constraint of constraints) {
     const prop = byId.get(constraint.prop ?? constraint.object ?? "");
     const actorId = typeof constraint.actor === "string"
       ? constraint.actor
       : typeof constraint.actorId === "string" ? constraint.actorId : constraint.holder ?? "";
-    const actor = actors.get(actorId);
-    const hand = actor?.anchors[constraint.hand ?? constraint.socket ?? ""];
-    if (!prop || !actor || !hand || !intervalActive(constraint, frame)) continue;
-    prop.x = actor.x + hand[0] * actor.scale + (constraint.offset?.[0] ?? 0);
-    prop.y = actor.y + hand[1] * actor.scale + (constraint.offset?.[1] ?? 0);
-    prop.rotation += actor.rotation;
-    prop.scale *= actor.scale;
-  }
-  return props;
-}
-
-function applyGenericBindings(
-  props: EvaluatedProp[],
-  tracks: readonly EvaluatedTrack[],
-  actors: Map<string, EvaluatedActor>,
-  frame: number,
-): EvaluatedProp[] {
-  const byId = new Map(props.map((prop) => [prop.id, prop]));
-  // Chronological bind/release state: the newest event wins, a release
-  // detaches the prop (it returns to its staged position). A fresh bind
-  // eases the prop from wherever it was into the hand across the event's
-  // duration — no teleport snap (docs/WORLD_PUPPET_MOTOR.md).
-  let bound: {propId: string; actorId: string; hand: string; offset: [number, number]} | null = null;
-  let lift: {fromX: number; fromY: number; startFrame: number} | null = null;
-  let drop: {propId: string; fromY: number; startFrame: number} | null = null;
-  const LIFT_FRAMES = 9;
-  const DROP_FRAMES = 8;
-  const events = tracks
-    .filter((track) => track.kind === "binding")
-    .flatMap((track) => track.events)
-    .filter((event) => trackEventStart(event) <= frame)
-    .sort((a, b) => trackEventStart(a) - trackEventStart(b));
-  for (const event of events) {
-    const value = eventValue(event);
-    if (String(value.operation ?? "bind") === "release") {
-      // Release: the object drops from the hand to the ground (ease, no snap).
-      const releaseId = String(value.prop ?? value.object ?? event.target ?? "");
-      const releaseProp = byId.get(releaseId);
-      if (releaseProp) drop = {propId: releaseId, fromY: releaseProp.y, startFrame: frame};
-      bound = null;
-      lift = null;
-      continue;
-    }
-    const propId = String(value.prop ?? value.object ?? event.target ?? "");
-    const actorId = String(value.actor ?? value.actorId ?? value.holder ?? event.subject ?? "");
-    const hand = String(value.hand ?? value.socket ?? "hand_r");
-    if (!byId.has(propId) || !actors.has(actorId)) continue;
-    bound = {propId, actorId, hand, offset: pointOf(value.offset) ?? [0, 0]};
-  }
-  // Apply the active binding, if any.
-  if (bound) {
-    const prop = byId.get(bound.propId);
-    const actor = actors.get(bound.actorId);
-    const hand = actor?.anchors[bound.hand];
-    if (prop && actor && hand) {
-      const handX = actor.x + hand[0] * actor.scale + bound.offset[0];
-      const handY = actor.y + hand[1] * actor.scale + bound.offset[1];
-      // Proximity gate: the prop lifts only once the hand is actually near
-      // (the actor walks to it via motor intents) — never from across the stage.
-      const near = Math.abs(handX - prop.x) < 220 && Math.abs(handY - prop.y) < 320;
-      if (!near) {
-        lift = null;
-      } else if (!lift) {
-        lift = {fromX: prop.x, fromY: prop.y, startFrame: frame};
-      }
-      if (near && lift) {
-        const eased = Math.min(1, (frame - lift.startFrame) / LIFT_FRAMES);
-        const easedEase = eased * eased * (3 - 2 * eased);
-        prop.x = lift.fromX + (handX - lift.fromX) * easedEase;
-        prop.y = lift.fromY + (handY - lift.fromY) * easedEase;
-        prop.rotation += actor.rotation;
-        prop.scale *= actor.scale;
-      }
-    }
-  } else if (drop) {
-    // Ease the released prop down to its staged ground position (no snap).
-    const prop = byId.get(drop.propId);
-    const eased = Math.min(1, (frame - drop.startFrame) / DROP_FRAMES);
-    if (prop) {
-      const groundY = (prop as {at?: [number, number]}).at?.[1] ?? prop.y;
-      const easedEase = eased * eased;
-      prop.y = drop.fromY + (groundY - drop.fromY) * Math.min(1, easedEase);
-      if (eased >= 1) drop = null;
-    } else {
-      drop = null;
-    }
+    // Props governed by binding events are already placed physically by
+    // propState (applyHeldMotion) — constraints never override them.
+    if (!prop || prop.tracks.some((track) => track.kind === "binding" && track.events.some((event) => event.active))) continue;
+    const t0 = constraint.startFrame ?? Math.round((constraint.start ?? 0) * fps);
+    const t1 = constraint.endFrame
+      ?? (constraint.end !== undefined ? Math.round(constraint.end * fps) : t0 + (constraint.durationFrames ?? Math.round((constraint.duration ?? 0) * fps)));
+    if (frame < t0 || frame >= t1 + DROP_FRAMES) continue;
+    const handName = constraint.hand ?? constraint.socket ?? "hand_r";
+    const offset = constraint.offset ?? [0, 0];
+    const handNow = handAtFrame(context?.actorAtFrame ?? (() => actors.get(actorId)), actorId, handName, frame, offset)
+      ?? undefined;
+    const handAtRelease = context?.actorAtFrame ? handAtFrame(context.actorAtFrame, actorId, handName, Math.max(t0, t1 - 1), offset) : undefined;
+    applyHeldMotion(prop, prop, prop, {t0, t1}, handNow, handAtRelease, frame);
   }
   return props;
 }
@@ -906,11 +1040,25 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
     const end = Math.round(((scene.start ?? 0) + 1) * motorFps);
     return safeFrame >= start && safeFrame < Math.max(end, (scene.motor?.actors ? Object.values(scene.motor.actors)[0]?.length ?? 0 : 0) + start);
   });
-  const motorFrameFor = (id: string): Record<string, unknown> | undefined => {
-    const frames = activeMotorScene?.motor?.actors?.[id];
+  const motorFrameAt = (id: string, at: number): Record<string, unknown> | undefined => {
+    const scene = motorScenes.find((candidate) => {
+      const start = Math.round((candidate.start ?? 0) * motorFps);
+      const end = Math.round(((candidate.start ?? 0) + 1) * motorFps);
+      return at >= start && at < Math.max(end, (candidate.motor?.actors ? Object.values(candidate.motor.actors)[0]?.length ?? 0 : 0) + start);
+    });
+    const frames = scene?.motor?.actors?.[id];
     if (!frames?.length) return undefined;
-    const local = Math.max(0, Math.min(safeFrame - Math.round((activeMotorScene!.start ?? 0) * motorFps), frames.length - 1));
+    const local = Math.max(0, Math.min(at - Math.round((scene!.start ?? 0) * motorFps), frames.length - 1));
     return frames[local];
+  };
+  const motorFrameFor = (id: string): Record<string, unknown> | undefined => motorFrameAt(id, safeFrame);
+  const actorAtFrame = (actorId: string, at: number): EvaluatedActor | undefined => {
+    const def = (normalized.actors ?? []).find((candidate) => candidate.id === actorId);
+    if (!def) return undefined;
+    const base = actorState(def, normalized, at, tracksForSubject(tracks, actorId));
+    const motor = motorFrameAt(actorId, at) as {x?: number; facing?: number} | undefined;
+    if (!motor || typeof motor.x !== "number") return base;
+    return {...base, x: motor.x, flip: (motor.facing ?? (base.flip ? -1 : 1)) === -1};
   };
   const actors = repelActors(
     rawActors.map((actor) => {
@@ -922,18 +1070,14 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
   const actorById = new Map(actors.map((actor) => [actor.id, actor]));
   const props = (normalized.props ?? normalized.objects ?? []).map((prop) => {
     const projected = {...prop, tracks: [...(prop.tracks ?? []), ...tracksForSubject(tracks, prop.id)]};
-    return propState(projected, actorById, safeFrame);
+    return propState(projected, actorById, safeFrame, {actorAtFrame});
   });
   const evaluatedProps = applyManifestConstraints(
-    applyGenericBindings(
-      props,
-      tracks,
-      actorById,
-      safeFrame,
-    ),
+    props,
     [...(normalized.constraints ?? []), ...(normalized.propConstraints ?? []), ...(normalized.bindingConstraints ?? [])],
     actorById,
     safeFrame,
+    {actorAtFrame, fps: normalized.video?.fps ?? 24},
   );
   const explicitCameraKeys = cameraKeys(normalized.camera ?? normalized.cameraTrack);
   const composition = interpolateCamera(explicitCameraKeys, 0);
@@ -1122,20 +1266,25 @@ function projectCompiledProps(compiled: PerformanceManifest, assets: UnknownReco
     const asset = resolvedAssetForInstance(assets, "objects", id);
     const visual = assetVisual(asset);
     const initial = compiled.sceneTrack?.find((scene) => scene.initial?.props?.[id])?.initial.props[id];
-    const placement = initial?.placement as {at?: [number, number]} | undefined;
+    // Placement may be a mark name ("desk"), a placement object, or absent —
+    // never spread a raw string (its characters/prototype leak into the prop).
+    const rawPlacement = initial?.placement as unknown;
+    const marks = (compiled.placements ?? compiled.marks) as Record<string, {at?: [number, number]; scale?: number} | undefined> | undefined;
+    const markAt = typeof rawPlacement === "string" ? marks?.[rawPlacement]?.at : undefined;
+    const placementRecord = typeof rawPlacement === "object" && rawPlacement !== null ? rawPlacement as {at?: [number, number]} : undefined;
     // Scene staging is the plugin-pipeline placement source (normalized
     // coordinates); without it props would be invisible.
     const staged = compiled.sceneTrack
       ?.map((scene) => scene.staging?.objects?.[id])
       .find((object) => object !== undefined) as {at: readonly number[]; scale: number; z?: number; relation?: string} | undefined;
-    const at = staged ? stagePoint([Number(staged.at[0]), Number(staged.at[1])], compiled.sceneTrack?.[0]?.staging ?? {}, video) : placement?.at;
+    const at = staged ? stagePoint([Number(staged.at[0]), Number(staged.at[1])], compiled.sceneTrack?.[0]?.staging ?? {}, video) : (placementRecord?.at ?? markAt);
     return {
       id,
       // Props draw procedural art in a 200x160 viewBox scaled so that the
       // authored staging scale (0.18) yields a sensible stage size.
       size: (visual.size ?? (visual.width !== undefined && visual.height !== undefined ? [visual.width, visual.height] : [1920, 1536])) as [number, number],
       ...(at ? {at, x: at[0], y: at[1]} : {}),
-      ...(placement ?? {}),
+      ...(placementRecord ?? {}),
       ...(staged ? {scale: staged.scale, z: staged.z ?? 30, label: staged.relation ? `${id} (${staged.relation})` : id} : {}),
       ...(visual.src ? {src: visual.src} : {}),
     } satisfies PerformanceProp;

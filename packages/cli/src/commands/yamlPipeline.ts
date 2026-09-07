@@ -28,7 +28,7 @@ import type { StageContext } from "../runtime/context";
 import { assembleYamlAudio, yamlAudioStage } from "./yamlAudio";
 import { stageNow } from "./audioSupport";
 
-import { detectCameraOverflows, describeCameraOverflows, detectTeleports, describeTeleports } from "@anim/studio";
+import { detectCameraOverflows, describeCameraOverflows, detectPropDiscontinuities, describePropDiscontinuities, detectTeleports, describeTeleports } from "@anim/studio";
 
 export const YAML_PERFORMANCE_MANIFEST_NAME = "performance.json";
 export const YAML_AUDIO_ARTIFACT_NAME = "yaml-audio.json";
@@ -203,6 +203,9 @@ export async function makeYamlEpisode(
     process.stderr.write(`[make] ${line}\n`);
   }
   for (const line of describeCameraOverflows(detectCameraOverflows(manifestWithCues as never))) {
+    process.stderr.write(`[make] ${line}\n`);
+  }
+  for (const line of describePropDiscontinuities(detectPropDiscontinuities(manifestWithCues as never))) {
     process.stderr.write(`[make] ${line}\n`);
   }
   return result;

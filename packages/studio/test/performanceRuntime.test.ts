@@ -107,7 +107,7 @@ test("evaluates generic transform, expression, binding, camera, and VFX tracks",
       {kind: "transform", events: [{frame: 0, endFrame: 10, x: 30, y: 40}]},
       {kind: "expression", events: [{frame: 0, value: {name: "alert"}}]},
     ]}],
-    props: [{id: "object", at: [0, 0], tracks: [{kind: "binding", events: [{frame: 0, endFrame: 10, actor: "actor", hand: "hand_r"}]}]}],
+    props: [{id: "object", at: [0, 0], tracks: [{kind: "binding", events: [{frame: 0, value: {actor: "actor", hand: "hand_r", operation: "bind"}}, {frame: 10, value: {actor: "actor", hand: "hand_r", operation: "release"}}]}]}],
     tracks: [
       {kind: "camera", subject: "camera", events: [{frame: 0, x: 3, y: 4, z: 2}]},
       {kind: "vfx", subject: "vfx", events: [{frame: 2, endFrame: 6, type: "flash"}]},
@@ -116,7 +116,16 @@ test("evaluates generic transform, expression, binding, camera, and VFX tracks",
   const state = evaluatePerformance(generic, 4);
   assert.deepEqual([state.actors[0]!.x, state.actors[0]!.y], [30, 40]);
   assert.equal(state.actors[0]!.expression.name, "alert");
-  assert.deepEqual([state.props[0]!.x, state.props[0]!.y], [35, 35]);
+  // Physical bind: frame 4 is mid-lift, so the prop eases from its staged
+  // spot (0,0) toward the hand (35,35) — never teleports.
+  const midLift = state.props[0]!;
+  assert.ok(midLift.x > 0 && midLift.x < 35 && midLift.y > 0 && midLift.y < 35, `mid-lift should ease, got ${midLift.x},${midLift.y}`);
+  // Frame 9: lift window (9 frames) complete -> the prop follows the hand.
+  const held = evaluatePerformance(generic, 9).props[0]!;
+  assert.deepEqual([held.x, held.y], [35, 35]);
+  // The bind ends at frame 10 -> the prop drops back toward its staged spot.
+  const dropped = evaluatePerformance(generic, 12).props[0]!;
+  assert.ok(dropped.x < 35 && dropped.x > 0, `release should ease down, got ${dropped.x}`);
   assert.deepEqual(state.camera, {x: 3, y: 4, z: 2, rotation: 0});
   assert.equal(state.vfx[0]?.type, "flash");
 });
@@ -355,10 +364,16 @@ test("projects generic procedure tracks into actors, speech, semantic placement,
   const prop = state.props.find((item) => item.id === "cup")!;
 
   assert.deepEqual([actor.x, actor.y, actor.scale, actor.flip], [120, 210, 0.6, true]);
+  // Physical bind: frame 12 (t0=6, lift over 9 frames) eases the cup from
+  // its staged spot toward the hand; the cup follows the hand once lifted
+  // (frame 16: the flipped hand anchor 120-10*0.6, 210-20*0.6).
+  assert.ok(prop.x > 0 && prop.x < 114 && prop.y > 0 && prop.y < 198, `mid-lift should ease, got ${prop.x},${prop.y}`);
+  const heldCup = evaluatePerformance(compiled, 16).props.find((item) => item.id === "cup")!;
+  assert.deepEqual([heldCup.x, heldCup.y], [114, 198]);
   assert.equal(actor.expression.name, "surprised");
   assert.equal(actor.tracks.find((track) => track.kind === "bone")?.events[0]?.value && (actor.tracks.find((track) => track.kind === "bone")?.events[0]?.value as {name?: string}).name, "point");
   assert.equal(actor.tracks.some((track) => track.kind === "expression"), true);
-  assert.deepEqual([prop.x, prop.y], [126, 198]);
+  // (cup placement asserted above via the physical-lift checks)
   assert.equal(state.subtitles[0]?.text, "hello");
   assert.equal(state.vfx[0]?.type, "flash");
   assert.deepEqual(state.camera, { x: 20, y: 10, z: 1.5, rotation: 0 });

@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./schemas": "./src/schemas/index.ts",
     "./adapters": "./src/adapters/index.ts",
-    "./stdlib": "./src/invocation/stdlib.ts"
+    "./stdlib": "./src/invocation/stdlib.ts",
+    "./figureGeometry": "./src/motor/figureGeometry.ts"
   },
   "types": "./src/index.ts",
   "dependencies": {

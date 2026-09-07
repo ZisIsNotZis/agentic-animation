@@ -111,8 +111,10 @@ test("pursuit stops at adjacency — actors never overlap", () => {
   };
   const trajectory = simulateScene(scene);
   const frames = trajectory.actors.aqiang!;
+  // Body half-width is the drawn robe silhouette (100px design, figureGeometry
+  // SSOT), so adjacency keeps ~200px between centers.
   const minGap = Math.min(...frames.map((frame, index) => Math.abs(trajectory.actors.awei![index]!.x - frame.x)));
-  assert.ok(minGap >= 380, `actors overlapped: minimum gap ${Math.round(minGap)}px`);
+  assert.ok(minGap >= 190, `actors overlapped: minimum gap ${Math.round(minGap)}px`);
   const finalGap = Math.abs(trajectory.actors.awei!.at(-1)!.x - frames.at(-1)!.x);
-  assert.ok(finalGap <= 450, `pursuit should halt near the target, gap ${Math.round(finalGap)}`);
+  assert.ok(finalGap <= 260, `pursuit should halt near the target, gap ${Math.round(finalGap)}`);
 });
