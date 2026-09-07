@@ -25,6 +25,15 @@ export const SkeletonSchema = z.object({
   parts: z.record(z.string(), z.unknown()),
   arm: z.object({upper: z.number().positive(), fore: z.number().positive(), handRadius: z.number().positive()}).strict(),
   waist: z.object({pitchMax: z.number()}).strict(),
+  /** Balance controller data: recovery stepping thresholds (Slice 2). */
+  balance: z.object({
+    /** Stage px of slide after which the feet take a recovery step. */
+    stepLength: z.number().positive(),
+    /** Fraction of stagger momentum one step catches. */
+    catchFraction: z.number().min(0).max(1),
+    /** Max recovery steps before the imbalance exceeds capacity. */
+    maxSteps: z.number().int().min(1).max(6),
+  }).strict(),
 }).strict();
 export type Skeleton = z.infer<typeof SkeletonSchema>;
 

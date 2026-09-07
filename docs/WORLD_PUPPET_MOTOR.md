@@ -76,6 +76,24 @@ same numbers, so force cannot conduct without the drawn hand touching the
 drawn body. Changing a drawing dimension changes the physics with it.
 Actor bind anchors (`hand_r`/`hand_l`) derive from `HAND_REST` too.
 
+## Slice 2 — contact push + balance stepping (shipped)
+
+- **Part contact**: force conducts only while the pusher's hand circle
+  overlaps the pushee's torso box (or a prop's box) — checked every substep;
+  the arm tracks the target and walks into range before any force exists.
+- **Two-way dynamics**: the impulse accelerates the pushee's stagger and
+  leans the pusher back (reaction); the pushee moves by their own foot
+  friction, never in sync.
+- **Capture-point stepping** (thresholds from the figure's
+  `balance: {stepLength, catchFraction, maxSteps}`): after ~stepLength of
+  slide the feet take a recovery step that catches `catchFraction` of the
+  remaining momentum; beyond `maxSteps` the imbalance exceeds capacity —
+  fall territory (fall poses are future work; the dynamics already
+  distinguish the regimes). Step plants are baked as frame markers
+  (`step: 1`) and visible in the debug overlay.
+- `action.push(subject, target, force)` takes the shove strength (data, not
+  engine constants; clamp 0.1..2).
+
 ## Slice 1 — one body, real touch (shipped)
 
 - **Skeleton data**: every figure declares `skeleton.json` (joints, part

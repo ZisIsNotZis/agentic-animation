@@ -160,5 +160,10 @@
   },
   "waist": {
     "pitchMax": 40
+  },
+  "balance": {
+    "stepLength": 90,
+    "catchFraction": 0.5,
+    "maxSteps": 3
   }
 }

@@ -97,6 +97,10 @@ interface ActorBody {
   handRadius: number;
   /** Max waist pitch in deg. */
   pitchMax: number;
+  /** Balance stepping: slide allowance per recovery step, catch fraction, capacity. */
+  stepLength: number;
+  catchFraction: number;
+  maxSteps: number;
   /** Waist pivot (design). */
   waist: [number, number];
   /** Ground-to-waist distance in design px. */
@@ -118,6 +122,9 @@ function bodyOf(skeleton: Skeleton): ActorBody {
     armReach: skeleton.arm.upper + skeleton.arm.fore + skeleton.arm.handRadius,
     handRadius: skeleton.arm.handRadius,
     pitchMax: skeleton.waist.pitchMax,
+    stepLength: skeleton.balance.stepLength,
+    catchFraction: skeleton.balance.catchFraction,
+    maxSteps: skeleton.balance.maxSteps,
     waist,
     groundToWaist: skeleton.space.height - waist[1],
     shoulderFromWaist: [shoulder[0] - waist[0], shoulder[1] - waist[1]],
@@ -162,6 +169,12 @@ interface ActorState {
   grab: { propId: string; t: number; x: number; y: number } | null;
   /** Impulse queue for stagger momentum. */
   stagger: number;
+  /** Recovery steps taken for the current stagger event. */
+  stepsTaken: number;
+  /** True on the substep a recovery step plants (baked as a frame marker). */
+  stepPlanted?: boolean;
+  /** Accumulated slide for the current stagger event (px). */
+  staggerSlide: number;
 }
 
 interface PropState {
@@ -189,7 +202,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
   const actors = new Map<string, ActorState>(
     scene.actors.map((actor) => [actor.id, {
       id: actor.id, x: actor.x, vx: 0, facing: actor.facing, groundY: actor.groundY, scale: actor.scale,
-      walkPhase: 0, lean: 0, moveTarget: null, reach: null, grab: null, stagger: 0,
+      walkPhase: 0, lean: 0, moveTarget: null, reach: null, grab: null, stagger: 0, stepsTaken: 0, staggerSlide: 0,
       body: bodyOf(actor.skeleton as Skeleton), skeleton: actor.skeleton, waist: 0,
     }]),
   );
@@ -234,7 +247,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           if (tx !== undefined) {
             const shoulderY = state.groundY - (state.body.groundToWaist + (state.body.waist[1] - state.body.torsoTop) * 0.45) * state.scale;
             state.reach = { tx, ty: shoulderY, target: intent.target!, contact: false };
-            pendingForces.push({ actor: id, target: intent.target!, start: now + (intent.reach ?? 0.35), sec: intent.forceSec ?? 0.25, force: clamp(intent.force ?? 0.7, 0.1, 1) });
+            pendingForces.push({ actor: id, target: intent.target!, start: now + (intent.reach ?? 0.35), sec: intent.forceSec ?? 0.25, force: clamp(intent.force ?? 0.7, 0.1, 2) });
           }
         }
       }
@@ -379,15 +392,31 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           state.walkPhase = (state.walkPhase + DT * 2.2) % 1;
         }
       } else if (Math.abs(state.stagger) > 1) {
-        // Stagger: momentum slides the body, feet catch with friction.
+        // Stagger: momentum slides the body with foot friction; when the
+        // slide exceeds the declared step allowance, the feet take a
+        // recovery step that catches part of the remaining momentum
+        // (capture-point stepping, thresholds from the figure data).
         const direction = Math.sign(state.stagger);
         const slide = Math.min(Math.abs(state.stagger), 140 * DT);
         state.x += direction * slide;
         state.stagger -= direction * slide;
+        state.staggerSlide += slide;
         state.walkPhase = (state.walkPhase + DT * 3) % 1;
         state.lean *= 0.96;
+        // Recovery step: after ~stepLength of slide the feet reposition and
+        // catch catchFraction of the remaining momentum. Beyond maxSteps the
+        // imbalance exceeds capacity — the figure is falling (future work:
+        // fall poses; for now the lean grows and friction settles it).
+        if (state.staggerSlide >= state.body.stepLength && state.stepsTaken < state.body.maxSteps) {
+          state.stagger -= direction * Math.abs(state.stagger) * state.body.catchFraction;
+          state.staggerSlide = 0;
+          state.stepsTaken += 1;
+          state.stepPlanted = true;
+        }
       } else {
         state.stagger = 0;
+        state.staggerSlide = 0;
+        state.stepsTaken = 0;
         state.lean *= 0.9;
         if (!state.reach) state.walkPhase = 0;
       }
@@ -427,12 +456,15 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       void frameIndex;
       for (const [id, frames] of actorFrames) {
         const state = actors.get(id)!;
+        const planted = state.stepPlanted;
+        state.stepPlanted = false;
         frames.push({
           x: Math.round(state.x * 100) / 100,
           lean: Math.round(state.lean * 100) / 100,
           facing: state.facing,
           walk: Math.round(state.walkPhase * 1000) / 1000,
           ...(state.waist ? {waist: Math.round(state.waist * 100) / 100} : {}),
+          ...(planted ? {step: 1} : {}),
           ...(state.reach ? {
             reach: [Math.round(state.reach.tx * 100) / 100, Math.round(state.reach.ty * 100) / 100],
             ...(state.reach.contact ? { contact: true } : {}),

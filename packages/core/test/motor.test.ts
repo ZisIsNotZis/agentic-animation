@@ -131,3 +131,41 @@ test("pursuit stops at adjacency — actors never overlap", () => {
   const finalGap = Math.abs(trajectory.actors.awei!.at(-1)!.x - frames.at(-1)!.x);
   assert.ok(finalGap <= 260, `pursuit should halt near the target, gap ${Math.round(finalGap)}`);
 });
+
+
+test("stagger: recovery steps catch momentum (balance stepping)", () => {
+  const scene: MotorScene = {
+    ...baseScene,
+    actors: [
+      { ...baseScene.actors[0]!, intents: [{ at: 0.2, duration: 1.2, intent: "push", target: "awei", reach: 0.3, forceSec: 0.3, force: 0.95 }] },
+      baseScene.actors[1]!,
+    ],
+  };
+  const trajectory = simulateScene(scene);
+  const awei = trajectory.actors.awei!;
+  // The pushee slides (real dynamics), but slides LESS than one step length
+  // per recovery step on average — the feet catch the body.
+  const totalSlide = Math.abs(awei.at(-1)!.x - awei[0]!.x);
+  assert.ok(totalSlide > 10, `pushee should slide, moved ${totalSlide}`);
+  assert.ok(totalSlide < 3 * 90, `pushee slid implausibly far for a stepping body: ${Math.round(totalSlide)}px`);
+  // The slide decays to rest (feet catch — no perpetual sliding).
+  const tail = awei.slice(-10).map((frame) => Math.round(frame.x));
+  assert.equal(new Set(tail).size, 1, "pushee must come to rest after recovery steps");
+});
+
+test("stagger: beyond step capacity the slide is long (fall territory)", () => {
+  const scene: MotorScene = {
+    ...baseScene,
+    actors: [
+      { ...baseScene.actors[0]!, intents: [{ at: 0.2, duration: 2, intent: "push", target: "awei", reach: 0.1, forceSec: 1.5, force: 1 }] },
+      baseScene.actors[1]!,
+    ],
+  };
+  const trajectory = simulateScene(scene);
+  const awei = trajectory.actors.awei!;
+  const totalSlide = Math.abs(awei.at(-1)!.x - awei[0]!.x);
+  // With a sustained shove past the step capacity, the body travels much
+  // farther than the stepping body — fall territory (fall poses are future
+  // work; the dynamics already distinguish the two regimes).
+  assert.ok(totalSlide > 150, `sustained shove should travel far: ${Math.round(totalSlide)}px`);
+});
