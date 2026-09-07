@@ -1,5 +1,6 @@
 import { ease } from "../lib/interpolate";
-import { circleOverlapsBox, solveSkeleton, type Skeleton } from "@anim/core";
+import { circleOverlapsBox, solveSkeleton } from "@anim/core/skeleton";
+import type { Skeleton } from "@anim/core";
 import type {
   EvaluatedActor,
   EvaluatedCamera,
@@ -612,7 +613,7 @@ function actorState(
     : undefined;
   // Orientation (45-degree facing): the newest semantic event that carries an
   // explicit `orientation` value wins; default full-front.
-  const ORIENTATIONS = ["front", "front-left", "front-right", "back-left", "back-right"];
+  const ORIENTATIONS = ["front", "back", "left", "right", "front-left", "front-right", "back-left", "back-right"];
   const orientation = tracks
     .flatMap((track) => track.events)
     .filter((event) => event.active)

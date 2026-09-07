@@ -76,6 +76,21 @@ same numbers, so force cannot conduct without the drawn hand touching the
 drawn body. Changing a drawing dimension changes the physics with it.
 Actor bind anchors (`hand_r`/`hand_l`) derive from `HAND_REST` too.
 
+## Slice 3 — eight views, five drawings, fabric (shipped)
+
+- Orientation is one of eight: front, back, left, right, front-left,
+  front-right, back-left, back-right — five drawings per figure (front,
+  back, side, quarter-front, quarter-back in
+  `packages/studio/src/components/performance/views45.tsx`), left/right and
+  the mirrored quarters are renderer mirrors.
+- Validation gate: `episodes/showcase-orientations` renders all eight side
+  by side; adjacent-view pixel differences are measured (all > 0.068 mean
+  abs vs the 0.01 gate — views cannot silently collapse into near-duplicates).
+  Sheet: `.scratch/orientation-sheet-8way.png`.
+- Algorithmic fabric: a seeded crosshatch weave clipped to the robe
+  (`Fabric` in Actor.tsx) — deterministic per figure id, anchored in
+  figure-local coordinates, subtle against the ink-outline style.
+
 ## Slice 2 — contact push + balance stepping (shipped)
 
 - **Part contact**: force conducts only while the pusher's hand circle

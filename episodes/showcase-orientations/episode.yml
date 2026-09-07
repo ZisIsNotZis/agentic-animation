@@ -1,0 +1,56 @@
+episode:
+  id: showcase_orientations
+  title: "八向朝向 / Eight orientations"
+  language: zh
+locations:
+  canteen:
+    use: set/school_canteen
+actors:
+  f0:
+    use: figure/lin
+    voice: voice/zh/lin
+  f1:
+    use: figure/awei
+    voice: voice/zh/awei
+  f2:
+    use: figure/aqiang
+    voice: voice/zh/aqiang
+  f3:
+    use: figure/liu
+    voice: voice/zh/liu
+  f4:
+    use: figure/senior
+    voice: voice/zh/senior
+  f5:
+    use: figure/student_a
+    voice: voice/zh/student_a
+  f6:
+    use: figure/student_b
+    voice: voice/zh/student_b
+  f7:
+    use: figure/elder
+    voice: voice/zh/elder
+objects: {}
+scenes:
+  - id: orientations
+    location: canteen
+    actors:
+      f0: {facing: right}
+      f1: {facing: right}
+      f2: {facing: right}
+      f3: {facing: right}
+      f4: {facing: right}
+      f5: {facing: right}
+      f6: {facing: right}
+      f7: {facing: right}
+    objects: {}
+    script:
+      - f0: "{pose.orient(f0, \"front\")}"
+      - f1: "{pose.orient(f1, \"front-right\")}"
+      - f2: "{pose.orient(f2, \"right\")}"
+      - f3: "{pose.orient(f3, \"back-right\")}"
+      - f4: "{pose.orient(f4, \"back\")}"
+      - f5: "{pose.orient(f5, \"back-left\")}"
+      - f6: "{pose.orient(f6, \"left\")}"
+      - f7: "{pose.orient(f7, \"front-left\")}"
+      - f0: "八向朝向展示。"

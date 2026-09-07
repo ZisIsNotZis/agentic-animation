@@ -5,7 +5,7 @@
 // each other diagonally instead of both staring into the camera.
 import { track } from "@anim/core/stdlib";
 
-const ORIENTATIONS = ["front", "front-left", "front-right", "back-left", "back-right"];
+const ORIENTATIONS = ["front", "back", "left", "right", "front-left", "front-right", "back-left", "back-right"];
 const D = 0.2;
 
 export function orient(subject, orientation = "front-right") {
