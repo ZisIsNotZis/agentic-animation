@@ -32,6 +32,8 @@ export interface MotorActorInput {
   x: number;
   groundY: number;
   facing: 1 | -1;
+  /** Staging scale — the sim shares the renderer's body geometry. */
+  scale: number;
   intents: MotorIntent[];
 }
 
@@ -72,10 +74,10 @@ const SUBSTEPS = Math.round(1 / (FPS * DT));
 const WALK_SPEED = 420;
 /** Actor visual half-width (the drawn puppet is ~400px at scale 1). */
 const BODY_HALF_WIDTH = 200;
-/** Hand extension beyond the body center when reaching. */
-const ARM_REACH = 260;
-/** Contact: hand within this distance of the target body center. */
-const CONTACT_RANGE = 240;
+/** Hand extension beyond body center when the arm is extended (px at scale 1). */
+const ARM_REACH = 286;
+/** Contact margin: hand inside the target's body silhouette. */
+const CONTACT_MARGIN = 60;
 /** Standing hand height above ground (chest line). */
 const HAND_HEIGHT = -320;
 /** Ground friction deceleration for sliding props (px/s²). */
@@ -89,6 +91,7 @@ interface ActorState {
   vx: number;
   facing: 1 | -1;
   groundY: number;
+  scale: number;
   walkPhase: number;
   lean: number;
   /** Motor-driven destination while a move intent is active. */
@@ -122,7 +125,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
   const frameCount = Math.max(1, Math.ceil(scene.durationSec * FPS));
   const actors = new Map<string, ActorState>(
     scene.actors.map((actor) => [actor.id, {
-      id: actor.id, x: actor.x, vx: 0, facing: actor.facing, groundY: actor.groundY,
+      id: actor.id, x: actor.x, vx: 0, facing: actor.facing, groundY: actor.groundY, scale: actor.scale,
       walkPhase: 0, lean: 0, moveTarget: null, reach: null, stagger: 0,
     }]),
   );
@@ -151,7 +154,14 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         const intent = queue.shift()!;
         if (intent.intent === "move") {
           const tx = intent.target !== undefined ? scene.resolveX(intent.target) : undefined;
-          state.moveTarget = tx ?? state.x;
+          if (tx !== undefined) {
+            // Moves at props halt at the prop's edge: pick up, do not walk through.
+            const isProp = !actors.has(intent.target!) && scene.props.some((prop) => prop.id === intent.target);
+            const dir = Math.sign(tx - state.x) || state.facing;
+            state.moveTarget = isProp ? tx - dir * BODY_HALF_WIDTH * state.scale : tx;
+          } else {
+            state.moveTarget = state.x;
+          }
         } else if (intent.intent === "push") {
           const tx = intent.target !== undefined ? scene.resolveX(intent.target) : undefined;
           if (tx !== undefined) {
@@ -173,8 +183,9 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       const targetX = targetActor?.x ?? targetProp?.x;
       if (targetX === undefined) { pendingForces.splice(i, 1); continue; }
       const direction = Math.sign(targetX - actor.x) || 1;
-      const handX = actor.x + direction * ARM_REACH;
-      const inContact = Math.abs(handX - targetX) <= CONTACT_RANGE;
+      const handX = actor.x + direction * ARM_REACH * actor.scale;
+      const targetScale = targetActor?.scale ?? 1;
+      const inContact = Math.abs(handX - targetX) <= BODY_HALF_WIDTH * targetScale + CONTACT_MARGIN * actor.scale;
       // Reach phase: track the target and step into contact range — the
       // approach always completes before any force can exist (I2).
       actor.reach = { tx: targetX, target: force.target, contact: inContact && now >= force.start };
@@ -236,7 +247,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       for (const other of actors.values()) {
         if (other.id === state.id) continue;
         const gap = Math.abs(other.x - state.x);
-        const required = BODY_HALF_WIDTH * 2;
+        const required = BODY_HALF_WIDTH * (state.scale + other.scale);
         if (gap >= required) continue;
         if (state.moveTarget !== null) {
           const dir = Math.sign(state.moveTarget - state.x) || state.facing;
@@ -311,7 +322,7 @@ export function bakeSceneMotor(
   const actorInputs: MotorActorInput[] = [];
   const intentsByActor = new Map<string, MotorIntent[]>();
   for (const [id, staged] of Object.entries(source.actors ?? {})) {
-    actorInputs.push({id, x: staged.at[0] * video.width, groundY: staged.at[1] * video.height, facing: staged.facing === -1 ? -1 : 1, intents: []});
+    actorInputs.push({id, x: staged.at[0] * video.width, groundY: staged.at[1] * video.height, facing: staged.facing === -1 ? -1 : 1, scale: (staged as {scale?: number}).scale ?? 1, intents: []});
     intentsByActor.set(id, []);
   }
   for (const track of source.tracks ?? []) {

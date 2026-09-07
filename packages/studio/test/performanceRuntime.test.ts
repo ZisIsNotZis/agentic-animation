@@ -432,7 +432,9 @@ test("projects compiled staging and semantic camera procedures into visible runt
   assert.ok(punch.camera.z >= initial.camera.z * 1.2);
   assert.ok(Math.abs(punch.camera.x - initial.camera.x) > 100);
   assert.ok(Math.abs(wide.camera.x - initial.camera.x) < 1);
-  assert.equal(wide.camera.z, 0.72);
+  // The camera never leaves the painted background: a pull wider than the
+  // stage fit clamps at the fit (with 1920x1080 video the fit is z=1).
+  assert.equal(wide.camera.z, 1);
 });
 
 test("detectTeleports flags implausible actor jumps", async () => {

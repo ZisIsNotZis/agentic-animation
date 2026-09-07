@@ -5,8 +5,8 @@ import { simulateScene, type MotorScene } from "../src/motor";
 const baseScene: MotorScene = {
   durationSec: 3,
   actors: [
-    { id: "aqiang", x: 600, groundY: 691, facing: 1, intents: [] },
-    { id: "awei", x: 1248, groundY: 691, facing: -1, intents: [] },
+    { id: "aqiang", x: 600, groundY: 691, facing: 1, scale: 1, intents: [] },
+    { id: "awei", x: 1248, groundY: 691, facing: -1, scale: 1, intents: [] },
   ],
   props: [],
   resolveX: (id) => (id === "aqiang" ? 600 : id === "awei" ? 1248 : undefined),

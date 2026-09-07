@@ -87,3 +87,47 @@ export function describeTeleports(warnings: TeleportWarning[]): string[] {
     `teleport warning: actor "${warning.actor}" jumps ${warning.distance}px at frame ${warning.frame} (${Math.round(warning.from[0])},${Math.round(warning.from[1])} -> ${Math.round(warning.to[0])},${Math.round(warning.to[1])}) — a movement/transform track probably targets the wrong subject`,
   );
 }
+
+export interface CameraOverflowWarning {
+  frame: number;
+  x: number;
+  y: number;
+  z: number;
+  overflow: string;
+}
+
+/**
+ * Shift-left check: a camera key whose viewport would leave the painted
+ * 1920x1080 background. The renderer clamps at evaluation time, so this never
+ * reaches the video — the warning exists so authors fix the intent instead.
+ */
+export function detectCameraOverflows(
+  manifest: PerformanceManifest,
+  options: {margin?: number} = {},
+): CameraOverflowWarning[] {
+  const margin = options.margin ?? 2;
+  const normalized = normalizePerformanceManifest({...manifest, timebase: manifest.timebase ?? "seconds"});
+  const video = normalized.video ?? {width: 1280, height: 720};
+  const keys = Array.isArray(normalized.camera) ? normalized.camera : normalized.camera?.keys ?? [];
+  const warnings: CameraOverflowWarning[] = [];
+  for (const key of keys) {
+    const z = key.z ?? 1;
+    const viewportWidth = video.width / z;
+    const viewportHeight = video.height / z;
+    const x = key.x ?? 0;
+    const y = key.y ?? 0;
+    const problems: string[] = [];
+    if (x < -margin) problems.push(`left edge at ${Math.round(x)}px`);
+    if (y < -margin) problems.push(`top edge at ${Math.round(y)}px`);
+    if (x + viewportWidth > 1920 + margin) problems.push(`right edge at ${Math.round(x + viewportWidth)}px > 1920`);
+    if (y + viewportHeight > 1080 + margin) problems.push(`bottom edge at ${Math.round(y + viewportHeight)}px > 1080`);
+    if (problems.length) warnings.push({frame: key.frame ?? 0, x, y, z, overflow: problems.join("; ")});
+  }
+  return warnings;
+}
+
+export function describeCameraOverflows(warnings: CameraOverflowWarning[]): string[] {
+  return warnings.map((warning) =>
+    `camera overflow warning: key at frame ${warning.frame} (z=${warning.z.toFixed(2)}, viewport top-left ${Math.round(warning.x)},${Math.round(warning.y)}) leaves the background: ${warning.overflow} — the renderer clamps, but fix the camera intent`,
+  );
+}

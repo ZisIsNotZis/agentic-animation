@@ -64,8 +64,12 @@ export const PerformanceFrame: React.FC<{
           // containCamera), so the transform must scale about the top-left
           // corner: screen = z*p - (x, y). A center origin would shift the
           // whole stage and expose the background as black bands.
+          // Camera x/y are the viewport top-left in stage space, so the
+          // transform must compose as scale-then-translate-in-stage-units:
+          // screen = z*(p - x). A translate-first order turns x into a
+          // screen-space offset and leaks the background on zoomed-out pans.
           transformOrigin: "0 0",
-          transform: `translate(${-camera.x}px, ${-camera.y}px) scale(${camera.z}) rotate(${camera.rotation}deg)`,
+          transform: `scale(${camera.z}) translate(${-camera.x}px, ${-camera.y}px) rotate(${camera.rotation}deg)`,
           willChange: "transform",
         }}
       >

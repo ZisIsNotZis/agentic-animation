@@ -184,6 +184,23 @@ function fitPushCamera(
   return {center: [(left + right) / 2, target[1]], zoom};
 }
 
+/** The camera viewport must stay inside the painted 1920x1080 stage. */
+function clampCameraToStage(
+  camera: EvaluatedCamera,
+  video: {width: number; height: number},
+): EvaluatedCamera {
+  const fit = Math.min(video.width / CANVAS.width, video.height / CANVAS.height);
+  const z = Math.max(fit, camera.z);
+  const viewportWidth = video.width / z;
+  const viewportHeight = video.height / z;
+  return {
+    x: Math.min(Math.max(camera.x, 0), Math.max(0, CANVAS.width - viewportWidth)),
+    y: Math.min(Math.max(camera.y, 0), Math.max(0, CANVAS.height - viewportHeight)),
+    z,
+    rotation: camera.rotation,
+  };
+}
+
 /** Keep the evaluated camera from defeating staging during a focused shot. */
 function containCamera(
   camera: EvaluatedCamera,
@@ -703,8 +720,10 @@ function applyGenericBindings(
   // eases the prop from wherever it was into the hand across the event's
   // duration — no teleport snap (docs/WORLD_PUPPET_MOTOR.md).
   let bound: {propId: string; actorId: string; hand: string; offset: [number, number]} | null = null;
-  let lift: {fromX: number; fromY: number; progress: number} | null = null;
-  let lastBindEvent = "";
+  let lift: {fromX: number; fromY: number; startFrame: number} | null = null;
+  let drop: {propId: string; fromY: number; startFrame: number} | null = null;
+  const LIFT_FRAMES = 9;
+  const DROP_FRAMES = 8;
   const events = tracks
     .filter((track) => track.kind === "binding")
     .flatMap((track) => track.events)
@@ -713,6 +732,10 @@ function applyGenericBindings(
   for (const event of events) {
     const value = eventValue(event);
     if (String(value.operation ?? "bind") === "release") {
+      // Release: the object drops from the hand to the ground (ease, no snap).
+      const releaseId = String(value.prop ?? value.object ?? event.target ?? "");
+      const releaseProp = byId.get(releaseId);
+      if (releaseProp) drop = {propId: releaseId, fromY: releaseProp.y, startFrame: frame};
       bound = null;
       lift = null;
       continue;
@@ -721,16 +744,9 @@ function applyGenericBindings(
     const actorId = String(value.actor ?? value.actorId ?? value.holder ?? event.subject ?? "");
     const hand = String(value.hand ?? value.socket ?? "hand_r");
     if (!byId.has(propId) || !actors.has(actorId)) continue;
-    const eventKey = `${propId}:${actorId}:${trackEventStart(event)}`;
-    if (eventKey !== lastBindEvent) {
-      const prop = byId.get(propId)!;
-      lift = {fromX: prop.x, fromY: prop.y, progress: event.progress};
-      lastBindEvent = eventKey;
-    } else if (lift) {
-      lift.progress = event.progress;
-    }
     bound = {propId, actorId, hand, offset: pointOf(value.offset) ?? [0, 0]};
   }
+  // Apply the active binding, if any.
   if (bound) {
     const prop = byId.get(bound.propId);
     const actor = actors.get(bound.actorId);
@@ -738,16 +754,34 @@ function applyGenericBindings(
     if (prop && actor && hand) {
       const handX = actor.x + hand[0] * actor.scale + bound.offset[0];
       const handY = actor.y + hand[1] * actor.scale + bound.offset[1];
-      if (lift && lift.progress < 1) {
-        const eased = lift.progress * lift.progress * (3 - 2 * lift.progress);
-        prop.x = lift.fromX + (handX - lift.fromX) * eased;
-        prop.y = lift.fromY + (handY - lift.fromY) * eased;
-      } else {
-        prop.x = handX;
-        prop.y = handY;
+      // Proximity gate: the prop lifts only once the hand is actually near
+      // (the actor walks to it via motor intents) — never from across the stage.
+      const near = Math.abs(handX - prop.x) < 220 && Math.abs(handY - prop.y) < 320;
+      if (!near) {
+        lift = null;
+      } else if (!lift) {
+        lift = {fromX: prop.x, fromY: prop.y, startFrame: frame};
       }
-      prop.rotation += actor.rotation;
-      prop.scale *= actor.scale;
+      if (near && lift) {
+        const eased = Math.min(1, (frame - lift.startFrame) / LIFT_FRAMES);
+        const easedEase = eased * eased * (3 - 2 * eased);
+        prop.x = lift.fromX + (handX - lift.fromX) * easedEase;
+        prop.y = lift.fromY + (handY - lift.fromY) * easedEase;
+        prop.rotation += actor.rotation;
+        prop.scale *= actor.scale;
+      }
+    }
+  } else if (drop) {
+    // Ease the released prop down to its staged ground position (no snap).
+    const prop = byId.get(drop.propId);
+    const eased = Math.min(1, (frame - drop.startFrame) / DROP_FRAMES);
+    if (prop) {
+      const groundY = (prop as {at?: [number, number]}).at?.[1] ?? prop.y;
+      const easedEase = eased * eased;
+      prop.y = drop.fromY + (groundY - drop.fromY) * Math.min(1, easedEase);
+      if (eased >= 1) drop = null;
+    } else {
+      drop = null;
     }
   }
   return props;
@@ -907,9 +941,14 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
   const interpolatedCamera = interpolateCamera([...explicitCameraKeys, ...projectedCameraKeys], safeFrame);
   return {
     frame: safeFrame,
-    camera: manifest.locationScenes
-      ? containCamera(interpolatedCamera, actors, normalized.video ?? {width: 1920, height: 1080})
-      : interpolatedCamera,
+    // The camera never leaves the painted stage: clamp every frame, whatever
+    // path produced the key (containCamera, explicit camera tracks, defaults).
+    camera: clampCameraToStage(
+      manifest.locationScenes
+        ? containCamera(interpolatedCamera, actors, normalized.video ?? {width: 1920, height: 1080})
+        : interpolatedCamera,
+      normalized.video ?? {width: 1280, height: 720},
+    ),
     actors,
     props: evaluatedProps,
     subtitles: activeSubtitles(normalized.subtitles ?? normalized.subtitleTrack ?? normalized.captions, safeFrame),
