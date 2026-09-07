@@ -82,3 +82,30 @@ export const HAND_REST = handOffset(REST_ARM);
 export const HAND_PUSH = handOffset(PUSH_ARM);
 /** Full forward reach including the hand sprite (push, from center). */
 export const REACH_PUSH = Math.abs(HAND_PUSH.x) + HAND_RADIUS;
+
+/**
+ * Analytic two-bone IK: arm angles so the hand joint lands on `target`
+ * (design space, figure-local: center x=0 at the figure center, ground at
+ * y=0 — the same convention as handOffset). `side: -1` mirrors the left
+ * arm. Round-trips with handOffset within 1e-6 at any reachable target.
+ */
+export function solveArmIK(target: {x: number; y: number}, side: 1 | -1 = 1): ArmAngles {
+  const shoulder = {x: (SHOULDER.x - FIGURE_CENTER_X) * side, y: SHOULDER.y - FIGURE_GROUND_Y};
+  const l1 = Math.hypot(UPPER_ARM.x, UPPER_ARM.y);
+  const l2 = Math.hypot(FOREARM.x, FOREARM.y);
+  const dx = target.x - shoulder.x;
+  const dy = target.y - shoulder.y;
+  let d = Math.hypot(dx, dy);
+  d = Math.min(d, l1 + l2 - 1e-3);
+  d = Math.max(d, Math.abs(l1 - l2) + 1e-3);
+  const base = Math.atan2(dy, dx);
+  const phi1 = Math.atan2(UPPER_ARM.y, UPPER_ARM.x * side); // neutral angle of the upper segment
+  const phi2 = Math.atan2(FOREARM.y, FOREARM.x * side); // neutral angle of the forearm (down)
+  const alpha = Math.acos(Math.min(1, Math.max(-1, (l1 * l1 + d * d - l2 * l2) / (2 * l1 * d))));
+  const beta = Math.acos(Math.min(1, Math.max(-1, (l1 * l1 + l2 * l2 - d * d) / (2 * l1 * l2))));
+  // Elbow bows toward the figure's back; both signs land the hand on the
+  // target — this one keeps the bend reading naturally in mirror.
+  const upperDeg = ((base - side * alpha - phi1) * 180) / Math.PI;
+  const lowerDeg = ((phi1 - phi2 + side * (Math.PI - beta)) * 180) / Math.PI;
+  return {upper: upperDeg, lower: lowerDeg};
+}

@@ -640,6 +640,10 @@ function smoothstep(t: number): number {
 const LIFT_FRAMES = 9;
 /** Frames a released prop falls to its staged spot (~0.33s at 24fps). */
 const DROP_FRAMES = 8;
+/** Grab: the hand must come this close before the prop starts following it. */
+export const GRAB_RADIUS = 120;
+/** Frames for the grip to seat the prop fully into the hand after a grab. */
+const GRAB_SEAT_FRAMES = 6;
 
 /**
  * Physical held-prop placement — the ONE authority for where a bound prop is
@@ -770,8 +774,13 @@ function handAtFrame(
   offset: [number, number],
 ): {x: number; y: number; rotation: number; scale: number} | undefined {
   const holder = actorAtFrame(holderId, at);
-  const anchor = holder?.anchors[handName];
-  if (!holder || !anchor) return undefined;
+  if (!holder) return undefined;
+  // While reaching (grab/push), the motor's reach point IS the hand.
+  if (holder.reach) {
+    return {x: holder.reach[0] + offset[0], y: holder.reach[1] + offset[1], rotation: holder.rotation, scale: holder.scale};
+  }
+  const anchor = holder.anchors[handName];
+  if (!anchor) return undefined;
   return {
     x: holder.x + (holder.flip ? -anchor[0] : anchor[0]) * holder.scale + offset[0],
     y: holder.y + anchor[1] * holder.scale + offset[1],
@@ -819,28 +828,55 @@ function propPlacementAt(
       : undefined;
   const isRelease = String(value.operation ?? "bind") === "release";
   if (!isRelease) {
-    // Bound: ease from the previous physical position into the hand, then
-    // follow it. An expired bind keeps the prop in the holder's hand — only
-    // an explicit release event puts it down.
+    // Grab semantics (docs/WORLD_PUPPET_MOTOR.md): the prop does not move by
+    // magic. It stays wherever it physically is until the binding hand
+    // actually arrives (within GRAB_RADIUS), and from the grab frame on it
+    // follows that hand exactly, keeping the grip offset it was grabbed with.
     if (!handNow) return stagedPropPosition(prop, frame);
-    // The lift window scales with the actual travel distance so long
-    // hand-to-hand transfers stay smooth (deterministic per frame).
-    const liftFrom = propPlacementAt(prop, events, index, actors, context, t0);
-    const liftFrames = Math.max(LIFT_FRAMES, Math.min(24, Math.round(Math.hypot(handNow.x - liftFrom.x, handNow.y - liftFrom.y) / 30)));
-    const pos = frame < t0 + liftFrames
-      ? (() => {
-          const eased = smoothstep((frame - t0) / liftFrames);
-          return {
-            x: liftFrom.x + (handNow.x - liftFrom.x) * eased,
-            y: liftFrom.y + (handNow.y - liftFrom.y) * eased,
-            rotation: liftFrom.rotation,
-            scale: liftFrom.scale,
-          };
-        })()
-      : {x: handNow.x, y: handNow.y, rotation: liftFrom.rotation, scale: liftFrom.scale};
-    pos.rotation += handNow.rotation;
-    pos.scale *= handNow.scale;
-    return pos;
+    const handPosAt = (t: number) => context?.actorAtFrame
+      ? handAtFrame(context.actorAtFrame, holderId, handName, t, offset)
+      : handNow;
+    const prevAt = (t: number) => propPlacementAt(prop, events, index, actors, context, t);
+    let grabFrame = -1;
+    let gripOffset: {x: number; y: number} | null = null;
+    for (let t = t0; t <= frame; t++) {
+      const handT = handPosAt(t);
+      if (!handT) break;
+      const propT: {x: number; y: number} = grabFrame >= 0
+        ? {x: handT.x + gripOffset!.x, y: handT.y + gripOffset!.y}
+        : prevAt(t);
+      if (grabFrame < 0 && Math.hypot(handT.x - propT.x, handT.y - propT.y) <= GRAB_RADIUS) {
+        grabFrame = t;
+        gripOffset = {x: propT.x - handT.x, y: propT.y - handT.y};
+      }
+    }
+    if (grabFrame >= 0) {
+      const handF = handPosAt(frame)!;
+      // The grip seats itself: any residual hand-to-prop gap at grab closes
+      // over a few frames (the fingers pull the object into the hand).
+      const seat = 1 - smoothstep((frame - grabFrame) / GRAB_SEAT_FRAMES);
+      return {
+        x: handF.x + gripOffset!.x * seat,
+        y: handF.y + gripOffset!.y * seat,
+        rotation: stagedPropPosition(prop, frame).rotation + handF.rotation,
+        scale: stagedPropPosition(prop, frame).scale * handF.scale,
+      };
+    }
+    // Not grabbed yet: the prop stays put — unless the hand is never going
+    // to arrive (no approach intent authored); after a grace period, ease to
+    // the hand so episodes without an approach still complete.
+    const graceOver = frame >= t0 + 72;
+    if (graceOver) {
+      const eased = smoothstep((frame - t0 - 72) / 18);
+      const from = prevAt(t0 + 72);
+      return {
+        x: from.x + (handNow.x - from.x) * eased,
+        y: from.y + (handNow.y - from.y) * eased,
+        rotation: stagedPropPosition(prop, frame).rotation + handNow.rotation,
+        scale: stagedPropPosition(prop, frame).scale * handNow.scale,
+      };
+    }
+    return prevAt(frame);
   }
   // Explicit release: the prop falls from the hand toward its staged
   // position over DROP_FRAMES.
@@ -904,9 +940,10 @@ function applyManifestConstraints(
     const actorId = typeof constraint.actor === "string"
       ? constraint.actor
       : typeof constraint.actorId === "string" ? constraint.actorId : constraint.holder ?? "";
-    // Props governed by binding events are already placed physically by
-    // propState (applyHeldMotion) — constraints never override them.
-    if (!prop || prop.tracks.some((track) => track.kind === "binding" && track.events.some((event) => event.active))) continue;
+    // Props with binding events are owned by propState's physical resolver
+    // for their whole timeline — compiler constraints never override them
+    // (a constraint interval ending is NOT a release).
+    if (!prop || prop.tracks.some((track) => track.kind === "binding" && track.events.length > 0)) continue;
     const t0 = constraint.startFrame ?? Math.round((constraint.start ?? 0) * fps);
     const t1 = constraint.endFrame
       ?? (constraint.end !== undefined ? Math.round(constraint.end * fps) : t0 + (constraint.durationFrames ?? Math.round((constraint.duration ?? 0) * fps)));
@@ -1056,9 +1093,17 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
     const def = (normalized.actors ?? []).find((candidate) => candidate.id === actorId);
     if (!def) return undefined;
     const base = actorState(def, normalized, at, tracksForSubject(tracks, actorId));
-    const motor = motorFrameAt(actorId, at) as {x?: number; facing?: number} | undefined;
+    const motor = motorFrameAt(actorId, at) as {x?: number; facing?: number; lean?: number; walk?: number; reach?: [number, number]; contact?: boolean} | undefined;
     if (!motor || typeof motor.x !== "number") return base;
-    return {...base, x: motor.x, flip: (motor.facing ?? (base.flip ? -1 : 1)) === -1};
+    return {
+      ...base,
+      x: motor.x,
+      flip: (motor.facing ?? (base.flip ? -1 : 1)) === -1,
+      ...(motor.lean === undefined ? {} : {lean: motor.lean}),
+      ...(motor.walk === undefined ? {} : {walk: motor.walk}),
+      ...(motor.reach === undefined ? {} : {reach: motor.reach}),
+      ...(motor.contact === undefined ? {} : {contact: motor.contact}),
+    };
   };
   const actors = repelActors(
     rawActors.map((actor) => {

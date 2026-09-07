@@ -6,8 +6,11 @@ import { PerformanceActor } from "./performance/Actor";
 import { PerformanceProp } from "./performance/Prop";
 import { PerformanceStage, sceneForFrame } from "./performance/Stage";
 import { PerformanceVfx } from "./performance/Vfx";
+import { DebugFrameCounter, PhysicsDebugOverlay } from "./performance/PhysicsDebug";
 
 export interface PerformanceEpisodeProps {
+  /** Draw the physics debug overlay (figure/collider/hand/prop boxes). */
+  debugPhysics?: boolean;
   manifest: PerformanceManifest;
   qaFrames?: number[];
 }
@@ -26,18 +29,18 @@ export function resolvePerformanceFrame(
 
 /** Manifest + frame are the only acting inputs. The SVG renderer has no clock,
  * filesystem access, image dependency, or mutable animation state. */
-export const PerformanceEpisode: React.FC<PerformanceEpisodeProps> = ({ manifest, qaFrames }) => {
+export const PerformanceEpisode: React.FC<PerformanceEpisodeProps> = ({ manifest, qaFrames, debugPhysics }) => {
   const frame = useCurrentFrame();
   const evaluatedFrame = qaFrames?.length
     ? resolvePerformanceFrame(frame, qaFrames, performanceMetadata(manifest).durationInFrames)
     : frame;
-  return <PerformanceFrame manifest={manifest} state={evaluatePerformance(manifest, evaluatedFrame)} />;
+  return <PerformanceFrame manifest={manifest} state={evaluatePerformance(manifest, evaluatedFrame)} debugPhysics={debugPhysics} />;
 };
 
 export const PerformanceFrame: React.FC<{
   manifest: PerformanceManifest;
   state: PerformanceFrameState;
-}> = ({ manifest, state }) => {
+}> = ({ manifest, state, debugPhysics }) => {
   const camera = state.camera;
   const scene = sceneForFrame(manifest, state.frame);
   const actors = state.actors.filter((actor) => actor.present).sort((a, b) => a.z - b.z);
@@ -79,10 +82,12 @@ export const PerformanceFrame: React.FC<{
           {props.map((prop) => <PerformanceProp key={prop.id} prop={prop} />)}
         </div>
         <div data-layer="actors" style={{ position: "absolute", inset: 0, zIndex: 40 }}>
-          {actors.map((actor) => <PerformanceActor key={actor.id} actor={actor} props={props} />)}
+          {actors.map((actor) => <PerformanceActor key={actor.id} actor={actor} props={props} debugDiv={debugPhysics} />)}
         </div>
         {frontVfx.map((effect) => <PerformanceVfx key={effect.id} effect={effect} />)}
+        <PhysicsDebugOverlay state={state} enabled={debugPhysics} />
       </div>
+      <DebugFrameCounter frame={state.frame} enabled={debugPhysics} />
       {subtitle ? <PerformanceSubtitle text={subtitle} /> : null}
       {stageVfx.map((effect) => <PerformanceVfx key={effect.id} effect={effect} />)}
     </AbsoluteFill>

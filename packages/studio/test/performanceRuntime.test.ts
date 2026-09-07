@@ -103,28 +103,35 @@ test("evaluates generic transform, expression, binding, camera, and VFX tracks",
     video: {width: 320, height: 180, fps: 10},
     durationInFrames: 20,
     placements: {},
-    actors: [{id: "actor", placement: {at: [10, 20]}, anchors: {hand_r: [5, -5]}, tracks: [
-      {kind: "transform", events: [{frame: 0, endFrame: 10, x: 30, y: 40}]},
+    actors: [{id: "actor", placement: {at: [0, 0]}, anchors: {hand_r: [5, -5]}, tracks: [
+      {kind: "transform", events: [{frame: 0, endFrame: 10, x: 0, y: 0}, {frame: 10, x: 30, y: 40}]},
       {kind: "expression", events: [{frame: 0, value: {name: "alert"}}]},
     ]}],
-    props: [{id: "object", at: [0, 0], tracks: [{kind: "binding", events: [{frame: 0, value: {actor: "actor", hand: "hand_r", operation: "bind"}}, {frame: 10, value: {actor: "actor", hand: "hand_r", operation: "release"}}]}]}],
+    props: [{id: "object", at: [0, 0], tracks: [{kind: "binding", events: [{frame: 0, value: {actor: "actor", hand: "hand_r", operation: "bind"}}, {frame: 14, value: {actor: "actor", hand: "hand_r", operation: "release"}}]}]}],
     tracks: [
       {kind: "camera", subject: "camera", events: [{frame: 0, x: 3, y: 4, z: 2}]},
       {kind: "vfx", subject: "vfx", events: [{frame: 2, endFrame: 6, type: "flash"}]},
     ],
   };
   const state = evaluatePerformance(generic, 4);
-  assert.deepEqual([state.actors[0]!.x, state.actors[0]!.y], [30, 40]);
+  // The actor's transform holds (0,0) until frame 10, then (30,40).
+  assert.deepEqual([state.actors[0]!.x, state.actors[0]!.y], [0, 0]);
   assert.equal(state.actors[0]!.expression.name, "alert");
-  // Physical bind: frame 4 is mid-lift, so the prop eases from its staged
-  // spot (0,0) toward the hand (35,35) — never teleports.
-  const midLift = state.props[0]!;
-  assert.ok(midLift.x > 0 && midLift.x < 35 && midLift.y > 0 && midLift.y < 35, `mid-lift should ease, got ${midLift.x},${midLift.y}`);
-  // Frame 9: lift window (9 frames) complete -> the prop follows the hand.
-  const held = evaluatePerformance(generic, 9).props[0]!;
+  assert.deepEqual([evaluatePerformance(generic, 10).actors[0]!.x, evaluatePerformance(generic, 10).actors[0]!.y], [30, 40]);
+  // Grab semantics: the hand grabs the staged prop on frame 0 (grip offset
+  // (-5,+5)) and the grip seats over 6 frames; the prop only tracks the
+  // hand's own motion.
+  const seating = state.props[0]!;
+  assert.ok(seating.x > 0 && seating.x < 5 && seating.y < 0 && seating.y > -5, `grip should seat, got ${seating.x},${seating.y}`);
+  assert.deepEqual([evaluatePerformance(generic, 8).props[0]!.x, evaluatePerformance(generic, 8).props[0]!.y], [5, -5]);
+  // The hand jumps to (35,35) at frame 10 -> the carried prop follows the
+  // hand exactly (the grip has seated; the object is in the hand).
+  const carried = evaluatePerformance(generic, 10).props[0]!;
+  assert.deepEqual([carried.x, carried.y], [35, 35]);
+  const held = evaluatePerformance(generic, 13).props[0]!;
   assert.deepEqual([held.x, held.y], [35, 35]);
-  // The bind ends at frame 10 -> the prop drops back toward its staged spot.
-  const dropped = evaluatePerformance(generic, 12).props[0]!;
+  // The bind releases at frame 14 -> the prop eases back toward its staged spot.
+  const dropped = evaluatePerformance(generic, 17).props[0]!;
   assert.ok(dropped.x < 35 && dropped.x > 0, `release should ease down, got ${dropped.x}`);
   assert.deepEqual(state.camera, {x: 3, y: 4, z: 2, rotation: 0});
   assert.equal(state.vfx[0]?.type, "flash");

@@ -76,18 +76,37 @@ same numbers, so force cannot conduct without the drawn hand touching the
 drawn body. Changing a drawing dimension changes the physics with it.
 Actor bind anchors (`hand_r`/`hand_l`) derive from `HAND_REST` too.
 
+## Debug overlay
+
+`ANIM_DEBUG_PHYSICS=1 render-yaml …` draws the engine's beliefs onto the
+video: figure box + ground line, collider torso/head, hand anchors, the
+motor reach point, prop boxes with their grab radius, and a frame counter.
+Use it to check contact and grips by eye — what the boxes say is what the
+physics uses. The actor div border/ground line (debugDiv) shares the flag.
+
 ## Prop placement (one authority)
 
 `propState` in `packages/studio/src/performance/evaluate.ts` is the only code
-that places held props. Events chain recursively: a bind lifts the prop from
-wherever it physically was when the bind started (staged spot, mid-drop, or
-another hand), the prop then follows the hand, and only an explicit
-`release` event drops it — an expired bind keeps holding. Lift and drop
-windows scale with travel distance (`~30px per frame`, clamped 9-24 frames),
-so no hand-to-hand transfer ever exceeds continuous speed. `make` runs
-`detectPropDiscontinuities` (studio) after every compile and prints a
-`[make] sudden-move warning` per per-frame jump > 60px (holder-turn anchor
-swings are excluded); `scripts/keypoints.mts` dumps raw per-frame positions.
+that places held props. Grab semantics: the prop does not move by magic — it
+stays wherever it physically is until the binding hand actually arrives
+(within `GRAB_RADIUS` 120px of it), then follows that hand exactly, keeping
+its grab-time grip offset while the grip seats over 6 frames. The motor bakes
+the hand's own trajectory for prop approaches: reach down to the object, hold
+the grip, then stand up with it (reach point interpolates back to the carry
+anchor, so the hand-follow is continuous). Handovers transfer the prop when
+the receiver's hand reaches it. Only an explicit `release` event puts a prop
+down; an expired bind keeps holding. If no approach was authored, a grace
+period (3s) eases the prop to the hand so episodes still complete. The
+motor's per-frame reach point is authoritative: `handAtFrame` prefers it over
+the rest anchor. `make` runs `detectPropDiscontinuities` (studio) after every
+compile and prints a `[make] sudden-move warning` per per-frame jump > 60px
+(holder-turn anchor swings are excluded); `scripts/keypoints.mts` dumps raw
+per-frame positions. All showcases lint at 0 discontinuities.
+
+**Ground alignment invariant**: an actor's drawn feet stand exactly on
+`actor.y` — Actor.tsx positions the figure div at `actor.y - 720` (the
+transform's bottom-edge origin already absorbs the scale). Getting this wrong
+sinks every figure below its physics ground and hands never meet bodies.
 
 ## 45-degree facing (orientation)
 

@@ -67,7 +67,7 @@ export interface MotorTrajectory {
   props: Record<string, MotorPropFrame[]>;
 }
 
-import { BODY_HALF_WIDTH as BODY_HALF_DESIGN, FIGURE_BOX, HAND_PUSH, REACH_PUSH } from "./figureGeometry";
+import { BODY_HALF_WIDTH as BODY_HALF_DESIGN, FIGURE_BOX, HAND_PUSH, HAND_REST, REACH_PUSH } from "./figureGeometry";
 
 const FPS = 24;
 const DT = 1 / 120;
@@ -87,6 +87,10 @@ const PROP_FRICTION = 900;
 /** Reaction lean per unit of applied force (degrees). */
 const REACTION_LEAN = 14;
 
+function smoothstep01(t: number): number {
+  return t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+}
+
 interface ActorState {
   id: string;
   x: number;
@@ -98,8 +102,12 @@ interface ActorState {
   lean: number;
   /** Motor-driven destination while a move intent is active. */
   moveTarget: number | null;
-  /** Reaching/exerting state. */
-  reach: { tx: number; target: string; contact: boolean } | null;
+  /** Prop id a completed move intent should grab (transient). */
+  grabTarget?: string | null;
+  /** Reaching/exerting state: the world-space point the hand is at. */
+  reach: { tx: number; ty: number; target: string; contact: boolean } | null;
+  /** Prop-grab trajectory after a move-to-prop intent arrives (see bake). */
+  grab: { propId: string; t: number; x: number; y: number } | null;
   /** Impulse queue for stagger momentum. */
   stagger: number;
 }
@@ -128,7 +136,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
   const actors = new Map<string, ActorState>(
     scene.actors.map((actor) => [actor.id, {
       id: actor.id, x: actor.x, vx: 0, facing: actor.facing, groundY: actor.groundY, scale: actor.scale,
-      walkPhase: 0, lean: 0, moveTarget: null, reach: null, stagger: 0,
+      walkPhase: 0, lean: 0, moveTarget: null, reach: null, grab: null, stagger: 0,
     }]),
   );
   const props = new Map<string, PropState>(
@@ -161,13 +169,14 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             const isProp = !actors.has(intent.target!) && scene.props.some((prop) => prop.id === intent.target);
             const dir = Math.sign(tx - state.x) || state.facing;
             state.moveTarget = isProp ? tx - dir * BODY_HALF_WIDTH * state.scale : tx;
+            state.grabTarget = isProp ? intent.target! : null;
           } else {
             state.moveTarget = state.x;
           }
         } else if (intent.intent === "push") {
           const tx = intent.target !== undefined ? scene.resolveX(intent.target) : undefined;
           if (tx !== undefined) {
-            state.reach = { tx, target: intent.target!, contact: false };
+            state.reach = { tx, ty: state.groundY + HAND_PUSH.y, target: intent.target!, contact: false };
             state.stagger += 0; // reaction applied during force below
             pendingForces.push({ actor: id, target: intent.target!, start: now + (intent.reach ?? 0.35), sec: intent.forceSec ?? 0.25, force: clamp(intent.force ?? 0.7, 0.1, 1) });
           }
@@ -190,7 +199,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       const inContact = Math.abs(handX - targetX) <= BODY_HALF_WIDTH * targetScale + CONTACT_MARGIN * actor.scale;
       // Reach phase: track the target and step into contact range — the
       // approach always completes before any force can exist (I2).
-      actor.reach = { tx: targetX, target: force.target, contact: inContact && now >= force.start };
+      actor.reach = { tx: targetX, ty: actor.groundY + HAND_PUSH.y, target: force.target, contact: inContact && now >= force.start };
       if (!inContact) {
         actor.facing = direction as 1 | -1;
         actor.x += direction * WALK_SPEED * DT;
@@ -217,6 +226,30 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
 
     // Actor integration.
     for (const state of actors.values()) {
+      // Grab trajectory (docs/WORLD_PUPPET_MOTOR.md): reach down to the
+      // object, grip, then stand up with it. The reach point lands exactly
+      // on the object and returns exactly to the carry anchor, so the
+      // renderer's hand-follow is continuous throughout.
+      if (state.grab) {
+        state.grab.t += DT;
+        const anchorX = state.x + state.facing * HAND_REST.x * state.scale;
+        const anchorY = state.groundY + HAND_REST.y * state.scale;
+        const t = state.grab.t;
+        const point = t < 0.25
+          ? { x: state.grab.x, y: state.grab.y }
+          : t < 0.7
+            ? (() => {
+                const k = smoothstep01((t - 0.25) / 0.45);
+                return { x: state.grab!.x + (anchorX - state.grab!.x) * k, y: state.grab!.y + (anchorY - state.grab!.y) * k };
+              })()
+            : null;
+        if (point) {
+          state.reach = { tx: point.x, ty: point.y, target: state.grab.propId, contact: true };
+        } else {
+          state.grab = null;
+          state.reach = null;
+        }
+      }
       // Balance recovery: stagger momentum decays through foot friction.
       if (state.moveTarget !== null) {
         const distance = state.moveTarget - state.x;
@@ -224,6 +257,12 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           state.x = state.moveTarget;
           state.moveTarget = null;
           state.vx = 0;
+          const propId = (state as {grabTarget?: string | null}).grabTarget;
+          if (propId) {
+            const prop = props.get(propId);
+            if (prop) state.grab = { propId, t: 0, x: prop.x, y: prop.y };
+            (state as {grabTarget?: string | null}).grabTarget = null;
+          }
         } else {
           const direction = Math.sign(distance) as 1 | -1;
           state.facing = direction;
@@ -285,7 +324,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           facing: state.facing,
           walk: Math.round(state.walkPhase * 1000) / 1000,
           ...(state.reach ? {
-            reach: [Math.round((state.reach.tx + (state.x - state.reach.tx) * 0.55) * 100) / 100, state.groundY + HAND_PUSH.y],
+            reach: [Math.round(state.reach.tx * 100) / 100, Math.round(state.reach.ty * 100) / 100],
             ...(state.reach.contact ? { contact: true } : {}),
           } : {}),
         });

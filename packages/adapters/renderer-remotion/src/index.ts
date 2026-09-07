@@ -432,7 +432,7 @@ async function preparePerformance(manifestPath: string, requestedFps?: number): 
   const composition = await selectComposition({
     serveUrl: serve,
     id: PERFORMANCE_COMPOSITION_ID,
-    inputProps: {manifest},
+    inputProps: {manifest, ...(process.env.ANIM_DEBUG_PHYSICS === "1" ? {debugPhysics: true} : {})},
     chromeMode: CHROME_MODE,
     chromiumOptions: CHROMIUM_OPTIONS,
     ...(browserExecutable ? {browserExecutable} : {}),
@@ -482,7 +482,7 @@ const adapter: RendererAdapter = {
         composition: {...p.composition, durationInFrames: plan.frames},
         codec: "h264",
         outputLocation: silent,
-        inputProps: {manifest: p.manifest},
+        inputProps: {manifest: p.manifest, ...(process.env.ANIM_DEBUG_PHYSICS === "1" ? {debugPhysics: true} : {})},
         crf: req.crf,
         // The manifest API calls this threads: it is the Remotion renderer's
         // concurrency, with no hidden cap or fallback.

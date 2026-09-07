@@ -39,3 +39,5 @@ scenes:
       - aqiang: "{...action.slam(aqiang, desk), durationSec: 1.2}听不懂吗！！"
       - aqiang: "{...action.push(aqiang, awei), mode: \"nonblock\"}出去！"
       - awei: "{emotion.fearful(awei)}别推我啊！"
+      # Back view: awei turns away from aqiang while storming off.
+      - awei: "{pose.orient(awei, \"back-left\")}不理你了。"
