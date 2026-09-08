@@ -1,11 +1,12 @@
 /**
  * Reach -> drawn-arm angle mapping (pure, React-free so core tests can
- * import it directly). The criterion is GEOMETRIC: the FK hand joint must
- * land on the motor's baked reach point in world space, for every
- * facing/flip/scale/waist-pitch combination — the drawn hand IS the physics
- * hand (docs/WORLD_PUPPET_MOTOR.md).
+ * import it directly). The criterion is GEOMETRIC: the hand the SVG actually
+ * renders must land on the motor's baked reach point in world space, for
+ * every facing/flip/scale/waist-pitch combination — the drawn hand IS the
+ * physics hand (docs/WORLD_PUPPET_MOTOR.md).
  */
-import {solveArmIK, type Skeleton} from "@anim/core/skeleton";
+import {solveArmIK} from "@anim/core/skeleton";
+import type {Skeleton} from "@anim/core";
 
 /** The minimal actor surface the reach solve needs (evaluate.ts output shape). */
 export interface ReachInput {
@@ -37,6 +38,24 @@ export interface ReachResult {
   waistPitch: number;
 }
 
+type Pt = [number, number];
+
+/** SVG-convention rotation (y down, +deg clockwise): [cos, -sin; sin, cos]. */
+function rot(deg: number, v: Pt): Pt {
+  const r = (deg * Math.PI) / 180;
+  const c = Math.cos(r);
+  const s = Math.sin(r);
+  return [v[0] * c - v[1] * s, v[1] * c + v[0] * s];
+}
+
+function add(a: Pt, b: Pt): Pt {
+  return [a[0] + b[0], a[1] + b[1]];
+}
+
+function sub(a: Pt, b: Pt): Pt {
+  return [a[0] - b[0], a[1] - b[1]];
+}
+
 /** Whether the drawn figure is mirrored (front/back mirror via `flip`; side views pick a side). */
 export function isFlipped(actor: Pick<ReachInput, "orientation" | "flip">): boolean {
   const orientation = actor.orientation ?? "front";
@@ -45,7 +64,7 @@ export function isFlipped(actor: Pick<ReachInput, "orientation" | "flip">): bool
     : orientation === "left" || orientation.endsWith("-left");
 }
 
-/** World reach point -> design-space target (the renderer's design frame). */
+/** World reach point -> design-space target in the SVG's pre-mirror frame. */
 export function reachDesignTarget(actor: ReachInput, flipped: boolean, space: {width: number; height: number}): [number, number] {
   return [
     space.width / 2 + ((actor.reach![0] - actor.x) / actor.scale) * (flipped ? -1 : 1),
@@ -54,7 +73,7 @@ export function reachDesignTarget(actor: ReachInput, flipped: boolean, space: {w
 }
 
 /** Design-space FK hand -> world position (inverse of the renderer mapping). */
-export function designHandToWorld(actor: ReachInput, hand: [number, number], space: {width: number; height: number}, flipped: boolean): [number, number] {
+export function designHandToWorld(actor: ReachInput, hand: Pt, space: {width: number; height: number}, flipped: boolean): [number, number] {
   return [
     actor.x + (hand[0] - space.width / 2) * actor.scale * (flipped ? -1 : 1),
     actor.y - (space.height - hand[1]) * actor.scale,
@@ -63,17 +82,17 @@ export function designHandToWorld(actor: ReachInput, hand: [number, number], spa
 
 /**
  * Solve the drawn right arm onto the motor's reach point. The IK runs in the
- * torso-rest frame: the world target is expressed in design space, unrotated
- * by the waist pitch about the declared waist joint (the SVG rotates the
- * whole torso group by waistPitch about that same pivot, so composing the
- * two puts the drawn hand back on the world target).
+ * SVG's pre-mirror design frame with the UNMIRRORED rest segments: the world
+ * target maps to design space (flip only flips the world back-map), and the
+ * waist-unrot undoes the torso group's rotate(waistPitch) about the declared
+ * waist joint. The div mirror then carries the drawn hand to the mirrored
+ * world position — one composition, no per-facing angle signs.
  */
 export function solveReach(actor: ReachInput): ReachResult {
   const sk = actor.skeleton;
   if (!actor.reach || !sk) throw new Error("solveReach needs reach + skeleton");
   const space = sk.space ?? {width: 400, height: 720};
   const flipped = isFlipped(actor);
-  const facing = (flipped ? -1 : 1) as 1 | -1;
   const waistPitch = (actor.lean ?? 0) + (actor.motor ? actor.waist ?? 0 : 0);
   const dir = (actor.facing ?? (actor.reach[0] >= actor.x ? 1 : -1)) as 1 | -1;
   const design = reachDesignTarget(actor, flipped, space);
@@ -82,28 +101,55 @@ export function solveReach(actor: ReachInput): ReachResult {
   const E = sk.joints.elbow_r ?? [S[0] + 32, S[1] + 122];
   const H0 = sk.joints.hand_r ?? [E[0], E[1] + 104];
   // world/design target -> torso-rest frame (undo the SVG torso rotation).
-  const r = (-waistPitch * Math.PI) / 180;
-  const dx = design[0] - W[0];
-  const dy = design[1] - W[1];
-  const g: [number, number] = [W[0] + dx * Math.cos(r) - dy * Math.sin(r), W[1] + dx * Math.sin(r) + dy * Math.cos(r)];
-  // Mirror the rest joints for flipped figures (the SVG mirrors the whole div).
-  const fold = (p: [number, number]): [number, number] => [space.width / 2 + (p[0] - space.width / 2) * (flipped ? -1 : 1), p[1]];
-  const Sf = fold(S);
-  const Ef = fold(E);
-  const Hf = fold(H0);
-  const gf = fold(g);
+  const g = add(W, rot(-waistPitch, sub(design, W)));
   const ik = solveArmIK(
-    {x: gf[0], y: gf[1]},
+    {x: g[0], y: g[1]},
     {
       upper: sk.arm.upper,
       fore: sk.arm.fore,
-      shoulder: Sf,
-      upperDir: [Ef[0] - Sf[0], Ef[1] - Sf[1]],
-      foreDir: [Hf[0] - Ef[0], Hf[1] - Ef[1]],
+      shoulder: S,
+      upperDir: sub(E, S),
+      foreDir: sub(H0, E),
     },
     1,
   );
   const armRight = {upper: ik.upper, lower: ik.lower, hand: (actor.contact ? "fist" : "rest") as "rest" | "fist"};
   return {armRight, torsoTiltBoost: dir * 6, target: design, flipped, waistPitch};
 }
+
+/**
+ * EXACTLY what the SVG renders for the right-arm shoulder pivot (waist
+ * rotation applied; div mirror applied in world space).
+ */
+export function renderedShoulderWorld(actor: ReachInput, flipped: boolean): [number, number] {
+  const sk = actor.skeleton;
+  if (!sk) throw new Error("renderedShoulderWorld needs skeleton");
+  const space = sk.space ?? {width: 400, height: 720};
+  const waistPitch = (actor.lean ?? 0) + (actor.motor ? actor.waist ?? 0 : 0);
+  const W = sk.joints.waist ?? [space.width / 2, space.height * 0.71];
+  const S = sk.joints.shoulder_r ?? [space.width / 2 + 60, space.height * 0.4];
+  const wd = add(W, rot(waistPitch, sub(S, W)));
+  return designHandToWorld(actor, wd, space, flipped);
+}
+
+/**
+ * EXACTLY what the SVG renders for the right arm: arm rotations nest inside
+ * the torso group's rotate(waistPitch) about the waist joint, and the div
+ * mirror (flipped figures) maps the design x about space.width/2. This is
+ * the ground truth the angles must satisfy — solveSkeleton's arm chain uses
+ * a different mirrored convention and is NOT the render truth.
+ */
+export function renderedHandWorld(actor: ReachInput, armRight: {upper: number; lower: number}, flipped: boolean): [number, number] {
+  const sk = actor.skeleton;
+  if (!sk) throw new Error("renderedHandWorld needs skeleton");
+  const space = sk.space ?? {width: 400, height: 720};
+  const waistPitch = (actor.lean ?? 0) + (actor.motor ? actor.waist ?? 0 : 0);
+  const W = sk.joints.waist ?? [space.width / 2, space.height * 0.71];
+  const S = sk.joints.shoulder_r ?? [space.width / 2 + 60, space.height * 0.4];
+  const E = sk.joints.elbow_r ?? [S[0] + 32, S[1] + 122];
+  const H0 = sk.joints.hand_r ?? [E[0], E[1] + 104];
+  const elbowT = add(S, rot(armRight.upper, sub(E, S)));
+  const handT = add(elbowT, rot(armRight.upper + armRight.lower, sub(H0, E)));
+  const wd = add(W, rot(waistPitch, sub(handT, W)));
+  return designHandToWorld(actor, wd, space, flipped);
 }
