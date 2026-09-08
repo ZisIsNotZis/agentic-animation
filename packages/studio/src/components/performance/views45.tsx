@@ -7,10 +7,7 @@
 // RIGHT by default; left/right is handled by the caller mirroring the box,
 // like Actor.tsx.
 import React from "react";
-
-const INK = "#272331"; const SKIN = "#d9a066"; const HAIR = "#242334";
-const ROBES = ["#287f8f", "#a43f4f", "#6b4c91"] as const; const DARKS = ["#174b62", "#57243d", "#352b61"] as const;
-const LIMB_OUTLINE = 36; const LIMB_FILL = 25;
+import {INK, SKIN, HAIR, ROBES, DARKS, LIMB_OUTLINE, LIMB_FILL, RobeFabric} from "./wardrobe";
 
 /** Name plate; identical placement to Actor.tsx and never mirrored. */
 const Label: React.FC<{label: string}> = ({label}) => <text x="200" y="690" textAnchor="middle" fill="#fff0c4" stroke={INK} strokeWidth="5" paintOrder="stroke" fontSize="18" fontWeight="900" fontFamily="Arial, 'Noto Sans CJK SC, sans-serif'">{label}</text>;
@@ -41,7 +38,9 @@ export function QuarterFrontView({role, label}: {role: number; label: string}): 
     {/* far arm, mostly occluded by the torso */}
     <path d="M176 300L164 420" stroke={DARKS[role]} strokeWidth={LIMB_OUTLINE} strokeLinecap="round" opacity=".85" />
     <g aria-label="torso, left edge foreshortened">
+      <defs><clipPath id={`robeClip-${label}-qf`}><path d="M154 270Q212 244 276 270L300 512Q212 552 128 512Z" /></clipPath></defs>
       <path d="M154 270Q212 244 276 270L300 512Q212 552 128 512Z" fill={ROBES[role]} stroke={INK} strokeWidth="10" />
+      <RobeFabric id={label} role={role} side="front" clipId={`robeClip-${label}-qf`} />
       <path d="M186 278L224 352L252 280" fill={DARKS[role]} stroke={INK} strokeWidth="8" />
       <path d="M162 482Q212 508 264 482" fill="none" stroke="#f2c14e" strokeWidth="12" />
       <rect x="192" y="482" width="40" height="50" rx="8" fill="#f2c14e" stroke={INK} strokeWidth="8" />
@@ -86,7 +85,9 @@ export function BackView({role, label}: {role: number; label: string}): React.Re
       <path d="M284 406L288 510" stroke="#d18b5b" strokeWidth={LIMB_FILL} strokeLinecap="round" />
     </g>
     <g aria-label="torso from behind">
+      <defs><clipPath id={`robeClip-${label}-back`}><path d="M132 270Q200 244 272 270L296 512Q200 552 104 512Z" /></clipPath></defs>
       <path d="M132 270Q200 244 272 270L296 512Q200 552 104 512Z" fill={ROBES[role]} stroke={INK} strokeWidth="10" />
+      <RobeFabric id={label} role={role} side="back" clipId={`robeClip-${label}-back`} />
       <path d="M136 482Q200 510 266 482" fill="none" stroke="#f2c14e" strokeWidth="12" />
       <rect x="180" y="482" width="44" height="50" rx="8" fill="#f2c14e" stroke={INK} strokeWidth="8" />
     </g>
@@ -125,7 +126,10 @@ export function SideView({role, label}: {role: number; label: string}): React.Re
     <path d="M182 300L172 416" stroke={DARKS[role]} strokeWidth={LIMB_OUTLINE} strokeLinecap="round" opacity=".8" />
     {/* narrow profile torso */}
     <g aria-label="torso in profile">
+      <defs><clipPath id={`robeClip-${label}-side`}><path d="M162 272Q212 248 262 272L272 512Q210 550 152 512Z" /></clipPath></defs>
       <path d="M162 272Q212 248 262 272L272 512Q210 550 152 512Z" fill={ROBES[role]} stroke={INK} strokeWidth="10" />
+      {/* profile shows mostly the garment's back plane: construction marks */}
+      <RobeFabric id={label} role={role} side="back" clipId={`robeClip-${label}-side`} />
       <path d="M204 278L216 360L226 480" fill="none" stroke={DARKS[role]} strokeWidth="7" opacity=".8" />
       <path d="M158 482Q210 506 266 482" fill="none" stroke="#f2c14e" strokeWidth="12" />
       <rect x="190" y="482" width="42" height="50" rx="8" fill="#f2c14e" stroke={INK} strokeWidth="8" />
@@ -163,7 +167,9 @@ export function QuarterBackView({role, label}: {role: number; label: string}): R
     {/* far (left) arm barely visible behind the near edge */}
     <path d="M158 302L146 414" stroke={DARKS[role]} strokeWidth={LIMB_OUTLINE} strokeLinecap="round" opacity=".7" />
     <g aria-label="torso, asymmetric back plane">
+      <defs><clipPath id={`robeClip-${label}-qb`}><path d="M148 270Q206 246 268 272L284 512Q202 550 120 510Z" /></clipPath></defs>
       <path d="M148 270Q206 246 268 272L284 512Q202 550 120 510Z" fill={ROBES[role]} stroke={INK} strokeWidth="10" />
+      <RobeFabric id={label} role={role} side="back" clipId={`robeClip-${label}-qb`} />
       {/* near-side shaded panel: the back turned away from the light */}
       <path d="M206 254L268 272L284 512Q240 536 196 542Z" fill={DARKS[role]} stroke="none" opacity=".55" />
       <path d="M132 482Q204 508 268 484" fill="none" stroke="#f2c14e" strokeWidth="12" />

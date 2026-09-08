@@ -173,7 +173,12 @@ function bodyOf(skeleton: Skeleton): ActorBody {
 
 /** World-space shoulder for an actor at a waist pitch + crouch (generic waist FK). */
 function shoulderAt(x: number, groundY: number, scale: number, facing: 1 | -1, body: ActorBody, pitchDeg: number, crouch: number): [number, number] {
-  const wx = x + facing * body.waist[0] * scale;
+  // state.x IS the waist anchor: the renderer maps actor.x to design
+  // space.width/2, and the declared waist.x == space.width/2 — so the waist
+  // sits AT actor.x (adding body.waist[0] here double-offsets the sim's
+  // shoulder ~176px right of the drawn figure at 0.88 scale, and the drawn
+  // arm can then never reach the sim's hand).
+  const wx = x;
   const wy = groundY - (body.groundToWaist - CROUCH_DROP * crouch) * scale;
   const d: [number, number] = [facing * body.shoulderFromWaist[0] * scale, body.shoulderFromWaist[1] * scale];
   const r = ((facing * pitchDeg) * Math.PI) / 180;
@@ -529,6 +534,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       }
       // Arm constraint: a taut arm drags the body (I3).
       const k = state.scale;
+      if (process.env.WDBG === state.id) console.log("drive", state.id, "x", state.x.toFixed(1), "hand", drive.hand[0].toFixed(0), drive.hand[1].toFixed(0), "phase", drive.phase, "t", drive.t.toFixed(2), "contactT", drive.contactT?.toFixed(2));
       const sh = shoulderAt(state.x, state.groundY, k, state.facing, state.body, state.waist, state.crouch);
       const dx = drive.hand[0] - sh[0];
       const dy = drive.hand[1] - sh[1];
