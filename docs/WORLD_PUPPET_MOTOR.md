@@ -119,27 +119,17 @@ Actor bind anchors (`hand_r`/`hand_l`) derive from `HAND_REST` too.
 ## Slice 1 — one body, real touch (shipped)
 
 - **Skeleton data**: every figure declares `skeleton.json` (joints, part
-  shapes — torso box, head circle, limb capsules, hand circles — arm lengths,
-  waist pivot and pitch limit). The engine has NO figure numbers: the generic
-  FK lives in `packages/core/src/motor/skeleton.ts` (`solveSkeleton`,
-  `solveArmIK`, `circleOverlapsBox`), the registry validates and carries the
-  data, and the compiler threads it into motor + renderer.
-- **Ground alignment invariant**: an actor's drawn feet stand exactly on
-  `actor.y`; props render bottom-center anchored at their declared base line
-  (`placement.base`). Position math and transforms must agree with these two
-  rules — this was the root cause of every "hand never touches" defect.
-- **Reach as force**: the approach halts where the SHOULDER lands beside the
-  object; the arm sweeps out over ~0.3s; the waist bends (baked per-frame
-  `waist` pitch) just to the smallest pitch — either lean direction — at
-  which the fully-extended hand touches the object's declared body box. No
-  remote grab radius: grab = hand circle ∩ body box, and the body bounds are
-  declared per prop (`placement.body`), not the art frame. The carried prop
-  rides the hand inside the simulation, so a handover receiver's grab tracks
-  it live (`intent.grab` on the receiver's move). If full bend still cannot
-  touch, the grab honestly fails and the object stays put.
+  shapes, arm lengths, waist pivot and pitch limit). The engine has NO figure
+  numbers: generic FK lives in `packages/core/src/motor/skeleton.ts`
+  (`solveSkeleton`, `solveArmIK`, `circleOverlapsBox`); the registry validates
+  and carries the data; the compiler threads it into motor + renderer. The
+  drawn joints ARE the physics joints by construction.
 - **Support surfaces**: furniture/set manifests declare
   `supports: [{name, x, y}]`; `on(X)` places the object's base on the surface
-  (compile error if undeclared). Releases drop back onto the surface.
+  (compile error if undeclared).
+- Root cause of every historic "hand never touches" defect was ground
+  misalignment (figures standing below their physics ground) — see the
+  invariant below.
 
 ## Debug overlay
 
@@ -198,17 +188,13 @@ staring into the camera; the camera view is "front".
   `back-right`; the diagonal values render `QuarterFrontView` /
   `BackView` (packages/studio/src/components/performance/views45.tsx,
   same 400x720 box and proportions), left/right selects the mirror.
-  Authored via `pose.orient(subject, "front-left")` (library/pose/orient),
-  which emits a bone event carrying `orientation`. A real puppet-figure
-  with view assets can slot into the same semantic later.
+  Authored via `pose.orient(subject, "front-left")` (library/pose/orient);
+  a real puppet-figure with view assets can slot into the same semantic later.
 
 ## Slices
 
-1. **Core + walk** — balance, foot planting, locomotion. Feet never glide.
-2. **Push** — brace → reach → contact → force ramp → target momentum +
-   reaction; stagger with recovery stepping. Contact-before-motion is
-   asserted by test.
-3. **Vocabulary migration** — re-express the ~30 procedural actions as motor
-   intents; delete the regex pose layer per migrated action.
-4. **Falls** — cut the balance controller on failed recovery: physical
-   collapse replaces the canned pose; later, full Verlet ragdoll if needed.
+1. **Core + walk** and **2. Push** (force chain + stagger) — shipped, above.
+   3. **Vocabulary migration**: re-express the ~30 procedural actions as
+   motor intents, deleting the regex pose layer per action. 4. **Falls**:
+   cut the balance controller on failed recovery — physical collapse, later
+   full Verlet ragdoll if needed.
