@@ -1,22 +1,21 @@
-// prop.handover — generated from the authored recipe (docs/WORLD_PLUGIN_CONTRACT.md).
-// Hand-polish freely; keep the descriptor contract: {durationSec, mode, run}.
+// prop.handover — physical handover (docs/WORLD_PUPPET_MOTOR.md): the
+// RECEIVER walks to the giver (his own legs — locomotion, not cooperation
+// with the object), reaches for the object riding the giver's hand, and the
+// grip binds on real contact. The bind physically takes the weight: the
+// giver's hand opens (his holding clears) the moment the receiver grips.
 import { track } from "@anim/core/stdlib";
 
-const D = 1.15;
+const D = 1.6;
 
 export function handover(subject, object, target) {
   return {
     durationSec: D,
     mode: "block",
     *run(world) {
-      // The receiver walks to the giver first — a handover at a distance
-      // would drag the object through the air (docs/WORLD_PUPPET_MOTOR.md).
-      track(world, "motor", subject.id, [{ at: 0, duration: 0.68, intent: "move", actor: target.id, to: subject.id, target: subject.id, grab: object.id }]);
-      track(world, "bone", target.id, [{ at: 0, duration: 0.3833333333333333, phase: "offer", action: "extend the object and meet the receiver's eyes", parts: ["arm_u_r","arm_l_r","hand_r","torso","head"], target: target.id }, { at: 0.3833333333333333, duration: 0.3833333333333333, phase: "handover", action: "receiver's grip takes the weight", parts: ["arm_u_r","arm_l_r","hand_r","torso","head"], target: target.id }, { at: 0.7666666666666666, duration: 0.3833333333333333, phase: "release", action: "open the fingers and return to neutral", parts: ["arm_u_r","arm_l_r","hand_r","torso","head"], target: target.id }]);
-      track(world, "gaze", target.id, [{ at: 0, duration: 1.15, phase: "offer", target: target.id, lead: "head", hold: 0.42 }]);
-      track(world, "binding", object.id, [{ at: 0.68, duration: 0.01, operation: "release", object: object.id, holder: subject.id, hand: "hand_r" }, { at: 0.6900000000000001, duration: 0.45999999999999985, operation: "bind", object: object.id, holder: target.id, hand: "hand_r" }]);
-      track(world, "object", object.id, [{ at: 0.68, duration: 0.01, operation: "release", object: object.id, status: "loose", holder: subject.id }, { at: 0.6900000000000001, duration: 0.45999999999999985, operation: "state", object: object.id, status: "held", holder: target.id }]);
-      track(world, "lifecycle", object.id, [{ at: 0.68, duration: 0.01, operation: "release", object: object.id, status: "loose" }, { at: 0.6900000000000001, duration: 0.45999999999999985, operation: "bind", object: object.id, status: "held", holder: target.id }]);
+      track(world, "gaze", target.id, [{ at: 0, duration: D, phase: "offer", target: subject.id, lead: "head", hold: 0.42 }]);
+      track(world, "motor", subject.id, [{ at: 0, duration: D, intent: "move", actor: target.id, to: subject.id, target: subject.id, grab: object.id }]);
+      // Motor tracks ride the call subject's track; `actor` redirects the
+      // intent to the driven actor (the receiver does the walking).
       yield D;
     },
   };

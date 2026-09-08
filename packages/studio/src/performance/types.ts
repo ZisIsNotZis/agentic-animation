@@ -388,6 +388,10 @@ export interface EvaluatedActor {
   handRadius?: number;
   /** Motor-driven waist pitch in degrees (0 = upright). */
   waist?: number;
+  /** Motor-driven crouch 0..1 (knees bend, hip drops). */
+  crouch?: number;
+  /** The prop currently bound to this actor's hand (motor bake, I4). */
+  holds?: string;
   contact?: boolean;
   gesture?: EvaluatedGesture;
   anchors: Record<string, [number, number]>;

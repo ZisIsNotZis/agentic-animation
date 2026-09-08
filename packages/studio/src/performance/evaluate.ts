@@ -704,8 +704,13 @@ function propState(
   prop: PerformanceProp,
   actors: Map<string, EvaluatedActor>,
   frame: number,
-  context?: {actorAtFrame?: (actorId: string, at: number) => EvaluatedActor | undefined},
+  context?: {actorAtFrame?: (actorId: string, at: number) => EvaluatedActor | undefined; motorPropFrame?: {x?: number; y?: number; falling?: boolean}},
 ): EvaluatedProp {
+  // Motor authority: when the motor simulation owns this prop, its baked
+  // frame IS the position — the binding interpolation below never runs.
+  if (context?.motorPropFrame && typeof context.motorPropFrame.x === "number") {
+    return projectedProp(prop, {x: context.motorPropFrame.x, y: context.motorPropFrame.y ?? stagedPropPosition(prop, frame).y, rotation: 0, scale: 1}, evaluateTracks(prop.tracks, frame));
+  }
   const stagedNow = stagedPropPosition(prop, frame);
   const tracks = evaluateTracks(prop.tracks, frame);
   const position = latestPositionKey(prop.positionTrack, frame);
@@ -1094,7 +1099,7 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
   const rawActors = (normalized.actors ?? []).map((actor) => actorState(actor, normalized, safeFrame, tracksForSubject(tracks, actor.id)));
   // Motor-driven actors follow baked trajectories exactly (docs/WORLD_PUPPET_MOTOR.md):
   // their positions are physical and must not be repelled or eased.
-  const motorScenes = (manifest as {sceneTrack?: Array<{start?: number; motor?: {actors?: Record<string, Array<Record<string, unknown>>>}}>}).sceneTrack ?? [];
+  const motorScenes = (manifest as {sceneTrack?: Array<{start?: number; motor?: {actors?: Record<string, Array<Record<string, unknown>>>; props?: Record<string, Array<{x?: number; y?: number; falling?: boolean}>>}}>}).sceneTrack ?? [];
   const motorFps = normalized.video?.fps ?? 24;
   const activeMotorScene = motorScenes.find((scene) => {
     const start = Math.round((scene.start ?? 0) * motorFps);
@@ -1113,11 +1118,25 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
     return frames[local];
   };
   const motorFrameFor = (id: string): Record<string, unknown> | undefined => motorFrameAt(id, safeFrame);
+  // Motor prop frames are the SINGLE position authority for motor-driven
+  // props: carried props ride the hand FK, pushed props slide by force, and
+  // released props fall to the declared support — nothing interpolates.
+  const motorPropFrameAt = (id: string, at: number): {x?: number; y?: number; falling?: boolean} | undefined => {
+    const scene = motorScenes.find((candidate) => {
+      const start = Math.round((candidate.start ?? 0) * motorFps);
+      const end = Math.round(((candidate.start ?? 0) + 1) * motorFps);
+      return at >= start && at < Math.max(end, (candidate.motor?.props ? Object.values(candidate.motor.props)[0]?.length ?? 0 : 0) + start);
+    });
+    const frames = scene?.motor?.props?.[id];
+    if (!frames?.length) return undefined;
+    const local = Math.max(0, Math.min(at - Math.round((scene!.start ?? 0) * motorFps), frames.length - 1));
+    return frames[local];
+  };
   const actorAtFrame = (actorId: string, at: number): EvaluatedActor | undefined => {
     const def = (normalized.actors ?? []).find((candidate) => candidate.id === actorId);
     if (!def) return undefined;
     const base = actorState(def, normalized, at, tracksForSubject(tracks, actorId));
-    const motor = motorFrameAt(actorId, at) as {x?: number; facing?: number; lean?: number; walk?: number; reach?: [number, number]; contact?: boolean; waist?: number} | undefined;
+    const motor = motorFrameAt(actorId, at) as {x?: number; facing?: number; lean?: number; walk?: number; reach?: [number, number]; contact?: boolean; waist?: number; holds?: string} | undefined;
     if (!motor || typeof motor.x !== "number") return base;
     return {
       ...base,
@@ -1128,19 +1147,20 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
       ...(motor.reach === undefined ? {} : {reach: motor.reach}),
       ...(motor.contact === undefined ? {} : {contact: motor.contact}),
       ...(motor.waist === undefined ? {} : {waist: motor.waist}),
+      ...(motor.holds === undefined ? {} : {holds: motor.holds}),
     };
   };
   const actors = repelActors(
     rawActors.map((actor) => {
-      const motor = motorFrameFor(actor.id) as {x?: number; lean?: number; walk?: number; facing?: number; reach?: [number, number]; contact?: boolean; waist?: number} | undefined;
+      const motor = motorFrameFor(actor.id) as {x?: number; lean?: number; walk?: number; facing?: number; reach?: [number, number]; contact?: boolean; waist?: number; holds?: string} | undefined;
       if (!motor || typeof motor.x !== "number") return actor;
-      return {...actor, x: motor.x, lean: motor.lean ?? 0, walk: motor.walk ?? 0, facing: (motor.facing ?? (actor.flip ? -1 : 1)) as 1 | -1, flip: (motor.facing ?? (actor.flip ? -1 : 1)) === -1, reach: motor.reach as [number, number] | undefined, contact: motor.contact === true, waist: motor.waist ?? 0, motor: true as const};
+      return {...actor, x: motor.x, lean: motor.lean ?? 0, walk: motor.walk ?? 0, facing: (motor.facing ?? (actor.flip ? -1 : 1)) as 1 | -1, flip: (motor.facing ?? (actor.flip ? -1 : 1)) === -1, reach: motor.reach as [number, number] | undefined, contact: motor.contact === true, waist: motor.waist ?? 0, motor: true as const, ...(motor.holds === undefined ? {} : {holds: motor.holds})};
     }),
   );
   const actorById = new Map(actors.map((actor) => [actor.id, actor]));
   const props = (normalized.props ?? normalized.objects ?? []).map((prop) => {
     const projected = {...prop, tracks: [...(prop.tracks ?? []), ...tracksForSubject(tracks, prop.id)]};
-    return propState(projected, actorById, safeFrame, {actorAtFrame});
+    return propState(projected, actorById, safeFrame, {actorAtFrame, motorPropFrame: motorPropFrameAt(projected.id, safeFrame)});
   });
   const evaluatedProps = applyManifestConstraints(
     props,

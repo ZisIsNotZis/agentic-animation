@@ -91,14 +91,21 @@ Actor bind anchors (`hand_r`/`hand_l`) derive from `HAND_REST` too.
   (`Fabric` in Actor.tsx) — deterministic per figure id, anchored in
   figure-local coordinates, subtle against the ink-outline style.
 
-## Slice 2 — contact push + balance stepping (shipped)
+## Slice 2 — contact push + balance stepping (shipped, force-chain rework)
 
-- **Part contact**: force conducts only while the pusher's hand circle
-  overlaps the pushee's torso box (or a prop's box) — checked every substep;
-  the arm tracks the target and walks into range before any force exists.
+- **Force chain, no cooperation**: `push` applies the force to the PUSHER'S
+  HAND (phase "approach" walks him into arm's range first — his own legs);
+  the hand accelerates, the arm IK extends, and once the arm is taut the
+  hand's further motion DRAGS THE PUSHER'S BODY (clamped at other bodies'
+  adjacency edges). The force window opens at FIRST CONTACT (the waist bend
+  absorbs the reach — timing is physical, not scripted) and conducts only
+  while the hand circle overlaps the pushee's torso box, every substep. The
+  pushee gets nothing for free: his own foot friction and capture-point
+  stepping decide stepping vs staggering. Body separation is a hard
+  projection — two actors never share ground.
 - **Two-way dynamics**: the impulse accelerates the pushee's stagger and
-  leans the pusher back (reaction); the pushee moves by their own foot
-  friction, never in sync.
+  leans the pusher back (reaction, held while the arm is loaded); the pushee
+  moves by their own foot friction, never in sync.
 - **Capture-point stepping** (thresholds from the figure's
   `balance: {stepLength, catchFraction, maxSteps}`): after ~stepLength of
   slide the feet take a recovery step that catches `catchFraction` of the
@@ -144,27 +151,35 @@ physics uses. The actor div border/ground line (debugDiv) shares the flag.
 
 ## Prop placement (one authority)
 
-`propState` in `packages/studio/src/performance/evaluate.ts` is the only code
-that places held props. Grab semantics: the prop does not move by magic — it
-stays wherever it physically is until the binding hand actually arrives
-(within `GRAB_RADIUS` 120px of it), then follows that hand exactly, keeping
-its grab-time grip offset while the grip seats over 6 frames. The motor bakes
-the hand's own trajectory for prop approaches: reach down to the object, hold
-the grip, then stand up with it (reach point interpolates back to the carry
-anchor, so the hand-follow is continuous). Handovers transfer the prop when
-the receiver's hand reaches it. Only an explicit `release` event puts a prop
-down; an expired bind keeps holding. If no approach was authored, a grace
-period (3s) eases the prop to the hand so episodes still complete. The
-motor's per-frame reach point is authoritative: `handAtFrame` prefers it over
-the rest anchor. `make` runs `detectPropDiscontinuities` (studio) after every
-compile and prints a `[make] sudden-move warning` per per-frame jump > 60px
-(holder-turn anchor swings are excluded); `scripts/keypoints.mts` dumps raw
-per-frame positions. All showcases lint at 0 discontinuities.
+Props have exactly TWO position sources — nothing else moves them:
+
+1. **Carried**: the prop rides the holding hand's FK position with the GRIP
+   OFFSET captured at bind time (the hand grips where it touched — the prop
+   never teleports to the hand). Rising from a crouch, walking, staggering,
+   handing over: the offset stays fixed.
+2. **Free**: the declared placement, moved only by push impulses (friction
+   slide) or gravity after release.
+
+Grab semantics: the grab controller bends the waist and crouches the MINIMUM
+amount whose fully-extended hand physically overlaps the object's declared
+body box (either lean direction searched), then binds on live contact — never
+by script, never by radius. Honest miss after 2.5s if no posture reaches.
+Handover: the RECEIVER walks (live pursuit of the mover's current position,
+stop at the adjacency clamp) and binds on contact; the bind physically takes
+the weight — the giver's holding clears the moment the receiver grips.
+Putdown: if the prop base sits below a declared support surface, the holder
+LIFTS the prop until the base clears the surface, then opens the hand; the
+prop falls the last few px onto the support. The motor's baked prop frames
+(`scene.motor.props`) are the position authority — `propState` in evaluate.ts
+consumes them directly and its legacy binding interpolation never runs for
+motor-driven props. `make` runs `detectPropDiscontinuities` and prints a
+`[make] sudden-move warning` per per-frame jump > 60px; `scripts/keypoints.mts`
+dumps raw per-frame positions. All showcases lint at 0 discontinuities.
 
 **Ground alignment invariant**: an actor's drawn feet stand exactly on
-`actor.y` — Actor.tsx positions the figure div at `actor.y - 720` (the
-transform's bottom-edge origin already absorbs the scale). Getting this wrong
-sinks every figure below its physics ground and hands never meet bodies.
+`actor.y` — Actor.tsx positions the figure div at `actor.y - space.height`
+(the transform's bottom-edge origin already absorbs the scale). Getting this
+wrong sinks every figure below its physics ground and hands never meet bodies.
 
 ## 45-degree facing (orientation)
 

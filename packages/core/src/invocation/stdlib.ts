@@ -256,11 +256,19 @@ export async function enumerateResources(categoryUrl: string): Promise<Record<st
   return namespace;
 }
 
-/** Enumerate audio cue files in a category subfolder into cueAssets data. */
+/** Enumerate audio cue files in a category subfolder into cueAssets data.
+ * A missing cues folder is a valid state (no cues declared yet), not an error. */
 export function enumerateCueAssets(categoryUrl: string, kind: "sfx" | "music", subDir = "cues"): Record<string, {kind: "sfx" | "music"; file: string}> {
   const dir = join(dirname(fileURLToPath(categoryUrl)), subDir);
   const cues: Record<string, {kind: "sfx" | "music"; file: string}> = {};
-  for (const entry of readdirSync(dir, {withFileTypes: true}).sort((a, b) => a.name.localeCompare(b.name))) {
+  let entries: import("node:fs").Dirent[];
+  try {
+    entries = readdirSync(dir, {withFileTypes: true});
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return cues;
+    throw error;
+  }
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
     if (!entry.isFile() || !/\.(?:wav|mp3|ogg)$/.test(entry.name)) continue;
     cues[entry.name.replace(/\.[^.]+$/, "")] = {kind, file: `${subDir}/${entry.name}`};
   }

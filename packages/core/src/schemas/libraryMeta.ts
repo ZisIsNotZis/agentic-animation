@@ -18,11 +18,20 @@ const RegistryAssetCommonSchema = z.object({
   hash: z.string().regex(/^sha256:[a-f0-9]{64}$/).optional(),
 }).strict();
 
+/** One collider part: an AABB, a circle, or a joint-anchored capsule —
+ * generated from the drawn figure geometry by scripts/part-bounds.mts. */
+export const SkeletonPartSchema = z.union([
+  z.object({box: z.tuple([z.tuple([z.number(), z.number()]), z.tuple([z.number(), z.number()])])}).strict(),
+  z.object({circle: z.object({at: z.string().optional(), center: z.tuple([z.number(), z.number()]).optional(), radius: z.number().positive()}).strict().refine((c) => c.at !== undefined || c.center !== undefined, "circle needs at or center")}).strict(),
+  z.object({capsule: z.object({from: z.string(), to: z.string(), radius: z.number().positive()}).strict()}).strict(),
+]);
+export type SkeletonPart = z.infer<typeof SkeletonPartSchema>;
+
 export const SkeletonSchema = z.object({
   version: z.literal(1),
   space: z.object({width: z.number().positive(), height: z.number().positive()}).strict(),
   joints: z.record(z.string(), z.tuple([z.number(), z.number()])),
-  parts: z.record(z.string(), z.unknown()),
+  parts: z.record(z.string(), SkeletonPartSchema),
   arm: z.object({upper: z.number().positive(), fore: z.number().positive(), handRadius: z.number().positive()}).strict(),
   waist: z.object({pitchMax: z.number()}).strict(),
   /** Balance controller data: recovery stepping thresholds (Slice 2). */

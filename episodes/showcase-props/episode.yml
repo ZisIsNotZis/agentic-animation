@@ -3,8 +3,10 @@ episode:
   title: 展示：道具拿取与交接
   language: zh-CN
 
-# Minimal showcase: object-subject prop choreography — pickup, handover
-# between actors, putdown with support settling.
+# Minimal showcase: physical prop choreography — the thermos starts on the
+# FLOOR so the pickup demonstrates the physics-driven waist bend + crouch;
+# the handover binds on real hand contact; the putdown drops it onto the
+# declared counter support.
 
 actors:
   lin:
@@ -29,8 +31,8 @@ scenes:
       lin: {facing: awei}
       awei: {facing: lin}
     objects:
-      thermos: on(counter)
+      thermos: center
     script:
-      - lin: "{prop.pickup(lin, thermos)}你的保温杯，捡到了。"
+      - lin: "{prop.pickup(lin, thermos)}你的保温杯，掉地上了，捡到了。"
       - lin: "{prop.handover(lin, thermos, awei)}给。"
-      - awei: "{prop.putdown(awei, thermos, lin)}谢了，先放你桌上。"
+      - awei: "{prop.putdown(awei, thermos)}谢了，放柜台上。"
