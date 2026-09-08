@@ -611,12 +611,14 @@ function actorState(
         hand_l: [Math.round(solvedRest.hands.hand_l!.center[0] - cx), Math.round(solvedRest.hands.hand_l!.center[1] - ground)],
       }
     : undefined;
-  // Orientation (45-degree facing): the newest semantic event that carries an
-  // explicit `orientation` value wins; default full-front.
+  // Orientation (45-degree facing): the newest semantic event at-or-before the
+  // frame wins and PERSISTS — orientation is a body state, not a 0.2s gesture.
+  // Procedure call events carry their bone-track events nested — read those too.
   const ORIENTATIONS = ["front", "back", "left", "right", "front-left", "front-right", "back-left", "back-right"];
   const orientation = tracks
     .flatMap((track) => track.events)
-    .filter((event) => event.active)
+    .flatMap((event) => [event, ...(((event as {tracks?: Array<{events: PerformanceTrackEvent[]}>}).tracks ?? []).flatMap((nested) => nested.events))])
+    .filter((event) => trackEventStart(event) <= frame)
     .map((event) => eventValue(event).orientation)
     .filter((value): value is string => typeof value === "string" && ORIENTATIONS.includes(value))
     .at(-1) as EvaluatedActor["orientation"] | undefined;
@@ -1293,9 +1295,8 @@ function propPlacementOf(asset: UnknownRecord | undefined): {base: number; size:
 
 /** The declared skeleton for a resolved figure asset, if any. */
 function skeletonOf(asset: UnknownRecord | undefined): Skeleton | undefined {
-  const use = asRecord(asset?.use) ?? {};
-  const resolved = asRecord(use.resolved) ?? {};
-  return resolved.skeleton as Skeleton | undefined;
+  // resolvedAssetForInstance already unwraps to the resolved content.
+  return asRecord(asset)?.skeleton as Skeleton | undefined;
 }
 
 function projectCompiledActors(compiled: PerformanceManifest, assets: UnknownRecord, fps: number): PerformanceActor[] {

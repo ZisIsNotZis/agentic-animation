@@ -310,6 +310,9 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
       activeBindingConstraints: constraints.filter((item) => item.start < end && item.end > sceneStart),
       motor: bakeSceneMotor({
         durationSec: duration,
+        supports: (Object.keys(context.episode.locations).length
+          ? ((context.assets.locations[Object.keys(context.episode.locations)[0]!]?.resolved as {supports?: Array<{x: [number, number]; y: number}>} | undefined)?.supports ?? [])
+          : []).map((surface) => ({x0: surface.x[0], x1: surface.x[1], y: surface.y})),
         actors: Object.fromEntries(Object.entries(staging.actors).map(([id, staged]) => {
           const resolved = context.assets.actors[id]?.use.resolved as {skeleton?: Skeleton} | undefined;
           return [id, {at: staged.at, facing: staged.facing === -1 ? -1 : 1, scale: staged.scale ?? 1, skeleton: resolved?.skeleton}];
@@ -547,7 +550,7 @@ function evaluateCall(context: CompileContext, expression: string): {descriptor:
   return {descriptor: evaluated as unknown as Invocation, call, declaredSec};
 }
 
-const ACTOR_NAMESPACES = new Set(["action", "emotion", "gaze", "movement", "voice", "prop"]);
+const ACTOR_NAMESPACES = new Set(["action", "emotion", "gaze", "movement", "voice", "prop", "pose"]);
 const SIMPLE_ARG = /^(?:[A-Za-z_$][\w$]*|-?(?:\d+(?:\.\d*)?|\.\d+)|true|false|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')$/;
 
 function shimCall(expression: string, namespace: string, terminal: string): ProcedureCall {
