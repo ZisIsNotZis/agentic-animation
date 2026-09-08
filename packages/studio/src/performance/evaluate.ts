@@ -858,9 +858,10 @@ function propPlacementAt(
     for (let t = t0; t <= frame; t++) {
       const handT = handPosAt(t);
       if (!handT) break;
-      const propT: {x: number; y: number} = grabFrame >= 0
-        ? {x: handT.x + gripOffset!.x, y: handT.y + gripOffset!.y}
-        : prevAt(t);
+      const propScale = (prop.base === undefined ? 1 : (prevAt(t).scale ?? 1));
+      const propT: {x: number; y: number; scale: number} = grabFrame >= 0
+        ? {x: handT.x + gripOffset!.x, y: handT.y + gripOffset!.y, scale: propScale}
+        : {...prevAt(t), scale: prevAt(t).scale ?? 1};
       const [pw, ph] = prop.size ?? [64, 64];
       const touches = circleOverlapsBox(
         {center: [handT.x, handT.y], radius: handRadiusAt(t)},
@@ -1283,10 +1284,11 @@ function compiledStateTracks(compiled: PerformanceManifest, actorId: string, fps
 }
 
 /** Declared placement data (base line + support surfaces) for a resolved prop. */
-function propPlacementOf(asset: UnknownRecord | undefined): {base: number; supports: Array<{name: string; x: [number, number]; y: number}>} | undefined {
-  const use = asRecord(asset?.use) ?? {};
-  const resolved = asRecord(use.resolved) ?? {};
-  return resolved.placement as {base: number; supports: Array<{name: string; x: [number, number]; y: number}>} | undefined;
+function propPlacementOf(asset: UnknownRecord | undefined): {base: number; size: [number, number]; supports: Array<{name: string; x: [number, number]; y: number}>; body?: [number, number, number, number]} | undefined {
+  // For objects, resolvedAssetForInstance already returns the resolved
+  // content — the placement lives directly on it.
+  const resolved = asRecord(asset) ?? {};
+  return resolved.placement as {base: number; size: [number, number]; supports: Array<{name: string; x: [number, number]; y: number}>; body?: [number, number, number, number]} | undefined;
 }
 
 /** The declared skeleton for a resolved figure asset, if any. */
@@ -1360,13 +1362,13 @@ function projectCompiledProps(compiled: PerformanceManifest, assets: UnknownReco
       ?.map((scene) => scene.staging?.objects?.[id])
       .find((object) => object !== undefined) as {at: readonly number[]; scale: number; z?: number; relation?: string} | undefined;
     const at = staged ? stagePoint([Number(staged.at[0]), Number(staged.at[1])], compiled.sceneTrack?.[0]?.staging ?? {}, video) : (placementRecord?.at ?? markAt);
+    const placement = propPlacementOf(asset);
     return {
       id,
-      // Props draw procedural art in a 200x160 viewBox scaled so that the
-      // authored staging scale (0.18) yields a sensible stage size.
-      size: (visual.size ?? (visual.width !== undefined && visual.height !== undefined ? [visual.width, visual.height] : [1920, 1536])) as [number, number],
+      // Declared art size wins; procedural props default to their 200x160 box.
+      size: (placement?.size ?? visual.size ?? (visual.width !== undefined && visual.height !== undefined ? [visual.width, visual.height] : [200, 160])) as [number, number],
       ...(at ? {at, x: at[0], y: at[1]} : {}),
-      ...(propPlacementOf(asset) === undefined ? {} : {base: propPlacementOf(asset)!.base, supports: propPlacementOf(asset)!.supports}),
+      ...(propPlacementOf(asset) === undefined ? {} : {base: propPlacementOf(asset)!.base, supports: propPlacementOf(asset)!.supports, body: propPlacementOf(asset)!.body}),
       ...(placementRecord ?? {}),
       ...(staged ? {scale: staged.scale, z: staged.z ?? 30, label: staged.relation ? `${id} (${staged.relation})` : id} : {}),
       ...(visual.src ? {src: visual.src} : {}),

@@ -51,6 +51,9 @@ export const PropPlacementSchema = z.object({
   base: z.number(),
   /** Declared art size (stage px before staging scale). */
   size: z.tuple([z.number(), z.number()]).default([200, 160]),
+  /** The drawn body's bounds in art space [x0, y0, x1, y1] — the physical
+   * object the hand must touch (the art frame includes shadows/margins). */
+  body: z.tuple([z.number(), z.number(), z.number(), z.number()]).optional(),
   /** Desired rendered width on the 1920 stage; scale derives from this. */
   stageWidth: z.number().positive().default(320),
   /** Declared support surfaces (furniture). */

@@ -315,8 +315,18 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
           return [id, {at: staged.at, facing: staged.facing === -1 ? -1 : 1, scale: staged.scale ?? 1, skeleton: resolved?.skeleton}];
         })),
         objects: Object.fromEntries(Object.entries(staging.objects).map(([id, staged]) => {
-          const resolved = context.assets.objects[id]?.resolved as {placement?: {size?: [number, number]}} | undefined;
-          return [id, {at: staged.at, size: resolved?.placement?.size, scale: staged.scale ?? 1}];
+          const placement = (context.assets.objects[id]?.resolved as {placement?: {base?: number; size?: [number, number]; body?: [number, number, number, number]}} | undefined)?.placement;
+          const scale = staged.scale ?? 1;
+          let touchBox: {a: [number, number]; b: [number, number]} | undefined;
+          if (placement?.body) {
+            const [bx0, by0, bx1, by1] = placement.body;
+            const base = placement.base ?? 160;
+            touchBox = {
+              a: [(bx0 - 100) * scale, -(base - by0) * scale],
+              b: [(bx1 - 100) * scale, -(base - by1) * scale],
+            };
+          }
+          return [id, {at: staged.at, size: placement?.size, scale, touchBox}];
         })),
         tracks: sceneTracks as never,
       }),

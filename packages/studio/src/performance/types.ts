@@ -213,6 +213,8 @@ export interface PerformanceProp {
   base?: number;
   /** Declared support surfaces in art space (furniture). */
   supports?: Array<{name: string; x: [number, number]; y: number}>;
+  /** Drawn-body bounds in art space — the physical object a hand must touch. */
+  body?: [number, number, number, number];
   at?: [number, number];
   position?: [number, number];
   placement?: PerformancePlacement | SemanticPlacement | string;
@@ -409,6 +411,8 @@ export interface EvaluatedProp {
   id: string;
   /** Art-space y of the base line (bottom-center anchor; default = art bottom). */
   base?: number;
+  /** Drawn-body bounds in art space (grab/contact box). */
+  body?: [number, number, number, number];
   label?: string;
   x: number;
   y: number;

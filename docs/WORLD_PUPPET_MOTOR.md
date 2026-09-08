@@ -121,10 +121,15 @@ Actor bind anchors (`hand_r`/`hand_l`) derive from `HAND_REST` too.
   `actor.y`; props render bottom-center anchored at their declared base line
   (`placement.base`). Position math and transforms must agree with these two
   rules — this was the root cause of every "hand never touches" defect.
-- **Reach as force**: a prop approach walks to the object, then the WAIST
-  bends (motor bakes per-frame `waist` pitch) while the arm extends — hand+waist
-  must genuinely reach, or the make-time gate fails (`no support surface` /
-  unreachable). No remote grab radius: grab = hand circle ∩ object box.
+- **Reach as force**: the approach halts where the SHOULDER lands beside the
+  object; the arm sweeps out over ~0.3s; the waist bends (baked per-frame
+  `waist` pitch) just to the smallest pitch — either lean direction — at
+  which the fully-extended hand touches the object's declared body box. No
+  remote grab radius: grab = hand circle ∩ body box, and the body bounds are
+  declared per prop (`placement.body`), not the art frame. The carried prop
+  rides the hand inside the simulation, so a handover receiver's grab tracks
+  it live (`intent.grab` on the receiver's move). If full bend still cannot
+  touch, the grab honestly fails and the object stays put.
 - **Support surfaces**: furniture/set manifests declare
   `supports: [{name, x, y}]`; `on(X)` places the object's base on the surface
   (compile error if undeclared). Releases drop back onto the surface.

@@ -22,6 +22,8 @@ export interface MotorIntent {
   force?: number;
   /** Fraction of the intent spent reaching before contact (push). */
   reach?: number;
+  /** Object to grab when this move completes (handover receiver). */
+  grab?: string;
   /** Seconds of force application after contact (push). */
   forceSec?: number;
 }
@@ -43,6 +45,9 @@ export interface MotorPropInput {
   id: string;
   /** Stage-space footprint [w, h]; the box anchors at (x, y) as base-center. */
   size: [number, number];
+  /** Declared touch box (stage-space offsets from the base point) — the
+   * drawn body the hand must actually touch. */
+  touchBox?: {a: [number, number]; b: [number, number]};
   x: number;
   y: number;
   intents: MotorIntent[];
@@ -166,7 +171,7 @@ interface ActorState {
   /** Reaching/exerting state: the world-space point the hand is at. */
   reach: { tx: number; ty: number; target: string; contact: boolean } | null;
   /** Prop-grab trajectory after a move-to-prop intent arrives (see bake). */
-  grab: { propId: string; t: number; x: number; y: number } | null;
+  grab: { propId: string; t: number; x: number; y: number; box: {a: [number, number]; b: [number, number]}; aim: [number, number]; phase: "bend" | "carry"; touchWaist?: number } | null;
   /** Impulse queue for stagger momentum. */
   stagger: number;
   /** Recovery steps taken for the current stagger event. */
@@ -183,6 +188,7 @@ interface PropState {
   y: number;
   vx: number;
   size: [number, number];
+  touchBox?: {a: [number, number]; b: [number, number]};
 }
 
 export interface MotorScene {
@@ -207,7 +213,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     }]),
   );
   const props = new Map<string, PropState>(
-    scene.props.map((prop) => [prop.id, { id: prop.id, x: prop.x, y: prop.y, vx: 0, size: prop.size }]),
+    scene.props.map((prop) => [prop.id, { id: prop.id, x: prop.x, y: prop.y, vx: 0, size: prop.size, touchBox: prop.touchBox }]),
   );
 
   // Intent queues per actor, in start order.
@@ -235,10 +241,19 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             // Moves at props halt at the prop's edge: pick up, do not walk through.
             const isProp = !actors.has(intent.target!) && scene.props.some((prop) => prop.id === intent.target);
             const dir = Math.sign(tx - state.x) || state.facing;
-            // Grab approaches stand close (hand reaches down over the object);
-            // other moves halt at body adjacency.
-            state.moveTarget = isProp ? tx - dir * state.body.halfWidth * state.scale * 0.3 : tx;
-            state.grabTarget = isProp ? intent.target! : null;
+            if (isProp || intent.grab) {
+              // Grab approach: halt where the SHOULDER lands beside the
+              // object (the shoulder rides 260 design px toward facing), so
+              // the hand reaches down onto it instead of past it.
+              const shoulderFromCenter = Math.abs(state.body.waist[0] + state.body.shoulderFromWaist[0]);
+              state.moveTarget = tx - dir * shoulderFromCenter * state.scale * 0.92;
+              // The grabbed object: the move target for prop pickups, or the
+              // declared `grab` for receiver moves (handover).
+              state.grabTarget = intent.grab ?? (isProp ? intent.target! : null);
+            } else {
+              state.moveTarget = tx;
+              state.grabTarget = null;
+            }
           } else {
             state.moveTarget = state.x;
           }
@@ -285,10 +300,12 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             b: [targetX + targetBody.halfWidth * targetActor.scale, targetActor.groundY - targetBody.groundToWaist * targetActor.scale] as [number, number],
           }
         : targetProp
-          ? {
-              a: [targetProp.x - targetProp.size[0] / 2, targetProp.y - targetProp.size[1]] as [number, number],
-              b: [targetProp.x + targetProp.size[0] / 2, targetProp.y] as [number, number],
-            }
+          ? targetProp.touchBox
+            ? {a: [targetProp.x + targetProp.touchBox.a[0], targetProp.y + targetProp.touchBox.a[1]] as [number, number], b: [targetProp.x + targetProp.touchBox.b[0], targetProp.y + targetProp.touchBox.b[1]] as [number, number]}
+            : {
+                a: [targetProp.x - targetProp.size[0] / 2, targetProp.y - targetProp.size[1]] as [number, number],
+                b: [targetProp.x + targetProp.size[0] / 2, targetProp.y] as [number, number],
+              }
           : undefined;
       const inContact = targetTorso !== undefined && circleOverlapsBox(handCircle, targetTorso);
       // Reach phase: track the target and step into contact range — the
@@ -321,55 +338,91 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
 
     // Actor integration.
     for (const state of actors.values()) {
-      // Grab trajectory (docs/WORLD_PUPPET_MOTOR.md): the waist bends just
-      // enough to bring the object within arm reach, the arm extends onto it,
-      // then the figure straightens up carrying it. The baked reach point is
-      // the FK hand position throughout, so the renderer's hand-follow is
-      // continuous and the drawn hand IS the grabbing hand.
+      // Grab trajectory (docs/WORLD_PUPPET_MOTOR.md): the arm sweeps out
+      // first; the waist then bends just to the smallest pitch at which the
+      // fully-extended hand touches the object's body box; the grip exists
+      // only while the live hand is inside the box; afterwards the figure
+      // straightens and the hand travels continuously to the carry anchor.
+      // If even full bend cannot touch, the grab honestly fails.
       if (state.grab) {
         state.grab.t += DT;
-        const t = state.grab.t;
+        const g = state.grab;
         const body = state.body;
         const k = state.scale;
-        const target: [number, number] = [state.grab.x, state.grab.y];
-        const BEND = 0.35, GRIP = 0.5, RISE = 1.0;
-        // Smallest waist pitch that puts the object within arm reach.
-        const reachablePitch = (): number => {
-          for (let p = 0; p <= body.pitchMax; p += 5) {
-            const s = shoulderAt(state.x, state.groundY, k, state.facing, body, p);
-            if (Math.hypot(target[0] - s[0], target[1] - s[1]) <= body.armReach * k) return p;
-          }
-          return body.pitchMax;
+        const sweep = smoothstep01(Math.min(1, g.t / 0.3));
+        // The touch box and aim track the prop's LIVE position (it may be
+        // carried by another figure mid-handover).
+        const liveProp = props.get(g.propId)!;
+        const box: {a: [number, number]; b: [number, number]} = {
+          a: [liveProp.x + g.box.a[0], liveProp.y + g.box.a[1]],
+          b: [liveProp.x + g.box.b[0], liveProp.y + g.box.b[1]],
         };
-        const need = reachablePitch();
-        if (t < BEND) {
-          state.waist = need * smoothstep01(t / BEND);
-        } else if (t < GRIP) {
-          state.waist = need;
-        } else if (t < RISE) {
-          state.waist = need * (1 - smoothstep01((t - GRIP) / (RISE - GRIP)));
-        } else {
-          state.waist = 0;
-          state.grab = null;
-          state.reach = null;
+        const handTargetAt = (pitch: number): [number, number] => {
+          const sh = shoulderAt(state.x, state.groundY, k, state.facing, body, pitch);
+          const dx = g.aim[0] - sh[0];
+          const dy = g.aim[1] - sh[1];
+          const d = Math.hypot(dx, dy) || 1;
+          const ext = Math.min(d, body.armReach * k);
+          return [sh[0] + (dx / d) * ext, sh[1] + (dy / d) * ext];
+        };
+        const touchesTarget = (pitch: number): boolean => circleOverlapsBox({center: handTargetAt(pitch), radius: body.handRadius * k}, box);
+        // Smallest |waist pitch| (either lean direction) whose
+        // fully-extended hand touches the object.
+        let need = body.pitchMax;
+        let needSign = 1;
+        for (let p = 0; p <= body.pitchMax; p += 2) {
+          if (touchesTarget(p)) { need = p; needSign = 1; break; }
+          if (touchesTarget(-p)) { need = p; needSign = -1; break; }
         }
-        if (state.grab) {
-          const shoulder = shoulderAt(state.x, state.groundY, k, state.facing, body, state.waist);
+        const liveHand = handTargetAt(state.waist);
+        const liveTouch = circleOverlapsBox({center: liveHand, radius: body.handRadius * k}, box);
+        if (g.t < 0.3) {
+          // Sweep phase: arm extends, waist holds.
+          state.reach = {tx: liveHand[0], ty: liveHand[1], target: g.propId, contact: liveTouch};
+        } else if (g.phase === "bend") {
+          // Bend toward the smallest touching pitch (either direction).
+          const goal = need * needSign;
+          const next = state.waist < goal
+            ? Math.min(goal, state.waist + 120 * DT)
+            : Math.max(goal, state.waist - 120 * DT);
+          state.waist = next;
+          state.reach = {tx: liveHand[0], ty: liveHand[1], target: g.propId, contact: liveTouch};
+          if (liveTouch && Math.abs(state.waist - goal) < 1) {
+            g.phase = "carry";
+            g.touchWaist = goal;
+          } else if (Math.abs(state.waist) === body.pitchMax && !liveTouch && g.t > 2.5) {
+            state.grab = null; // honest miss: full bend cannot reach
+            state.reach = null;
+          }
+        } else {
+          // Carry: straighten up; the hand blends from the touch point to
+          // the carry anchor as the waist returns to zero.
+          const touchHand = handTargetAt(g.touchWaist ?? need);
           const rest = solveSkeleton(state.skeleton as Skeleton, {});
           const restHand = rest.hands.hand_r?.center ?? [state.skeleton!.space.width / 2, state.skeleton!.space.height * 0.71];
           const carry: [number, number] = [
             state.x + state.facing * (restHand[0] - state.skeleton!.space.width / 2) * k,
             state.groundY - (state.skeleton!.space.height - restHand[1]) * k,
           ];
-          const d = Math.hypot(target[0] - shoulder[0], target[1] - shoulder[1]);
-          const ext = Math.min(d, body.armReach * k);
-          const hand: [number, number] = t < GRIP
-            ? [shoulder[0] + ((target[0] - shoulder[0]) / (d || 1)) * ext, shoulder[1] + ((target[1] - shoulder[1]) / (d || 1)) * ext]
-            : [
-                target[0] + (carry[0] - target[0]) * smoothstep01((t - GRIP) / (RISE - GRIP)),
-                target[1] + (carry[1] - target[1]) * smoothstep01((t - GRIP) / (RISE - GRIP)),
-              ];
-          state.reach = { tx: hand[0], ty: hand[1], target: state.grab.propId, contact: t >= BEND && t < RISE };
+          const riseK = Math.min(1, (g.t - 0.6) / 0.5);
+          const blended: [number, number] = [
+            touchHand[0] + (carry[0] - touchHand[0]) * riseK,
+            touchHand[1] + (carry[1] - touchHand[1]) * riseK,
+          ];
+          state.waist = (g.touchWaist ?? need * needSign) * (1 - riseK);
+          state.reach = {tx: blended[0], ty: blended[1], target: g.propId, contact: riseK < 1};
+          // The carried prop rides the hand inside the same simulation, so
+          // other figures' grabs (handover) track it physically.
+          const carried = props.get(g.propId);
+          if (carried) {
+            carried.x = blended[0];
+            carried.y = blended[1];
+            carried.vx = 0;
+          }
+          if (riseK >= 1) {
+            state.grab = null;
+            state.reach = null;
+          }
         }
       }
       // Pursuit: walk toward an active move target (planted-feet walk).
@@ -382,7 +435,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           const propId = (state as {grabTarget?: string | null}).grabTarget;
           if (propId) {
             const prop = props.get(propId);
-            if (prop) state.grab = { propId, t: 0, x: prop.x, y: prop.y };
+            if (prop) state.grab = { propId, t: 0, x: prop.x, y: prop.y, box: prop.touchBox ?? {a: [prop.x - prop.size[0] * state.scale / 2, prop.y - prop.size[1] * state.scale], b: [prop.x + prop.size[0] * state.scale / 2, prop.y]}, aim: [(prop.touchBox ? (prop.touchBox.a[0] + prop.touchBox.b[0]) / 2 : 0) + prop.x, (prop.touchBox ? (prop.touchBox.a[1] + prop.touchBox.b[1]) / 2 : -prop.size[1] * state.scale / 2) + prop.y], phase: "bend" };
             (state as {grabTarget?: string | null}).grabTarget = null;
           }
         } else {
@@ -488,7 +541,7 @@ export interface MotorSceneSource {
   durationSec: number;
   /** Normalized staging positions keyed by instance id. */
   actors: Record<string, {at: readonly [number, number]; facing?: number; scale?: number; skeleton?: Skeleton}>;
-  objects: Record<string, {at: readonly [number, number]; size?: [number, number]; scale?: number}>;
+  objects: Record<string, {at: readonly [number, number]; size?: [number, number]; scale?: number; touchBox?: {a: [number, number]; b: [number, number]}}>;
   /** Scene performance tracks (motor intents live here, subject-keyed). */
   tracks: Array<{subject?: string; events?: Array<{start?: number; end?: number; tracks?: Array<{kind?: string; events?: Array<Record<string, unknown>>}>}>}>;
 }
@@ -528,6 +581,7 @@ export function bakeSceneMotor(
             force: typeof intent.force === "number" ? intent.force : undefined,
             reach: typeof intent.reach === "number" ? intent.reach : undefined,
             forceSec: typeof intent.forceSec === "number" ? intent.forceSec : undefined,
+            grab: typeof intent.grab === "string" ? intent.grab : undefined,
           });
         }
       }
@@ -539,7 +593,7 @@ export function bakeSceneMotor(
   return simulateScene({
     durationSec: source.durationSec,
     actors: actorInputs,
-    props: Object.entries(source.objects ?? {}).map(([id, staged]) => ({id, x: staged.at[0] * video.width, y: staged.at[1] * video.height, size: staged.size ?? [80, 120] as [number, number], intents: []})),
+    props: Object.entries(source.objects ?? {}).map(([id, staged]) => ({id, x: staged.at[0] * video.width, y: staged.at[1] * video.height, size: staged.size ?? [80, 120] as [number, number], touchBox: staged.touchBox, intents: []})),
     resolveX: (id) => {
       const actor = source.actors?.[id];
       if (actor) return actor.at[0] * video.width;

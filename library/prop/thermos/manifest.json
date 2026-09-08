@@ -22,6 +22,12 @@
       160
     ],
     "supports": [],
-    "stageWidth": 150
+    "stageWidth": 150,
+    "body": [
+      68,
+      38,
+      132,
+      132
+    ]
   }
 }
