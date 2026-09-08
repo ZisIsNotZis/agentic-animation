@@ -113,6 +113,42 @@ test("props slide under force and stop by friction", () => {
   assert.equal(new Set(tail).size, 1, "prop must come to rest (friction)");
 });
 
+test("grab: the hand carries the object at its box CENTER after the grip settles", () => {
+  const scene: MotorScene = {
+    ...baseScene,
+    props: [{ id: "thermos", x: 900, y: 560, size: [80, 120], intents: [] }],
+    actors: [
+      { ...baseScene.actors[0]!, intents: [{ at: 0.1, duration: 1.5, intent: "move", target: "thermos", grab: "thermos" }] },
+      baseScene.actors[1]!,
+    ],
+    resolveX: (id) => (id === "aqiang" ? 700 : id === "awei" ? 1248 : id === "thermos" ? 900 : undefined),
+  };
+  const trajectory = simulateScene(scene);
+  const aqiang = trajectory.actors.aqiang!;
+  const thermos = trajectory.props.thermos!;
+  const heldFrames = aqiang
+    .map((f, i) => ((f as {holds?: string}).holds === "thermos" ? i : -1))
+    .filter((i) => i >= 0);
+  assert.ok(heldFrames.length > 0, "grab never bound the prop");
+  // The grip eases to the center grip over the 0.45s settle (~11 frames).
+  const settleFrom = heldFrames[0]! + 12;
+  for (let i = settleFrom; i <= heldFrames.at(-1)!; i++) {
+    const aq = aqiang[i]! as {reach?: [number, number]};
+    const prop = thermos[i]!;
+    assert.ok(aq.reach, `no hand position baked at frame ${i}`);
+    const cx = prop.x;
+    const cy = prop.y - 60; // thermos box center (80x120, base origin)
+    const d = Math.hypot(cx - aq.reach![0], cy - aq.reach![1]);
+    assert.ok(d <= 8, `box center ${d.toFixed(1)}px from the hand at frame ${i}`);
+  }
+  // The grip settle must not teleport the prop (make lint threshold 60px).
+  let maxJump = 0;
+  for (let i = 1; i < thermos.length; i++) {
+    maxJump = Math.max(maxJump, Math.hypot(thermos[i]!.x - thermos[i - 1]!.x, thermos[i]!.y - thermos[i - 1]!.y));
+  }
+  assert.ok(maxJump <= 60, `prop jumped ${maxJump.toFixed(1)}px in one frame`);
+});
+
 test("pursuit stops at adjacency — actors never overlap", () => {
   const scene: MotorScene = {
     ...baseScene,

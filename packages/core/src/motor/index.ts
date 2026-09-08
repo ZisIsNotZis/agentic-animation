@@ -234,6 +234,10 @@ interface ActorState {
   /** Where the hand grips the held prop relative to the hand point (the prop
    *  never teleports to the hand — it stays exactly where the grip landed). */
   grip: {ox: number; oy: number} | null;
+  /** The settled grip: the prop origin relative to the hand when the hand
+   *  sits at the object's box CENTER (small objects are carried at their
+   *  middle). The grip eases here over the holdRel settle, never snaps. */
+  gripGoal: {ox: number; oy: number} | null;
   /** Live pursuit: the actor id whose CURRENT position the walk follows
    *  (handovers chase a mover; the stop point is the adjacency clamp). */
   pursue: string | null;
@@ -290,6 +294,7 @@ function propOpenHand(state: ActorState, props: Map<string, PropState>): void {
   state.holding = null;
   state.holdRel = null;
   state.grip = null;
+  state.gripGoal = null;
   state.place = null;
 }
 
@@ -322,7 +327,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
   const actors = new Map<string, ActorState>(
     scene.actors.map((actor) => [actor.id, {
       id: actor.id, x: actor.x, vx: 0, facing: actor.facing, groundY: actor.groundY, scale: actor.scale,
-      walkPhase: 0, lean: 0, moveTarget: null, grab: null, holding: null, holdRel: null, handDrive: null, reach: null, grip: null, pursue: null, place: null,
+      walkPhase: 0, lean: 0, moveTarget: null, grab: null, holding: null, holdRel: null, handDrive: null, reach: null, grip: null, gripGoal: null, pursue: null, place: null,
       stagger: 0, stepsTaken: 0, staggerSlide: 0, body: bodyOf(actor.skeleton as Skeleton),
       skeleton: actor.skeleton, waist: 0, crouch: 0,
     }]),
@@ -452,6 +457,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
               state.holding = null;
               state.holdRel = null;
               state.grip = null;
+              state.gripGoal = null;
             }
           }
         }
@@ -584,15 +590,18 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
               other.holdRel = null;
               other.reach = null;
               other.grip = null;
+              other.gripGoal = null;
             }
           }
           state.holding = g.propId;
           state.grab = null;
           const sh = shoulderAt(state.x, state.groundY, k, state.facing, state.body, state.waist, state.crouch);
           const hand = handTargetAt(state, aim, state.waist, state.crouch);
-          // The grip keeps the prop exactly where it was grabbed: the offset
-          // between the prop's origin and the hand point stays fixed.
+          // The grip starts where the hand physically touched, then eases to
+          // the CENTER grip: the box center sits at the hand point (small
+          // objects are carried at their middle, not by a distant offset).
           state.grip = {ox: liveProp.x - hand[0], oy: liveProp.y - hand[1]};
+          state.gripGoal = {ox: liveProp.x - aim[0], oy: liveProp.y - aim[1]};
           state.holdRel = {from: [hand[0] - sh[0], hand[1] - sh[1]], t: 0, dur: 0.45};
         } else if (g.t > 2.5) {
           // Honest miss: no posture within the puppet model can touch it.
@@ -627,6 +636,15 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         if (state.holdRel) {
           state.holdRel.t += DT;
           const blend = smoothstep01(state.holdRel.t / state.holdRel.dur);
+          // The grip eases from the bind-time touch offset to the center grip
+          // while the hand settles to carry — the fingers close around the
+          // object; the prop never jumps (the ease spans the whole settle).
+          const gripNow = state.grip && state.gripGoal
+            ? {
+                ox: state.grip.ox + (state.gripGoal.ox - state.grip.ox) * blend,
+                oy: state.grip.oy + (state.gripGoal.oy - state.grip.oy) * blend,
+              }
+            : state.grip;
           const k = state.scale;
           const sh = shoulderAt(state.x, state.groundY, k, state.facing, state.body, state.waist, state.crouch);
           const carry = carryHandAt(state);
@@ -635,12 +653,15 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             state.holdRel.from[1] + ((carry[1] - sh[1]) - state.holdRel.from[1]) * blend,
           ];
           const hand: [number, number] = [sh[0] + rel[0], sh[1] + rel[1]];
-          heldProp.x = hand[0] + (state.grip?.ox ?? 0);
-          heldProp.y = hand[1] + (state.grip?.oy ?? 0);
+          heldProp.x = hand[0] + (gripNow?.ox ?? 0);
+          heldProp.y = hand[1] + (gripNow?.oy ?? 0);
           heldProp.vx = 0;
           heldProp.falling = false;
           state.reach = {tx: hand[0], ty: hand[1], target: state.holding, contact: true};
-          if (blend >= 1) state.holdRel = null;
+          if (blend >= 1) {
+            state.grip = state.gripGoal ?? state.grip;
+            state.holdRel = null;
+          }
         } else if (state.place !== null) {
           // Placing: raise the hand (the prop rides the grip) until the prop
           // base clears the support surface, then open the hand.
