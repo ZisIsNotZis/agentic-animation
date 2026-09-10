@@ -78,8 +78,12 @@ const round1 = (n: number): number => Math.round(n * 10) / 10;
 
 /** Pull the drawn figure geometry out of the Actor component source. */
 export function extractShapes(source: string): DrawnShapes {
+  // Layout-tolerant: the source may be formatted (one-line or split lines),
+  // so matching runs over whitespace-normalized text and attribute order is
+  // free. Only the semantic anchors (path data, component, fill source) matter.
+  const flat = source.replace(/\s+/g, " ");
   const grab = (re: RegExp, what: string): RegExpExecArray => {
-    const m = re.exec(source);
+    const m = re.exec(flat);
     if (!m) throw new Error(`part-bounds: cannot find ${what} in ${ACTOR_TSX} — the drawing changed, update the extractor`);
     return m;
   };
@@ -92,12 +96,12 @@ export function extractShapes(source: string): DrawnShapes {
   const neck = strokedPath(/aria-label="neck connection" d="([^"]+)" fill=\{SKIN\} stroke=\{INK\} strokeWidth="(\d+)"/, "neck path");
   const cm = grab(/<circle cx="(\d+)" cy="(\d+)" r="(\d+)" fill=\{SKIN\} stroke=\{INK\} strokeWidth="(\d+)"/, "head circle");
   const headCircle = {c: [Number(cm[1]), Number(cm[2])] as Pt, r: Number(cm[3]), stroke: Number(cm[4])};
-  const limbRadius = Number(grab(/const LIMB_OUTLINE = (\d+);/, "limb outline width")[1]) / 2;
+  const limbRadius = Number(grab(/const LIMB_OUTLINE = (\d+)/, "limb outline width")[1]) / 2;
   // Fist silhouette (the grabbing hand): template numbers from the Hand
   // component, plus half the stroke. Groups: 1=A(x-extent) 2=B(top end y)
   // 3=C(top ctrl y) 4=D 5=E 6=F(bottom x1) 7=G(bottom end y) 8=H(bottom ctrl
   // y) 9=I(bottom x2) 10=J 11=strokeWidth.
-  const fm = grab(/shape === "fist" \? <path d=\{`M\$\{x - (\d+)\} \$\{y - (\d+)\}Q\$\{x\} \$\{y - (\d+)\} \$\{x \+ (\d+)\} \$\{y - (\d+)\}L\$\{x \+ (\d+)\} \$\{y \+ (\d+)\}Q\$\{x\} \$\{y \+ (\d+)\} \$\{x - (\d+)\} \$\{y \+ (\d+)\}Z`\} fill=\{SKIN\} stroke=\{INK\} strokeWidth="(\d+)"/, "fist path");
+  const fm = grab(/shape === "fist" \? \( ?<path d=\{`M\$\{x - (\d+)\} \$\{y - (\d+)\}Q\$\{x\} \$\{y - (\d+)\} \$\{x \+ (\d+)\} \$\{y - (\d+)\}L\$\{x \+ (\d+)\} \$\{y \+ (\d+)\}Q\$\{x\} \$\{y \+ (\d+)\} \$\{x - (\d+)\} \$\{y \+ (\d+)\}Z`\} fill=\{SKIN\} stroke=\{INK\} strokeWidth="(\d+)"/, "fist path");
   const strokeHalf = Number(fm[11]) / 2;
   const fy0 = -(Number(fm[2]) + (Number(fm[3]) - Number(fm[2])) / 2 + strokeHalf); // quad extreme above
   const fy1 = Number(fm[7]) + (Number(fm[8]) - Number(fm[7])) / 2 + strokeHalf; // quad extreme below

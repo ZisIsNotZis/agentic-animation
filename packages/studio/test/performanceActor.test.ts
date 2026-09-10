@@ -82,7 +82,8 @@ test("puppet geometry keeps the head attached and removes visible joint markers"
   assert.doesNotMatch(source, /<circle[^>]+cx=\{(?:elbow|knee)\}/);
   assert.match(source, /strokeWidth=\{LIMB_OUTLINE\}/);
   assert.match(source, /strokeWidth=\{LIMB_FILL\}/);
-  assert.match(source, /stroke=\{DARKS\[role\]\} strokeWidth=\{LIMB_OUTLINE\}/);
+  // Layout-tolerant: the source may be formatted with attribute splits.
+  assert.match(source.replace(/\s+/g, " "), /stroke=\{DARKS\[role\]\} strokeWidth=\{LIMB_OUTLINE\}/);
 });
 
 test("future semantic events do not alter the current frame", () => {
