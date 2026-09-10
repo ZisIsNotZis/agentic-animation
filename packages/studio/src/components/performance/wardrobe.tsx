@@ -59,7 +59,7 @@ export function RobeFabric({id, role, side, clipId}: RobeFabricProps): React.Rea
   }
   // Back plane: construction marks of the same garment — center-back seam,
   // yoke and hem bands, and a coarser single-direction weave.
-  const seamX = 196 + (seed % 9); // center seam, slight per-figure drift
+  const seamX = 200; // center seam, exactly centered (the back view must be symmetric)
   const coarseGap = 12 + (seed % 4);
   const bandOpacity = 0.22;
   const weaveOpacity = 0.09 + (seed % 3) * 0.012;

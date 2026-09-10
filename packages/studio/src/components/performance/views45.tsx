@@ -335,12 +335,12 @@ export function QuarterFrontView({
       <PoseArm
         role={role}
         arm={pose.armLeft}
-        shoulder={[176, 300]}
-        elbow={[164, 420]}
-        wrist={[160, 512]}
+        shoulder={[168, 300]}
+        elbow={[136, 420]}
+        wrist={[130, 516]}
         mirror={1}
         ariaSide="far"
-        foreshorten={0.72}
+        foreshorten={0.82}
       />
       <g
         aria-label="torso, left edge foreshortened"
@@ -509,16 +509,17 @@ export function BackView({ role, label, pose }: ViewProps): React.ReactElement {
             <path d="M132 270Q200 244 272 270L296 512Q200 552 104 512Z" />
           </clipPath>
         </defs>
-        {/* far (left) arm at the far side, complete with hand */}
+        {/* From behind, the figure's right arm is on the viewer's left;
+            both arms fully visible and symmetric about x=200. */}
         <PoseArm
           role={role}
-          arm={pose.armLeft}
-          shoulder={[170, 296]}
-          elbow={[152, 410]}
-          wrist={[150, 514]}
+          arm={pose.armRight}
+          shoulder={[138, 292]}
+          elbow={[116, 406]}
+          wrist={[112, 510]}
           mirror={1}
-          ariaSide="far"
-          foreshorten={0.85}
+          ariaSide="left"
+          foreshorten={1}
         />
         <path
           d="M132 270Q200 244 272 270L296 512Q200 552 104 512Z"
@@ -550,12 +551,13 @@ export function BackView({ role, label, pose }: ViewProps): React.ReactElement {
         />
         <PoseArm
           role={role}
-          arm={pose.armRight}
+          arm={pose.armLeft}
           shoulder={[262, 292]}
           elbow={[284, 406]}
           wrist={[288, 510]}
           mirror={-1}
-          ariaSide="near"
+          ariaSide="right"
+          foreshorten={1}
         />
       </g>
       <g aria-label="back of head" transform={headTransform(pose)}>
@@ -566,7 +568,7 @@ export function BackView({ role, label, pose }: ViewProps): React.ReactElement {
           strokeWidth="9"
         />
         <circle
-          cx="208"
+          cx="200"
           cy="182"
           r="94"
           fill={SKIN}
@@ -574,19 +576,10 @@ export function BackView({ role, label, pose }: ViewProps): React.ReactElement {
           strokeWidth="10"
         />
         <path
-          d="M114 186Q112 70 206 66Q300 70 302 186Q302 232 286 252L270 236L252 258L234 238L216 260L198 240L180 258L162 238Q114 232 114 186Z"
+          d="M107 186Q105 70 199 66Q293 70 295 186Q295 232 279 252L263 236L245 258L227 238L209 260L191 240L173 258L155 238Q107 232 107 186Z"
           fill={HAIR}
           stroke={INK}
           strokeWidth="10"
-        />
-        <ellipse
-          cx="296"
-          cy="196"
-          rx="14"
-          ry="20"
-          fill={SKIN}
-          stroke={INK}
-          strokeWidth="6"
         />
       </g>
       <Label label={label} />
@@ -650,9 +643,9 @@ export function SideView({
         <PoseArm
           role={role}
           arm={pose.armLeft}
-          shoulder={[182, 300]}
-          elbow={[172, 416]}
-          wrist={[168, 508]}
+          shoulder={[174, 300]}
+          elbow={[142, 416]}
+          wrist={[138, 512]}
           mirror={1}
           ariaSide="far"
           foreshorten={0.7}
@@ -816,9 +809,9 @@ export function QuarterBackView({
         <PoseArm
           role={role}
           arm={pose.armLeft}
-          shoulder={[158, 302]}
-          elbow={[146, 414]}
-          wrist={[142, 508]}
+          shoulder={[142, 292]}
+          elbow={[116, 408]}
+          wrist={[112, 510]}
           mirror={1}
           ariaSide="far"
           foreshorten={0.68}
@@ -859,12 +852,13 @@ export function QuarterBackView({
         />
         <PoseArm
           role={role}
-          arm={pose.armRight}
-          shoulder={[270, 292]}
-          elbow={[296, 404]}
-          wrist={[302, 508]}
+          arm={pose.armLeft}
+          shoulder={[268, 292]}
+          elbow={[294, 408]}
+          wrist={[298, 510]}
           mirror={-1}
-          ariaSide="near"
+          ariaSide="right"
+          foreshorten={1}
         />
       </g>
       <g
