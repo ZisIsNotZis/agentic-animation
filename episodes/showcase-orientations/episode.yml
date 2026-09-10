@@ -6,51 +6,54 @@ locations:
   canteen:
     use: set/school_canteen
 actors:
-  f0:
+  # ONE person shown in eight directions. All instance ids hash to the same
+  # role palette (lin_a..lin_v share a charcode sum mod 3), so the wardrobe
+  # is identical across every view by construction.
+  lin_a:
     use: figure/lin
     voice: voice/zh/lin
-  f1:
-    use: figure/awei
-    voice: voice/zh/awei
-  f2:
-    use: figure/aqiang
-    voice: voice/zh/aqiang
-  f3:
-    use: figure/liu
-    voice: voice/zh/liu
-  f4:
-    use: figure/senior
-    voice: voice/zh/senior
-  f5:
-    use: figure/student_a
-    voice: voice/zh/student_a
-  f6:
-    use: figure/student_b
-    voice: voice/zh/student_b
-  f7:
-    use: figure/elder
-    voice: voice/zh/elder
+  lin_d:
+    use: figure/lin
+    voice: voice/zh/lin
+  lin_g:
+    use: figure/lin
+    voice: voice/zh/lin
+  lin_j:
+    use: figure/lin
+    voice: voice/zh/lin
+  lin_m:
+    use: figure/lin
+    voice: voice/zh/lin
+  lin_p:
+    use: figure/lin
+    voice: voice/zh/lin
+  lin_s:
+    use: figure/lin
+    voice: voice/zh/lin
+  lin_v:
+    use: figure/lin
+    voice: voice/zh/lin
 objects: {}
 scenes:
   - id: orientations
     location: canteen
     actors:
-      f0: {facing: right}
-      f1: {facing: right}
-      f2: {facing: right}
-      f3: {facing: right}
-      f4: {facing: right}
-      f5: {facing: right}
-      f6: {facing: right}
-      f7: {facing: right}
+      lin_a: {facing: right}
+      lin_d: {facing: right}
+      lin_g: {facing: right}
+      lin_j: {facing: right}
+      lin_m: {facing: right}
+      lin_p: {facing: right}
+      lin_s: {facing: right}
+      lin_v: {facing: right}
     objects: {}
     script:
-      - f0: "{pose.orient(f0, \"front\")}"
-      - f1: "{pose.orient(f1, \"front-right\")}"
-      - f2: "{pose.orient(f2, \"right\")}"
-      - f3: "{pose.orient(f3, \"back-right\")}"
-      - f4: "{pose.orient(f4, \"back\")}"
-      - f5: "{pose.orient(f5, \"back-left\")}"
-      - f6: "{pose.orient(f6, \"left\")}"
-      - f7: "{pose.orient(f7, \"front-left\")}"
-      - f0: "八向朝向展示。"
+      - lin_a: "{pose.orient(lin_a, \"front\")}"
+      - lin_d: "{pose.orient(lin_d, \"front-right\")}"
+      - lin_g: "{pose.orient(lin_g, \"right\")}"
+      - lin_j: "{pose.orient(lin_j, \"back-right\")}"
+      - lin_m: "{pose.orient(lin_m, \"back\")}"
+      - lin_p: "{pose.orient(lin_p, \"back-left\")}"
+      - lin_s: "{pose.orient(lin_s, \"left\")}"
+      - lin_v: "{pose.orient(lin_v, \"front-left\")}"
+      - lin_a: "八向朝向展示。"
