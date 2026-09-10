@@ -273,7 +273,10 @@ const NEAR_STANCE = {
 const torsoTransform = (pose: ActorPose, waist: Pt): string =>
   `translate(0 ${pose.torsoY}) rotate(${pose.torsoTilt} ${waist[0]} ${waist[1]}) scale(1 ${pose.torsoScaleY})`;
 const headTransform = (pose: ActorPose): string =>
-  `translate(0 ${pose.headY}) rotate(${pose.headTilt} 200 205)`;
+  // The head rotates about the NECK BASE (where it meets the collar), never
+  // the head center — a tilt about the center swings the neck base out of
+  // the torso and visually detaches the head.
+  `translate(0 ${pose.headY}) rotate(${pose.headTilt} 200 326)`;
 
 /** Mouth for the partially-visible faces: speech opens it (pose-driven),
  *  otherwise a smile/somber curve from the shared faceFamily logic. */

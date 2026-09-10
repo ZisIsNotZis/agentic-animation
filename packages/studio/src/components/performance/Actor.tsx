@@ -324,7 +324,9 @@ export function deriveActorPose(actor: EvaluatedActor): ActorPose {
       legLeft.lower -= 14 * stride;
       legRight.lower += 14 * stride;
       torsoTilt -= 4 * stride;
-      headTilt += 2 * stride;
+      // The head follows the body: same lean direction, damped — the neck
+      // never counter-bends against the torso (docs/WORLD_PUPPET_MOTOR.md).
+      headTilt += -1.5 * stride;
     } else if (action === "bow") {
       torsoTilt += 29 * bell(p) * Math.max(amount, 0.7);
       torsoY += 24 * easeOut(p);
@@ -610,6 +612,10 @@ export function solveActorFigure(actor: EvaluatedActor): ActorFigure {
   // walk cycle, and a reaching/exerting arm override the heuristics.
   if (actor.motor) {
     pose.torsoTilt += actor.lean ?? 0;
+    // Head follow-through: without an authored head action the head continues
+    // the body's lean (same direction, damped) — the neck stays a living
+    // hinge, not a spring pulling the head upright.
+    pose.headTilt += (actor.lean ?? 0) * 0.45;
     const phase = actor.walk ?? 0;
     if (phase > 0) {
       const swing = Math.sin(phase * Math.PI * 2) * 26;
@@ -618,6 +624,7 @@ export function solveActorFigure(actor: EvaluatedActor): ActorFigure {
       pose.legLeft.lower -= Math.max(0, swing) * 0.9;
       pose.legRight.lower -= Math.max(0, -swing) * 0.9;
       pose.torsoY += Math.abs(Math.sin(phase * Math.PI * 2)) * 6;
+      pose.headTilt += -1.5 * Math.sin(phase * Math.PI * 2);
     }
   }
   // Forward kinematics from the declared skeleton: the drawn joints are THE
@@ -825,7 +832,7 @@ export const PerformanceActor: React.FC<{
             <Arm side="right" role={role} pose={pose.armRight} />
             <g
               aria-label="articulated head and neck"
-              transform={`translate(0 ${pose.headY}) rotate(${pose.headTilt} 200 205)`}
+              transform={`translate(0 ${pose.headY}) rotate(${pose.headTilt} 200 326)`}
             >
               <path
                 aria-label="neck connection"
