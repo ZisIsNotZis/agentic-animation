@@ -40,6 +40,7 @@ export const PerformanceEpisode: React.FC<PerformanceEpisodeProps> = ({ manifest
 export const PerformanceFrame: React.FC<{
   manifest: PerformanceManifest;
   state: PerformanceFrameState;
+  debugPhysics?: boolean;
 }> = ({ manifest, state, debugPhysics }) => {
   const camera = state.camera;
   const scene = sceneForFrame(manifest, state.frame);
