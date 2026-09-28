@@ -8,7 +8,6 @@ node_modules/.cache/
 # --- local scratch, temporary workspaces, generated QA material --------------
 .tmp/
 **/.tmp/
-.scratch/
 **/screenshots/
 **/screenshot-*.png
 **/*-screenshot.png
@@ -60,3 +59,18 @@ episodes/*/golden.json
 .DS_Store
 Thumbs.db
 *.log
+
+# Common local caches and temporary workspaces
+__pycache__/
+.pi/
+worktrees/
+.worktrees/
+
+# Local secrets, test caches, and generated logs
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.cache/
+.env
+.env.*
+!.env.example
