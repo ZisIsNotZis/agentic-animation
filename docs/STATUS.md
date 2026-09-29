@@ -1,8 +1,6 @@
 # Project status
 
-Last reconciled: 2026-09-02. Status: **plugin-host architecture implemented; docs reconciled to [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md)**.
-
-The canonical contract is [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md); [PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md) is historical reference for how Steps 1-2 were executed.
+Last reconciled: 2026-09-29. Status: **closed (milestone)** — the plugin-host engine is implemented end-to-end and three episodes validate, compile, and render through the canonical YAML pipeline. Remaining work is deferred backlog (see below), not a blocker for the engine's usability. The canonical contract is [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md); [PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md) is historical reference for how Steps 1-2 were executed.
 
 ## Done now
 
@@ -43,9 +41,19 @@ The canonical contract is [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md); 
 
 Existing checked-in MP4 files remain untouched. Generated audio, video, manifests, screenshots, caches, and temporary QA artifacts remain outside the source change set.
 
-## Next
+## Backlog (deferred; not required for the closed milestone)
 
-Per-frame plugin-owned canvas behavior (run() bodies beyond identity), then new-episode production on the plugin-host runtime.
+Ideas recorded but intentionally left undone. They are optional extensions, not
+engine prerequisites:
+
+- Per-frame plugin-owned canvas behavior (`run()` bodies beyond identity).
+- A compiled continuous-performance Remotion runtime: performance
+  manifest/frame-state seam, frame-evaluator tests, `PerformanceEpisode`
+  composition (kept alongside legacy `episode`).
+- Bailan visual asset upgrade: three distinct outlined character puppets,
+  repointed cast, upgraded cultivation/arena sets.
+- Optional `render-yaml` of a full episode as a showcase; not needed to render
+  demos, since the engine is what this repository ships.
 
 ## Showcase evidence (evaluated invocations, particle category)
 

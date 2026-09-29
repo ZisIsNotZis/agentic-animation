@@ -9,8 +9,11 @@ The toolkit is project-agnostic: story source, image generation, TTS, lip-sync,
 music, and renderer are all swappable adapters selected in `anim.config.json`.
 An optional Hindu-mythology corpus can be enabled with `ANIM_CORPUS_ROOT`.
 
-Status: **active development** (`0.0.0`). Episodes in this repository are demos,
-not a stable product API or finished-film release. Interfaces may change.
+Status: **closed (milestone, 2026-09-29)** (`0.0.0`). The engine is functional
+end-to-end: three episodes validate, compile, and render through the canonical
+YAML pipeline. Episodes in this repository are demos, not a stable product API
+or finished-film release. Remaining ideas are deferred as backlog in
+[`docs/STATUS.md`](docs/STATUS.md), not required for the engine to be usable.
 
 ## Quickstart
 

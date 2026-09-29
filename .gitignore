@@ -8,6 +8,7 @@ node_modules/.cache/
 # --- local scratch, temporary workspaces, generated QA material --------------
 .tmp/
 **/.tmp/
+.scratch/
 **/screenshots/
 **/screenshot-*.png
 **/*-screenshot.png
