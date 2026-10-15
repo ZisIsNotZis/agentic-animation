@@ -5,10 +5,9 @@ node_modules/
 *.tsbuildinfo
 node_modules/.cache/
 
-# --- local scratch, temporary workspaces, generated QA material --------------
+# --- temporary workspaces and generated QA material ---------------------------
 .tmp/
 **/.tmp/
-.scratch/
 **/screenshots/
 **/screenshot-*.png
 **/*-screenshot.png
