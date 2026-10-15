@@ -1,0 +1,114 @@
+[
+  {
+    "orientation": "front",
+    "direction": -1,
+    "bound": 28,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "front",
+    "direction": 1,
+    "bound": 29,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "front-right",
+    "direction": -1,
+    "bound": 32,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "front-right",
+    "direction": 1,
+    "bound": 29,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "right",
+    "direction": -1,
+    "bound": 37,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "right",
+    "direction": 1,
+    "bound": 24,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "back-right",
+    "direction": -1,
+    "bound": 32,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "back-right",
+    "direction": 1,
+    "bound": 29,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "back",
+    "direction": -1,
+    "bound": 28,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "back",
+    "direction": 1,
+    "bound": 29,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "back-left",
+    "direction": -1,
+    "bound": 28,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "back-left",
+    "direction": 1,
+    "bound": 33,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "left",
+    "direction": -1,
+    "bound": 23,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "left",
+    "direction": 1,
+    "bound": 38,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "front-left",
+    "direction": -1,
+    "bound": 28,
+    "persistent": true,
+    "rest": true
+  },
+  {
+    "orientation": "front-left",
+    "direction": 1,
+    "bound": 33,
+    "persistent": true,
+    "rest": true
+  }
+]

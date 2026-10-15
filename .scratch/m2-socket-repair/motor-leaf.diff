@@ -1,0 +1,138 @@
+diff --git a/.scratch/m2-socket-repair/motor.baseline.ts b/packages/core/src/motor/index.ts
+index 911131b..a58391e 100644
+--- a/.scratch/m2-socket-repair/motor.baseline.ts
++++ b/packages/core/src/motor/index.ts
+@@ -134,6 +134,16 @@ const REACTION_LEAN = 14;
+  */
+ const SPINE_MAX = 85;
+ export const CROUCH_DROP = 90;
++/** Native crouch keeps at least half of each declared leg chain extended.
++ * Motor and renderer must use this same design-space hip drop. */
++export function nativeCrouchDrop(skeleton: Skeleton): number {
++  const lengths = (["l", "r"] as const).map(side => {
++    const hip=skeleton.joints[`hip_${side}`]!,knee=skeleton.joints[`knee_${side}`]!,foot=skeleton.joints[`foot_${side}`]!;
++    return Math.hypot(knee[0]-hip[0],knee[1]-hip[1])+Math.hypot(foot[0]-knee[0],foot[1]-knee[1]);
++  });
++  return Math.min(...lengths) / 2;
++}
++
+ const WAIST_RATE = 120; // deg/s
+ const CROUCH_RATE = 1.6; // fraction/s
+ /** Gravity for released props (stage px/s²). */
+@@ -146,6 +156,7 @@ const HAND_MAX = 560;
+ interface ActorBody {
+   /** Torso half-width in design px (torso box). */
+   halfWidth: number;
++  crouchDrop: number;
+   /** Torso top/bottom design y. */
+   torsoTop: number;
+   torsoBottom: number;
+@@ -178,6 +189,7 @@ function bodyOf(skeleton: Skeleton, native = false): ActorBody {
+   const rest = solveSkeleton(skeleton, {});
+   const restHand = rest.hands.hand_r?.center ?? [waist[0] + 92, waist[1] - 300];
+   return {
++    crouchDrop: native ? nativeCrouchDrop(skeleton) : CROUCH_DROP,
+     halfWidth: Math.abs(torso.box[1][0] - torso.box[0][0]) / 2,
+     torsoTop: Math.min(torso.box[0][1], torso.box[1][1]),
+     torsoBottom: Math.max(torso.box[0][1], torso.box[1][1]),
+@@ -202,7 +214,7 @@ function shoulderAt(x: number, groundY: number, scale: number, facing: 1 | -1, b
+   // shoulder ~176px right of the drawn figure at 0.88 scale, and the drawn
+   // arm can then never reach the sim's hand).
+   const wx = x;
+-  const wy = groundY - (body.groundToWaist - CROUCH_DROP * crouch) * scale;
++  const wy = groundY - (body.groundToWaist - body.crouchDrop * crouch) * scale;
+   const d: [number, number] = [facing * body.shoulderFromWaist[0] * scale, body.shoulderFromWaist[1] * scale];
+   const r = ((facing * pitchDeg) * Math.PI) / 180;
+   const c = Math.cos(r);
+@@ -217,13 +229,13 @@ function restHandAt(state: ActorState): [number, number] {
+     const facing = geometryFacing(state);
+     const d = [state.body.restHand[0]-state.body.waist[0],state.body.restHand[1]-state.body.waist[1]];
+     const r = (state.waist+state.lean)*Math.PI/180,c=Math.cos(r),s=Math.sin(r);
+-    return [state.x+facing*(d[0]!*c-d[1]!*s)*k,state.groundY-state.body.groundToWaist*k+(d[0]!*s+d[1]!*c+CROUCH_DROP*state.crouch)*k];
++    return [state.x+facing*(d[0]!*c-d[1]!*s)*k,state.groundY-state.body.groundToWaist*k+(d[0]!*s+d[1]!*c+state.body.crouchDrop*state.crouch)*k];
+   }
+   return [
+     state.x + (state.body.restHand[0] - state.body.waist[0]) * state.facing * k,
+     // Height above ground of a design point = spaceHeight - design y (crouch
+     // lowers the whole body).
+-    state.groundY - (state.body.spaceHeight - state.body.restHand[1] - CROUCH_DROP * state.crouch) * k,
++    state.groundY - (state.body.spaceHeight - state.body.restHand[1] - state.body.crouchDrop * state.crouch) * k,
+   ];
+ }
+ 
+@@ -238,7 +250,7 @@ function wristDirection(state: ActorState, hand: [number,number]): number {
+   const sk=state.skeleton!;const facing=geometryFacing(state);
+   const w=sk.joints.waist!,sh=sk.joints.shoulder_r!,e=sk.joints.elbow_r!,h=sk.joints.hand_r!;
+   const pitch=state.waist+state.lean;
+-  const design: [number,number]=[w[0]+facing*(hand[0]-state.x)/state.scale,sk.space.height+(hand[1]-state.groundY)/state.scale-CROUCH_DROP*state.crouch];
++  const design: [number,number]=[w[0]+facing*(hand[0]-state.x)/state.scale,sk.space.height+(hand[1]-state.groundY)/state.scale-state.body.crouchDrop*state.crouch];
+   const rel=rotateVector([design[0]-w[0],design[1]-w[1]],-pitch);
+   const u: [number,number]=[e[0]-sh[0],e[1]-sh[1]],v: [number,number]=[h[0]-e[0],h[1]-e[1]];
+   const ik=solveArmIK({x:w[0]+rel[0],y:w[1]+rel[1]},{shoulder:sh,upper:sk.arm.upper,fore:sk.arm.fore,upperDir:u,foreDir:v},1,u[0]*v[1]-u[1]*v[0]<0?-1:1);
+@@ -250,10 +262,17 @@ function approach(current: number, goal: number, maxDelta: number): number {
+   return current < goal ? Math.min(goal, current + maxDelta) : Math.max(goal, current - maxDelta);
+ }
+ 
++/** Slow the final native hip rise before planted leg IK reaches extension. */
++function recoverCrouch(state: ActorState): number {
++  if (!state.skeletonViews) return approach(state.crouch, 0, CROUCH_RATE * DT);
++  if (state.crouch < .0001) return 0;
++  return approach(state.crouch, 0, Math.min(CROUCH_RATE * DT, state.crouch * DT / .12));
++}
++
+ /** Finite travel, shared by incoming contact and outgoing withdrawal. */
+-function travelHand(from: [number, number], to: [number, number], settleSec = 0): [number, number] {
++function travelHand(from: [number, number], to: [number, number], settleSec = 0, speed = 480): [number, number] {
+   const distance = Math.hypot(to[0] - from[0], to[1] - from[1]);
+-  const fraction = distance === 0 ? 1 : Math.min(1, 480 * DT / distance, settleSec ? DT / settleSec : 1);
++  const fraction = distance === 0 ? 1 : Math.min(1, speed * DT / distance, settleSec ? DT / settleSec : 1);
+   return [from[0] + (to[0] - from[0]) * fraction, from[1] + (to[1] - from[1]) * fraction];
+ }
+ 
+@@ -611,8 +630,8 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
+       const targetBody = targetActor?.body;
+       const targetBox = targetActor && targetBody
+         ? {
+-            a: [targetActor.x - targetBody.halfWidth * targetActor.scale, targetActor.groundY - (targetBody.groundToWaist - CROUCH_DROP * targetActor.crouch + (targetBody.waist[1] - targetBody.torsoTop)) * targetActor.scale] as [number, number],
+-            b: [targetActor.x + targetBody.halfWidth * targetActor.scale, targetActor.groundY - (targetBody.groundToWaist - CROUCH_DROP * targetActor.crouch) * targetActor.scale] as [number, number],
++            a: [targetActor.x - targetBody.halfWidth * targetActor.scale, targetActor.groundY - (targetBody.groundToWaist - targetBody.crouchDrop * targetActor.crouch + (targetBody.waist[1] - targetBody.torsoTop)) * targetActor.scale] as [number, number],
++            b: [targetActor.x + targetBody.halfWidth * targetActor.scale, targetActor.groundY - (targetBody.groundToWaist - targetBody.crouchDrop * targetActor.crouch) * targetActor.scale] as [number, number],
+           }
+         : targetProp
+           ? propBoxWorld(targetProp)
+@@ -639,7 +658,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
+       if (!inContact || !forcing) {
+         drive.speed = Math.min(drive.speed + HAND_ACC * drive.force * DT, HAND_MAX * drive.force);
+         const targetAimY = targetActor && targetBody
+-          ? targetActor.groundY - (targetBody.groundToWaist - CROUCH_DROP * targetActor.crouch + (targetBody.waist[1] - targetBody.torsoTop) * 0.5) * targetActor.scale
++          ? targetActor.groundY - (targetBody.groundToWaist - targetBody.crouchDrop * targetActor.crouch + (targetBody.waist[1] - targetBody.torsoTop) * 0.5) * targetActor.scale
+           : targetProp
+             ? propAim(targetProp)[1]
+             : state.groundY - 300 * state.scale;
+@@ -709,7 +728,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
+         const targetHand = handTargetAt(state, aim, state.waist, state.crouch);
+         const previousHand: [number, number] = state.reach
+           ? [state.reach.tx, state.reach.ty] : restHandAt(state);
+-        const hand = travelHand(previousHand, targetHand);
++        const hand = travelHand(previousHand, targetHand, 0, 480 * smoothstep01(g.t / .25));
+         state.reach = {tx: hand[0], ty: hand[1], target: g.propId, contact: false};
+         if (contact(hand) && now >= (g.notBefore ?? 0)) {
+           // The grip takes the weight: any previous holder's hand opens.
+@@ -766,7 +785,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
+         // its shoulder-relative shape (the arm holds the object as the body
+         // straightens), then relaxes to the carry pose.
+         state.waist = approach(state.waist, 0, WAIST_RATE * DT);
+-        state.crouch = approach(state.crouch, 0, CROUCH_RATE * DT);
++        state.crouch = recoverCrouch(state);
+         if (state.holdRel) {
+           state.holdRel.t += DT;
+           const blend = smoothstep01(state.holdRel.t / state.holdRel.dur);
+@@ -837,7 +856,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
+       // Posture return when nothing is held or grabbed.
+       if (!state.grab && !state.holding && (state.waist !== 0 || state.crouch !== 0)) {
+         state.waist = approach(state.waist, 0, WAIST_RATE * DT);
+-        state.crouch = approach(state.crouch, 0, CROUCH_RATE * DT);
++        state.crouch = recoverCrouch(state);
+       }
+       if (!state.retract) {state.retractInfluence = 1;state.retractElapsed = 0;}
+       if (state.retract && !state.grab && !state.holding && !state.handDrive) {

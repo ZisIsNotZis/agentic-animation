@@ -1,0 +1,130 @@
+diff --git a/.scratch/m2-socket-repair/tests.baseline.ts b/packages/studio/test/contactContinuity.test.ts
+index 3ededc3..be71fe7 100644
+--- a/.scratch/m2-socket-repair/tests.baseline.ts
++++ b/packages/studio/test/contactContinuity.test.ts
+@@ -1,6 +1,6 @@
+ import {test} from 'node:test';
+ import assert from 'node:assert/strict';
+-import {artworkFixture} from '../../core/test/helpers/figureArtwork';
++import {artworkFixture,nativeDraftArtworkFixture} from '../../core/test/helpers/figureArtwork';
+ import {simulateScene,type MotorScene} from '../../core/src/motor';
+ import {FIGURE_VIEWS, type FigureView} from '../../core/src/schemas/figureArtwork';
+ import type {Skeleton} from '../../core/src/schemas/libraryMeta';
+@@ -122,7 +122,7 @@ test('local handle socket prevents body-center pickup and carries rotated contac
+ 
+ test('handover bake prepares before cue, gates contact and diagnoses insufficient pre-roll',async()=>{
+   const {bakeSceneMotor}=await import('../../core/src/motor');
+-  const art=await artworkFixture();
++  const art=await nativeDraftArtworkFixture();
+   const views=Object.fromEntries(FIGURE_VIEWS.map(v=>[v,art.views[v].skeleton])) as Record<FigureView,Skeleton>;
+   const common={scale:.6,skeleton:art.views.front.skeleton,skeletonViews:views};
+   const source={durationSec:5,actors:{giver:{...common,at:[.6,.9] as const},receiver:{...common,at:[.25,.9] as const}},objects:{cup:{at:[.55,.65] as const,size:[12,16] as [number,number]}},tracks:[{subject:'giver',events:[{start:0,tracks:[{kind:'motor',events:[{intent:'grab',target:'cup',duration:1}]}]},{start:3,tracks:[{kind:'motor',events:[{intent:'move',actor:'receiver',target:'giver',grab:'cup',duration:1.6}]}]}]}]};
+@@ -143,7 +143,7 @@ test('handover bake prepares before cue, gates contact and diagnoses insufficien
+ test('release and transfer withdrawal overlap authored arm without deferred endpoint jumps',async()=>{
+   const {evaluatePerformance}=await import('../src/performance/evaluate');
+   const {solveActorFigure,deriveActorPose}=await import('../src/components/performance/actorPose');
+-  const artwork=await artworkFixture();
++  const artwork=await nativeDraftArtworkFixture();
+   const views=Object.fromEntries(FIGURE_VIEWS.map(v=>[v,artwork.views[v].skeleton])) as Record<FigureView,Skeleton>;
+   const common={groundY:650,scale:.6,skeleton:artwork.views.front.skeleton,skeletonViews:views};
+   const movie=simulateScene({durationSec:6,actors:[
+@@ -158,6 +158,14 @@ test('release and transfer withdrawal overlap authored arm without deferred endp
+     const manifest={video:{width:1280,height:720,fps:24},durationInFrames:144,actors:[
+       {id,artwork,skeleton:artwork.views.front.skeleton,placement:{at:[id==='giver'?750:350,650],scale:.6},tracks:[{kind:'bone',events:[{frame:start,endFrame:143,value:{action:'point',parts:['arm_u_r','arm_l_r','hand_r']}}]}]},
+     ],props:[{id:'cup',at:[650,480]}],sceneTrack:[{start:0,end:6,motor:movie}]} as PerformanceManifest;
++    const mid=evaluatePerformance(manifest,start+8).actors[0]!;
++    assert.ok(mid.reachInfluence!>0 && mid.reachInfluence!<1,'challenge must exercise live overlapping arbitration');
++    const authoredMid=deriveActorPose(mid).armRight;
++    const contactMid=solveActorFigure({...mid,reachInfluence:1}).pose.armRight;
++    const blendedMid=solveActorFigure(mid).pose.armRight;
++    assert.ok(Math.abs(contactMid.upper-authoredMid.upper)>5,'authored and outgoing contact poses must differ meaningfully');
++    assert.ok(Math.abs(blendedMid.upper-contactMid.upper)>2,'authored gesture contributes before withdrawal finishes');
++    assert.ok(Math.abs(blendedMid.upper-(authoredMid.upper+(contactMid.upper-authoredMid.upper)*mid.reachInfluence!))<.001);
+     const overlap=evaluatePerformance(manifest,clear-1).actors[0]!;
+     const actual=solveActorFigure(overlap).pose.armRight,authored=deriveActorPose(overlap).armRight;
+     assert.ok(Math.abs(actual.upper-authored.upper)<.1,`${id} must regain authored control before reach clears`);
+@@ -167,12 +175,12 @@ test('release and transfer withdrawal overlap authored arm without deferred endp
+ });
+ 
+ test('socket transfer preserves orientation and one-call release frees gravity while hold persists',async()=>{
+-  const art=await artworkFixture();
++  const art=await nativeDraftArtworkFixture();
+   const views=Object.fromEntries(FIGURE_VIEWS.map(v=>[v,art.views[v].skeleton])) as Record<FigureView,Skeleton>;
+   const common={groundY:650,scale:.6,skeleton:art.views.front.skeleton,skeletonViews:views};
+   const movie=simulateScene({durationSec:8,actors:[
+     {...common,id:'giver',x:750,facing:-1,intents:[{at:0,duration:.2,intent:'grab',target:'cup'}]},
+-    {...common,id:'receiver',x:350,facing:1,intents:[{at:2,duration:.2,intent:'move',target:'giver',grab:'cup'},{at:6,duration:.1,intent:'release',target:'cup'}]},
++    {...common,id:'receiver',x:350,facing:1,intents:[{at:2,duration:.2,intent:'move',target:'giver',grab:'cup'},{at:6,duration:.1,intent:'release',releaseMode:'free',target:'cup'}]},
+   ],props:[{id:'cup',x:650,y:480,size:[40,50],grip:{at:[26,-25],radius:2,depth:'behind'},rotation:20,intents:[]}],groundY:650,resolveX:id=>id==='giver'?750:650});
+   const transfer=movie.actors.receiver!.findIndex(f=>f.holds==='cup');assert.ok(transfer>48);
+   assert.ok(movie.actors.receiver!.slice(transfer,144).every(f=>f.holds==='cup'),'holding must not expire at intent end');
+@@ -181,7 +189,8 @@ test('socket transfer preserves orientation and one-call release frees gravity w
+   assert.ok(movie.props.cup!.slice(144).some(f=>f.falling),'one release must free gravity');
+   assert.equal(movie.props.cup!.at(-1)!.y,650,'prop lands on support without extra author calls');
+   const {evaluatePerformance}=await import('../src/performance/evaluate');
+-  const manifest={video:{width:1280,height:720,fps:24},durationInFrames:192,actors:[{id:'receiver',artwork:art,skeleton:art.views.front.skeleton,placement:{at:[350,650],scale:.6}}],props:[{id:'cup',at:[650,480]}],sceneTrack:[{start:0,end:8,motor:movie}]} as PerformanceManifest;
++  const manifest={video:{width:1280,height:720,fps:24},durationInFrames:192,actors:[{id:'receiver',artwork:art,skeleton:art.views.front.skeleton,placement:{at:[350,650],scale:.6}},{id:'giver',artwork:art,skeleton:art.views.front.skeleton,placement:{at:[750,650],scale:.6}}],props:[{id:'cup',at:[650,480]}],sceneTrack:[{start:0,end:8,motor:movie}]} as PerformanceManifest;
++  assert.deepEqual(detectPropDiscontinuities(manifest).filter(w=>/\.(hand|elbow|shoulder)/.test(w.id)),[],'native socket handover and free release have continuous drawn arm FK');
+   const state=evaluatePerformance(manifest,100);
+   assert.equal(state.props[0]!.rotation,movie.props.cup![100]!.rotation,'renderer must consume baked orientation instead of zeroing it');
+   assert.equal(state.actors[0]!.gripDepth,'behind');
+@@ -215,3 +224,59 @@ test('free release retains moving carry velocity and cannot remotely bind an idl
+   assert.ok(Math.abs(freeDx-previousDx)<6,'velocity must not reset to zero or teleport');
+   assert.ok(movie.actors.receiver!.every(f=>!f.holds),'no receiver contact means no remote binding');
+ });
++
++
++test('actual native draft socket pickup is reachable and FK-continuous in all sixteen view/travel cases',async()=>{
++  const {solveActorFigure}=await import('../src/components/performance/actorPose');
++  const {evaluatePerformance}=await import('../src/performance/evaluate');
++  const art=await nativeDraftArtworkFixture();
++  const skeletonViews=Object.fromEntries(FIGURE_VIEWS.map(v=>[v,art.views[v].skeleton])) as Record<FigureView,Skeleton>;
++  for(const orientation of ['front','front-right','right','back-right','back','back-left','left','front-left'])for(const direction of [-1,1] as const){
++    const movie=simulateScene({durationSec:8,actors:[{id:'hero',x:650-direction*250,groundY:650,scale:.8,facing:direction,skeleton:art.views.front.skeleton,skeletonViews,orientations:[{at:0,orientation}],intents:[{at:0,duration:1.6,intent:'move',target:'cup',grab:'cup'},{at:6,duration:.8,intent:'release',releaseMode:'free',target:'cup'}]}],props:[{id:'cup',x:650,y:650,size:[50,40],grip:{at:[12,-14],radius:1.5,depth:'front'},intents:[]}],groundY:650,resolveX:()=>650});
++    const label=`${orientation}/${direction}`,frames=movie.actors.hero!;
++    assert.ok(frames.findIndex(f=>f.holds==='cup')>=0,`${label} binds real handle`);
++    assert.ok(frames.slice(60,144).every(f=>f.holds==='cup'),`${label} persistent hold`);
++    assert.ok(frames.slice(144).every(f=>!f.holds),`${label} free release`);
++    assert.ok(frames.slice(-12).every(f=>!f.reach),`${label} natural rest`);
++    assert.equal(movie.props.cup!.at(-1)!.y,650);
++    const manifest={video:{width:1280,height:720,fps:24},durationInFrames:192,actors:[{id:'hero',artwork:art,skeleton:art.views.front.skeleton,placement:{at:[650-direction*250,650],scale:.8},tracks:[{kind:'bone',events:[{frame:0,endFrame:192,value:{orientation}}]}]}],props:[{id:'cup',at:[650,650]}],sceneTrack:[{start:0,end:8,motor:movie}]} as PerformanceManifest;
++    for(let i=0;i<144;i++)if(frames[i]!.holds){
++      const actor=evaluatePerformance(manifest,i).actors[0]!,fk=solveActorFigure(actor);
++      const h=fk.solved!.hands.hand_r!.center;
++      const world=[actor.x+(fk.flipped?-1:1)*(h[0]-fk.space.width/2)*actor.scale,actor.y+(h[1]-fk.space.height)*actor.scale];
++      assert.ok(Math.hypot(world[0]!-actor.reach![0],world[1]!-actor.reach![1])<.02,`${label} drawn palm equals contact`);
++      const prop=movie.props.cup![i]!,angle=prop.rotation!*Math.PI/180;
++      const socket=[prop.x+12*Math.cos(angle)+14*Math.sin(angle),prop.y+12*Math.sin(angle)-14*Math.cos(angle)];
++      assert.ok(Math.hypot(world[0]!-socket[0]!,world[1]!-socket[1]!)<1.6,`${label} drawn palm remains on rotated handle`);
++      assert.equal(actor.gripDepth,'front');
++
++    }
++    assert.deepEqual(detectPropDiscontinuities(manifest).filter(w=>/hero\.(hand|elbow|shoulder)/.test(w.id)),[],`${label} native arm continuity`);
++    const bind=frames.findIndex(f=>f.holds==='cup');
++    assert.deepEqual(detectPropDiscontinuities(manifest).filter(w=>w.frame>=bind&&/hero\.(knee|foot)/.test(w.id)),[],`${label} planted crouch recovery continuity`);
++  }
++});
++
++
++test('actual native draft socket handover and free release stay continuous in all sixteen view/travel cases',async()=>{
++  const art=await nativeDraftArtworkFixture();
++  const skeletonViews=Object.fromEntries(FIGURE_VIEWS.map(v=>[v,art.views[v].skeleton])) as Record<FigureView,Skeleton>;
++  const common={groundY:650,scale:.8,skeleton:art.views.front.skeleton,skeletonViews};
++  for(const orientation of ['front','front-right','right','back-right','back','back-left','left','front-left'])for(const direction of [-1,1] as const){
++    const movie=simulateScene({durationSec:8,actors:[
++      {...common,id:'giver',x:650+direction*100,facing:(-direction) as 1|-1,orientations:[{at:0,orientation}],intents:[{at:0,duration:.2,intent:'grab',target:'cup'}]},
++      {...common,id:'receiver',x:650-direction*300,facing:direction,orientations:[{at:0,orientation}],intents:[{at:2,duration:.2,intent:'move',target:'giver',grab:'cup'},{at:6,duration:.1,intent:'release',releaseMode:'free',target:'cup'}]},
++    ],props:[{id:'cup',x:650,y:480,size:[40,50],grip:{at:[26,-25],radius:2,depth:'behind'},rotation:20,intents:[]}],groundY:650,resolveX:id=>id==='giver'?650+direction*100:650});
++    const label=`${orientation}/${direction}`,receiver=movie.actors.receiver!,giver=movie.actors.giver!;
++    const transfer=receiver.findIndex(f=>f.holds==='cup');
++    assert.ok(transfer>48,`${label} contact-controlled transfer`);
++    assert.ok(giver.slice(0,transfer).some(f=>f.holds==='cup'),`${label} giver picked up`);
++    assert.ok(!giver[transfer]!.holds&&giver[transfer]!.reach,`${label} giver withdraws`);
++    assert.ok(receiver.slice(transfer,144).every(f=>f.holds==='cup'),`${label} receiver holds beyond intent`);
++    assert.ok(receiver.slice(144).every(f=>!f.holds),`${label} one-call release`);
++    assert.equal(movie.props.cup!.at(-1)!.y,650);
++    for(let i=1;i<144;i++)assert.ok(Math.abs(movie.props.cup![i]!.rotation!-movie.props.cup![i-1]!.rotation!)<=3.76,`${label} continuous socket orientation`);
++    const manifest={video:{width:1280,height:720,fps:24},durationInFrames:192,actors:['giver','receiver'].map(id=>({id,artwork:art,skeleton:art.views.front.skeleton,placement:{at:[id==='giver'?650+direction*100:650-direction*300,650],scale:.8},tracks:[{kind:'bone',events:[{frame:0,endFrame:192,value:{orientation}}]}]})),props:[{id:'cup',at:[650,480]}],sceneTrack:[{start:0,end:8,motor:movie}]} as PerformanceManifest;
++    assert.deepEqual(detectPropDiscontinuities(manifest).filter(w=>/\.(hand|elbow|shoulder)/.test(w.id)),[],`${label} drawn arm FK through transfer/release`);
++  }
++});
