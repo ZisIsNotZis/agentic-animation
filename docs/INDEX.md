@@ -5,7 +5,11 @@ document owning a contract before changing implementation or an episode.
 
 ## Start here
 
-- [STATUS.md](STATUS.md) — verified state, evidence, limits, and next work.
+- [STATUS.md](STATUS.md) — milestone state and links to owning evidence.
+- [ART_CHARACTER_M2.md](ART_CHARACTER_M2.md#next-session-entry-and-recovery) —
+  actionable current-session handoff, unfinished acceptance and reconstruction.
+- [tickets/M2-DOC-READINESS.md](tickets/M2-DOC-READINESS.md) — task contract,
+  historical provenance and documentation readiness audit.
 - [REPOSITORY_MAINTENANCE.md](REPOSITORY_MAINTENANCE.md) — upkeep and contribution rules.
 - [NARROW_EPISODE_DSL.md](NARROW_EPISODE_DSL.md) — canonical `episode.yml` language.
 
@@ -19,6 +23,11 @@ document owning a contract before changing implementation or an episode.
 - [SHOWCASES.md](SHOWCASES.md): minimal per-capability showcase episodes (states, actions, camera, effects, props, voice, particle snow).
 - [PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md): historical migration plan; Steps 1-2 are implemented. Kept for reference, superseded by [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md).
 - [PIPELINE.md](PIPELINE.md): assets-first production and QA workflow.
+- [ART_PRODUCTION_UPGRADE.md](ART_PRODUCTION_UPGRADE.md): approved M0–M8 art-quality roadmap, preservation boundaries, learning coverage and comparison budget.
+- [ART_BASELINE_M0.md](ART_BASELINE_M0.md): frozen short-scene baseline and inspected evidence for that roadmap.
+- [ART_DIRECTION_M1.md](ART_DIRECTION_M1.md): accepted B direction, preserved A/B/C studies and selection evidence.
+- [ART_CHARACTER_M2.md](ART_CHARACTER_M2.md): B-character identity/draft-rig work and canonical-engine integration boundary.
+- [ART_WORLD_M3.md](ART_WORLD_M3.md): M3 world contract — one coherent canteen set, set-metadata consumption, support agreement and package split.
 - [DECISIONS.md](DECISIONS.md): durable technology, licensing, and migration decisions.
 - [schemas/](schemas/): exported JSON Schema artifacts.
 
@@ -26,7 +35,8 @@ document owning a contract before changing implementation or an episode.
 
 For public behavior, the DSL and schemas win. Architecture defines module
 ownership; pipeline defines operating order; decisions define durable choices;
-status and handoff report current evidence and limits. README files explain the
+status routes current milestone state; each milestone document owns its evidence,
+acceptance and next actions. Tickets own process history/provenance. README files explain the
 project for users but do not override contracts.
 
 If implementation or an episode contradicts a contract, update the owning

@@ -1,4 +1,5 @@
-import type { CompiledEpisode, CompiledScene, PerformanceEvent, PerformanceTrack, Skeleton } from "@anim/core";
+import type { CompiledEpisode, CompiledScene, PerformanceEvent, PerformanceTrack, Skeleton, FigureArtwork } from "@anim/core";
+import type {SkeletonPose} from "@anim/core/skeleton";
 import type { Ease } from "../lib/interpolate";
 
 export interface PerformanceVideo {
@@ -130,6 +131,7 @@ export interface PerformanceActor {
   id: string;
   /** Declared figure skeleton (joints/parts/arm/waist) — see figure skeleton.json. */
   skeleton?: Skeleton;
+  artwork?: FigureArtwork;
   placement?: PerformancePlacement | SemanticPlacement | string;
   semanticPlacement?: PerformancePlacement | SemanticPlacement | string;
   at?: [number, number];
@@ -382,14 +384,22 @@ export interface EvaluatedActor {
   orientation?: "front" | "back" | "left" | "right" | "front-left" | "front-right" | "back-left" | "back-right";
   /** World-space hand position while reaching/exerting. */
   reach?: [number, number];
+  reachInfluence?: number;
+  gripDepth?: "front" | "behind";
   /** Declared figure skeleton (threaded to the renderer for FK painting). */
   skeleton?: Skeleton;
+  artwork?: FigureArtwork;
+  /** Speech cue timebase; carried for asset-native visemes. */
+  fps?: number;
   /** Hand circle radius in stage px (skeleton-derived). */
   handRadius?: number;
   /** Motor-driven waist pitch in degrees (0 = upright). */
   waist?: number;
   /** Motor-driven crouch 0..1 (knees bend, hip drops). */
   crouch?: number;
+  skeletonPose?:SkeletonPose;
+  worldFootTargets?:{l:[number,number];r:[number,number]};
+  footSupport?:{l:boolean;r:boolean};
   /** The prop currently bound to this actor's hand (motor bake, I4). */
   holds?: string;
   contact?: boolean;

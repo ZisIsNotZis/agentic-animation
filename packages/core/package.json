@@ -9,7 +9,12 @@
     "./schemas": "./src/schemas/index.ts",
     "./adapters": "./src/adapters/index.ts",
     "./stdlib": "./src/invocation/stdlib.ts",
-    "./skeleton": "./src/motor/skeleton.ts"
+    "./skeleton": "./src/motor/skeleton.ts",
+    "./figure-artwork": "./src/schemas/figureArtwork.ts",
+    "./actor-pose": "./src/motor/actorPose.ts",
+    "./reach": "./src/motor/reach.ts",
+    "./prop-geometry": "./src/motor/propGeometry.ts",
+    "./motor": "./src/motor/index.ts"
   },
   "types": "./src/index.ts",
   "dependencies": {

@@ -9,7 +9,17 @@ export type PerformanceSceneTheme =
   | "opening-office" | "failure-incident" | "teaching-workshop" | "memory-archive" | "token-control"
   | "refactor-lab" | "quality-lab" | "security-night" | "workflow-command" | "ending-stage";
 
-export interface PerformanceSceneContext { id: string; index: number; location: string; theme: PerformanceSceneTheme; sceneSvg?: string; }
+export interface PerformanceSceneContext {
+  id: string;
+  index: number;
+  location: string;
+  theme: PerformanceSceneTheme;
+  sceneSvg?: string;
+  /** Declared world layers with preloaded group text, back-to-front (M3). */
+  setLayers?: Array<{id: string; foreground: boolean; text: string}>;
+  /** Intrinsic coordinateSpace extents of the set art (SVG viewBox). */
+  setViewBox?: [number, number];
+}
 
 const THEME_BY_ID: Record<string, PerformanceSceneTheme> = {
   opening: "opening-office", failure_triad: "failure-incident", teach_ai: "teaching-workshop", memory: "memory-archive",
@@ -30,7 +40,19 @@ export function sceneForFrame(manifest: PerformanceManifest, frame: number): Per
   if (!scene) return { id: "opening", index: 0, location: "office", theme: "opening-office" };
   const id = String(scene.id);
   const location = scene.location || scene.layout || "office";
-  return { id, index: Number.isFinite(scene.index) ? scene.index : scenes.indexOf(scene), location, theme: THEME_BY_ID[id] ?? themeForScene(scene.index), sceneSvg: manifest.locationScenes?.[location] };
+  const setLayers = (scene.setLayers ?? []).flatMap((layer) => {
+    const text = manifest.locationScenes?.[`${location}/${layer.id}`];
+    return typeof text === "string" ? [{id: layer.id, foreground: layer.foreground === true, text}] : [];
+  });
+  return {
+    id,
+    index: Number.isFinite(scene.index) ? scene.index : scenes.indexOf(scene),
+    location,
+    theme: THEME_BY_ID[id] ?? themeForScene(scene.index),
+    sceneSvg: manifest.locationScenes?.[location],
+    ...(setLayers.length ? {setLayers} : {}),
+    ...(scene.setViewBox ? {setViewBox: [scene.setViewBox[0], scene.setViewBox[1]] as [number, number]} : {}),
+  };
 }
 
 function themeForScene(index: number): PerformanceSceneTheme {
@@ -40,8 +62,45 @@ function themeForScene(index: number): PerformanceSceneTheme {
 
 interface StageProps { scene?: PerformanceSceneContext; }
 
+/** viewBox of the declared coordinateSpace; 1920x1080 when undeclared. */
+function setViewBoxOf(scene: PerformanceSceneContext): {width: number; height: number} {
+  return scene.setViewBox ? {width: scene.setViewBox[0], height: scene.setViewBox[1]} : {width: 1920, height: 1080};
+}
+
+/** One declared set layer: intrinsic-space art scaled onto the 1920x1080 stage. */
+const SetLayerSvg: React.FC<{scene: PerformanceSceneContext; layer: {id: string; foreground: boolean; text: string}; zIndex: number}> = ({scene, layer, zIndex}) => {
+  const viewBox = setViewBoxOf(scene);
+  return (
+    <svg
+      aria-label={`${scene.location} ${layer.id}`}
+      data-stage="scene-layer"
+      data-scene-id={scene.id}
+      data-location={scene.location}
+      data-set-layer={layer.id}
+      data-set-foreground={layer.foreground ? "true" : undefined}
+      data-layer={layer.foreground ? "set-foreground" : "set-background"}
+      viewBox={`0 0 ${viewBox.width} ${viewBox.height}`}
+      width="1920"
+      height="1080"
+      dangerouslySetInnerHTML={{__html: layer.text}}
+      style={{position: "absolute", inset: 0, zIndex, display: "block", overflow: "hidden"}}
+    />
+  );
+};
+
+/** Declared set layers behind actors, replacing the single flat background. */
+export const PerformanceForegroundLayers: React.FC<StageProps> = ({scene}) => {
+  const layers = (scene?.setLayers ?? []).filter((layer) => layer.foreground);
+  return layers.length ? <>{layers.map((layer, index) => <SetLayerSvg key={layer.id} scene={scene!} layer={layer} zIndex={70 + index} />)}</> : null;
+};
+
 /** Flat, hard-edged scene dressing. It is rendered before props and actors. */
-export const PerformanceStage: React.FC<StageProps> = ({ scene = { id: "opening", index: 0, location: "office", theme: "opening-office" } }) => scene.sceneSvg ? (
+export const PerformanceStage: React.FC<StageProps> = ({ scene = { id: "opening", index: 0, location: "office", theme: "opening-office" } }) => {
+  const backgroundLayers = (scene.setLayers ?? []).filter((layer) => !layer.foreground);
+  if (backgroundLayers.length) {
+    return <>{backgroundLayers.map((layer, index) => <SetLayerSvg key={layer.id} scene={scene} layer={layer} zIndex={index} />)}</>;
+  }
+  return scene.sceneSvg ? (
   <svg
     aria-label={`${scene.location} ${scene.id} background`}
     data-stage="scene-background"
@@ -59,7 +118,8 @@ export const PerformanceStage: React.FC<StageProps> = ({ scene = { id: "opening"
   <svg aria-label={`${scene.location} ${scene.id} background`} data-stage="scene-background" data-scene-id={scene.id} data-scene-theme={scene.theme} data-location={scene.location} data-layer="background" viewBox="0 0 1920 1080" width="1920" height="1080" style={{ position: "absolute", inset: 0, display: "block", zIndex: 0 }}>
     {SCENE_ART[scene.theme]()}
   </svg>
-);
+  );
+};
 
 const SCENE_ART: Record<PerformanceSceneTheme, () => React.ReactNode> = {
   "opening-office": OpeningOffice, "failure-incident": FailureIncident, "teaching-workshop": TeachingWorkshop, "memory-archive": MemoryArchive,

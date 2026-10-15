@@ -56,6 +56,17 @@ expression, gaze, movement, socket bindings, object state, camera, effect,
 sound, and lifecycle events. There is no TypeScript-authored procedure catalog;
 `loadProcedureDefinitions` discovers plugins.
 
+Expression tracks are facial state, not body-action or arm-claim instructions.
+`action.blink(actor)` emits a 0.5s transient expression event with numeric
+`eyeOpen: 0`. Transient eye closure values interpolate from the current expression to
+that value at mid-event and back at exit, without persisting an expression key,
+changing expression identity or replacing speech/visemes. Ordinary expression
+keys retain their persistent behavior; authored bone arms remain independent.
+Successive overlapping authored bone claims take over from the current pose of
+claimed arm chains, not a new zero envelope. Takeover decays into the new action
+and its ordinary recovery; unclaimed chains remain owned by their earlier claim.
+Motor contact and accepted whole-body poses retain final authority.
+
 ## Compiled performance IR
 
 One immutable renderer-neutral manifest contains absolute scene/audio timing,
@@ -66,6 +77,80 @@ checked-in location assets, the Remotion adapter adds a transient
 `locationScenes` map containing the corresponding `scene.svg` text before
 browser evaluation; this keeps filesystem access out of frame rendering and
 selects backgrounds by compiled location instance rather than scene names.
+
+## Prop grip geometry (M2 additive implementation)
+
+Prop placement may declare `grip: {at: [x,y], radius, depth}` in intrinsic art
+units. `at` is a handle/palm contact socket, not the prop center; radius is the
+allowed socket contact tolerance. `depth` is `front` (fingers over object) or
+`behind` (object over hand). Compiler converts this to scaled base-relative
+geometry. Assets without a socket retain body-box contact. Baked prop rotation
+is continuous and follows changes in the holder's wrist direction from bind,
+retaining the original attachment orientation across transfer and release.
+
+## Figure artwork (M2 additive implementation)
+
+A figure may supply `artwork.json` alongside its declared skeleton. The loader
+validates its `svg-bone-parts` format and embeds renderer-safe vector layers in
+resolved assets before compilation; frame evaluation performs no asset I/O.
+Layers use an allowlisted SVG shape/group/defs grammar with quoted allowlisted
+attributes. Style elements/attributes, executable/media/animation elements,
+namespaced attributes (except the root SVG namespace), declarations, entities
+and non-fragment URLs are rejected. Paint and clip references may use only
+literal local `url(#id)` fragments; renderer-owned CSS is not asset content.
+Old figures without this resource retain their existing rendering unchanged.
+The resource supplies five native drawings (front, quarter-front, profile,
+back, quarter-back), matching skeletons, the standard articulated parts,
+independent face/eye/mouth/hand shapes and explicit occlusion. These are reusable
+asset data, not a second episode language or the alternative Puppet runtime.
+
+The renderer selects the native drawing from the existing eight-direction body
+state, retaining the existing mirror convention. Bone transforms, motor reach,
+voice cues and gaze drive asset layers, never figure-name-specific code. Both historical compiled and direct-manifest evaluation preserve baked motor
+crouch metadata, including for old figures; old figures retain their renderer.
+Native projection must also select matching physical geometry during motor baking;
+a visible palm must agree with the authoritative contact point. Missing or
+invalid declared artwork fails asset loading, not a silent old-look fallback.
+During native motor presentation, only unclaimed arms receive the resting
+correction. An independent non-presentation bone claim on any upper-arm,
+forearm or hand segment preserves that arm's authored gesture; presentation's
+own recipe claims are not independent gestures. Other actions retain gestures.
+Native-bound interaction objects composite between body art and foreground grip
+parts, so the existing whole-actor layer cannot hide a carried/placed object.
+This is conditional on native-art participation; legacy-only layering is unchanged.
+Draft previews use a disposable library; no draft becomes a production asset
+until sampled orientation, expression, speech and contact QA passes. This seam
+is under implementation; the static M2 parts alone do not establish support.
+
+## Set world declarations (M3 additive implementation)
+
+A `library/set/<name>/manifest.json` may declare a world in
+`coordinateSpace` units (e.g. `"1920x1080"`): `layers` as an ordered
+back-to-front list of group ids in `scene.svg` (an entry may instead be
+`{id, foreground: true}` to composite in front of actors), `safeActorArea` as
+a rect, and `supports` as `{name, x: [min, max], y, paint}`. A set becomes a
+world-declaring set exactly when its `scene.svg` carries `<g id="...">`
+groups (double-quoted, like the `figureArtwork` resource opt-in); sets whose
+SVG has no id groups keep the flat single-background path and their
+`layers`/`safeActorArea` stay inert. At load the registry validates and
+normalizes all declarations to 0..1 once; `anim check`/`make` fail asset
+loading (never a silent fallback) when a world-declaring set is missing
+`layers`/`coordinateSpace`, declares a layer id with no painted group, has a
+`scene.svg` viewBox unequal to `coordinateSpace`, or declares a `supports`
+entry whose painted element (the SVG element with id `paint`, carrying
+`data-support-top="<y>"`) disagrees with the declared `y` by more than 8
+coordinateSpace units. Legacy sets keep raw art-unit `supports` passthrough.
+The compiled scene IR carries normalized `setLayers` (`{id, foreground}`),
+`safeArea`, `supportSurfaces`, and the intrinsic `setViewBox`; the
+renderer-remotion preloader injects per-layer group text into
+`locationScenes` keyed `"<instance>/<layerId>"` for world sets (legacy sets
+keep the whole-document blob keyed by instance). The Remotion stage stacks
+declared layers back-to-front below the prop and actor planes; `foreground`
+entries composite above actors and props. `stageScene` clamps actor placement
+inside the declared `safeActorArea` (centers, including collision
+resolution); sets without one keep the 10%–90% width heuristic. The
+support-surface pass stays the authority for `on(X)` and resolves through the
+normalized declarations.
 
 ## Invariants
 

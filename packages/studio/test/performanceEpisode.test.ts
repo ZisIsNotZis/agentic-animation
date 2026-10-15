@@ -41,12 +41,13 @@ test("scene background switches only at compiled scene boundaries", () => {
 
 test("performance SVG renderer exposes acting and semantic-depth markup", () => {
   const actor = readFileSync(new URL("../src/components/performance/Actor.tsx", import.meta.url), "utf8");
+  const pose = readFileSync(new URL("../../core/src/motor/actorPose.ts", import.meta.url), "utf8");
   const stage = readFileSync(new URL("../src/components/performance/Stage.tsx", import.meta.url), "utf8");
   const vfx = readFileSync(new URL("../src/components/performance/Vfx.tsx", import.meta.url), "utf8");
   assert.match(actor, /actor\.expression/);
   assert.match(actor, /actor\.tracks/);
   assert.match(actor, /actor\.pose/);
-  assert.match(actor, /expression\.gaze/);
+  assert.match(pose, /expression\.gaze/);
   assert.match(actor, /data-track-count/);
   assert.match(actor, /data-face-expression/);
   assert.match(stage, /AI 项目作战墙/);
@@ -55,7 +56,7 @@ test("performance SVG renderer exposes acting and semantic-depth markup", () => 
   assert.match(vfx, /screen-error|ErrorOverlay/);
   assert.match(vfx, /lighting-dim/);
   assert.match(vfx, /lighting-rise/);
-  assert.doesNotMatch(`${actor}${stage}${vfx}`, /<Img|gradient/i);
+  assert.doesNotMatch(`${actor}${pose}${stage}${vfx}`, /<Img|gradient/i);
 });
 
 test("performance frame keeps background below props and actors", () => {

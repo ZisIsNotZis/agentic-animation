@@ -1,3 +1,4 @@
+import {isThermosArt,thermosSolid,transformSolid} from "../motor/propGeometry";
 import {
   type NarrowEpisode,
   type ProcedureCall,
@@ -6,9 +7,10 @@ import {
 import {loadNarrowEpisode} from "../narrowEpisode/load";
 import {buildScope, calleeOf, evaluateExpression, runInvocationSync, splitExpressions} from "../invocation/runner";
 import type {Invocation, LoadedPlugin, World} from "../invocation/types";
-import {stageScene, type StagingResult} from "../staging";
+import {stageScene, type StageRect, type StagingResult} from "../staging";
 import {bakeSceneMotor} from "../motor";
-import type {Skeleton} from "../schemas/libraryMeta";
+import type {Skeleton, NormalizedSetWorld} from "../schemas/libraryMeta";
+import {FIGURE_VIEWS, type FigureArtwork, type FigureView} from "../schemas/figureArtwork";
 
 export type CompilerAssetKind = "actor" | "voice" | "location" | "object";
 
@@ -200,6 +202,12 @@ export interface CompiledScene {
   end: number;
   duration: number;
   staging: StagingResult;
+  /** Declared world of the scene's location, normalized (absent for legacy sets). */
+  setLayers?: ReadonlyArray<{id: string; foreground: boolean}>;
+  safeArea?: StageRect;
+  supportSurfaces?: ReadonlyArray<{name: string; x: readonly [number, number]; y: number}>;
+  /** Intrinsic coordinateSpace extents of the set art (SVG viewBox). */
+  setViewBox?: readonly [number, number];
   initial: EpisodeState;
   final: EpisodeState;
   performanceTracks: PerformanceTrack[];
@@ -280,12 +288,14 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
   let sequence = 0;
 
   for (const [index, scene] of episode.scenes.entries()) {
+    const locationWorld = setWorldFor(context, scene.location);
+    const locationSupports = setSupportSurfacesStagePx(locationWorld, context, scene.location);
     const staging = stageScene({
-      location: {id: scene.location},
+      location: {id: scene.location, ...(locationWorld?.safeArea ? {safeActorArea: locationWorld.safeArea} : {})},
       actors: scene.actors,
       objects: Object.fromEntries(Object.entries(scene.objects).map(([id, placement]) => [id, relationFor(placement)])),
     }, LOGICAL_STAGE);
-    resolveSupportSurfaces(staging, scene.objects, context);
+    resolveSupportSurfaces(staging, scene.objects, context, scene.location);
     const initial = snapshotState(state, episode);
     const compiled = await compileScene(scene, sceneStart, context, sequence);
     sequence = compiled.nextSequence;
@@ -306,19 +316,25 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
       staging,
       initial,
       final,
+      ...(locationWorld ? {
+        setLayers: locationWorld.layers,
+        ...(locationWorld.safeArea ? {safeArea: locationWorld.safeArea} : {}),
+        supportSurfaces: locationWorld.supports,
+        setViewBox: [locationWorld.coordinateSpace.width, locationWorld.coordinateSpace.height],
+      } : {}),
       performanceTracks: sceneTracks,
       activeBindingConstraints: constraints.filter((item) => item.start < end && item.end > sceneStart),
       motor: bakeSceneMotor({
         durationSec: duration,
-        supports: (Object.keys(context.episode.locations).length
-          ? ((context.assets.locations[Object.keys(context.episode.locations)[0]!]?.resolved as {supports?: Array<{x: [number, number]; y: number}>} | undefined)?.supports ?? [])
-          : []).map((surface) => ({x0: surface.x[0], x1: surface.x[1], y: surface.y})),
+        startSec: sceneStart,
+        supports: locationSupports.map((surface) => ({x0: surface.x[0], x1: surface.x[1], y: surface.y})),
         actors: Object.fromEntries(Object.entries(staging.actors).map(([id, staged]) => {
-          const resolved = context.assets.actors[id]?.use.resolved as {skeleton?: Skeleton} | undefined;
-          return [id, {at: staged.at, facing: staged.facing === -1 ? -1 : 1, scale: staged.scale ?? 1, skeleton: resolved?.skeleton}];
+          const resolved = context.assets.actors[id]?.use.resolved as {skeleton?: Skeleton;artwork?:FigureArtwork} | undefined;
+          const skeletonViews = resolved?.artwork ? Object.fromEntries(FIGURE_VIEWS.map(view=>[view,resolved.artwork!.views[view].skeleton])) as Record<FigureView,Skeleton> : undefined;
+          return [id, {at: staged.at, facing: staged.facing === -1 ? -1 : 1, scale: staged.scale ?? 1, skeleton: resolved?.skeleton, skeletonViews}];
         })),
         objects: Object.fromEntries(Object.entries(staging.objects).map(([id, staged]) => {
-          const placement = (context.assets.objects[id]?.resolved as {placement?: {base?: number; size?: [number, number]; body?: [number, number, number, number]}} | undefined)?.placement;
+          const placement = (context.assets.objects[id]?.resolved as {placement?: {base?: number; size?: [number, number]; body?: [number, number, number, number]; grip?: {at:[number,number];radius:number;depth:"front"|"behind"}}} | undefined)?.placement;
           const scale = staged.scale ?? 1;
           let touchBox: {a: [number, number]; b: [number, number]} | undefined;
           if (placement?.body) {
@@ -329,7 +345,10 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
               b: [(bx1 - 100) * scale, -(base - by1) * scale],
             };
           }
-          return [id, {at: staged.at, size: placement?.size, scale, touchBox}];
+          const grip=placement?.grip ? {at:[(placement.grip.at[0]-100)*scale,(placement.grip.at[1]-(placement.base??160))*scale] as [number,number],radius:placement.grip.radius*scale,depth:placement.grip.depth} : undefined;
+          // Motor-driven renderer uses scale1 (propState), independently of grip staging.
+          const solid=isThermosArt(id) ? transformSolid(thermosSolid,placement?.size??[200,160],placement?.base??160,1) : undefined;
+          return [id, {at: staged.at, size: placement?.size, scale, touchBox, grip, solid}];
         })),
         tracks: sceneTracks as never,
       }),
@@ -798,16 +817,30 @@ function snapshotState(state: MutableState, episode: NarrowEpisode): EpisodeStat
  * "on(X)" placement resolves against DECLARED support surfaces (set or prop
  * manifests) — the object's base line stands on the surface, inside its x
  * range. No hard-coded offsets: a surface nobody declared cannot hold
- * anything (compile error).
+ * anything (compile error). World-declaring sets resolve through their
+ * normalized declarations (SCHEMAS.md "Set world declarations"); legacy
+ * sets keep raw art-unit supports in the 1920x1080 stage frame.
  */
+function setWorldFor(context: CompileContext, sceneLocation: string): NormalizedSetWorld | undefined {
+  return (context.assets.locations[sceneLocation]?.resolved as {world?: NormalizedSetWorld} | undefined)?.world;
+}
+
+/** Declared set supports for a scene location, in 1920x1080 stage px. */
+function setSupportSurfacesStagePx(locationWorld: NormalizedSetWorld | undefined, context: CompileContext, sceneLocation: string): Array<{name: string; x: [number, number]; y: number}> {
+  if (locationWorld) {
+    return locationWorld.supports.map((surface) => ({name: surface.name, x: [surface.x[0] * 1920, surface.x[1] * 1920], y: surface.y * 1080}));
+  }
+  const legacy = (context.assets.locations[sceneLocation]?.resolved ?? {}) as {supports?: Array<{name: string; x: [number, number]; y: number}>};
+  return (legacy.supports ?? []).map((surface) => ({name: surface.name, x: surface.x, y: surface.y}));
+}
+
 function resolveSupportSurfaces(
   staging: {objects?: Readonly<Record<string, {at: readonly [number, number]; scale: number; z?: number}>>},
   sceneObjects: Record<string, string | undefined>,
   context: CompileContext,
+  sceneLocation: string,
 ): void {
-  const locationIds = Object.keys(context.episode.locations);
-  const setAsset = locationIds.length ? context.assets.locations[locationIds[0]!] : undefined;
-  const setResolved = (setAsset?.resolved ?? {}) as {supports?: Array<{name: string; x: [number, number]; y: number}>};
+  const setSupports = setSupportSurfacesStagePx(setWorldFor(context, sceneLocation), context, sceneLocation);
   const objects: Record<string, {at: readonly [number, number]; scale: number; z?: number}> = {...(staging.objects ?? {})};
   for (const [id, placement] of Object.entries(sceneObjects)) {
     const match = (placement ?? "").match(/^on\(([a-z][a-z0-9_]*)\)$/);
@@ -821,7 +854,7 @@ function resolveSupportSurfaces(
     const targetIsProp = targetPlacement !== undefined && targetStaged !== undefined;
     const surfaces = targetIsProp
       ? (targetPlacement?.supports ?? [])
-      : (setResolved.supports ?? []).filter((surface) => surface.name === target);
+      : setSupports.filter((surface) => surface.name === target);
     const surface = surfaces[0];
     if (!surface) {
       throw new Error(`compileEpisode: object "${id}" placed on "${target}" but no support surface is declared for it`);

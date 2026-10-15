@@ -1,3 +1,4 @@
+import {THERMOS_ART,isThermosArt} from "@anim/core/prop-geometry";
 import React from "react";
 import type { EvaluatedProp } from "../../performance";
 
@@ -39,7 +40,7 @@ type PropKind = "desk" | "thermos" | "scroll" | "skillBottle" | "skillCards" | "
 
 function propKind(key: string): PropKind {
   if (key.includes("desk")) return "desk";
-  if (key.includes("thermos") || key.includes("cup")) return "thermos";
+  if (isThermosArt(key)) return "thermos";
   if (key.includes("scroll")) return "scroll";
   if (key.includes("skill_bottle") || key.includes("skill bottle") || key.includes("bottle")) return "skillBottle";
   if (key.includes("skill_cards") || key.includes("skill cards") || key.includes("cards")) return "skillCards";
@@ -68,10 +69,10 @@ const Desk: React.FC<PropArtProps> = () => (
 const Thermos: React.FC<PropArtProps> = () => (
   <g aria-label="thermos">
     <ellipse cx="100" cy="143" rx="36" ry="7" fill="#151526" opacity=".3" />
-    <path d="M68 38h64v77q0 17-17 17H85q-17 0-17-17z" fill={TEAL} stroke={INK} strokeWidth="8" />
+    <path d={THERMOS_ART.body} fill={TEAL} stroke={INK} strokeWidth={THERMOS_ART.bodyStroke} />
     <path d="M73 61h54M73 84h54" stroke="#a6e7d9" strokeWidth="6" /><path d="M78 112q22 9 44 0" fill="none" stroke="#155d68" strokeWidth="5" />
-    <rect x="78" y="22" width="44" height="23" rx="6" fill="#d1e4df" stroke={INK} strokeWidth="7" /><path d="M84 23v-9h32v9" fill={GOLD} stroke={INK} strokeWidth="7" />
-    <path d="M133 54q25 0 25 22t-25 22" fill="none" stroke={INK} strokeWidth="9" /><path d="M138 62q13 1 13 14t-13 14" fill="none" stroke={RED} strokeWidth="5" />
+    <rect {...THERMOS_ART.cap} fill="#d1e4df" stroke={INK} strokeWidth={THERMOS_ART.capStroke} /><path d={THERMOS_ART.top} fill={GOLD} stroke={INK} strokeWidth={THERMOS_ART.topStroke} />
+    <path d={THERMOS_ART.handle} fill="none" stroke={INK} strokeWidth={THERMOS_ART.handleStroke} /><path d="M138 62q13 1 13 14t-13 14" fill="none" stroke={RED} strokeWidth="5" />
   </g>
 );
 

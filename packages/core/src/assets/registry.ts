@@ -1,12 +1,14 @@
 import {readdir, readFile, access} from "node:fs/promises";
 import {join, relative, resolve} from "node:path";
+import {z} from "zod";
 import {
   FigureAssetManifestSchema,
+  FigureArtworkSchema,
   PropAssetManifestSchema,
-  SetManifestSchema,
   AssetRegistrySchema,
   ProcedureManifestSchema,
   RegistryAssetIdSchema,
+  SupportSurfaceSchema,
   type AssetRegistryManifest,
   type ProcedureManifest,
   type ProcedureParamType,
@@ -14,6 +16,8 @@ import {
   type Parameter,
 } from "../schemas/libraryMeta";
 import type {ProcedureCall, Scalar} from "../schemas/narrowEpisode";
+import {svgGroupIds, normalizeSetWorld} from "./setWorld";
+import {hashJson} from "../util/hash";
 
 export interface RegistryLocals {
   actors: Record<string, string | {use: string; voice?: string}>;
@@ -87,16 +91,37 @@ async function discoverAssets(root: string): Promise<RegistryAssetManifest[]> {
             }
           }
           if (base.kind === "set") {
-            // Set resources declare support surfaces in their own space.
+            // Set resources declare their world (layers, containment, supports)
+            // in their own coordinateSpace; a set whose scene.svg paints <g id>
+            // groups is world-declaring and must carry complete, valid
+            // declarations — missing or invalid ones fail loading (SCHEMAS.md
+            // "Set world declarations"). Legacy sets keep raw support passthrough.
             try {
-              const raw = JSON.parse(await readFile(join(child, "manifest.json"), "utf8")) as {supports?: unknown};
-              if (raw.supports !== undefined) {
-                const {supports} = SetManifestSchema.parse({supports: raw.supports});
+              const raw = JSON.parse(await readFile(join(child, "manifest.json"), "utf8")) as Record<string, unknown>;
+              let sceneSvg: string | undefined;
+              try {
+                sceneSvg = await readFile(join(child, "scene.svg"), "utf8");
+              } catch { /* a set may carry no scene art */ }
+              const layerGroups = sceneSvg === undefined ? [] : svgGroupIds(sceneSvg);
+              if (layerGroups.length > 0) {
+                if (raw.layers === undefined) throw new Error("layers are required when scene.svg paints <g id> groups");
+                if (raw.coordinateSpace === undefined) throw new Error("coordinateSpace is required when scene.svg paints <g id> groups");
+                (base as {world?: unknown}).world = normalizeSetWorld({
+                  manifest: {
+                    coordinateSpace: raw.coordinateSpace,
+                    layers: raw.layers,
+                    ...(raw.safeActorArea !== undefined ? {safeActorArea: raw.safeActorArea} : {}),
+                    ...(raw.supports !== undefined ? {supports: raw.supports} : {}),
+                  },
+                  sceneSvg: sceneSvg!,
+                });
+              } else if (raw.supports !== undefined) {
+                const {supports} = z.object({supports: z.array(SupportSurfaceSchema)}).strict().parse({supports: raw.supports});
                 (base as {supports?: unknown}).supports = supports;
               }
             } catch (error) {
               if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-                throw new Error(`set ${identity}: invalid manifest supports: ${(error as Error).message}`);
+                throw new Error(`set ${identity}: ${(error as Error).message}`);
               }
             }
           }
@@ -108,6 +133,19 @@ async function discoverAssets(root: string): Promise<RegistryAssetManifest[]> {
             } catch (error) {
               if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
                 throw new Error(`figure ${identity}: invalid skeleton.json: ${(error as Error).message}`);
+              }
+            }
+            try {
+              const raw = JSON.parse(await readFile(join(child, "artwork.json"), "utf8")) as unknown;
+              const artwork = FigureArtworkSchema.parse(raw);
+              if (base.skeleton !== undefined && hashJson(base.skeleton) !== hashJson(artwork.views.front.skeleton)) {
+                throw new Error("front artwork geometry differs from declared skeleton.json");
+              }
+              base.artwork = artwork;
+              base.skeleton = artwork.views.front.skeleton;
+            } catch (error) {
+              if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+                throw new Error(`figure ${identity}: invalid artwork.json: ${(error as Error).message}`);
               }
             }
           }

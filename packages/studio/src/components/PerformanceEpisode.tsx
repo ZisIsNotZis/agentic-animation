@@ -6,8 +6,9 @@ import type {
     PerformanceManifest,
 } from "../performance";
 import { PerformanceActor } from "./performance/Actor";
+import {nativeInteractionObjectIds} from "../performance/interactionLayers";
 import { PerformanceProp } from "./performance/Prop";
-import { PerformanceStage, sceneForFrame } from "./performance/Stage";
+import { PerformanceForegroundLayers, PerformanceStage, sceneForFrame } from "./performance/Stage";
 import { PerformanceVfx } from "./performance/Vfx";
 import {
     DebugFrameCounter,
@@ -74,6 +75,8 @@ export const PerformanceFrame: React.FC<{
         .filter((actor) => actor.present)
         .sort((a, b) => a.z - b.z);
     const props = [...state.props].sort((a, b) => a.z - b.z);
+    const nativeObjects = nativeInteractionObjectIds(manifest,actors);
+    const foregroundProps = props.filter((prop)=>nativeObjects.has(prop.id));
     const subtitle = state.subtitles.at(-1)?.text;
     const sceneVfx = state.vfx.filter((effect) =>
         Array.isArray(effect.targetPosition),
@@ -122,7 +125,7 @@ export const PerformanceFrame: React.FC<{
                     data-layer="props"
                     style={{ position: "absolute", inset: 0, zIndex: 20 }}
                 >
-                    {props.map((prop) => (
+                    {props.filter((prop)=>!nativeObjects.has(prop.id)).map((prop) => (
                         <PerformanceProp key={prop.id} prop={prop} />
                     ))}
                 </div>
@@ -139,6 +142,16 @@ export const PerformanceFrame: React.FC<{
                         />
                     ))}
                 </div>
+                {foregroundProps.length ? <>
+                    <div data-layer="native-interaction-props" style={{position:'absolute',inset:0,zIndex:50}}>
+                        {foregroundProps.map((prop)=><PerformanceProp key={prop.id} prop={prop}/>)}
+                    </div>
+                    <div data-layer="native-contact-hands" style={{position:'absolute',inset:0,zIndex:60}}>
+                        {actors.filter((actor)=>actor.artwork&&actor.gripDepth!=="behind"&&(actor.holds||actor.contact)).map((actor)=><PerformanceActor key={actor.id} actor={actor} props={props} handsOnly/>)}
+                    </div>
+                </> : null}
+                {/* Declared foreground set layers occlude actors and props (M3). */}
+                <PerformanceForegroundLayers scene={scene} />
                 {frontVfx.map((effect) => (
                     <PerformanceVfx key={effect.id} effect={effect} />
                 ))}

@@ -9,6 +9,12 @@ requirement maps to an existing asset or an explicit asset-production task.
 
 ## 2. Prepare assets
 
+For new visual directions, establish a representative composed keyframe before
+full rigging: character silhouette, scene, focal hierarchy, palette and light
+must work together. Artistic appeal and functional correctness are separate
+acceptance dimensions. The approved improvement sequence and short comparison
+budget live in [ART_PRODUCTION_UPGRADE.md](ART_PRODUCTION_UPGRADE.md).
+
 Build or select approved category assets before script lock. Figures need
 native 30-45 degree views, complete rigs, sockets, hand shapes, eye/mouth/face
 sets, and compatible actions. Locations need detailed layers and semantic
@@ -33,9 +39,11 @@ Generate captions and lips from that same timeline. Mix sound/BGM with dialogue
 ducking and loudness normalization. Completion: an audio QA report proves text,
 subtitles, lips, and events share one timing source.
 
-Network TTS adapters retry each individual request indefinitely with capped
-backoff. Completed chunks remain cached; transient provider failure must never
-terminate or restart the episode build.
+Network TTS adapters currently retry requests with capped backoff and preserve
+completed chunks. Execute builds with a finite deadline/cancellation path and
+collect their result; preserve cache on cancellation. Retry behavior is not
+permission for unattended infinite work. Art comparisons reuse frozen audio
+rather than silently requesting new takes.
 
 ## 5. Compile performance
 
@@ -72,9 +80,12 @@ on their actor or object rather than the canvas.
 
 ## 7. Benchmark before full render
 
-Render the first 180 seconds at 1280x720, 24fps, four workers. Compare wall time,
-peak RSS, crashes, and visual output against the current accepted baseline of
-452 seconds and 744 MB peak RSS. A material regression requires diagnosis before
+For art-upgrade milestone comparisons, use the bounded short-pass budget in
+[ART_PRODUCTION_UPGRADE.md](ART_PRODUCTION_UPGRADE.md), not the long-form benchmark.
+
+For long-form production, render the first 180 seconds at 1280x720, 24fps,
+four workers. Compare wall time, peak RSS, crashes, and visual output against
+the current accepted baseline of 452 seconds and 744 MB peak RSS. A material regression requires diagnosis before
 full render. Keep configurable concurrency; do not run model generation beside
 Chromium rendering.
 
@@ -88,9 +99,12 @@ the final artifact, not merely after a successful process exit.
 The committed render defaults are 1280x720 and four workers; explicit CLI
 dimensions, frame rate, CRF, and thread overrides remain supported. Generated
 audio, video, manifests, screenshots, and render caches stay ignored; all
-temporary QA output belongs under `/tmp`.
+temporary QA output belongs under `/tmp`. Effort-bearing comparison evidence
+must also have a verified durable external bundle before cleanup; recovery and
+revision-binding requirements for current character work are in
+[ART_CHARACTER_M2](ART_CHARACTER_M2.md).
 
-## 8. Delivery encoding policy
+## 9. Delivery encoding policy
 
 Goal: smallest file at fair-enough quality. `render-yaml` re-encodes the
 Remotion intermediate in the final mux (never `-c:v copy`):
@@ -101,9 +115,11 @@ Remotion intermediate in the final mux (never `-c:v copy`):
   (`libx265` crf 28) > H.264 (`libx264` crf 20). `render.encode.codec`
   forces one; `auto` probes. An NVIDIA RTX 40-series GPU can substitute
   `av1_nvenc` for long legacy transcodes where CPU speed matters.
-- Audio AAC 128k, MP4 with `+faststart`, subtitles burned as soft `mov_text`
-  tracks. Voice default `tts.speed` 1.2.
-- Existing long-form deliveries may be transcoded in place to this bar.
+- Audio AAC 128k, MP4 with `+faststart`, soft `mov_text` subtitle tracks;
+  visible caption overlays are separate from the soft track. Voice default
+  `tts.speed` 1.2.
+- Existing checked-in/frozen deliveries stay preserved; this encoding target
+  does not itself authorize overwriting them.
 
 `anim make episode.yml --voice-speed <n>` and `anim render-yaml episode.yml
 --voice-speed <n>` override the configured `tts.speed` for this canonical run.

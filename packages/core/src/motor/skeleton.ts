@@ -22,6 +22,12 @@ export interface SkeletonPose {
   facing?: 1 | -1;
   armR?: ArmAngles;
   armL?: ArmAngles;
+  /** Native-art body/hip drop in design units; feet remain independent. */
+  waistY?: number;
+  torsoScaleY?: number;
+  /** Leg angles are in design space, before renderer mirroring. */
+  legR?: ArmAngles;
+  legL?: ArmAngles;
 }
 
 export interface WorldCircle {
@@ -89,10 +95,16 @@ export function solveSkeleton(skeleton: Skeleton, pose: SkeletonPose = {}): Solv
   const facing = pose.facing ?? 1;
   const pitch = (pose.waistPitch ?? 0) * facing;
   const waist = skeleton.joints.waist ?? [skeleton.space.width / 2, skeleton.space.height * 0.71];
+  const drop = pose.waistY ?? 0;
+  const sy = pose.torsoScaleY ?? 1;
+  const bodyPoint = (point: [number, number]): [number, number] => {
+    const v = sub(point, waist);
+    return add([0,drop],add(waist,rot(pitch,[v[0],v[1]*sy])));
+  };
   const legged = new Set(["hip_r", "knee_r", "foot_r", "hip_l", "knee_l", "foot_l"]);
   const joints: Record<string, [number, number]> = {};
   for (const [name, point] of Object.entries(skeleton.joints)) {
-    joints[name] = legged.has(name) ? [point[0], point[1]] : add(waist, rot(pitch, sub(point, waist)));
+    joints[name] = legged.has(name) ? [point[0], point[1] + (name.startsWith("hip_") ? drop : 0)] : bodyPoint(point);
   }
   const parts: SolvedSkeleton["parts"] = {};
   let torso: WorldBox | undefined;
@@ -100,7 +112,12 @@ export function solveSkeleton(skeleton: Skeleton, pose: SkeletonPose = {}): Solv
     const shape = part as {box?: [[number, number], [number, number]]; circle?: {at?: string; center?: [number, number]; radius: number}; capsule?: {from: string; to: string; radius: number}};
     let world: WorldShape | undefined;
     if (shape.box) {
-      world = rotateBox(shape.box[0], shape.box[1], waist, pitch);
+      if (drop === 0 && sy === 1) world = rotateBox(shape.box[0], shape.box[1], waist, pitch);
+      else {
+        const [a,b] = shape.box;
+        const corners = [a,[b[0],a[1]],[a[0],b[1]],b].map((p) => bodyPoint(p as [number,number]));
+        world = {kind:"box",a:[Math.min(...corners.map(p=>p[0])),Math.min(...corners.map(p=>p[1]))],b:[Math.max(...corners.map(p=>p[0])),Math.max(...corners.map(p=>p[1]))]};
+      }
       if (name === "torso") torso = world;
     } else if (shape.circle) {
       const center: [number, number] = shape.circle.at
@@ -120,13 +137,13 @@ export function solveSkeleton(skeleton: Skeleton, pose: SkeletonPose = {}): Solv
     if (!angles) continue;
     const shoulder = skeleton.joints[`shoulder_${side}`];
     if (!shoulder) continue;
-    const s = add(waist, rot(pitch, sub(shoulder, waist)));
+    const s = bodyPoint(shoulder);
     const elbow0 = skeleton.joints[`elbow_${side}`] ?? [0, 0];
     const hand0 = skeleton.joints[`hand_${side}`] ?? [0, 0];
     const u: [number, number] = [(elbow0[0] - shoulder[0]) * facing, elbow0[1] - shoulder[1]];
     const f: [number, number] = [(hand0[0] - elbow0[0]) * facing, hand0[1] - elbow0[1]];
-    const elbow = add(s, rot(pitch + angles.upper, u));
-    const hand = add(elbow, rot(pitch + angles.upper + angles.lower, f));
+    const elbow = drop === 0 && sy === 1 ? add(s, rot(pitch + angles.upper, u)) : bodyPoint(add(shoulder,rot(angles.upper,u)));
+    const hand = drop === 0 && sy === 1 ? add(elbow, rot(pitch + angles.upper + angles.lower, f)) : bodyPoint(add(add(shoulder,rot(angles.upper,u)),rot(angles.upper+angles.lower,f)));
     joints[`shoulder_${side}`] = s;
     joints[`elbow_${side}`] = elbow;
     joints[`hand_${side}`] = hand;
@@ -137,6 +154,20 @@ export function solveSkeleton(skeleton: Skeleton, pose: SkeletonPose = {}): Solv
     if (fore) parts[`forearm_${side}`] = {shape: fore.shape, world: {kind: "capsule", a: elbow, b: hand, radius: (fore.shape as WorldCapsule).radius}};
     if (upper) parts[`upper_arm_${side}`] = {shape: upper.shape, world: {kind: "capsule", a: s, b: elbow, radius: (upper.shape as WorldCapsule).radius}};
   }
+  for (const side of ["r","l"] as const) {
+    const angles = side === "r" ? pose.legR : pose.legL;
+    if (!angles) continue;
+    const h0 = skeleton.joints[`hip_${side}`],k0 = skeleton.joints[`knee_${side}`],f0 = skeleton.joints[`foot_${side}`];
+    if (!h0 || !k0 || !f0) continue;
+    const h: [number,number] = [h0[0],h0[1]+drop];
+    const k = add(h,rot(angles.upper,sub(k0,h0)));
+    const f = add(k,rot(angles.upper+angles.lower,sub(f0,k0)));
+    joints[`hip_${side}`]=h;joints[`knee_${side}`]=k;joints[`foot_${side}`]=f;
+    for (const [name,a,b] of [[`thigh_${side}`,h,k],[`shin_${side}`,k,f]] as const) {
+      const previous=parts[name];
+      if (previous?.world.kind==="capsule") parts[name]={shape:previous.shape,world:{kind:"capsule",a,b,radius:previous.world.radius}};
+    }
+  }
   const handCircle = (side: "r" | "l"): WorldCircle | undefined => {
     const p = parts[`hand_${side}`]?.world;
     return p?.kind === "circle" ? p : undefined;
@@ -144,11 +175,13 @@ export function solveSkeleton(skeleton: Skeleton, pose: SkeletonPose = {}): Solv
   return {joints, parts, hands: {hand_r: handCircle("r"), hand_l: handCircle("l")}, torso};
 }
 
-/** Analytic two-bone IK against declared arm lengths (SVG angle convention). */
+/** Analytic two-bone IK (SVG angles): side mirrors rest vectors; bend selects
+ * the elbow branch independently. Default preserves the mirrored legacy solve. */
 export function solveArmIK(
   target: {x: number; y: number},
   arm: {upper: number; fore: number; shoulder: [number, number]; upperDir: [number, number]; foreDir: [number, number]},
   side: 1 | -1 = 1,
+  bend: 1 | -1 = side,
 ): ArmAngles {
   const [sx, sy] = arm.shoulder;
   const dx = target.x - sx;
@@ -164,9 +197,44 @@ export function solveArmIK(
   const alpha = Math.acos(Math.min(1, Math.max(-1, (l1 * l1 + d * d - l2 * l2) / (2 * l1 * d))));
   const beta = Math.acos(Math.min(1, Math.max(-1, (l1 * l1 + l2 * l2 - d * d) / (2 * l1 * l2))));
   return {
-    upper: ((base - side * alpha - phi1) * 180) / Math.PI,
-    lower: ((phi1 - phi2 + side * (Math.PI - beta)) * 180) / Math.PI,
+    upper: ((base - bend * alpha - phi1) * 180) / Math.PI,
+    lower: ((phi1 - phi2 + bend * (Math.PI - beta)) * 180) / Math.PI,
   };
+}
+
+/** Feasible nonnegative hip drop while the hip stays above the ankle.
+ * Uses the complete two-bone annulus on that native standing branch, with
+ * the same .01 design-pixel extension margin as plantedLegAngles. Null means
+ * infeasible; a horizontally clamped foot must not count as planted support. */
+export function legDropInterval(skeleton: Skeleton, side: "l"|"r", target: [number,number]): [number,number] | null {
+  const H=skeleton.joints[`hip_${side}`]!,K=skeleton.joints[`knee_${side}`]!,F=skeleton.joints[`foot_${side}`]!;
+  const a=Math.hypot(K[0]-H[0],K[1]-H[1]),b=Math.hypot(F[0]-K[0],F[1]-K[1]);
+  const dx=target[0]-H[0],dy=target[1]-H[1],outer=a+b-.01,inner=Math.abs(a-b)+.01;
+  if (outer < inner || Math.abs(dx)>outer) return null;
+  const high=Math.sqrt(outer*outer-dx*dx);
+  const low=Math.abs(dx)<inner?Math.sqrt(inner*inner-dx*dx):0;
+  const from=Math.max(0,dy-high),to=dy-low;
+  return to>=from?[from,to]:null;
+}
+
+/** Hip drop -> leg angles with an independent foot target (shared native FK). */
+export function plantedLegAngles(skeleton: Skeleton, side: "l"|"r", drop: number, target?: [number,number]): ArmAngles {
+  const H=skeleton.joints[`hip_${side}`]!,K=skeleton.joints[`knee_${side}`]!,F=skeleton.joints[`foot_${side}`]!;
+  const u=sub(K,H),v=sub(F,K);
+  const hip: [number,number]=[H[0],H[1]+drop];
+  const goal: [number,number]=target?[...target]:[...F];
+  const max=Math.hypot(...u)+Math.hypot(...v)-.01;
+  // Horizontal stride cannot lengthen a leg. Preserve the support height
+  // whenever reachable, limiting stride instead of letting the sole sink.
+  const dy=goal[1]-hip[1];
+  if (Math.abs(dy)<max) {
+    const dx=Math.sqrt(max*max-dy*dy);
+    goal[0]=Math.max(hip[0]-dx,Math.min(hip[0]+dx,goal[0]));
+  }
+  // Native joints already contain their left/right geometry; mirroring their
+  // rest vectors again changes the IK branch and cannot round-trip rest FK.
+  const bend = (u[0]*v[1]-u[1]*v[0] < 0 ? -1 : 1) as 1|-1;
+  return solveArmIK({x:goal[0],y:goal[1]}, {shoulder:hip,upper:Math.hypot(...u),fore:Math.hypot(...v),upperDir:u,foreDir:v},1,bend);
 }
 
 /** True if a circle overlaps an axis-aligned box. */
@@ -180,4 +248,12 @@ export function circleOverlapsBox(circle: {center: [number, number]; radius: num
 /** True if two circles touch or overlap. */
 export function circleOverlapsCircle(a: {center: [number, number]; radius: number}, b: {center: [number, number]; radius: number}): boolean {
   return Math.hypot(a.center[0] - b.center[0], a.center[1] - b.center[1]) <= a.radius + b.radius;
+}
+
+export function nativeCrouchDrop(skeleton: Skeleton): number {
+  const lengths = (["l", "r"] as const).map(side => {
+    const hip=skeleton.joints[`hip_${side}`]!,knee=skeleton.joints[`knee_${side}`]!,foot=skeleton.joints[`foot_${side}`]!;
+    return Math.hypot(knee[0]-hip[0],knee[1]-hip[1])+Math.hypot(foot[0]-knee[0],foot[1]-knee[1]);
+  });
+  return Math.min(...lengths) / 2;
 }

@@ -1,6 +1,8 @@
 import { evaluatePerformance } from "./evaluate";
 import { normalizePerformanceManifest, } from "./evaluate";
 import type { PerformanceManifest } from "./types";
+import {solveActorFigure} from "../components/performance/actorPose";
+import {designHandToWorld} from "../components/performance/reach";
 
 export interface TeleportWarning {
   actor: string;
@@ -138,51 +140,69 @@ export interface PropDiscontinuityWarning {
   from: [number, number];
   to: [number, number];
   delta: number;
+  metric?: "angle";
 }
 
-/**
- * Shift-left check: a prop or actor that jumps more than `threshold` px in a
- * single frame. Real objects move continuously — a jump means something
- * teleported (a snap placement, a missing approach). Cheap: pure manifest
- * evaluation, no rendering.
- */
+/** Per-frame visible FK/contact continuity, in stage pixels and degrees.
+ * Mirrored snaps remain defects: no actor flip suppresses another object's jump.
+ * Thresholds are diagnostics, not a substitute for rendered contact acceptance. */
 export function detectPropDiscontinuities(
   manifest: PerformanceManifest,
-  options: {threshold?: number} = {},
+  options: {threshold?: number; angleThreshold?: number} = {},
 ): PropDiscontinuityWarning[] {
-  const threshold = options.threshold ?? 60;
+  const threshold = options.threshold ?? 30;
+  const angleThreshold = options.angleThreshold ?? 35;
   const normalized = normalizePerformanceManifest({...manifest, timebase: manifest.timebase ?? "seconds"});
   const fps = normalized.video?.fps ?? 24;
   const frames = normalized.durationInFrames ?? Math.round((normalized.totalDuration ?? 0) * fps);
   const warnings: PropDiscontinuityWarning[] = [];
-  let previous = new Map<string, {x: number; y: number}>();
-  let previousFlips = new Map<string, boolean>();
+  type Sample = {point: [number, number]; metric?: "angle"};
+  let previous = new Map<string, Sample>();
   for (let frame = 0; frame < frames; frame++) {
     const state = evaluatePerformance(normalized, frame);
-    const current = new Map<string, {x: number; y: number}>();
-    let flipped = false;
+    const current = new Map<string, Sample>();
     for (const actor of state.actors) {
-      current.set(actor.id, {x: actor.x, y: actor.y});
-      if (previous.has(actor.id) && previousFlips.get(actor.id) !== actor.flip) flipped = true;
+      if (!actor.present) continue;
+      current.set(actor.id, {point: [actor.x, actor.y]});
+      current.set(`${actor.id}.rotation`, {point: [actor.rotation, 0], metric: "angle"});
+      const figure = solveActorFigure(actor);
+      if (!figure.solved) continue;
+      const joints = new Map<string, [number, number]>();
+      for (const [name, joint] of Object.entries(figure.solved.joints)) {
+        const world = designHandToWorld(actor, joint, figure.space, actor.artwork ? figure.flipped : false);
+        const r = actor.rotation * (figure.flipped ? -1 : 1) * Math.PI / 180;
+        const dx = world[0] - actor.x, dy = world[1] - actor.y;
+        const point: [number, number] = [actor.x + dx * Math.cos(r) - dy * Math.sin(r), actor.y + dx * Math.sin(r) + dy * Math.cos(r)];
+        joints.set(name, point);
+        current.set(`${actor.id}.${name}`, {point});
+      }
+      // Segment directions expose abrupt IK branch/angle changes even when a
+      // short limb's positional displacement is below the pixel threshold.
+      for (const side of ["l", "r"]) for (const [a, b] of [[`shoulder_${side}`, `elbow_${side}`], [`elbow_${side}`, `hand_${side}`], [`hip_${side}`, `knee_${side}`], [`knee_${side}`, `foot_${side}`]]) {
+        const from = joints.get(a!), to = joints.get(b!);
+        if (from && to) current.set(`${actor.id}.${a}-${b}.angle`, {point: [Math.atan2(to[1]-from[1], to[0]-from[0])*180/Math.PI, 0], metric: "angle"});
+      }
     }
-    for (const prop of state.props) current.set(prop.id, {x: prop.x, y: prop.y});
-    const previousFlipsNow = new Map(state.actors.map((actor) => [actor.id, actor.flip]));
+    for (const prop of state.props) {
+      current.set(prop.id, {point: [prop.x, prop.y]});
+      current.set(`${prop.id}.rotation`, {point: [prop.rotation, 0], metric: "angle"});
+    }
     for (const [id, at] of current) {
       const before = previous.get(id);
       if (!before) continue;
-      const delta = Math.hypot(at.x - before.x, at.y - before.y);
-      // A holder turning around swings its hand anchor to the mirrored side —
-      // a rig artifact, not a teleport.
-      if (delta > threshold && !flipped) warnings.push({frame, id, from: [before.x, before.y], to: [at.x, at.y], delta});
+      const delta = at.metric === "angle"
+        ? Math.abs(((at.point[0] - before.point[0] + 540) % 360 + 360) % 360 - 180)
+        : Math.hypot(at.point[0] - before.point[0], at.point[1] - before.point[1]);
+      if (delta > (at.metric === "angle" ? angleThreshold : threshold)) warnings.push({frame, id, from: before.point, to: at.point, delta, ...(at.metric ? {metric: at.metric} : {})});
     }
     previous = current;
-    previousFlips = previousFlipsNow;
   }
   return warnings;
 }
 
 export function describePropDiscontinuities(warnings: PropDiscontinuityWarning[]): string[] {
-  return warnings.map((warning) =>
-    `sudden-move warning: ${warning.id} jumps ${Math.round(warning.delta)}px at frame ${warning.frame} (${Math.round(warning.from[0])},${Math.round(warning.from[1])} -> ${Math.round(warning.to[0])},${Math.round(warning.to[1])}) — objects must move continuously`,
+  return warnings.map((warning) => warning.metric === "angle"
+    ? `sudden-move warning: ${warning.id} turns ${Math.round(warning.delta)}deg at frame ${warning.frame} (${Math.round(warning.from[0])} -> ${Math.round(warning.to[0])}deg) — joints and objects must turn continuously`
+    : `sudden-move warning: ${warning.id} jumps ${Math.round(warning.delta)}px at frame ${warning.frame} (${Math.round(warning.from[0])},${Math.round(warning.from[1])} -> ${Math.round(warning.to[0])},${Math.round(warning.to[1])}) — objects must move continuously`,
   );
 }

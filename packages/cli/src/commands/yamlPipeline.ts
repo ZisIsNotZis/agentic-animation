@@ -205,6 +205,9 @@ export async function makeYamlEpisode(
   for (const line of describeCameraOverflows(detectCameraOverflows(manifestWithCues as never))) {
     process.stderr.write(`[make] ${line}\n`);
   }
+  for (const scene of (manifestWithCues as {sceneTrack?: Array<{motor?: {diagnostics?: string[]}}>}).sceneTrack ?? []) {
+    for (const diagnostic of scene.motor?.diagnostics ?? []) console.warn(`motor warning: ${diagnostic}`);
+  }
   for (const line of describePropDiscontinuities(detectPropDiscontinuities(manifestWithCues as never))) {
     process.stderr.write(`[make] ${line}\n`);
   }

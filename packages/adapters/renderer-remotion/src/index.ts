@@ -20,6 +20,7 @@ import {
   hashString,
   notReadyCheck,
   readJson,
+  svgGroupElement,
   type AdapterRegistration,
   type Check,
   type RendererAdapter,
@@ -105,6 +106,13 @@ function preloadLocationScenes(manifestPath: string, manifest: PerformanceManife
   const locations = assets?.locations;
   if (!locations) return manifest;
   const libraryRoot = resolve(dirname(manifestPath), "..", "..", "library");
+  // World-declaring locations (compiled setLayers) get per-layer group text
+  // keyed "<instance>/<layerId>"; legacy locations keep the whole document.
+  const layeredLocations = new Map<string, ReadonlyArray<{id: string; foreground?: boolean}>>();
+  for (const scene of (manifest as unknown as {sceneTrack?: Array<{location?: unknown; setLayers?: ReadonlyArray<{id: string; foreground?: boolean}>}>}).sceneTrack ?? []) {
+    if (!scene?.setLayers?.length || typeof scene.location !== "string") continue;
+    if (!layeredLocations.has(scene.location)) layeredLocations.set(scene.location, scene.setLayers);
+  }
   const locationScenes: Record<string, string> = {};
   for (const [instance, entry] of Object.entries(locations)) {
     // The identity is the canonical library-relative asset directory.
@@ -112,7 +120,16 @@ function preloadLocationScenes(manifestPath: string, manifest: PerformanceManife
     if (typeof assetPath !== "string") continue;
     const scenePath = resolve(libraryRoot, assetPath, "scene.svg");
     if (scenePath.startsWith(`${libraryRoot}/`) && existsSync(scenePath)) {
-      locationScenes[instance] = readFileSync(scenePath, "utf8");
+      const svgText = readFileSync(scenePath, "utf8");
+      const layers = layeredLocations.get(instance);
+      if (layers) {
+        for (const layer of layers) {
+          const group = svgGroupElement(svgText, layer.id);
+          if (group !== undefined) locationScenes[`${instance}/${layer.id}`] = group;
+        }
+      } else {
+        locationScenes[instance] = svgText;
+      }
     }
   }
   return Object.keys(locationScenes).length ? {...manifest, locationScenes} : manifest;

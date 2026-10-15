@@ -19,6 +19,8 @@ export interface LocationSemanticMetadata {
   depth?: "flat" | "layered";
   entrances?: readonly Entrance[];
   affordances?: readonly string[];
+  /** Declared actor containment, normalized (SCHEMAS.md "Set world declarations"). */
+  safeActorArea?: StageRect;
 }
 
 export interface ActorSetup {
@@ -259,6 +261,15 @@ function subjectSafeArea(width: number, height: number): StageRect {
   return {x: SIDE_MARGIN, y: round(height * 0.09), width: width - SIDE_MARGIN * 2, height: round(height * 0.67)};
 }
 
+/** Declared actor containment in canvas units; the 10%-90% heuristic default otherwise. */
+function declaredActorBounds(safeActorArea: StageRect | undefined, width: number, height: number): {x: readonly [number, number]; y: readonly [number, number]; collision: StageRect} {
+  if (!safeActorArea) {
+    return {x: [width * 0.1, width * 0.9], y: [height * 0.45, height * 0.76], collision: subjectSafeArea(width, height)};
+  }
+  const area = {x: safeActorArea.x * width, y: safeActorArea.y * height, width: safeActorArea.width * width, height: safeActorArea.height * height};
+  return {x: [area.x, area.x + area.width], y: [area.y, area.y + area.height], collision: area};
+}
+
 function avoidActorCollisions(
   actors: readonly ActorSetup[],
   points: Readonly<Record<string, StagePoint>>,
@@ -335,13 +346,14 @@ export function stageScene(request: StagingRequest, options: StagingOptions = {}
   const yDefault = height * 0.64;
   const scale = actorScale(orderedActors.length, request.location.framing);
   const bias = request.location.subjectBias === "left" ? -0.05 : request.location.subjectBias === "right" ? 0.05 : 0;
+  const actorBounds = declaredActorBounds(request.location.safeActorArea, width, height);
   for (const [index, actor] of orderedActors.entries()) {
-    const x = clamp((baseX(index, orderedActors.length) + bias) * width, width * 0.1, width * 0.9);
-    const y = clamp(entranceY(actor.entrance, setupY(actor.setup)) * height, height * 0.45, height * 0.76);
+    const x = clamp((baseX(index, orderedActors.length) + bias) * width, actorBounds.x[0], actorBounds.x[1]);
+    const y = clamp(entranceY(actor.entrance, setupY(actor.setup)) * height, actorBounds.y[0], actorBounds.y[1]);
     actorPoints[actor.id] = point(entranceX(actor.entrance, x / width) * width, y);
   }
   const safeArea = subjectSafeArea(width, height);
-  Object.assign(actorPoints, avoidActorCollisions(orderedActors, actorPoints, scale, safeArea));
+  Object.assign(actorPoints, avoidActorCollisions(orderedActors, actorPoints, scale, actorBounds.collision));
   const emptyObjects: Record<string, StagedObject> = {};
   for (const actor of orderedActors) {
     const fallbackFacing: 1 | -1 = orderedActors.length === 2

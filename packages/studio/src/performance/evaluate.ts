@@ -1,6 +1,7 @@
 import { ease } from "../lib/interpolate";
 import { circleOverlapsBox, solveSkeleton } from "@anim/core/skeleton";
-import type { Skeleton } from "@anim/core";
+import type {FigureArtwork, Skeleton} from "@anim/core";
+import {figureViewForOrientation} from "@anim/core/figure-artwork";
 import type {
   EvaluatedActor,
   EvaluatedCamera,
@@ -595,22 +596,22 @@ function actorState(
   const lifecyclePresent = typeof lifecycleValue?.present === "boolean" ? lifecycleValue.present : undefined;
   const lifecyclePose = typeof lifecycleValue?.pose === "string" ? lifecycleValue.pose : undefined;
   const expressionTrack = tracks.filter((track) => track.kind === "expression").flatMap((track) => track.events).filter((event) => trackEventStart(event) <= frame);
-  const expressionFromTrack = expressionTrack.at(-1);
+  const expressionFromTrack = expressionTrack.filter(event => eventValue(event).transient !== true).at(-1);
   const expressionValue = expressionFromTrack ? (asRecord(eventValue(expressionFromTrack).value) ?? eventValue(expressionFromTrack)) : undefined;
   const expression = expressionValue && (expressionValue.name || expressionValue.emotion)
     ? {name: String(expressionValue.name ?? expressionValue.emotion), ...expressionValue} as PerformanceExpression
     : undefined;
+  const evaluatedExpression = expression ? {...DEFAULT_EXPRESSION, ...expression} : expressionAt(actor, frame);
+  const restingEyeOpen = evaluatedExpression.eyeOpen;
+  for (const event of expressionTrack) {
+    const value = eventValue(event);
+    if (value.transient !== true || !event.active || typeof value.eyeOpen !== "number") continue;
+    // Eye-only envelope: open -> authored closure -> open; facial identity persists.
+    const weight = Math.sin(Math.PI * event.progress) ** 2;
+    evaluatedExpression.eyeOpen = Math.min(evaluatedExpression.eyeOpen,
+      restingEyeOpen + (value.eyeOpen - restingEyeOpen) * weight);
+  }
   const transformed = genericPlacement(tracks, frame, placement, manifest);
-  const solvedRest = actor.skeleton ? solveSkeleton(actor.skeleton, {facing: transformed.flip === true ? -1 : 1}) : undefined;
-  const handRadius = solvedRest ? (solvedRest.hands.hand_r?.radius ?? 26) * (transformed.scale ?? 1) : undefined;
-  const cx = (actor.skeleton?.space.width ?? 400) / 2;
-  const ground = actor.skeleton?.space.height ?? 720;
-  const fkAnchors: Record<string, [number, number]> | undefined = solvedRest
-    ? {
-        hand_r: [Math.round(solvedRest.hands.hand_r!.center[0] - cx), Math.round(solvedRest.hands.hand_r!.center[1] - ground)],
-        hand_l: [Math.round(solvedRest.hands.hand_l!.center[0] - cx), Math.round(solvedRest.hands.hand_l!.center[1] - ground)],
-      }
-    : undefined;
   // Orientation (45-degree facing): the newest semantic event at-or-before the
   // frame wins and PERSISTS — orientation is a body state, not a 0.2s gesture.
   // Procedure call events carry their bone-track events nested — read those too.
@@ -622,6 +623,17 @@ function actorState(
     .map((event) => eventValue(event).orientation)
     .filter((value): value is string => typeof value === "string" && ORIENTATIONS.includes(value))
     .at(-1) as EvaluatedActor["orientation"] | undefined;
+  const skeleton = actor.artwork?.views[figureViewForOrientation(orientation)].skeleton ?? actor.skeleton;
+  const solvedRest = skeleton ? solveSkeleton(skeleton, {facing: transformed.flip === true ? -1 : 1}) : undefined;
+  const handRadius = solvedRest ? (solvedRest.hands.hand_r?.radius ?? 26) * (transformed.scale ?? 1) : undefined;
+  const cx = (skeleton?.space.width ?? 400) / 2;
+  const ground = skeleton?.space.height ?? 720;
+  const fkAnchors: Record<string, [number, number]> | undefined = solvedRest
+    ? {
+        hand_r: [Math.round(solvedRest.hands.hand_r!.center[0] - cx), Math.round(solvedRest.hands.hand_r!.center[1] - ground)],
+        hand_l: [Math.round(solvedRest.hands.hand_l!.center[0] - cx), Math.round(solvedRest.hands.hand_l!.center[1] - ground)],
+      }
+    : undefined;
   return {
     id: actor.id,
     x: transformed.at?.[0] ?? transformed.x ?? 0,
@@ -629,13 +641,14 @@ function actorState(
     scale: numberOr(transformed.scale, 1),
     rotation: numberOr(transformed.rotation, 0),
     flip: transformed.flip === true,
-    ...(actor.skeleton === undefined ? {} : {skeleton: actor.skeleton}),
+    ...(skeleton === undefined ? {} : {skeleton}),
+    ...(actor.artwork === undefined ? {} : {artwork: actor.artwork, fps: numberOr(manifest.video?.fps,24)}),
     ...(handRadius === undefined ? {} : {handRadius: Math.round(handRadius * 100) / 100}),
     ...(orientation === undefined ? {} : {orientation}),
     z: numberOr(actor.z, 0),
     present: lifecyclePresent ?? present ?? actor.present !== false,
     ...(lifecyclePose ?? pose ?? actor.pose) === undefined ? {} : {pose: lifecyclePose ?? pose ?? actor.pose},
-    expression: expression ? {...DEFAULT_EXPRESSION, ...expression} : expressionAt(actor, frame),
+    expression: evaluatedExpression,
     gesture: gestureAt(actor, frame),
     tracks,
     anchors: Object.fromEntries(
@@ -704,12 +717,12 @@ function propState(
   prop: PerformanceProp,
   actors: Map<string, EvaluatedActor>,
   frame: number,
-  context?: {actorAtFrame?: (actorId: string, at: number) => EvaluatedActor | undefined; motorPropFrame?: {x?: number; y?: number; falling?: boolean}},
+  context?: {actorAtFrame?: (actorId: string, at: number) => EvaluatedActor | undefined; motorPropFrame?: {x?: number; y?: number; falling?: boolean; rotation?: number}},
 ): EvaluatedProp {
   // Motor authority: when the motor simulation owns this prop, its baked
   // frame IS the position — the binding interpolation below never runs.
   if (context?.motorPropFrame && typeof context.motorPropFrame.x === "number") {
-    return projectedProp(prop, {x: context.motorPropFrame.x, y: context.motorPropFrame.y ?? stagedPropPosition(prop, frame).y, rotation: 0, scale: 1}, evaluateTracks(prop.tracks, frame));
+    return projectedProp(prop, {x: context.motorPropFrame.x, y: context.motorPropFrame.y ?? stagedPropPosition(prop, frame).y, rotation: context.motorPropFrame.rotation ?? 0, scale: 1}, evaluateTracks(prop.tracks, frame));
   }
   const stagedNow = stagedPropPosition(prop, frame);
   const tracks = evaluateTracks(prop.tracks, frame);
@@ -1099,7 +1112,7 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
   const rawActors = (normalized.actors ?? []).map((actor) => actorState(actor, normalized, safeFrame, tracksForSubject(tracks, actor.id)));
   // Motor-driven actors follow baked trajectories exactly (docs/WORLD_PUPPET_MOTOR.md):
   // their positions are physical and must not be repelled or eased.
-  const motorScenes = (manifest as {sceneTrack?: Array<{start?: number; motor?: {actors?: Record<string, Array<Record<string, unknown>>>; props?: Record<string, Array<{x?: number; y?: number; falling?: boolean}>>}}>}).sceneTrack ?? [];
+  const motorScenes = (manifest as {sceneTrack?: Array<{start?: number; motor?: {actors?: Record<string, Array<Record<string, unknown>>>; props?: Record<string, Array<{x?: number; y?: number; falling?: boolean; rotation?: number}>>}}>}).sceneTrack ?? [];
   const motorFps = normalized.video?.fps ?? 24;
   const activeMotorScene = motorScenes.find((scene) => {
     const start = Math.round((scene.start ?? 0) * motorFps);
@@ -1121,7 +1134,7 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
   // Motor prop frames are the SINGLE position authority for motor-driven
   // props: carried props ride the hand FK, pushed props slide by force, and
   // released props fall to the declared support — nothing interpolates.
-  const motorPropFrameAt = (id: string, at: number): {x?: number; y?: number; falling?: boolean} | undefined => {
+  const motorPropFrameAt = (id: string, at: number): {x?: number; y?: number; falling?: boolean; rotation?: number} | undefined => {
     const scene = motorScenes.find((candidate) => {
       const start = Math.round((candidate.start ?? 0) * motorFps);
       const end = Math.round(((candidate.start ?? 0) + 1) * motorFps);
@@ -1136,7 +1149,7 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
     const def = (normalized.actors ?? []).find((candidate) => candidate.id === actorId);
     if (!def) return undefined;
     const base = actorState(def, normalized, at, tracksForSubject(tracks, actorId));
-    const motor = motorFrameAt(actorId, at) as {x?: number; facing?: number; lean?: number; walk?: number; reach?: [number, number]; contact?: boolean; waist?: number; holds?: string} | undefined;
+    const motor = motorFrameAt(actorId, at) as {x?: number; facing?: number; lean?: number; walk?: number; reach?: [number, number]; reachInfluence?: number; gripDepth?: "front"|"behind"; contact?: boolean; waist?: number;crouch?:number; skeletonPose?:import("@anim/core/skeleton").SkeletonPose; worldFootTargets?:{l:[number,number];r:[number,number]}; footSupport?:{l:boolean;r:boolean}; orientation?:EvaluatedActor["orientation"]; holds?: string} | undefined;
     if (!motor || typeof motor.x !== "number") return base;
     return {
       ...base,
@@ -1145,16 +1158,19 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
       ...(motor.lean === undefined ? {} : {lean: motor.lean}),
       ...(motor.walk === undefined ? {} : {walk: motor.walk}),
       ...(motor.reach === undefined ? {} : {reach: motor.reach}),
+      reachInfluence: motor.reachInfluence, gripDepth: motor.gripDepth,
       ...(motor.contact === undefined ? {} : {contact: motor.contact}),
       ...(motor.waist === undefined ? {} : {waist: motor.waist}),
+      crouch: motor.crouch ?? 0, worldFootTargets:motor.worldFootTargets, footSupport:motor.footSupport, skeletonPose:motor.skeletonPose, ...(motor.orientation?{orientation:motor.orientation, skeleton:base.artwork?.views[figureViewForOrientation(motor.orientation)].skeleton??base.skeleton}:{}),
+      ...(base.artwork ? {motor:true as const,facing:(motor.facing??(base.flip?-1:1)) as 1|-1} : {}),
       ...(motor.holds === undefined ? {} : {holds: motor.holds}),
     };
   };
   const actors = repelActors(
     rawActors.map((actor) => {
-      const motor = motorFrameFor(actor.id) as {x?: number; lean?: number; walk?: number; facing?: number; reach?: [number, number]; contact?: boolean; waist?: number; holds?: string} | undefined;
+      const motor = motorFrameFor(actor.id) as {x?: number; lean?: number; walk?: number; facing?: number; reach?: [number, number]; reachInfluence?: number; gripDepth?: "front"|"behind"; contact?: boolean; waist?: number;crouch?:number; skeletonPose?:import("@anim/core/skeleton").SkeletonPose; worldFootTargets?:{l:[number,number];r:[number,number]}; footSupport?:{l:boolean;r:boolean}; orientation?:EvaluatedActor["orientation"]; holds?: string} | undefined;
       if (!motor || typeof motor.x !== "number") return actor;
-      return {...actor, x: motor.x, lean: motor.lean ?? 0, walk: motor.walk ?? 0, facing: (motor.facing ?? (actor.flip ? -1 : 1)) as 1 | -1, flip: (motor.facing ?? (actor.flip ? -1 : 1)) === -1, reach: motor.reach as [number, number] | undefined, contact: motor.contact === true, waist: motor.waist ?? 0, motor: true as const, ...(motor.holds === undefined ? {} : {holds: motor.holds})};
+      return {...actor, x: motor.x, lean: motor.lean ?? 0, walk: motor.walk ?? 0, facing: (motor.facing ?? (actor.flip ? -1 : 1)) as 1 | -1, flip: (motor.facing ?? (actor.flip ? -1 : 1)) === -1, reach: motor.reach as [number, number] | undefined, reachInfluence: motor.reachInfluence, gripDepth: motor.gripDepth, contact: motor.contact === true, waist: motor.waist ?? 0, motor: true as const, crouch: motor.crouch ?? 0, worldFootTargets:motor.worldFootTargets, footSupport:motor.footSupport, skeletonPose:motor.skeletonPose, ...(motor.orientation?{orientation:motor.orientation, skeleton:actor.artwork?.views[figureViewForOrientation(motor.orientation)].skeleton??actor.skeleton}:{}), ...(motor.holds === undefined ? {} : {holds: motor.holds})};
     }),
   );
   const actorById = new Map(actors.map((actor) => [actor.id, actor]));
@@ -1342,7 +1358,10 @@ function projectCompiledActors(compiled: PerformanceManifest, assets: UnknownRec
           events: track.events.map((item) => ({...item, frame: start + Math.round(numberOr(item.at as number | undefined, 0) * fps), durationFrames: Math.max(1, Math.round(numberOr(item.duration as number | undefined, event.end - event.start) * fps))})),
         });
         if (track.kind === "expression") {
-          for (const item of track.events) expressions.push({frame: start + Math.round(numberOr(item.at as number | undefined, 0) * fps), expression: (item.value ?? item) as PerformanceExpression});
+          for (const item of track.events) {
+            if ((asRecord(item.value) ?? item).transient === true) continue;
+            expressions.push({frame: start + Math.round(numberOr(item.at as number | undefined, 0) * fps), expression: (item.value ?? item) as PerformanceExpression});
+          }
         }
       }
     }
@@ -1352,6 +1371,7 @@ function projectCompiledActors(compiled: PerformanceManifest, assets: UnknownRec
       placement: stateTracks.placements[0]?.placement,
       anchors: assetAnchors(asset),
       ...(skeletonOf(asset) === undefined ? {} : {skeleton: skeletonOf(asset)}),
+      ...(asset?.artwork === undefined ? {} : {artwork: asset.artwork as FigureArtwork}),
       ...(stateTracks.placements.length ? {placementTrack: stateTracks.placements} : {}),
       ...(expressions.length ? {expressionTrack: expressions} : {}),
       ...(tracks.length ? {tracks} : {}),

@@ -10,7 +10,7 @@ export function putdown(subject, object, _target) {
     durationSec: D,
     mode: "block",
     *run(world) {
-      track(world, "motor", subject.id, [{ at: 0, duration: D, intent: "release", target: object.id }]);
+      track(world, "motor", subject.id, [{ at: 0, duration: D, intent: "release", releaseMode: "place", target: object.id }]);
       yield D;
     },
   };

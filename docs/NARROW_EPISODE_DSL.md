@@ -44,7 +44,7 @@ emotion.<name>(actor)             persistent facial state
 gaze.<name>(actor, target)        persistent gaze constraint
 movement.<name>(actor, target)    semantic locomotion
 voice.<name>(actor, ...)          voice behavior (e.g. interrupt)
-prop.<name>(actor, object, ...)   pickup, putdown, handover
+prop.<name>(actor, object, ...)   pickup, handover, putdown, release
 camera.<name>(target)             camera performance
 effect.<name>(target)             visual effect
 sound.<name>()                    sound effect
@@ -90,6 +90,16 @@ Semantic staging groups actors into inferred `left`, `center`, and `right`
 lanes, separates same-lane footprints in stable actor-ID order, clamps to the
 subject safe area, and fails when the requested composition cannot fit.
 Authors never write coordinates; plugins and the engine keep geometry normalized to `0..1`.
+
+For ordinary contact, use one `prop.pickup(actor, object)` and one
+`prop.handover(giver, object, recipient)` call. The handover cue is the intended
+contact beat: motor preparation precedes it, and ownership changes only with
+physical contact at/after the cue. Insufficient scene pre-roll or conflicting
+prior motor motion produces a diagnostic, not instantaneous reach. Holding
+persists until transfer or one `prop.release(actor, object)` call, which opens
+the hand immediately and preserves carry velocity into free gravity/support.
+`prop.putdown(actor, object)` retains support-aware placement (including lifting
+to clear a higher surface). Explicit poses/moves are optional overrides.
 
 ## Hard cutover
 

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { IdSchema } from "./common";
+import {createFigureArtworkSchema} from "./figureArtwork";
 
 export const RegistryAssetIdSchema = z.string().regex(/^(?:figure|voice|set|prop|dressing|layout)(?:\/[a-z][a-z0-9_]*)+$/, "asset identity must be a canonical library-relative path");
 export type RegistryAssetId = z.infer<typeof RegistryAssetIdSchema>;
@@ -45,6 +46,7 @@ export const SkeletonSchema = z.object({
   }).strict(),
 }).strict();
 export type Skeleton = z.infer<typeof SkeletonSchema>;
+export const FigureArtworkSchema = createFigureArtworkSchema(SkeletonSchema);
 
 export const SupportSurfaceSchema = z.object({
   name: z.string().min(1).default("top"),
@@ -63,21 +65,56 @@ export const PropPlacementSchema = z.object({
   /** The drawn body's bounds in art space [x0, y0, x1, y1] — the physical
    * object the hand must touch (the art frame includes shadows/margins). */
   body: z.tuple([z.number(), z.number(), z.number(), z.number()]).optional(),
+  /** Intrinsic handle socket; renderer uses the same base-relative geometry. */
+  grip: z.object({at: z.tuple([z.number().finite(),z.number().finite()]), radius: z.number().positive().default(2), depth: z.enum(['front','behind']).default('front')}).strict().optional(),
   /** Desired rendered width on the 1920 stage; scale derives from this. */
   stageWidth: z.number().positive().default(320),
   /** Declared support surfaces (furniture). */
   supports: z.array(SupportSurfaceSchema).default([]),
 }).strict();
+export const SetSupportSurfaceSchema = SupportSurfaceSchema.extend({
+  /** Id of the SVG element that paints this surface; it carries data-support-top. */
+  paint: z.string().min(1),
+}).strict();
+export type SetSupportSurface = z.infer<typeof SetSupportSurfaceSchema>;
+
+/** One declared set layer: a group id in scene.svg, optionally in front of actors. */
+export const SetLayerEntrySchema = z.union([
+  z.string().min(1),
+  z.object({id: z.string().min(1), foreground: z.literal(true)}).strict(),
+]);
+export type SetLayerEntry = z.infer<typeof SetLayerEntrySchema>;
+
+/** Author-facing actor containment rect in coordinateSpace units. */
+export const SafeActorAreaSchema = z.object({
+  x: z.number().finite(),
+  y: z.number().finite(),
+  width: z.number().positive(),
+  height: z.number().positive(),
+}).strict();
+export type SafeActorArea = z.infer<typeof SafeActorAreaSchema>;
+
 export const SetManifestSchema = z.object({
-  supports: z.array(SupportSurfaceSchema).default([]),
-}).partial().strip();
+  coordinateSpace: z.string().regex(/^\d+x\d+$/, "coordinateSpace must be like 1920x1080"),
+  layers: z.array(SetLayerEntrySchema).min(1),
+  safeActorArea: SafeActorAreaSchema.optional(),
+  supports: z.array(SetSupportSurfaceSchema).default([]),
+}).strict();
+
+/** Registry-normalized set world: every value is 0..1 of the canvas. */
+export interface NormalizedSetWorld {
+  readonly coordinateSpace: {readonly width: number; readonly height: number};
+  readonly layers: ReadonlyArray<{readonly id: string; readonly foreground: boolean}>;
+  readonly safeArea?: {readonly x: number; readonly y: number; readonly width: number; readonly height: number};
+  readonly supports: ReadonlyArray<{readonly name: string; readonly x: readonly [number, number]; readonly y: number}>;
+}
 export type PropPlacement = z.infer<typeof PropPlacementSchema>;
 
 // The generic manifest is open (passthrough): category-specific content
 // (figure skeleton, prop placement, set supports) is validated by its own
 // schema when read; the registry index tolerates all of them.
 export const RegistryAssetManifestSchema = RegistryAssetCommonSchema.extend({identity: RegistryAssetIdSchema, kind: RegistryAssetKindSchema}).passthrough();
-export const FigureAssetManifestSchema = RegistryAssetCommonSchema.extend({identity: RegistryAssetIdSchema, kind: RegistryAssetKindSchema, skeleton: SkeletonSchema}).strict();
+export const FigureAssetManifestSchema = RegistryAssetCommonSchema.extend({identity: RegistryAssetIdSchema, kind: RegistryAssetKindSchema, skeleton: SkeletonSchema, artwork: FigureArtworkSchema.optional()}).strict();
 export const PropAssetManifestSchema = RegistryAssetCommonSchema.extend({identity: RegistryAssetIdSchema, kind: RegistryAssetKindSchema, placement: PropPlacementSchema}).strict();
 export type RegistryAssetManifest = z.infer<typeof RegistryAssetManifestSchema>;
 export const AssetManifestSchema = RegistryAssetManifestSchema;

@@ -105,3 +105,30 @@ test("reports impossible same-lane compositions clearly", () => {
     /staging: impossible composition: same-lane actors require more horizontal safe area/,
   );
 });
+
+test("declared safeActorArea clamps actor placement instead of the 10%-90% heuristic", () => {
+  // The declared area excludes the heuristic center, so both axes clamp.
+  const declared = {id: "canteen", framing: "balanced" as const, safeActorArea: {x: 0.25, y: 0.3, width: 0.2, height: 0.33}};
+  const clamped = stageScene({location: declared, actors: [{id: "lin", facing: "audience"}]});
+  // Footprint-scaled half-extents inset the declared area (scale 0.92 for one actor).
+  assert.deepEqual(clamped.actors.lin!.at, [0.393, 0.524]);
+  // Entrances resolve inside the declared area too (collision clamping).
+  const entrances = stageScene({location: {id: "canteen", safeActorArea: {x: 0.2, y: 0.3, width: 0.4, height: 0.33}}, actors: [{id: "a", entrance: "left"}, {id: "b", entrance: "right"}]});
+  for (const actor of Object.values(entrances.actors)) {
+    assert.ok(actor.at[0] >= 0.2 && actor.at[0] <= 0.6, `x ${actor.at[0]} outside declared area`);
+    assert.ok(actor.at[1] >= 0.3 && actor.at[1] <= 0.63, `y ${actor.at[1]} outside declared area`);
+  }
+  // A declared area too small for the actor footprint fails loudly.
+  assert.throws(
+    () => stageScene({location: {id: "tiny", safeActorArea: {x: 0.49, y: 0.5, width: 0.02, height: 0.02}}, actors: [{id: "lin"}]}),
+    /staging: impossible composition: actor footprint does not fit in the subject safe area/,
+  );
+  // Legacy sets without a declaration keep the heuristic exactly.
+  const legacy = {id: "canteen", framing: "balanced" as const};
+  const staged = stageScene({location: legacy, actors: [{id: "lin", facing: "audience"}]});
+  assert.deepEqual(staged.actors.lin!.at, [0.5, 0.64]);
+  assert.deepEqual(
+    stageScene({location: {...legacy, safeActorArea: undefined}, actors: [{id: "lin", facing: "audience"}]}).actors,
+    staged.actors,
+  );
+});

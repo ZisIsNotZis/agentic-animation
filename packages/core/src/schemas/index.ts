@@ -24,6 +24,7 @@ export * from "./puppet";
 export * from "./motion";
 export * from "./config";
 export * from "./libraryMeta";
+export * from "./figureArtwork";
 export * from "./narrowEpisode";
 export * from "./world";
 
