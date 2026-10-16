@@ -15,7 +15,7 @@ test('wholeBodyProposal consumes actual renderer-authored poses in all sixteen n
       const skeleton=artwork.views[figureViewForOrientation(orientation)].skeleton;
       const manifest={video:{width:1280,height:720,fps:24},durationInFrames:2,
         actors:[{id:'hero',artwork,skeleton,placement:{at:[500,650],scale:.88},
-          tracks:[{kind:'bone',events:[{frame:0,endFrame:2,value:{action:'point',parts:['arm_u_l','arm_l_l','hand_l'],orientation}}]}]}],
+          tracks:[{kind:'bone',events:[{frame:0,endFrame:2,value:{action:'write with the hand',parts:['arm_u_l','arm_l_l','hand_l'],orientation}}]}]}],
         sceneTrack:[{start:0,end:2/24,motor:{actors:{hero:[0,1].map(()=>({x:500,lean:0,facing,walk:0,crouch:.2,waist:10}))},props:{}}}],
       } as PerformanceManifest;
       const actor=evaluatePerformance(manifest,1).actors[0]!,figure=solveActorFigure(actor);

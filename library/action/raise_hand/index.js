@@ -1,5 +1,6 @@
-// action.raise_hand — generated from the authored recipe (docs/WORLD_PLUGIN_CONTRACT.md).
-// Hand-polish freely; keep the descriptor contract: {durationSec, mode, run}.
+// action.raise_hand — motor reach gesture (docs/WORLD_PUPPET_MOTOR.md,
+// slice 3): the hand travels above shoulder height at real hand speed and
+// returns through the shared retract path. No regex pose layer.
 import { track } from "@anim/core/stdlib";
 
 const D = 0.75;
@@ -9,7 +10,7 @@ export function raise_hand(subject) {
     durationSec: D,
     mode: "block",
     *run(world) {
-      track(world, "bone", undefined, [{ at: 0, duration: 0.25, phase: "signal", action: "catch the listener's eye", parts: ["arm_u_r","arm_l_r","hand_r","head"] }, { at: 0.25, duration: 0.25, phase: "raise", action: "lift the hand above shoulder height", parts: ["arm_u_r","arm_l_r","hand_r","head"] }, { at: 0.5, duration: 0.25, phase: "wait", action: "hold patiently for recognition", parts: ["arm_u_r","arm_l_r","hand_r","head"] }]);
+      track(world, "motor", subject.id, [{ at: 0, duration: D, intent: "raise" }]);
       yield D;
     },
   };

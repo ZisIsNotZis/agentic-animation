@@ -25,12 +25,19 @@ test("semantic raise is eased, articulated, and establishes an eyeline", () => {
 });
 
 test("the requested actions have materially different silhouette signatures", () => {
-  const names = ["point", "pat", "sip", "type", "write", "count", "scatter", "present", "bow", "nod", "shiver", "think", "scratch", "touch", "slam", "walk"];
+  // Slice 3: bow, nod, point, shiver and think are motor gestures — their
+  // regex pose paths are deleted, so leftover prose collapses to generic.
+  const names = ["pat", "sip", "type", "write", "count", "scatter", "present", "scratch", "touch", "slam", "walk"];
   const signatures = names.map((name) => {
     const p = pose(name, ["arm_u_r", "arm_l_r", "hand_r", "torso", "head", "leg_u_l", "leg_u_r"]);
     return [p.torsoTilt, p.torsoY, p.headTilt, p.headY, p.armLeft.upper, p.armRight.upper, p.armRight.lower, p.legLeft.upper, p.legRight.upper, p.armRight.hand, p.slamPeak].join(",");
   });
   assert.equal(new Set(signatures).size, names.length);
+  for (const migrated of ["bow", "nod", "point", "shiver", "think"]) {
+    const p = pose(migrated, ["arm_u_r", "arm_l_r", "hand_r", "torso", "head", "leg_u_l", "leg_u_r"]);
+    assert.equal(p.armRight.upper, 0, migrated + " has no regex pose path");
+    assert.equal(p.legLeft.upper, 0, migrated + " has no regex pose path");
+  }
 });
 
 test("motion is seek-safe and has no old shared sinusoidal twitch recipe", () => {

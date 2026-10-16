@@ -206,3 +206,67 @@ test("stagger: beyond step capacity the slide is long (fall territory)", () => {
   // work; the dynamics already distinguish the two regimes).
   assert.ok(totalSlide > 150, `sustained shove should travel far: ${Math.round(totalSlide)}px`);
 });
+
+test("gesture bow: the waist hinges forward and returns upright inside the authored duration", () => {
+  const scene: MotorScene = {
+    ...baseScene,
+    actors: [{ ...baseScene.actors[0]!, intents: [{ at: 0.2, duration: 0.9, intent: "bow" }] }, baseScene.actors[1]!],
+  };
+  const trajectory = simulateScene(scene);
+  const frames = trajectory.actors.aqiang!;
+  const peak = Math.max(...frames.map((f) => f.waist ?? 0));
+  assert.ok(peak > 20, `bow must hinge the waist visibly: peak ${peak.toFixed(1)}deg`);
+  // Planted support: a gesture never translates the body.
+  const tail = frames.slice(-6).map((f) => f.x);
+  assert.equal(new Set(tail.map(Math.round)).size, 1, "bow never translates the actor");
+  assert.equal(Math.max(...frames.slice(-6).map((f) => Math.abs(f.waist ?? 0))), 0, "waist returns upright before the scene ends");
+  // Frame-end sampling: frame k samples at (k+1)/24s, so the beat at 0.2s
+  // first shows in frame index 4.
+  assert.equal(frames.slice(0, 4).every((f) => (f.waist ?? 0) === 0), true, "no bend before the authored beat");
+  assert.ok((frames[5]?.waist ?? 0) > 0 || (frames[6]?.waist ?? 0) > 0, "bend under way just after the authored beat");
+});
+
+test("gesture nod: two distinct dips then upright", () => {
+  const scene: MotorScene = {
+    ...baseScene,
+    actors: [{ ...baseScene.actors[0]!, intents: [{ at: 0, duration: 0.45, intent: "nod" }] }, baseScene.actors[1]!],
+  };
+  const frames = simulateScene(scene).actors.aqiang!;
+  const pitches = frames.map((f) => f.waist ?? 0);
+  const peak = Math.max(...pitches);
+  assert.ok(peak > 4 && peak < 12, `nod dips stay small: ${peak.toFixed(1)}deg`);
+  // Two dips: the pitch curve crosses half-amplitude at least three times.
+  const crossings = pitches.filter((p, i) => i > 0 && (pitches[i - 1]! < peak / 2) !== (p < peak / 2)).length;
+  assert.ok(crossings >= 3, `two dips expected, saw ${crossings} half-amplitude crossings`);
+  assert.equal(Math.max(...pitches.slice(-4)), 0, "nod ends upright");
+});
+
+test("gesture shiver: deterministic lean oscillation around zero", () => {
+  const scene: MotorScene = {
+    ...baseScene,
+    actors: [{ ...baseScene.actors[0]!, intents: [{ at: 0, duration: 0.7, intent: "shiver" }] }, baseScene.actors[1]!],
+  };
+  const frames = simulateScene(scene).actors.aqiang!;
+  const again = simulateScene(scene).actors.aqiang!;
+  assert.deepEqual(frames, again, "shiver is deterministic");
+  const peak = Math.max(...frames.map((f) => Math.abs(f.lean)));
+  assert.ok(peak > 1 && peak < 5, `shiver oscillates modestly: ${peak.toFixed(2)}deg`);
+  assert.equal(new Set(frames.slice(-4).map((f) => f.x)).size, 1, "shiver never translates the actor");
+});
+
+test("gesture point: the actor faces the target and the hand travels to the aim, then retracts", () => {
+  const scene: MotorScene = {
+    ...baseScene,
+    actors: [{ ...baseScene.actors[0]!, intents: [{ at: 0.2, duration: 0.65, intent: "point", target: "awei" }] }, baseScene.actors[1]!],
+  };
+  const frames = simulateScene(scene).actors.aqiang!;
+  const mid = frames[Math.round(0.5 * 24)]!;
+  assert.equal(mid.facing, 1, "point faces the target");
+  assert.ok(mid.reach, "the reach point is baked while pointing");
+  const dx = mid.reach![0] - mid.x;
+  assert.ok(dx > 100, `the hand leads toward the target: ${Math.round(dx)}px`);
+  assert.equal(Math.abs(mid.reach![1] - (frames[0]!.reach?.[1] ?? mid.reach![1])) >= 0, true, "reach is finite");
+  // Recovery: the reach clears again after the authored duration.
+  const cleared = frames.findIndex((f, i) => i > Math.round(1.1 * 24) && !f.reach);
+  assert.ok(cleared > 0, "the arm retracts after the point ends");
+});

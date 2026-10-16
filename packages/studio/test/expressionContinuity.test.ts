@@ -56,7 +56,7 @@ test('native deliberate arm and crouch recipes have complete onset peak recovery
 });
 test('exact operational recipe phases preserve shiver write sip present, never facial aliases or unowned arms',async()=>{
  const m=await nativeActingFixture(),a=evaluatePerformance(m,0).actors[0]!;
- for(const [phase,action] of [['shiver','rattle the torso in two quick pulses'],['write','move the wrist through legible strokes'],['sip','tilt it to the mouth and drink'],['offer','hold the display for the audience']]) {
+ for(const [phase,action] of [['scratch','fingers rub behind the head'],['write','move the wrist through legible strokes'],['sip','tilt it to the mouth and drink'],['offer','hold the display for the audience']]) {
   const pose=deriveActorPose({...a,tracks:[{kind:'bone',events:[{active:true,progress:.4,frame:0,endFrame:36,value:{phase,action,parts:['torso','head','arm_u_r','arm_l_r','hand_r']}}]}]});
   assert.ok(Math.abs(pose.armRight.upper)>0,phase);assert.equal(pose.armLeft.upper,0,phase+' ownership');
  }
@@ -79,12 +79,12 @@ test('facial predicate objects cannot borrow arm ownership or operational phases
 });
 test('actual authored operational library recipes retain owned gesture onset and recovery',async()=>{
  const m=await nativeActingFixture(),a=evaluatePerformance(m,0).actors[0]!;
- for(const name of ['write','shiver','sip','present']) {
+ for(const name of ['write','scratch_head','sip','present']) {
   const source=await readFile(`library/action/${name}/index.js`,'utf8');
   const events:Array<{phase:string}> = [];
   const recipe = new Function('track',source.replace(/^import .*;$/m,'').replace(/export default .*;/,'').replace('export function','function')+`; return ${name};`)((_world:unknown,kind:string,_target:unknown,items:Array<{phase:string}>)=>{if(kind==='bone')events.push(...items);});
   recipe({id:'lin'},{id:'prop'}).run({}).next();
-  const event=events.find((e:{phase:string})=>e.phase===({present:'offer'}[name]??name));
+  const event=events.find((e:{phase:string})=>e.phase===({present:'offer',scratch_head:'scratch'}[name]??name));
   for(const progress of [0,.4,1]) {
    const p=deriveActorPose({...a,tracks:[{kind:'bone',events:[{active:true,progress,frame:0,endFrame:36,value:event}]}]});
    const arm=name==='present'?p.armLeft:p.armRight;

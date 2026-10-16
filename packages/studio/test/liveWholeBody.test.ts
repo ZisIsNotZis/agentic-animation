@@ -29,7 +29,7 @@ test('live whole-body transaction bakes canonical nonzero authored pose in all s
   const art=await nativeDraftArtworkFixture();
   const skeletonViews=Object.fromEntries(FIGURE_VIEWS.map(v=>[v,art.views[v].skeleton])) as Record<FigureView,Skeleton>;
   for(const orientation of ['front','back','right','left','front-right','front-left','back-right','back-left'])for(const facing of [-1,1] as const){
-    const value={action:'point',parts:['arm_u_l','arm_l_l','hand_l']};
+    const value={action:'write with the hand',parts:['arm_u_l','arm_l_l','hand_l']};
     const movie=bakeSceneMotor({durationSec:1,actors:{hero:{at:[.5,.9],scale:.6,facing,skeleton:art.views.front.skeleton,skeletonViews}},objects:{},tracks:[{subject:'hero',events:[
       {start:0,end:1,tracks:[{kind:'bone',events:[{value:{orientation}}]},{kind:'bone',events:[{value,duration:1}]}]},
       {start:.9,end:1,tracks:[{kind:'motor',events:[{intent:'release',target:'absent',duration:.1}]}]},

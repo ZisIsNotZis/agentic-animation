@@ -83,7 +83,7 @@ test('native resting correction preserves each explicitly claimed arm segment',a
   for (const side of ['l','r']) for (const part of [`arm_u_${side}`,`arm_l_${side}`,`hand_${side}`]) {
     const manifest={video:{width:1280,height:720,fps:24},durationInFrames:24,actors:[{id:'hero',artwork,skeleton:artwork.views.front.skeleton,placement:{at:[500,650],scale:.6},tracks:[
       {kind:'action',events:[{frame:0,endFrame:24,value:{action:'present'}}]},
-      {kind:'bone',events:[{frame:0,endFrame:24,value:{action:'point',parts:[part]}}]},
+      {kind:'bone',events:[{frame:0,endFrame:24,value:{action:'write with the hand',parts:[part]}}]},
     ]}]} as PerformanceManifest;
     const actor={...evaluatePerformance(manifest,12).actors[0]!,motor:true};
     const key=side==='l'?'armLeft':'armRight';

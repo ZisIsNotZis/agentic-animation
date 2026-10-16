@@ -22,7 +22,8 @@ import {solidSupport,type PropSolid} from "./propGeometry";
 export interface MotorIntent {
   at: number;
   duration: number;
-  intent: "move" | "push" | "grab" | "release";
+  intent: "move" | "push" | "grab" | "release"
+    | "bow" | "nod" | "shiver" | "point" | "wave" | "raise" | "think";
   target?: string;
   /** Stylized force 0..1 for push. */
   force?: number;
@@ -154,6 +155,12 @@ const GRAVITY = 2600;
 /** Hand drive acceleration/top speed per unit force (stage px/s², px/s). */
 const HAND_ACC = 1500;
 const HAND_MAX = 560;
+/** Gesture envelopes (slice 3 vocabulary): stylized joint-space magnitudes —
+ *  the invariants (planted support, no contact) are what matter. */
+const BOW_PITCH = 28; // deg forward at the waist
+const NOD_PITCH = 7.5; // deg per dip
+const SHIVER_AMP = 2.4; // deg lean oscillation
+const SHIVER_HZ = 9;
 
 /** Per-actor body geometry, all derived from the declared skeleton. */
 interface ActorBody {
@@ -285,6 +292,17 @@ function travelHand(from: [number, number], to: [number, number], settleSec = 0,
 
 function smoothstep01(t: number): number {
   return t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+}
+
+/** Bow envelope: bend in over the first 45%, hold to 62%, return upright. */
+function bowEnvelope(t: number, dur: number): number {
+  const t1 = dur * 0.45, t2 = dur * 0.62;
+  return t < t1 ? smoothstep01(t / t1) : t < t2 ? 1 : smoothstep01(Math.max(0, 1 - (t - t2) / (dur - t2)));
+}
+
+/** Nod envelope: two full dips across the duration (0→1→0→1→0). */
+function nodEnvelope(t: number, dur: number): number {
+  return 0.5 - 0.5 * Math.cos((t / dur) * 4 * Math.PI);
 }
 
 function nativeCadence(state:ActorState):number {
@@ -420,6 +438,12 @@ interface ActorState {
   stepPlanted?: boolean;
   /** Accumulated slide for the current stagger event (px). */
   staggerSlide: number;
+  /** Torso-pitch gesture in flight (bow/nod/shiver): the waist/lean follows a
+   *  fixed envelope; weight stays planted, nothing translates or contacts. */
+  gesture: {kind: "bow" | "nod" | "shiver"; t: number; dur: number} | null;
+  /** Reach gesture in flight (point/wave/raise/think): the hand travels to a
+   *  fixed aim at real hand speed, holds, then returns via the shared retract. */
+  handGesture: {kind: "point" | "wave" | "raise" | "think"; target: string; t: number; dur: number} | null;
 }
 
 interface PropState {
@@ -510,7 +534,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     scene.actors.map((actor) => [actor.id, {
       id: actor.id, x: actor.x, vx: 0, facing: actor.facing, groundY: actor.groundY, scale: actor.scale,
       walkPhase: 0, lean: 0, moveTarget: null, grab: null, holding: null, holdRel: null, handDrive: null, reach: null, retract: false, retractInfluence: 1, retractElapsed: 0, retractDuration: .65, wristAtBind: 0, propAngleAtBind: 0, grip: null, gripGoal: null, pursue: null, place: null,
-      stagger: 0, stepsTaken: 0, staggerSlide: 0, body: bodyOf((actor.skeletonViews?.front??actor.skeleton) as Skeleton,actor.skeletonViews!==undefined),
+      stagger: 0, stepsTaken: 0, staggerSlide: 0, gesture: null, handGesture: null, body: bodyOf((actor.skeletonViews?.front??actor.skeleton) as Skeleton,actor.skeletonViews!==undefined),
       skeleton: actor.skeletonViews?.front??actor.skeleton, skeletonViews:actor.skeletonViews, orientation:actor.skeletonViews?'front':undefined, waist: 0, crouch: 0,
     }]),
   );
@@ -734,6 +758,23 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
               propOpenHand(state, props, intent.releaseMode === 'free');
             }
           }
+        } else if (intent.intent === "bow" || intent.intent === "nod" || intent.intent === "shiver") {
+          // Torso-pitch gesture: the envelope is the whole motion — planted
+          // support (I1), no contact (I2), no translation. A new gesture
+          // supersedes an in-flight reach, which retracts through the shared path.
+          state.handGesture = null;
+          if (state.reach && !state.holding) state.retract = true;
+          state.gesture = {kind: intent.intent, t: 0, dur: Math.max(0.2, intent.duration)};
+        } else if (intent.intent === "point" || intent.intent === "wave" || intent.intent === "raise" || intent.intent === "think") {
+          // Reach gesture: face the aim first (a hand cannot honestly point
+          // where the body refuses to look); the hand then travels there at
+          // real hand speed — no snap, no remote effect.
+          state.gesture = null;
+          if (intent.intent !== "think") {
+            const tx = intent.target !== undefined ? scene.resolveX(intent.target) : undefined;
+            if (tx !== undefined) state.facing = (Math.sign(tx - state.x) || state.facing) as 1 | -1;
+          }
+          state.handGesture = {kind: intent.intent, target: intent.target ?? "", t: 0, dur: Math.max(0.3, intent.duration)};
         }
       }
     }
@@ -1155,13 +1196,43 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         advance(delta);
 
       }
+      // Gesture intents (slice 3 vocabulary): torso-pitch envelopes and reach
+      // gestures are baked motion — planted support, no contact (I1/I2).
+      if (state.gesture) {
+        const g = state.gesture;
+        g.t += delta;
+        if (g.t >= g.dur) {
+          state.waist = 0;
+          state.gesture = null;
+        } else if (g.kind === "bow") state.waist = BOW_PITCH * bowEnvelope(g.t, g.dur);
+        else if (g.kind === "nod") state.waist = NOD_PITCH * nodEnvelope(g.t, g.dur);
+        else state.lean = SHIVER_AMP * Math.sin(SHIVER_HZ * 2 * Math.PI * g.t);
+      }
+      if (state.handGesture) {
+        const g = state.handGesture;
+        g.t += delta;
+        const sh = geometryShoulder(state);
+        const arm = state.body.armReach * state.scale;
+        const goal: [number, number] = g.kind === "raise"
+          ? [sh[0] + state.facing * arm * 0.28, sh[1] - arm * 0.98]
+          : g.kind === "think"
+            ? [sh[0] + state.facing * arm * 0.06, sh[1] - arm * 0.42]
+            : [sh[0] + state.facing * arm * 0.94, sh[1] + (g.kind === "wave" ? Math.sin(g.t * 14) * arm * 0.05 : 0)];
+        const previous: [number, number] = state.reach ? [state.reach.tx, state.reach.ty] : restHandAt(state);
+        const hand = travelHand(previous, goal, 0, 480 * smoothstep01(g.t / 0.25), delta);
+        state.reach = {tx: hand[0], ty: hand[1], target: g.target, contact: false};
+        if (g.t >= g.dur) {
+          state.handGesture = null;
+          state.retract = true;
+        }
+      }
       // Posture return when nothing is held or grabbed.
-      if (!state.grab && !state.holding && (state.waist !== 0 || state.crouch !== 0)) {
+      if (!state.grab && !state.holding && !state.gesture && (state.waist !== 0 || state.crouch !== 0)) {
         state.waist = approach(state.waist, 0, WAIST_RATE * delta);
         state.crouch = recoverCrouch(state,delta);
       }
       if (!state.retract) {state.retractInfluence = 1;state.retractElapsed = 0;}
-      if (state.retract && !state.grab && !state.holding && !state.handDrive) {
+      if (state.retract && !state.grab && !state.holding && !state.handDrive && !state.handGesture) {
         const rest = restHandAt(state);
         if (state.retractElapsed === 0) {
           const span = state.reach ? Math.hypot(state.reach.tx-rest[0],state.reach.ty-rest[1]) : 0;
@@ -1361,7 +1432,9 @@ export function bakeSceneMotor(
         if (recipe.kind !== "motor") continue;
         for (const item of recipe.events ?? []) {
           const intent = (item.value ?? item) as Record<string, unknown>;
-          if (intent.intent !== "move" && intent.intent !== "push" && intent.intent !== "release" && intent.intent !== "grab") continue;
+          const GESTURE_INTENTS = ["bow", "nod", "shiver", "point", "wave", "raise", "think"] as const;
+          const kind = String(intent.intent);
+          if (kind !== "move" && kind !== "push" && kind !== "release" && kind !== "grab" && !(GESTURE_INTENTS as readonly string[]).includes(kind)) continue;
           // An intent may drive an actor other than the invoking subject
           // (e.g. a handover walks the RECEIVER to the giver).
           const driven = typeof intent.actor === "string" && intentsByActor.has(intent.actor) ? intent.actor : subject;
@@ -1369,7 +1442,7 @@ export function bakeSceneMotor(
           intentsByActor.get(driven)!.push({
             at: Number(event.start ?? 0) - (source.actors[driven]?.skeletonViews ? source.startSec??0 : 0) + Number(intent.at ?? 0),
             duration: Number(intent.duration ?? (Number(event.end ?? Number(event.start ?? 0) + 1) - Number(event.start ?? 0))),
-            intent: intent.intent as "move" | "push" | "release" | "grab",
+            intent: kind as MotorIntent["intent"],
             target: intent.target as string | undefined,
             force: typeof intent.force === "number" ? intent.force : undefined,
             reach: typeof intent.reach === "number" ? intent.reach : undefined,

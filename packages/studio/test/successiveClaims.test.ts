@@ -10,8 +10,8 @@ const left=['arm_u_l','arm_l_l','hand_l'];
 async function fixture(first:string[],second:string[]) {
  const artwork=await artworkFixture();
  const bone:PerformanceGenericTrack={kind:'bone',events:[
-  {frame:13,durationFrames:17,value:{action:'point',parts:first}},
-  {frame:26,durationFrames:17,value:{action:'point',parts:second}}]};
+  {frame:13,durationFrames:17,value:{action:'tap the shoulder',parts:first}},
+  {frame:26,durationFrames:17,value:{action:'tap the shoulder',parts:second}}]};
  return {video:{width:1280,height:720,fps:24},durationInFrames:53,actors:[{id:'hero',artwork,skeleton:artwork.views.front.skeleton,placement:{at:[1050,650],scale:.6},expression:{name:'calm'},tracks:[bone]}]} as PerformanceManifest;
 }
 test('successive authored one/two-hand claims retain takeover pose and all-frame FK continuity',async()=>{
@@ -43,10 +43,13 @@ test('native draft successive claims crossfade at full-size renderer geometry ac
    {kind:'bone',events:[structuredClone(event)]},
   ]) as PerformanceGenericTrack[];
   let previous:Record<string,number[]>|undefined;
+  // 32px/frame: calibrated for the smallest surviving regex gesture
+  // (touch, 54deg) at full size; the 24px bound belonged to the migrated
+  // 34deg point, which is now a motor gesture.
   for(let frame=0;frame<53;frame++) {
    const a=evaluatePerformance(m,frame).actors[0]!,fig=solveActorFigure(a);
    const hands=Object.fromEntries(['hand_l','hand_r'].map(j=>[j,designHandToWorld(a,fig.solved!.joints[j]!,fig.space,fig.flipped)]));
-   if(previous)for(const j of ['hand_l','hand_r'])assert.ok(Math.hypot(hands[j]![0]!-previous[j]![0]!,hands[j]![1]!-previous[j]![1]!)<=24,`native ${first!.length}->${second!.length}/${frame}/${j}`);
+   if(previous)for(const j of ['hand_l','hand_r'])assert.ok(Math.hypot(hands[j]![0]!-previous[j]![0]!,hands[j]![1]!-previous[j]![1]!)<=32,`native ${first!.length}->${second!.length}/${frame}/${j}`);
    if(frame===26) {
     const old=structuredClone(a);old.tracks=old.tracks.filter(track=>track.events[0]?.frame===13);
     assert.deepEqual(deriveActorPose(a).armRight,deriveActorPose(old).armRight);

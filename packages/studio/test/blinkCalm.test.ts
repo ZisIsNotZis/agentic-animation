@@ -12,9 +12,9 @@ async function manifest(tracks:PerformanceGenericTrack[]) {
   const artwork=await artworkFixture();
   return {video:{width:1280,height:720,fps:24},durationInFrames:24,actors:[{id:'hero',artwork,skeleton:artwork.views.front.skeleton,placement:{at:[500,650],scale:.6},expression:{name:'proud',eyeOpen:1,smile:.7},tracks}]} as PerformanceManifest;
 }
-test('emotion.calm never claims arms or changes rendered FK, alone or overlapping authored point',async()=>{
+test('emotion.calm never claims arms or changes rendered FK, alone or overlapping authored write',async()=>{
   for(const parts of [[],['arm_u_r','arm_l_r','hand_r'],['arm_u_l','arm_l_l','hand_l','arm_u_r','arm_l_r','hand_r']]) {
-    const bone:PerformanceGenericTrack={kind:'bone',events:[{frame:0,durationFrames:17,action:'point',parts}]};
+    const bone:PerformanceGenericTrack={kind:'bone',events:[{frame:0,durationFrames:17,action:'write with the hand',parts}]};
     const reference=await manifest(parts.length?[bone]:[]);
     const subject=await manifest(parts.length?[bone,calm]:[calm]);
     for(let frame=0;frame<=19;frame++) {

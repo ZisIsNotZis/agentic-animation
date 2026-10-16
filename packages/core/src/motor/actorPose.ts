@@ -154,7 +154,6 @@ function actionOf(text: string, bonePredicate = true): string {
   if (/\b(?:slam|impact|drive(?: it)? down)\b/.test(text)) return "slam";
   if (/\b(?:scatter|sprinkle|throw wide)\b/.test(text)) return "scatter";
   if (/\b(?:present|offer|handover|show)\b/.test(text) && !/remain.*present/.test(text)) return "present";
-  if (/\b(?:point|index|direct|aim)\b/.test(text)) return "point";
   if (/\b(?:sip|drink|cup)\b/.test(text)) return "sip";
   if (/\b(?:type|keyboard)\b/.test(text)) return "type";
   if (/\b(?:write|scribble|pen)\b/.test(text)) return "write";
@@ -163,18 +162,14 @@ function actionOf(text: string, bonePredicate = true): string {
   if (/\b(?:scratch|itch)\b/.test(text)) return "scratch";
   if (/\b(?:touch|tap|press)\b/.test(text)) return "touch";
   if (/\b(?:walk|step|travel|stride|plant|arrive|depart)\b/.test(text)) return "walk";
-  if (/\b(?:bow|hinge)\b/.test(text)) return "bow";
-  if (/\b(?:nod|dip)\b/.test(text)) return "nod";
-  if (/\b(?:shiver|tremble|shake|cold)\b/.test(text)) return "shiver";
-  if (/\b(?:think|thought|ponder)\b/.test(text)) return "think";
   return "generic";
 }
 function semanticAction(semantic: SemanticEvent): string {
   const phase = String(semantic.value.phase ?? "").toLowerCase();
   const operationalPhases: Record<string,string> = {
-    slam:"slam",scatter:"scatter",present:"present",offer:"present",point:"point",
+    slam:"slam",scatter:"scatter",present:"present",offer:"present",
     sip:"sip",type:"type",write:"write",count:"count",pat:"pat",scratch:"scratch",
-    touch:"touch",walk:"walk",bow:"bow",nod:"nod",shiver:"shiver",think:"think",
+    touch:"touch",walk:"walk",
   };
   const textAction = actionOf(semantic.text, semantic.trackKind === 'bone');
   // Existing action recipes sometimes name the operation in their exact phase
@@ -322,7 +317,7 @@ export function deriveActorPose(actor: PoseActor, continuity = true): ActorPose 
     const timedNative = actor.artwork && semantic.trackKind === "bone";
     const envelope = smooth(p / .5) * (1 - smooth((p - .5) / .5));
     // Native timed gestures return to rest within the authored interval.
-    const eased = (timedNative && action !== "point" && action !== "present"
+    const eased = (timedNative && action !== "present"
       ? envelope : easeOut(p)) * amount;
     const before = {armLeft:{...armLeft},armRight:{...armRight}};
     const sides = eachSide(semantic);
@@ -389,27 +384,6 @@ export function deriveActorPose(actor: PoseActor, continuity = true): ActorPose 
       // The head follows the body: same lean direction, damped — the neck
       // never counter-bends against the torso (docs/WORLD_PUPPET_MOTOR.md).
       headTilt += -1.5 * stride;
-    } else if (action === "bow") {
-      torsoTilt += 29 * bell(p) * Math.max(amount, 0.7);
-      torsoY += 24 * (timedNative ? envelope : easeOut(p));
-      torsoScaleY -= 0.1 * eased;
-      headTilt += 12 * bell(p);
-      headY += 10 * eased;
-      legLeft.upper -= 18 * eased;
-      legRight.upper += 18 * eased;
-    } else if (action === "nod") {
-      const nod = bell(p);
-      headTilt += 18 * nod;
-      headY += 7 * nod;
-      gaze[1] += 8 * nod;
-    } else if (action === "shiver") {
-      const shake = alternating(p, 4) * amount;
-      torsoTilt += 7 * shake;
-      headTilt += 5 * shake;
-      armLeft.upper += 8 * shake;
-      armRight.upper -= 8 * shake;
-      armLeft.lower -= 5 * shake;
-      armRight.lower += 5 * shake;
     } else if (action === "slam") {
       const peak = p >= 0.42;
       slamPeak ||= peak;
@@ -418,19 +392,6 @@ export function deriveActorPose(actor: PoseActor, continuity = true): ActorPose 
       armRight.lower = timedNative ? 18 * eased : peak ? 18 : -12;
       torsoTilt += timedNative ? 16 * eased : peak ? 16 : -8 * p;
       torsoY += timedNative ? 16 * eased : peak ? 16 : 0;
-    } else if (action === "point") {
-      // Timed pointing includes recovery; no authored reset is needed at exit.
-      const point = eased * (1 - smooth((p - .5) / .5));
-      for (const side of sides)
-        setArm(
-          side === "left" ? armLeft : armRight,
-          side,
-          34 * point,
-          18 * point,
-          "point",
-        );
-      torsoTilt += (sides.includes("left") ? -1 : 1) * 5 * point;
-      gaze = sides.includes("left") ? [-18, -2] : [18, -2];
     } else if (action === "pat") {
       for (const side of sides)
         setArm(
@@ -508,17 +469,6 @@ export function deriveActorPose(actor: PoseActor, continuity = true): ActorPose 
         );
       torsoTilt += 4 * present;
       gaze = [0, -5];
-    } else if (action === "think") {
-      const side = sides.includes("right") ? "right" : "left";
-      setArm(
-        side === "left" ? armLeft : armRight,
-        side,
-        78 * eased,
-        -42 * eased,
-        "open",
-      );
-      headTilt += (side === "left" ? -1 : 1) * 12 * eased;
-      gaze = [side === "left" ? -10 : 10, -12];
     } else if (action === "scratch") {
       const side = sides.includes("right") ? "right" : "left";
       setArm(

@@ -88,7 +88,7 @@ test('solveReach follows the declared rest elbow branch when returning to rest',
   const artwork=await artworkFixture();
   const manifest={video:{width:1280,height:720,fps:24},durationInFrames:30,
     actors:[{id:'hero',artwork,skeleton:artwork.views.front.skeleton,placement:{at:[500,650],scale:.6},
-      tracks:[{kind:'bone',events:[{frame:0,endFrame:30,value:{action:'point',parts:['arm_u_r','arm_l_r','hand_r']}}]}]}],
+      tracks:[{kind:'bone',events:[{frame:0,endFrame:30,value:{action:'tap the shoulder',parts:['arm_u_r','arm_l_r','hand_r']}}]}]}],
     sceneTrack:[{frame:0,endFrame:30,motor:{fps:24,actors:{hero:Array.from({length:30},(_,i)=>({x:500,lean:0,facing:1,walk:0,reach:[550,550],reachInfluence:Math.exp(-i/3)}))},props:{}}}],
   } as PerformanceManifest;
   const actor=evaluatePerformance(manifest,20).actors[0]!;
@@ -156,7 +156,7 @@ test('release and transfer withdrawal overlap authored arm without deferred endp
     assert.ok(start>0);
     const clear=frames.findIndex((f,i)=>i>start&&!f.reach);
     const manifest={video:{width:1280,height:720,fps:24},durationInFrames:144,actors:[
-      {id,artwork,skeleton:artwork.views.front.skeleton,placement:{at:[id==='giver'?750:350,650],scale:.6},tracks:[{kind:'bone',events:[{frame:start,endFrame:143,value:{action:'point',parts:['arm_u_r','arm_l_r','hand_r']}}]}]},
+      {id,artwork,skeleton:artwork.views.front.skeleton,placement:{at:[id==='giver'?750:350,650],scale:.6},tracks:[{kind:'bone',events:[{frame:start,endFrame:143,value:{action:'write with the hand',parts:['arm_u_r','arm_l_r','hand_r']}}]}]},
     ],props:[{id:'cup',at:[650,480]}],sceneTrack:[{start:0,end:6,motor:movie}]} as PerformanceManifest;
     const mid=evaluatePerformance(manifest,start+8).actors[0]!;
     assert.ok(mid.reachInfluence!>0 && mid.reachInfluence!<1,'challenge must exercise live overlapping arbitration');
@@ -287,13 +287,13 @@ test('actual native draft socket handover and free release stay continuous in al
   }
 });
 
-test('short native point returns continuously at its authored endpoint with cleared or residual reach',async()=>{
+test('short native authored gesture returns continuously at its authored endpoint with cleared or residual reach',async()=>{
   const {evaluatePerformance}=await import('../src/performance/evaluate');
   const {solveActorFigure}=await import('../src/components/performance/actorPose');
   const art=await nativeDraftArtworkFixture();
   for(const residual of [false,true]){
     const manifest={video:{width:1920,height:1080,fps:24},durationInFrames:26,
-      actors:[{id:'hero',artwork:art,skeleton:art.views.side.skeleton,placement:{at:[900,690],scale:.88},tracks:[{kind:'bone',events:[{frame:0,endFrame:24,value:{action:'point',parts:['arm_u_r','arm_l_r','hand_r']}}]}]}],
+      actors:[{id:'hero',artwork:art,skeleton:art.views.side.skeleton,placement:{at:[900,690],scale:.88},tracks:[{kind:'bone',events:[{frame:0,endFrame:24,value:{action:'write with the hand',parts:['arm_u_r','arm_l_r','hand_r']}}]}]}],
       sceneTrack:[{frame:0,endFrame:26,motor:{fps:24,actors:{hero:Array.from({length:26},()=>({x:900,lean:0,facing:1,walk:0,...(residual?{reach:[925,470],reachInfluence:0}:{})}))},props:{}}}],
     } as PerformanceManifest;
     const active=evaluatePerformance(manifest,23).actors[0]!;
