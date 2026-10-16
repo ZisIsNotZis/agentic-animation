@@ -1,6 +1,6 @@
 # World Puppet Motor
 Physical motion SSOT; [WORLD_PLUGIN_CONTRACT](WORLD_PLUGIN_CONTRACT.md) owns authoring.
-Status: motor slices 1–2 are shipped and motor slice 3 (vocabulary migration: seven actions) is reviewed; see [Slices](#slices). Falls (4) are pending. Eight-view orientation/fabric is shipped separately.
+Status: motor slices 1–2 shipped, slice 3 (vocabulary migration) reviewed, slice 4 (falls) shipped; see [Slices](#slices). Eight-view orientation/fabric is shipped separately.
 ## Why
 The previous renderer *imagined* motion: bone tracks carried English prose,
 the renderer regex-matched it into poses, and positions were eased lerps. A
@@ -9,8 +9,8 @@ so it happened. This motor makes remote force **unrepresentable**.
 ## Model
 Planar 2D, stage space (1920×1080, y-down). An actor is a pelvis point-mass
 with procedural limbs (two-segment arms/legs drawn by the
-renderer), not a full Verlet skeleton — slices 1–2. A ragdoll mode (cut
-balance springs, full particle skeleton) is slice 4.
+renderer), not a full Verlet skeleton — slices 1–2. A fall (slice 4) cuts
+balance and collapses the shared FK; a Verlet particle skeleton stays future work, admitted only if this provably cannot render a believable fall.
 State: actor pelvis/velocity, facing, support, walk phase and lean; props have position/velocity and ground friction.
 ## Invariants (enforced by the simulation, not by convention)
 1. **Support** — feet plant on the ground line; the pelvis accelerates only
@@ -197,4 +197,4 @@ staring into the camera; the camera view is "front".
    a real cue asset is produced. The migrated `shiver` emits "shiver-rattle",
    which has the same never-shipped-cue status — see
    [tickets/BACKLOG-SHIVER-RATTLE-CUE.md](tickets/BACKLOG-SHIVER-RATTLE-CUE.md).
-4. **Falls** — pending: failed recovery cuts balance for physical collapse; later Verlet ragdoll if needed.
+4. **Falls** — shipped: failed recovery cuts balance for physical collapse. Trigger: the slide demand passes `stepLength` with the declared `maxSteps` recovery steps already spent, or an authored `fall` intent (gesture-intent pattern; `library/action/fall`). Balance cut ends stepping, posture recovery and in-flight hand drives/gestures. The collapse uses the shared FK only — hip drops to the full crouch drop, waist hinges ~80° into the fall, the step cycle freezes, the feet skid with the slide, remaining momentum decays by ground friction. The figure stays down (get-up is out of scope). `action.push` exposes the intent's `forceSec` so a sustained shove can honestly exceed capacity. Legacy figures keep planted feet under the hinge — the drop channels are native-art FK (the preferred figure is native).
