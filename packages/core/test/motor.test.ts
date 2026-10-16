@@ -311,7 +311,7 @@ test("move: a self-target walk returns the actor to his staged mark (pursuit of 
   const scene: MotorScene = {
     ...baseScene,
     actors: [
-      { ...baseScene.actors[0]!, x: 900, intents: [{ at: 0.2, duration: 1.2, intent: "move", to: "aqiang", target: "aqiang" }] },
+      { ...baseScene.actors[0]!, x: 900, intents: [{ at: 0.2, duration: 1.2, intent: "move", target: "aqiang" }] },
       baseScene.actors[1]!,
     ],
     resolveX: (id) => (id === "aqiang" ? 600 : id === "awei" ? 1248 : undefined),
