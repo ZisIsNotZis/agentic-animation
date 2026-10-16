@@ -74,3 +74,7 @@ worktrees/
 .env
 .env.*
 !.env.example
+
+# generated pretest figure fixtures (regenerable via pretest/gen:fixtures)
+library/figure/_placeholder/v1/
+library/figure/_testrig/v1/
