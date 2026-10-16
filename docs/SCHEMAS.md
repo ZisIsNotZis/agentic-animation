@@ -144,7 +144,9 @@ The compiled scene IR carries normalized `setLayers` (`{id, foreground}`),
 `safeArea`, `supportSurfaces`, and the intrinsic `setViewBox`; the
 renderer-remotion preloader injects per-layer group text into
 `locationScenes` keyed `"<instance>/<layerId>"` for world sets (legacy sets
-keep the whole-document blob keyed by instance). The Remotion stage stacks
+keep the whole-document blob keyed by instance) and fails the render when a
+declared layer's group or the set's `scene.svg` cannot be read — never a
+placeholder fallback. The Remotion stage stacks
 declared layers back-to-front below the prop and actor planes; `foreground`
 entries composite above actors and props. `stageScene` clamps actor placement
 inside the declared `safeActorArea` (centers, including collision

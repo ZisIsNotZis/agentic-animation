@@ -101,7 +101,7 @@ function readPerformanceManifest(manifestPath: string): PerformanceManifest {
   return value as PerformanceManifest;
 }
 
-function preloadLocationScenes(manifestPath: string, manifest: PerformanceManifest): PerformanceManifest {
+export function preloadLocationScenes(manifestPath: string, manifest: PerformanceManifest): PerformanceManifest {
   const assets = manifest.assets as {locations?: Record<string, {resolved?: {identity?: unknown; path?: unknown}}>} | undefined;
   const locations = assets?.locations;
   if (!locations) return manifest;
@@ -119,13 +119,21 @@ function preloadLocationScenes(manifestPath: string, manifest: PerformanceManife
     const assetPath = typeof entry.resolved?.identity === "string" ? entry.resolved.identity : entry.resolved?.path;
     if (typeof assetPath !== "string") continue;
     const scenePath = resolve(libraryRoot, assetPath, "scene.svg");
+    const declared = layeredLocations.get(instance);
+    if (declared && !(scenePath.startsWith(`${libraryRoot}/`) && existsSync(scenePath))) {
+      // A layered set whose art cannot be read must fail the render, never
+      // fall back to placeholder stage art (no silent fallback).
+      throw new Error(`renderer: ${instance}: world-declaring location has no scene.svg at ${assetPath}`);
+    }
     if (scenePath.startsWith(`${libraryRoot}/`) && existsSync(scenePath)) {
       const svgText = readFileSync(scenePath, "utf8");
-      const layers = layeredLocations.get(instance);
-      if (layers) {
-        for (const layer of layers) {
+      if (declared) {
+        for (const layer of declared) {
           const group = svgGroupElement(svgText, layer.id);
-          if (group !== undefined) locationScenes[`${instance}/${layer.id}`] = group;
+          if (group === undefined) {
+            throw new Error(`renderer: ${instance}: declared layer "${layer.id}" has no <g id> group in ${assetPath}/scene.svg`);
+          }
+          locationScenes[`${instance}/${layer.id}`] = group;
         }
       } else {
         locationScenes[instance] = svgText;
