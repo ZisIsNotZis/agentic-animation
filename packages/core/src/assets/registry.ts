@@ -96,13 +96,26 @@ async function discoverAssets(root: string): Promise<RegistryAssetManifest[]> {
             // groups is world-declaring and must carry complete, valid
             // declarations — missing or invalid ones fail loading (SCHEMAS.md
             // "Set world declarations"). Legacy sets keep raw support passthrough.
+            let sceneSvg: string | undefined;
             try {
-              const raw = JSON.parse(await readFile(join(child, "manifest.json"), "utf8")) as Record<string, unknown>;
-              let sceneSvg: string | undefined;
-              try {
-                sceneSvg = await readFile(join(child, "scene.svg"), "utf8");
-              } catch { /* a set may carry no scene art */ }
-              const layerGroups = sceneSvg === undefined ? [] : svgGroupIds(sceneSvg);
+              sceneSvg = await readFile(join(child, "scene.svg"), "utf8");
+            } catch { /* a set may carry no scene art */ }
+            // The painted groups decide world-declaring, so they are read even
+            // when the manifest is missing: a world-declaring set without
+            // declarations fails loading instead of silently going legacy.
+            const layerGroups = sceneSvg === undefined ? [] : svgGroupIds(sceneSvg);
+            let raw: Record<string, unknown> | undefined;
+            try {
+              raw = JSON.parse(await readFile(join(child, "manifest.json"), "utf8")) as Record<string, unknown>;
+            } catch (error) {
+              if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+                throw new Error(`set ${identity}: ${(error as Error).message}`);
+              }
+            }
+            if (raw === undefined && layerGroups.length > 0) {
+              throw new Error(`set ${identity}: layers are required when scene.svg paints <g id> groups`);
+            }
+            if (raw !== undefined) try {
               if (layerGroups.length > 0) {
                 if (raw.layers === undefined) throw new Error("layers are required when scene.svg paints <g id> groups");
                 if (raw.coordinateSpace === undefined) throw new Error("coordinateSpace is required when scene.svg paints <g id> groups");
@@ -120,9 +133,7 @@ async function discoverAssets(root: string): Promise<RegistryAssetManifest[]> {
                 (base as {supports?: unknown}).supports = supports;
               }
             } catch (error) {
-              if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-                throw new Error(`set ${identity}: ${(error as Error).message}`);
-              }
+              throw new Error(`set ${identity}: ${(error as Error).message}`);
             }
           }
           if (base.kind === "figure") {

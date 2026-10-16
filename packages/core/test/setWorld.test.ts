@@ -44,6 +44,18 @@ async function registryWith(manifest: string, sceneSvg: string) {
   }
 }
 
+async function registryWithMissingManifest(sceneSvg: string) {
+  const root = mkdtempSync(join(tmpdir(), "anim-setworld-"));
+  try {
+    mkdirSync(join(root, "set"), {recursive: true});
+    mkdirSync(join(root, "set", "fixture"));
+    writeFileSync(join(root, "set", "fixture", "scene.svg"), sceneSvg);
+    return await loadAssetRegistry(root);
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+}
+
 test("normalizes world declarations once from coordinateSpace units", () => {
   const world = normalizeSetWorld({manifest: JSON.parse(worldManifest()), sceneSvg: worldScene()});
   assert.deepEqual(world.coordinateSpace, {width: 960, height: 540});
@@ -83,6 +95,10 @@ test("world-declaring sets with missing or invalid declarations fail loading", a
   const painted = worldScene();
   // SVG carries groups but the manifest declares nothing.
   await assert.rejects(registryWith(JSON.stringify({}), painted), /set set\/fixture: layers are required/);
+  // Painted groups make a set world-declaring even with no manifest at all:
+  // the declarations are missing, so loading fails instead of falling back
+  // to the legacy path.
+  await assert.rejects(registryWithMissingManifest(painted), /set set\/fixture: layers are required/);
   // Declared layer id has no painted group.
   const ghost = worldManifest().replace("\"backdrop\"", "\"backdrop2\"");
   await assert.rejects(registryWith(ghost, painted), /declared layer "backdrop2" has no/);
