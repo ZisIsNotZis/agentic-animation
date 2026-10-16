@@ -21,7 +21,7 @@ document owning a contract before changing implementation or an episode.
 - [WORLD_PUPPET_MOTOR.md](WORLD_PUPPET_MOTOR.md): physical motion model — support/contact/reaction invariants, compile-time motor simulation, trajectory bake format.
 - [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md): canonical world/plugin contract — library layout, categories, world type, plugin lifecycle, ordering, and state rules.
 - [SHOWCASES.md](SHOWCASES.md): minimal per-capability showcase episodes (states, actions, camera, effects, props, voice, particle snow).
-- [PLUGIN_HOST_MIGRATION_PLAN.md](PLUGIN_HOST_MIGRATION_PLAN.md): historical migration plan; Steps 1-2 are implemented. Kept for reference, superseded by [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md).
+- [tickets/PLUGIN_HOST_MIGRATION_PLAN.md](tickets/PLUGIN_HOST_MIGRATION_PLAN.md): historical migration plan; Steps 1-2 are implemented. Kept for reference, superseded by [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md).
 - [PIPELINE.md](PIPELINE.md): assets-first production and QA workflow.
 - [ART_PRODUCTION_UPGRADE.md](ART_PRODUCTION_UPGRADE.md): approved M0–M8 art-quality roadmap, preservation boundaries, learning coverage and comparison budget.
 - [ART_BASELINE_M0.md](ART_BASELINE_M0.md): frozen short-scene baseline and inspected evidence for that roadmap.

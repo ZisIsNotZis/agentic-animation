@@ -6,7 +6,7 @@ Status: **closed (engine milestone)** — the plugin-host engine is implemented
 end-to-end; three demonstration episodes validate, compile and render through
 the canonical YAML pipeline. Deferred backlog does not block engine usability.
 The canonical engine contract is [WORLD_PLUGIN_CONTRACT](WORLD_PLUGIN_CONTRACT.md);
-[PLUGIN_HOST_MIGRATION_PLAN](PLUGIN_HOST_MIGRATION_PLAN.md) is historical reference.
+[tickets/PLUGIN_HOST_MIGRATION_PLAN](tickets/PLUGIN_HOST_MIGRATION_PLAN.md) is historical reference.
 The supported production workflow is owned by [PIPELINE](PIPELINE.md).
 
 ## Art-quality work

@@ -1,3 +1,5 @@
+# TICKET (historical, superseded by WORLD_PLUGIN_CONTRACT.md)
+
 # Library-plugin engine redesign
 
   ## Summary
