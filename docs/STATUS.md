@@ -29,8 +29,10 @@ M3–M8 are planned, not delivered.
 
 ## Motion and demonstrations
 
-Motor slices 1–2 are shipped; vocabulary migration (3) and falls (4) remain
-pending. Eight-view orientation/fabric is shipped separately, not motor Slice 3.
+Motor slices 1–2 are shipped, and vocabulary migration (3) is delivered:
+seven actions (bow, nod, shiver, point, raise_hand, dismiss, think) are motor
+intents with their regex pose paths deleted, independently reviewed at
+`d863f96`. Falls (4) remain pending. Eight-view orientation/fabric is shipped separately, not motor Slice 3.
 Motion implementation, geometry authority and scoped evidence are owned by
 [WORLD_PUPPET_MOTOR](WORLD_PUPPET_MOTOR.md), including its
 [body geometry contract](WORLD_PUPPET_MOTOR.md#body-geometry-ssot-drawn--collider).
