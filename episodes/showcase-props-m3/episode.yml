@@ -1,0 +1,40 @@
+episode:
+  id: showcase_props_m3
+  title: 展示：道具拿取与交接（M3 草稿集）
+  language: zh-CN
+
+# M3 WP4: the showcase-props script copied onto the draft set
+# set/canteen_counter_m3 (docs/ART_WORLD_M3.md). Only the location binding,
+# episode id and title differ from episodes/showcase-props so the frozen M0
+# audio cache keys stay valid; script/text is unchanged. The putdown rest
+# state beyond the frozen 6.727s clip is evidenced by the silent-tail
+# comparison vehicles, not by this episode.
+
+actors:
+  lin:
+    use: figure/lin_b_draft
+    voice: voice/zh/lin
+  awei:
+    use: figure/lin_b_draft
+    voice: voice/zh/awei
+
+locations:
+  canteen:
+    use: set/canteen_counter_m3
+
+objects:
+  thermos:
+    use: prop/thermos
+
+scenes:
+  - id: props
+    location: canteen
+    actors:
+      lin: {facing: awei}
+      awei: {facing: lin}
+    objects:
+      thermos: center
+    script:
+      - lin: "{prop.pickup(lin, thermos)}你的保温杯，掉地上了，捡到了。"
+      - lin: "{prop.handover(lin, thermos, awei)}给。"
+      - awei: "{prop.putdown(awei, thermos)}谢了，放柜台上。"
