@@ -1,0 +1,33 @@
+{
+  "source": "scene.svg",
+  "preview": "preview.png",
+  "coordinateSpace": "1920x1080",
+  "layers": [
+    "backdrop",
+    "floor",
+    "furniture",
+    "counter",
+    { "id": "foreground_counter", "foreground": true }
+  ],
+  "safeActorArea": {
+    "x": 220,
+    "y": 180,
+    "width": 1480,
+    "height": 720
+  },
+  "supports": [
+    {
+      "name": "counter",
+      "x": [270, 1650],
+      "y": 400,
+      "paint": "counter_top_surface"
+    }
+  ],
+  "provenance": {
+    "artwork": "Original hand-authored vector artwork (this scene.svg), drawn for M3 WP3 as the draft set canteen_counter_m3; no AI-generated, raster or third-party sources.",
+    "license": "Repository license (see LICENSE at the repository root); the artwork is original to this project.",
+    "styleAnchor": "Accepted M1 B-direction (docs/ART_DIRECTION_M1.md) and figure/lin_b_draft palette: outline #424e46, muted teal #477c7b, cream #eadcbb, terracotta #b96a55, warm woods, flat fills with opacity overlays, no filters.",
+    "supportAgreement": "Declared support counter y=400 equals the painted data-support-top=400 on counter_top_surface (top quad back edge y368, front edge y430, resting line y400); closes the M0/M2 declared-vs-painted defect class at the source.",
+    "date": "2026-10-16"
+  }
+}

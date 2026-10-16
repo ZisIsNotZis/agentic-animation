@@ -1,0 +1,265 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <!-- canteen_counter_m3 — original vector artwork for the M3 draft set (WP3).
+       One coherent school-canteen counter space in the accepted M1 B-direction
+       language: thin #424e46 contours, muted teal/cream/terracotta/warm-wood
+       flat fills with opacity overlays, no gradients-as-blur and no filters.
+       Light source: the left window. Depth is painted (overlap, value, size,
+       converging floor seams), never projected. -->
+  <title>School canteen counter — M3 draft set</title>
+
+  <!-- ==================== backdrop: back wall, window, sign, boards ==================== -->
+  <g id="backdrop">
+    <!-- wall base and ceiling -->
+    <rect x="0" y="0" width="1920" height="640" fill="#eadcbb"/>
+    <rect x="0" y="0" width="1920" height="42" fill="#d5c49b"/>
+    <rect x="0" y="42" width="1920" height="3" fill="#424e46" opacity="0.45"/>
+    <!-- upper wall slightly lighter, kept flat -->
+    <rect x="0" y="45" width="1920" height="240" fill="#f0e3c6" opacity="0.75"/>
+    <!-- right end of wall falls into shade -->
+    <rect x="1460" y="0" width="460" height="640" fill="#c9b78f" opacity="0.35"/>
+    <rect x="1700" y="0" width="220" height="640" fill="#c9b78f" opacity="0.3"/>
+
+    <!-- wainscot tile dado along the wall base -->
+    <rect x="0" y="470" width="1920" height="170" fill="#cdbb97"/>
+    <rect x="0" y="470" width="1920" height="5" fill="#424e46" opacity="0.4"/>
+    <rect x="0" y="556" width="1920" height="3" fill="#a8977a"/>
+    <g fill="#a8977a" opacity="0.7">
+      <rect x="60" y="475" width="3" height="165"/><rect x="180" y="475" width="3" height="165"/>
+      <rect x="300" y="475" width="3" height="165"/><rect x="1760" y="475" width="3" height="165"/>
+      <rect x="1850" y="475" width="3" height="165"/>
+    </g>
+
+    <!-- window on the left: the light source -->
+    <rect x="112" y="102" width="416" height="336" fill="#477c7b" stroke="#424e46" stroke-width="5"/>
+    <rect x="140" y="130" width="360" height="280" fill="#fdf3d9"/>
+    <rect x="140" y="130" width="360" height="120" fill="#e9f0e2" opacity="0.55"/>
+    <rect x="314" y="130" width="10" height="280" fill="#424e46"/>
+    <rect x="140" y="264" width="360" height="10" fill="#424e46"/>
+    <rect x="98" y="438" width="446" height="24" fill="#ad8062" stroke="#424e46" stroke-width="4"/>
+    <rect x="122" y="462" width="396" height="16" fill="#c9b78f" opacity="0.7"/>
+
+    <!-- warm light spill on the wall below the window -->
+    <path d="M140 462 L500 462 L760 640 L40 640 Z" fill="#f7e8c3" opacity="0.28"/>
+
+    <!-- hanging shop sign above the counter -->
+    <path d="M830 45 L830 100 M1090 45 L1090 100" stroke="#424e46" stroke-width="5" fill="none"/>
+    <rect x="760" y="98" width="400" height="114" rx="10" fill="#b96a55" stroke="#424e46" stroke-width="5"/>
+    <text x="960" y="174" text-anchor="middle" font-family="'Noto Sans CJK SC','Noto Sans SC',sans-serif" font-size="60" font-weight="900" fill="#f4ead0">青云小卖部</text>
+    <circle cx="786" cy="120" r="4" fill="#424e46" opacity="0.6"/>
+    <circle cx="1134" cy="120" r="4" fill="#424e46" opacity="0.6"/>
+
+    <!-- jar shelf between window and sign -->
+    <rect x="600" y="330" width="320" height="16" fill="#ad8062" stroke="#424e46" stroke-width="3"/>
+    <path d="M640 346 L640 372 L664 346 Z M912 346 L912 372 L888 346 Z" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
+    <!-- jars: teal, cream, terracotta tin, deep teal -->
+    <rect x="622" y="272" width="58" height="58" rx="8" fill="#477c7b" stroke="#424e46" stroke-width="3"/>
+    <rect x="634" y="262" width="34" height="14" rx="4" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
+    <rect x="696" y="284" width="48" height="46" rx="8" fill="#eadcbb" stroke="#424e46" stroke-width="3"/>
+    <rect x="706" y="274" width="28" height="12" rx="4" fill="#b96a55" stroke="#424e46" stroke-width="2.5"/>
+    <rect x="762" y="252" width="66" height="78" rx="8" fill="#b96a55" stroke="#424e46" stroke-width="3"/>
+    <rect x="762" y="278" width="66" height="12" fill="#eadcbb" opacity="0.85"/>
+    <rect x="846" y="280" width="52" height="50" rx="8" fill="#587f7a" stroke="#424e46" stroke-width="3"/>
+    <path d="M632 286 L632 316 M706 296 L706 318 M856 292 L856 318" stroke="#424e46" opacity="0.35" stroke-width="3" fill="none"/>
+
+    <!-- menu chalkboard on the right wall -->
+    <rect x="1400" y="150" width="340" height="240" fill="#344545" stroke="#424e46" stroke-width="5"/>
+    <rect x="1392" y="390" width="356" height="14" fill="#ad8062" stroke="#424e46" stroke-width="3"/>
+    <text x="1570" y="212" text-anchor="middle" font-family="'Noto Sans CJK SC','Noto Sans SC',sans-serif" font-size="34" font-weight="700" fill="#d5c49b">今日供应</text>
+    <g stroke="#d5c49b" stroke-width="5" stroke-linecap="round" opacity="0.8">
+      <path d="M1436 252 L1560 252 M1596 252 L1704 252"/>
+      <path d="M1436 292 L1508 292 M1544 292 L1640 292 M1672 292 L1704 292"/>
+      <path d="M1436 332 L1548 332 M1584 332 L1668 332"/>
+      <path d="M1436 366 L1496 366 M1528 366 L1592 366"/>
+    </g>
+  </g>
+
+  <!-- ==================== floor: bands, converging seams, light pool, wear ==================== -->
+  <g id="floor">
+    <!-- graded value bands: far lighter, near darker (painted aerial perspective) -->
+    <rect x="0" y="640" width="1920" height="120" fill="#c6ae87"/>
+    <rect x="0" y="760" width="1920" height="100" fill="#b39a76"/>
+    <rect x="0" y="860" width="1920" height="90" fill="#a08866"/>
+    <rect x="0" y="950" width="1920" height="130" fill="#8a745a"/>
+    <rect x="0" y="752" width="1920" height="16" fill="#c6ae87" opacity="0.5"/>
+    <rect x="0" y="852" width="1920" height="16" fill="#b39a76" opacity="0.5"/>
+    <rect x="0" y="942" width="1920" height="16" fill="#a08866" opacity="0.5"/>
+
+    <!-- plank seams converging to the vanishing region behind the counter -->
+    <g fill="#75694e" opacity="0.55">
+      <path d="M958 640 L962 640 L-46 1080 L-86 1080 Z"/>
+      <path d="M959 640 L961 640 L248 1080 L224 1080 Z"/>
+      <path d="M959 640 L961 640 L504 1080 L492 1080 Z"/>
+      <path d="M959.5 640 L960.5 640 L728 1080 L722 1080 Z"/>
+      <path d="M959.5 640 L960.5 640 L956 1080 L948 1080 Z"/>
+      <path d="M959.5 640 L960.5 640 L1188 1080 L1180 1080 Z"/>
+      <path d="M959 640 L961 640 L1424 1080 L1412 1080 Z"/>
+      <path d="M959 640 L961 640 L1676 1080 L1652 1080 Z"/>
+      <path d="M958 640 L962 640 L1968 1080 L1928 1080 Z"/>
+      <path d="M958 640 L962 640 L2276 1080 L2196 1080 Z"/>
+    </g>
+    <!-- staggered butt joints between planks -->
+    <g stroke="#75694e" stroke-linecap="round" opacity="0.4" fill="none">
+      <path d="M330 700 L560 700 M1330 700 L1548 700" stroke-width="2"/>
+      <path d="M180 764 L420 764 M640 764 L860 764 M1240 764 L1500 764" stroke-width="3"/>
+      <path d="M60 852 L300 852 M520 852 L780 852 M1080 852 L1330 852 M1600 852 L1860 852" stroke-width="3"/>
+      <path d="M120 960 L400 960 M700 960 L1000 960 M1350 960 L1660 960" stroke-width="4"/>
+    </g>
+
+    <!-- window light pool across the floor -->
+    <path d="M100 690 L620 690 L880 1080 L20 1080 Z" fill="#f7e8c3" opacity="0.3"/>
+    <path d="M150 690 L560 690 L760 1010 L60 1010 Z" fill="#f7e8c3" opacity="0.25"/>
+
+    <!-- worn traffic path where actors stand, in front of the counter -->
+    <path d="M470 860 Q960 812 1450 860 L1400 996 Q960 952 520 996 Z" fill="#8a745a" opacity="0.32"/>
+    <path d="M600 880 Q960 846 1320 880 L1290 972 Q960 940 630 972 Z" fill="#8a745a" opacity="0.28"/>
+
+    <!-- near-floor darkening -->
+    <rect x="0" y="1024" width="1920" height="56" fill="#6e5b47" opacity="0.35"/>
+    <path d="M0 960 L0 1080 L240 1080 Z" fill="#6e5b47" opacity="0.25"/>
+    <path d="M1920 960 L1920 1080 L1680 1080 Z" fill="#6e5b47" opacity="0.25"/>
+  </g>
+
+  <!-- ==================== furniture: cooler, crates, A-board, stool ==================== -->
+  <g id="furniture">
+    <!-- crate stack with fruit, far left -->
+    <g>
+      <rect x="118" y="642" width="180" height="100" fill="#b57c61" stroke="#424e46" stroke-width="4"/>
+      <path d="M118 676 L298 676 M118 708 L298 708 M150 642 L150 742 M266 642 L266 742" stroke="#75694e" stroke-width="3" opacity="0.8" fill="none"/>
+      <rect x="136" y="544" width="150" height="98" fill="#ad8062" stroke="#424e46" stroke-width="4"/>
+      <path d="M136 578 L286 578 M136 610 L286 610" stroke="#75694e" stroke-width="3" opacity="0.8" fill="none"/>
+      <!-- fruit crowning the top crate -->
+      <circle cx="166" cy="536" r="17" fill="#c47a4d" stroke="#424e46" stroke-width="3"/>
+      <circle cx="204" cy="526" r="18" fill="#b96a55" stroke="#424e46" stroke-width="3"/>
+      <circle cx="243" cy="537" r="16" fill="#c47a4d" stroke="#424e46" stroke-width="3"/>
+      <circle cx="222" cy="544" r="15" fill="#d08a56" stroke="#424e46" stroke-width="3"/>
+    </g>
+
+    <!-- stool in the left flank -->
+    <g>
+      <rect x="46" y="796" width="128" height="26" rx="12" fill="#477c7b" stroke="#424e46" stroke-width="4"/>
+      <path d="M62 822 L54 900 M158 822 L166 900 M110 822 L110 902" stroke="#75694e" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <path d="M40 900 L180 900" stroke="#6e5b47" stroke-width="8" opacity="0.4" stroke-linecap="round" fill="none"/>
+    </g>
+
+    <!-- drinks cooler against the right wall -->
+    <g>
+      <rect x="1600" y="470" width="230" height="310" fill="#477c7b" stroke="#424e46" stroke-width="5"/>
+      <rect x="1622" y="492" width="186" height="262" fill="#dbe4e0" opacity="0.42"/>
+      <rect x="1622" y="492" width="186" height="262" fill="none" stroke="#424e46" stroke-width="3"/>
+      <path d="M1622 576 L1808 576 M1622 652 L1808 652" stroke="#424e46" stroke-width="3" opacity="0.8"/>
+      <!-- bottles on the shelves -->
+      <g stroke="#424e46" stroke-width="2.5">
+        <rect x="1636" y="536" width="22" height="40" rx="5" fill="#eadcbb"/>
+        <rect x="1666" y="540" width="20" height="36" rx="5" fill="#b96a55"/>
+        <rect x="1694" y="536" width="22" height="40" rx="5" fill="#587f7a"/>
+        <rect x="1724" y="542" width="20" height="34" rx="5" fill="#eadcbb"/>
+        <rect x="1752" y="536" width="22" height="40" rx="5" fill="#b96a55"/>
+        <rect x="1638" y="612" width="20" height="40" rx="5" fill="#b96a55"/>
+        <rect x="1666" y="616" width="22" height="36" rx="5" fill="#eadcbb"/>
+        <rect x="1696" y="612" width="20" height="40" rx="5" fill="#587f7a"/>
+        <rect x="1724" y="618" width="22" height="34" rx="5" fill="#b96a55"/>
+        <rect x="1754" y="612" width="20" height="40" rx="5" fill="#eadcbb"/>
+      </g>
+      <rect x="1600" y="470" width="230" height="34" fill="#eadcbb" stroke="#424e46" stroke-width="4"/>
+      <text x="1715" y="496" text-anchor="middle" font-family="'Noto Sans CJK SC','Noto Sans SC',sans-serif" font-size="24" font-weight="700" fill="#424e46">冷饮</text>
+      <path d="M1610 780 L1820 780" stroke="#6e5b47" stroke-width="10" opacity="0.4" stroke-linecap="round"/>
+    </g>
+
+    <!-- A-board menu stand in the right flank -->
+    <g>
+      <path d="M1690 590 L1860 590 M1672 800 L1730 590 L1810 590 L1878 800" stroke="#75694e" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <rect x="1706" y="616" width="132" height="150" fill="#344545" stroke="#424e46" stroke-width="4"/>
+      <g stroke="#eadcbb" stroke-width="5" stroke-linecap="round" opacity="0.85">
+        <path d="M1724 650 L1794 650 M1724 682 L1820 682 M1724 714 L1780 714 M1724 742 L1806 742"/>
+      </g>
+      <path d="M1650 802 L1900 802" stroke="#6e5b47" stroke-width="10" opacity="0.4" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- ==================== counter: top, front, kick, dressing off the resting band ==================== -->
+  <g id="counter">
+    <!-- contact shadow on the floor -->
+    <path d="M256 690 L1664 690 L1700 716 L220 716 Z" fill="#4a4238" opacity="0.22"/>
+    <path d="M262 690 L1658 690 L1682 708 L238 708 Z" fill="#4a4238" opacity="0.25"/>
+    <!-- kick board -->
+    <path d="M250 660 L1670 660 L1670 690 L250 690 Z" fill="#75694e" stroke="#424e46" stroke-width="3"/>
+    <!-- front face (a step darker than the top so resting objects read against the top) -->
+    <rect x="240" y="430" width="1440" height="230" fill="#b07156" stroke="#424e46" stroke-width="4"/>
+    <path d="M240 430 L1680 430" stroke="#424e46" stroke-width="5"/>
+    <!-- vertical board seams and left-light overlay -->
+    <g stroke="#9a6a50" stroke-width="3" opacity="0.7">
+      <path d="M420 434 L420 656 M600 434 L600 656 M780 434 L780 656 M960 434 L960 656 M1140 434 L1140 656 M1320 434 L1320 656 M1500 434 L1500 656"/>
+    </g>
+    <rect x="240" y="434" width="440" height="226" fill="#c98d6b" opacity="0.3"/>
+    <rect x="1500" y="434" width="180" height="226" fill="#9a6a50" opacity="0.35"/>
+    <!-- back upstand lip -->
+    <path d="M300 352 L1620 352 L1620 368 L300 368 Z" fill="#ad8062" stroke="#424e46" stroke-width="3"/>
+    <!-- top surface: declared support plane (resting line y=400) -->
+    <path id="counter_top_surface" data-support-top="400" d="M300 368 L1620 368 L1680 430 L240 430 Z" fill="#cfa382" stroke="#424e46" stroke-width="4"/>
+    <path d="M300 368 L1620 368 L1640 388 L280 388 Z" fill="#dcb086" opacity="0.55"/>
+    <path d="M1200 368 L1620 368 L1680 430 L1330 430 Z" fill="#b98f70" opacity="0.3"/>
+    <!-- front lip: dark strip along the top's front edge, in front of resting objects -->
+    <path d="M249 421 L1671 421 L1680 430 L240 430 Z" fill="#8a5a40" opacity="0.55"/>
+    <!-- cloth runner along the back edge, behind the resting line -->
+    <path d="M330 372 L1590 372 L1598 392 L322 392 Z" fill="#477c7b" opacity="0.85"/>
+    <path d="M330 372 L1590 372 L1591.5 376 L328.5 376 Z" fill="#eadcbb" opacity="0.9"/>
+
+    <!-- glass display case, left end (kept off the resting band) -->
+    <g>
+      <rect x="330" y="356" width="240" height="18" fill="#ad8062" stroke="#424e46" stroke-width="3"/>
+      <rect x="342" y="268" width="216" height="90" fill="#dbe4e0" opacity="0.4"/>
+      <rect x="342" y="268" width="216" height="90" fill="none" stroke="#424e46" stroke-width="3"/>
+      <path d="M342 314 L558 314" stroke="#424e46" stroke-width="2.5" opacity="0.8"/>
+      <g stroke="#424e46" stroke-width="2.5">
+        <path d="M366 306 q14 -16 30 0 q14 12 -4 14 l-24 0 q-12 -4 -2 -14 Z" fill="#eadcbb"/>
+        <path d="M412 306 q14 -16 30 0 q14 12 -4 14 l-24 0 q-12 -4 -2 -14 Z" fill="#e4cf9f"/>
+        <path d="M458 306 q14 -16 30 0 q14 12 -4 14 l-24 0 q-12 -4 -2 -14 Z" fill="#eadcbb"/>
+        <circle cx="516" cy="312" r="9" fill="#b96a55"/>
+        <circle cx="536" cy="314" r="7" fill="#c47a4d"/>
+      </g>
+      <rect x="334" y="258" width="232" height="12" fill="#b57c61" stroke="#424e46" stroke-width="3"/>
+    </g>
+
+    <!-- stacked bowls, right end (kept off the resting band) -->
+    <g>
+      <path d="M1444 366 L1580 366 L1568 394 L1456 394 Z" fill="#eadcbb" stroke="#424e46" stroke-width="3"/>
+      <path d="M1444 366 L1580 366 L1577 373 L1447 373 Z" fill="#477c7b"/>
+      <path d="M1448 338 L1576 338 L1578 366 L1446 366 Z" fill="#eadcbb" stroke="#424e46" stroke-width="3"/>
+      <path d="M1448 338 L1576 338 L1575 345 L1449 345 Z" fill="#477c7b"/>
+      <path d="M1452 310 L1572 310 L1574 338 L1450 338 Z" fill="#eadcbb" stroke="#424e46" stroke-width="3"/>
+      <path d="M1452 310 L1572 310 L1571 317 L1453 317 Z" fill="#477c7b"/>
+    </g>
+
+    <!-- small jar and chopstick cup, right of the case, clear of center -->
+    <g>
+      <rect x="648" y="352" width="44" height="34" rx="6" fill="#587f7a" stroke="#424e46" stroke-width="3"/>
+      <rect x="658" y="344" width="24" height="10" rx="3" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
+      <rect x="1668" y="330" width="0" height="0" fill="none"/>
+    </g>
+  </g>
+
+  <!-- ==================== foreground_counter: near-camera return (occludes actors) ==================== -->
+  <g id="foreground_counter">
+    <!-- near-camera return entering from the lower-right corner: only the top
+         surface is in frame; bevel strip inside the near edge, contact shadow
+         on the floor outside it -->
+    <path d="M1236 1080 L1920 868 L1920 906 L1306 1080 Z" fill="#4a4238" opacity="0.22"/>
+    <path d="M1300 1080 L1920 900 L1920 1080 Z" fill="#cfa382" stroke="#424e46" stroke-width="5"/>
+    <path d="M1338 1080 L1920 900 L1920 930 L1382 1080 Z" fill="#b98f70" opacity="0.65"/>
+    <path d="M1620 1042 L1920 928 L1920 952 L1672 1080 Z" fill="#dcb086" opacity="0.5"/>
+    <!-- steamer stack on the return -->
+    <g>
+      <path d="M1656 1002 L1830 955 L1830 992 L1656 1039 Z" fill="#c79878" stroke="#424e46" stroke-width="4"/>
+      <path d="M1656 962 L1830 915 L1830 953 L1656 1000 Z" fill="#ad8062" stroke="#424e46" stroke-width="4"/>
+      <path d="M1664 992 L1822 949 M1664 980 L1822 937 M1664 968 L1822 925" stroke="#75694e" stroke-width="2.5" opacity="0.8" fill="none"/>
+      <path d="M1700 946 L1792 921 L1792 899 L1700 924 Z" fill="#c79878" stroke="#424e46" stroke-width="3.5"/>
+      <circle cx="1746" cy="908" r="7" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
+    </g>
+    <!-- drawn steam: flat strokes, no filters -->
+    <g stroke="#f7f1de" stroke-linecap="round" fill="none">
+      <path d="M1716 892 Q1696 852 1720 822 Q1742 794 1724 760" stroke-width="9" opacity="0.6"/>
+      <path d="M1762 882 Q1786 846 1764 814 Q1744 786 1764 752" stroke-width="7" opacity="0.45"/>
+      <path d="M1680 900 Q1664 870 1682 844" stroke-width="6" opacity="0.35"/>
+    </g>
+  </g>
+</svg>
