@@ -195,7 +195,7 @@ test("stagger: beyond step capacity balance cuts and the figure collapses (slice
     ...baseScene,
     durationSec: 6,
     actors: [
-      { ...baseScene.actors[0]!, intents: [{ at: 0.2, duration: 2, intent: "push", target: "awei", reach: 0.1, forceSec: 1.5, force: 2 }] },
+      { ...baseScene.actors[0]!, intents: [{ at: 0.2, duration: 2, intent: "push", target: "awei", reach: 0.1, forceSec: 2.5, force: 2 }] },
       baseScene.actors[1]!,
     ],
   };

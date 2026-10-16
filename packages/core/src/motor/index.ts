@@ -357,8 +357,24 @@ function advanceSupport(state:ActorState,previousX:number,dt:number):void {
       const t=local*2,blend=smoothstep01(t);
       foot.target=[foot.from[0]+(foot.landing[0]-foot.from[0])*blend,
         foot.from[1]+(foot.landing[1]-foot.from[1])*blend-Math.sin(Math.PI*t)**2*22*k];
-    }else if(foot.swing)foot.target=[...foot.landing];
-    foot.swing=swing;
+    }else if(foot.swing){
+      if(state.fallen){
+        // A fallen body cannot snap its swing foot down: glide it to the
+        // landing at a bounded rate while the collapse continues underneath.
+        foot.target=[approach(foot.target[0],foot.landing[0],480*dt),
+          approach(foot.target[1],foot.landing[1],480*dt)];
+        if(Math.hypot(foot.target[0]-foot.landing[0],foot.target[1]-foot.landing[1])<.5){
+          foot.target=[...foot.landing];
+        }
+      }
+      else foot.target=[...foot.landing];
+    }
+    // The fallen glide keeps its own swing flag until the foot lands (the
+    // frozen walk phase would otherwise declare a mid-air foot stance, and a
+    // supported mid-air sole is exactly what the proposal must reject).
+    foot.swing=state.fallen
+      ?(foot.swing&&Math.hypot(foot.target[0]-foot.landing[0],foot.target[1]-foot.landing[1])>=.01)
+      :swing;
     const target:[number,number]=[sk.space.width/2+dir*(foot.target[0]-state.x)/k,
       sk.space.height+(foot.target[1]-state.groundY)/k];
     const interval=legDropInterval(sk,side,target);
@@ -506,13 +522,18 @@ function propOpenHand(state: ActorState, props: Map<string, PropState>, free = f
  *  body through the shared FK and it stays down (get-up is out of scope). */
 function startFall(state: ActorState, dir: 1 | -1, dur = FALL_DUR): void {
   if (state.fall || state.fallen) return;
-  for (const foot of state.feet ? [state.feet.l, state.feet.r] : []) {
-    if (foot.swing) { foot.target = [...foot.landing]; foot.swing = false; }
-  }
+  // A mid-swing foot is NOT snapped to its landing here: the walk phase
+  // freezes and advanceSupport glides the swing down at a bounded rate (an
+  // instant landing snaps the shin IK and the whole-body proposal correctly
+  // rejects it).
   state.walkPhase = 0;
   state.fall = {t: 0, dur, dir};
   state.fallen = true;
   state.staggerSlide = 0;
+  // The failed final catch: the last momentum fraction a recovery step would
+  // have caught is absorbed by the collapse itself (the ground catches what
+  // the feet no longer can).
+  state.stagger -= Math.sign(state.stagger) * Math.abs(state.stagger) * state.body.catchFraction;
   state.handDrive = null;
   state.gesture = null;
   state.handGesture = null;
@@ -830,11 +851,21 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       const targetX = targetActor?.x ?? targetProp?.x;
       if (targetX === undefined) { state.handDrive = null; continue; }
       if (drive.t > (drive.contactT ?? 0) + drive.sec + (drive.contactT === null ? 1.2 : 0.45)) {
-        // Force window over: the arm relaxes back to rest.
+        // Force window over: the arm relaxes back to rest and the brace lean
+        // releases, both at honest rates (not an unbounded ease).
         const rest = restHandAt(state);
         const blend = clamp((drive.t - drive.sec - 0.45) / 0.3, 0, 1);
-        drive.hand = [drive.hand[0] + (rest[0] - drive.hand[0]) * 8 * delta * (1 - blend), drive.hand[1] + (rest[1] - drive.hand[1]) * 8 * delta * (1 - blend)];
-        if (blend >= 1) { state.handDrive = null; state.reach = null; continue; }
+        state.lean = approach(state.lean, 0, WAIST_RATE * delta);
+        drive.hand = travelHand(drive.hand, rest, 0, 480 * (1 - blend), delta);
+        if (blend >= 1) {
+          // Hand off to the shared retract: clearing the reach outright would
+          // snap the extended arm to the authored rest pose in one substep
+          // (57° forearm swing — the whole-body proposal correctly rejects it;
+          // repaired pre-existing defect).
+          state.handDrive = null;
+          state.retract = state.reach !== null;
+          continue;
+        }
         state.reach = {tx: drive.hand[0], ty: drive.hand[1], target: drive.target, contact: false};
         continue;
       }
@@ -865,25 +896,36 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         } else if (targetProp) {
           targetProp.vx += dir * impulse * 6;
         }
-        // I3 reaction: the pusher leans back against the exertion.
-        state.lean = -dir * REACTION_LEAN * drive.force;
+        // I3 reaction: the pusher leans back against the exertion — easing at
+        // the waist rate; a body cannot snap 28° in one substep (the snap
+        // yanked the taut hand and froze the whole-body proposal).
+        state.lean = approach(state.lean, -dir * REACTION_LEAN * drive.force, WAIST_RATE * delta);
       }
-      // Hand motion: accelerate toward the target; brace on contact.
+      // Hand motion: accelerate toward the target; brace on contact. The
+      // drive hand obeys the same 480 px/s honest-travel cap as every other
+      // hand motion (grab/withdraw) — including the vertical aim chase, so
+      // the combined diagonal step stays within the cap (a faster stylized
+      // speed is not renderable palm motion and the whole-body proposal
+      // correctly rejects it).
       if (!inContact || !forcing) {
-        drive.speed = Math.min(drive.speed + HAND_ACC * drive.force * delta, HAND_MAX * drive.force);
+        drive.speed = Math.min(drive.speed + HAND_ACC * drive.force * delta, Math.min(HAND_MAX * drive.force, 480));
         const targetAimY = targetActor && targetBody
           ? targetActor.groundY - (targetBody.groundToWaist - targetBody.crouchDrop * targetActor.crouch + (targetBody.waist[1] - targetBody.torsoTop) * 0.5) * targetActor.scale
           : targetProp
             ? propAim(targetProp)[1]
             : state.groundY - 300 * state.scale;
         const step = drive.speed * delta;
-        drive.hand = [drive.hand[0] + dir * step, drive.hand[1] + clamp(targetAimY - drive.hand[1], -step, step)];
+        const goalX = drive.hand[0] + dir * step;
+        const goalY = drive.hand[1] + clamp(targetAimY - drive.hand[1], -step, step);
+        const span = Math.hypot(goalX - drive.hand[0], goalY - drive.hand[1]);
+        const share = span > step ? step / span : 1;
+        drive.hand = [drive.hand[0] + (goalX - drive.hand[0]) * share, drive.hand[1] + (goalY - drive.hand[1]) * share];
       } else {
         drive.speed = Math.max(0, drive.speed - HAND_ACC * drive.force * delta * 2);
         // Brace against the contact: the hand rests just inside the box edge.
         const aim = targetActor ? [targetX, drive.hand[1]] as [number, number] : propAim(targetProp!);
         const held = handTargetAt(state, aim, state.waist, state.crouch);
-        drive.hand = [drive.hand[0] + (held[0] - drive.hand[0]) * 10 * delta, drive.hand[1] + (held[1] - drive.hand[1]) * 10 * delta];
+        drive.hand = travelHand(drive.hand, held, 0, 480, delta);
       }
       // Arm constraint: a taut arm drags the body (I3).
       const k = state.scale;
@@ -910,9 +952,10 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         state.walkPhase = (state.walkPhase + delta * nativeCadence(state)) % 1;
       }
       // Keep the reaction lean while the force window holds and the arm is
-      // loaded (contact or fully taut — the pusher is bracing either way).
+      // loaded (contact or fully taut — the pusher is bracing either way);
+      // the lean eases in at the waist rate, never snaps.
       if (drive.contactT !== null && drive.t - drive.contactT <= drive.sec && (inContact || d >= reach * 0.98)) {
-        state.lean = -dir * REACTION_LEAN * drive.force;
+        state.lean = approach(state.lean, -dir * REACTION_LEAN * drive.force, WAIST_RATE * delta);
       }
       state.reach = {tx: drive.hand[0], ty: drive.hand[1], target: drive.target, contact: inContact && forcing};
     }
@@ -997,20 +1040,15 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         f.t += delta;
         const p = smoothstep01(Math.min(1, f.t / f.dur));
         const direction = f.dir;
-        const slide = Math.min(Math.abs(state.stagger), 140 * delta);
+        // The feet stay PLANTED (the contract: a supported foot never
+        // drifts); the root may only slide within what the folding legs
+        // still reach, so the slide rate follows the collapse progress.
+        const slide = Math.min(Math.abs(state.stagger), (20 + 120 * p) * delta);
         state.x += direction * slide;
         state.stagger -= direction * slide;
         state.lean *= 0.9;
         state.crouch = Math.max(state.crouch, p);
         state.waist = direction * state.facing * FALL_PITCH * p;
-        if (state.feet) {
-          // Skid only horizontally: each ankle target already carries its
-          // declared rest height above the ground (the sole rides the same
-          // ground projection — moving target[1] would sink it below ground).
-          for (const side of ["l", "r"] as const) {
-            state.feet[side].target[0] += direction * slide;
-          }
-        }
         // The envelope holds the down pose; the branch stays alive only
         // while momentum remains to skid.
         if (f.t >= f.dur && Math.abs(state.stagger) <= 1) state.fall = null;
