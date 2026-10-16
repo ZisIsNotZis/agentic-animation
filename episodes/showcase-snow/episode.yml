@@ -11,10 +11,10 @@ episode:
 
 actors:
   awei:
-    use: figure/awei
+    use: figure/lin_b_draft
     voice: voice/zh/awei
   lin:
-    use: figure/lin
+    use: figure/lin_b_draft
     voice: voice/zh/lin
 
 locations:

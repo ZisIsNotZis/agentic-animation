@@ -30,6 +30,18 @@ test("loadPlugins rejects corrupted or unknown-key category manifests", async ()
   await assert.rejects(loadPlugins(root), /not a valid plugin manifest/);
 });
 
+test("category manifest may recommend a preferred resource via use", async () => {
+  const root = await mkdtemp(join(tmpdir(), "anim-plugin-"));
+  await mkdir(join(root, "figure"));
+  await writeFile(join(root, "figure", "plugin.js"), run);
+  await writeFile(join(root, "figure", "manifest.json"), JSON.stringify({priority: -100, use: "figure/lin_b_draft"}));
+  const plugins = await loadPlugins(root);
+  assert.equal((plugins[0]!.manifest as {use?: string}).use, "figure/lin_b_draft");
+
+  await writeFile(join(root, "figure", "manifest.json"), JSON.stringify({use: "figure/Lin_B_Draft"}));
+  await assert.rejects(loadPlugins(root), /not a valid plugin manifest/);
+});
+
 test("loadPlugins rejects a plugin without a namespace default export", async () => {
   const root = await mkdtemp(join(tmpdir(), "anim-plugin-"));
   await mkdir(join(root, "broken"));

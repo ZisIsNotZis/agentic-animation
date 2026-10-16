@@ -8,10 +8,10 @@ episode:
 
 actors:
   aqiang:
-    use: figure/aqiang
+    use: figure/lin_b_draft
     voice: voice/zh/aqiang
   awei:
-    use: figure/awei
+    use: figure/lin_b_draft
     voice: voice/zh/awei
 
 locations:

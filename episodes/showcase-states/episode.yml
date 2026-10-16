@@ -8,10 +8,10 @@ episode:
 
 actors:
   lin:
-    use: figure/lin
+    use: figure/lin_b_draft
     voice: voice/zh/lin
   awei:
-    use: figure/awei
+    use: figure/lin_b_draft
     voice: voice/zh/awei
 
 locations:

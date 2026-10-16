@@ -10,28 +10,28 @@ actors:
   # role palette (lin_a..lin_v share a charcode sum mod 3), so the wardrobe
   # is identical across every view by construction.
   lin_a:
-    use: figure/lin
+    use: figure/lin_b_draft
     voice: voice/zh/lin
   lin_d:
-    use: figure/lin
+    use: figure/lin_b_draft
     voice: voice/zh/lin
   lin_g:
-    use: figure/lin
+    use: figure/lin_b_draft
     voice: voice/zh/lin
   lin_j:
-    use: figure/lin
+    use: figure/lin_b_draft
     voice: voice/zh/lin
   lin_m:
-    use: figure/lin
+    use: figure/lin_b_draft
     voice: voice/zh/lin
   lin_p:
-    use: figure/lin
+    use: figure/lin_b_draft
     voice: voice/zh/lin
   lin_s:
-    use: figure/lin
+    use: figure/lin_b_draft
     voice: voice/zh/lin
   lin_v:
-    use: figure/lin
+    use: figure/lin_b_draft
     voice: voice/zh/lin
 objects: {}
 scenes:
