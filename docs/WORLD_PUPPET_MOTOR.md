@@ -77,48 +77,24 @@ verify actual pose/viseme/contact frames before approving a new asset.
 - Algorithmic fabric: a seeded crosshatch weave clipped to the robe
   (`Fabric` in Actor.tsx) — deterministic per figure id, anchored in
   figure-local coordinates, subtle against the ink-outline style.
-## Slice 2 — contact push + balance stepping (shipped, force-chain rework)
-- **Force chain, no cooperation**: `push` applies the force to the PUSHER'S
-  HAND (phase "approach" walks him into arm's range first — his own legs);
-  the hand accelerates, the arm IK extends, and once the arm is taut the
-  hand's further motion DRAGS THE PUSHER'S BODY (clamped at other bodies'
-  adjacency edges). The force window opens at FIRST CONTACT (the waist bend
-  absorbs the reach — timing is physical, not scripted) and conducts only
-  while the hand circle overlaps the pushee's torso box, every substep. The
-  pushee gets nothing for free: his own foot friction and capture-point
-  stepping decide stepping vs staggering. Body separation is a hard
-  projection — two actors never share ground.
-- **Two-way dynamics**: the impulse accelerates the pushee's stagger and
-  leans the pusher back (reaction, held while the arm is loaded); the pushee
-  moves by their own foot friction, never in sync.
-- **Capture-point stepping** (thresholds from the figure's
-  `balance: {stepLength, catchFraction, maxSteps}`): after ~stepLength of
-  slide the feet take a recovery step that catches `catchFraction` of the
-  remaining momentum; beyond `maxSteps` the imbalance exceeds capacity —
-  fall territory (fall poses are future work; the dynamics already
-  distinguish the regimes). Step plants are baked as frame markers
-  (`step: 1`) and visible in the debug overlay.
-- `action.push(subject, target, force)` takes the shove strength (data, not
-  engine constants; clamp 0.1..2).
-## Slice 1 — one body, real touch (shipped)
-- **Skeleton data**: every figure declares `skeleton.json` (joints, part
-  shapes, arm lengths, waist pivot and pitch limit). The engine has NO figure
-  numbers: generic FK lives in `packages/core/src/motor/skeleton.ts`
-  (`solveSkeleton`, `solveArmIK`, `circleOverlapsBox`); the registry validates
-  and carries the data; the compiler threads it into motor + renderer. The
-  drawn joints ARE the physics joints by construction.
-- **Support surfaces**: furniture/set manifests declare
-  `supports: [{name, x, y}]`; `on(X)` places the object's base on the surface
-  (compile error if undeclared).
-- Root cause of every historic "hand never touches" defect was ground
-  misalignment (figures standing below their physics ground) — see the
-  invariant below.
+## Shipped slices 1–2 (walk; contact push + balance stepping)
+Historical detail is owned by the code and tests
+(`packages/core/src/motor/`, `packages/core/test/motor.test.ts`); the contract
+above is the law. Essentials: `push` applies force to the pusher's hand —
+approach walks him into range, arm IK extends, and a taut arm drags his body
+(only while the hand circle overlaps the torso box, every substep); the
+pushee's own foot friction and capture-point stepping
+(`balance: {stepLength, catchFraction, maxSteps}`) decide stepping vs
+staggering; step plants bake as `step: 1` markers. Every figure declares
+`skeleton.json` — the drawn joints ARE the physics joints; `on(X)` support
+placement requires the declared surface; body separation is a hard projection.
+`action.push(subject, target, force)` takes shove strength as data (clamp
+0.1..2).
 ## Debug overlay
 `ANIM_DEBUG_PHYSICS=1 render-yaml …` draws the engine's beliefs onto the
 video: figure box + ground line, collider torso/head, hand anchors, the
 motor reach point, prop boxes with their grab radius, and a frame counter.
-Use it to check contact and grips by eye — what the boxes say is what the
-physics uses. The actor div border/ground line (debugDiv) shares the flag.
+Use it to check contact and grips by eye — what the boxes say is what the physics uses. The actor div border/ground line (debugDiv) shares the flag.
 ## Prop placement (one authority)
 Props have exactly TWO position sources — nothing else moves them:
 1. **Carried**: the prop rides the holding hand's FK position with the GRIP
@@ -200,7 +176,7 @@ staring into the camera; the camera view is "front".
   puppet runtime is introduced. Approval still requires rendered view/contact QA.
 ## Slices
 1. **Core + walk** and 2. **Push** (force chain + stagger) — shipped, above.
-3. **Vocabulary migration** — in progress: actions become motor intents, deleting
+3. **Vocabulary migration** — delivered and reviewed (main `d863f96`+): actions become motor intents, deleting
    the regex pose layer per action. Migrated (prose can no longer claim the
    pose): `bow`, `nod`, `shiver` (torso envelopes: waist hinge, two dips, lean
    oscillation), `point`, `raise_hand`, `dismiss`, `think` (reach gestures:
@@ -221,4 +197,4 @@ staring into the camera; the camera view is "front".
    a real cue asset is produced. The migrated `shiver` emits "shiver-rattle",
    which has the same never-shipped-cue status — see
    [tickets/BACKLOG-SHIVER-RATTLE-CUE.md](tickets/BACKLOG-SHIVER-RATTLE-CUE.md).
-4. **Falls** — pending: failed recovery cuts balance for physical collapse; later full Verlet ragdoll if needed.
+4. **Falls** — pending: failed recovery cuts balance for physical collapse; later Verlet ragdoll if needed.

@@ -163,35 +163,23 @@ deferred in [tickets/BACKLOG-PROP-DROP-BOUNCE.md](tickets/BACKLOG-PROP-DROP-BOUN
 not an additional M2 gate. Automatic rebound is the confirmed target behavior,
 not a claim that the current motor implements it.
 Current supplemental source-binding entry: `m2-facial-object-20261014T0010/index.html` under the archive root; [continuity ticket](tickets/M2-EXPRESSION-CONTINUITY.md) owns repair/proof. `m2-final-packaging-20261013T2348/index.html` is the historical blocked H3 combined presentation; supplemental receipts determine current-source equivalence and inventories. Speech-bearing reused contact/support clips contain audio; new acting/overlap clips are video-only silent, not speech evidence. The user's milestone judgment on this entry is recorded in [tickets/M2-MILESTONE-ACCEPTANCE.md](tickets/M2-MILESTONE-ACCEPTANCE.md) with the immutable acceptance archive `m2-acceptance-20261014T2133+0800/`; he did not itemize listening or lip-sync, and actual listening therefore remains unitemized rather than verified. Production-path replacement was not approved on that occasion; it was opened for `figure/lin_b_draft` on 2026-10-16 ([production-gate-linb](tickets/M2-MILESTONE-ACCEPTANCE.md)).
-## Next-session entry and recovery
-1. Read this contract, the roadmap and linked schema/motor owners. Compare fresh
-   `git status` and source hashes with the ticket/audit evidence. HEAD remains
-   `4213bc40b64241b500b0d6097cccc585a0dc3eb3`; dirty source is part of the candidate,
-   so HEAD cannot identify rendered output. Preserve vendor/skills/unrelated dirt.
-2. Inspect `/tmp/agentic-animation-art-m2-parts-20261008/`: `workspace/` contains
-   copied library/episodes/audio and module context; `draft-library/`,
-   `native-sprites/`, `logs/`, canonical sheets and render helpers support iteration.
-   No continuing background job is recorded; verify processes before new work.
-3. If `/tmp` is missing, reconstruct a NEW workspace from the immutable
-   checkpoint `draft-library`, `episodes`, `native-sprites`, helpers and frozen
-   M0 audio; verify cached WAV/timing hashes; never resynthesize or replace M0.
-4. Use the recovery ticket's final source inventory and stills, not superseded
-   coverage-bundle contact media. Signed native shoulder/posture alignment is
-   repaired and regression-tested across all orientations/both travel directions.
-   Check final pickup/contact/recovery and profile grip depth in fresh review;
-   prior grip/shoulder/arm/crouch fixes remain included. Do not restart old repairs.
-5. Build a coverage receipt: all eight orientations, nine mouths and blink,
-   expression families with explicit reset, one-hand versus two-hand point,
-   planted motion, reach/grab/carry/transfer/release/support. Sample each start,
-   peak and recovery plus contact transitions. Use `pose.orient`, not action.orient;
-   set explicit blocking when sequencing (orientation factory defaults nonblock).
-6. Reuse hash-matched draft resources/stills; regenerate affected bounded videos.
-   Inspect hips/robe bend, shoulders/elbows, grips, mouth, occlusion and camera.
-   Follow canonical check → make → preview/render-yaml; reuse frozen takes.
-   Use the roadmap's [comparison and render budget](ART_PRODUCTION_UPGRADE.md#comparison-and-render-budget).
-7. Gates, independent whole-M2 review and the user milestone judgment are
-   recorded in [tickets/M2-MILESTONE-ACCEPTANCE.md](tickets/M2-MILESTONE-ACCEPTANCE.md);
-   its immutable acceptance archive binds the exact accepted revision.
-Archives are local evidence, not replicated backups. Final source is dirty; the
-accepted revision is identified by the acceptance archive's hashes, not HEAD. Do
-not clean the tree. Next: scoped M3 contract; production asset approval gate.
+## Current state and recovery
+1. `figure/lin_b_draft` is merged into `library/` as the preferred production
+   figure (main at the integration commit; see [STATUS](STATUS.md)); the old
+   figures remain installed and loadable. Reusable figure assets are in git.
+2. The M2 evidence archives live at
+   `~/.local/share/agentic-animation/art-baselines/` (restored 2026-10-16 from
+   the remote harvest; binding hashes verified). The old `/tmp` workspace and
+   draft-library reconstruction routes are obsolete — the figure is in git and
+   the archives are in a durable local path. Do not resynthesize or replace
+   the frozen M0 audio.
+3. Gates and the user milestone judgment are recorded in
+   [tickets/M2-MILESTONE-ACCEPTANCE.md](tickets/M2-MILESTONE-ACCEPTANCE.md),
+   including [production-gate-linb](tickets/M2-MILESTONE-ACCEPTANCE.md). Any
+   further production art replacement, publication or spending stays
+   approval-gated per the roadmap.
+4. Evidence archives are local, not replicated; the 4 GB full art-baselines
+   set on the remote machine is not yet mirrored locally. Mirror it before any
+   local cleanup of that remote.
+Archives are local evidence, not replicated backups. The accepted M2 revision
+is identified by the acceptance archive's hashes, not HEAD.

@@ -10,7 +10,11 @@ approval provenance is in the [ticket](tickets/M2-DOC-READINESS.md).
 
 Preserve `episode.yml` as the sole authored production input, `library/`
 identities, the canonical compiler/Remotion path, dialogue/visemes, reusable
-procedures, physical support/contact/grip, and camera capabilities. Do not
+procedures, physical support/contact/grip, and camera capabilities. Priority
+order confirmed 2026-10-16: first absorb every valuable Huashu mechanism into
+this engine, its skills and its practice (everything except image-generation
+models), then continue the main engine goal with ready-made example assets;
+every step ships as a vertical slice a user can see. Do not
 introduce a parallel DSL or production pipeline. Existing licensing and
 no-generative-video decisions remain in force. New recurring costs, external
 services, or material contract changes require authority covering them.
@@ -56,8 +60,12 @@ User gates: M1 direction selection, M2 identity derivation approval and the M2
 milestone judgment are met — the user said “我感觉没啥问题，自动推进” at the
 trusted `m2-facial-object-20261014T0010` entry and did not itemize
 listening/lip-sync ([acceptance ticket](tickets/M2-MILESTONE-ACCEPTANCE.md)).
-M2 production asset approval remains open; no production-path replacement,
-publication or new spending is authorized by that judgment. Stills, test runs,
+listening/lip-sync ([acceptance ticket](tickets/M2-MILESTONE-ACCEPTANCE.md)).
+On 2026-10-16 the user opened the production path specifically for
+`figure/lin_b_draft` ("old characters shall still be there, just not the top
+choice"), which is now the recommended library figure; the production gate for
+further character/art replacements, publication and new spending stays closed
+until named per item. Stills, test runs,
 renders and independent review are internal checkpoints, not reasons for progress
 pauses. M3–M8 still require scoped contracts and human milestone judgment, not
 automatic production replacement. Publication and material spending remain

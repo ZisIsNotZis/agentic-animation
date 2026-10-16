@@ -6,8 +6,8 @@ document owning a contract before changing implementation or an episode.
 ## Start here
 
 - [STATUS.md](STATUS.md) — milestone state and links to owning evidence.
-- [ART_CHARACTER_M2.md](ART_CHARACTER_M2.md#next-session-entry-and-recovery) —
-  actionable current-session handoff, unfinished acceptance and reconstruction.
+- [ART_CHARACTER_M2.md](ART_CHARACTER_M2.md#current-state-and-recovery) —
+  M2 current state, evidence archive locations and recovery.
 - [tickets/M2-DOC-READINESS.md](tickets/M2-DOC-READINESS.md) — task contract,
   historical provenance and documentation readiness audit.
 - [REPOSITORY_MAINTENANCE.md](REPOSITORY_MAINTENANCE.md) — upkeep and contribution rules.
