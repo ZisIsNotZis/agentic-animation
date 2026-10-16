@@ -1,7 +1,7 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {artworkFixture} from "../../core/test/helpers/figureArtwork";
-import {simulateScene,bakeSceneMotor} from "../../core/src/motor";
+import {simulateScene,bakeSceneMotor,nativeCrouchDrop} from "../../core/src/motor";
 import {FIGURE_VIEWS,figureViewForOrientation,type FigureView} from "../../core/src/schemas/figureArtwork";
 import type {Skeleton} from "../../core/src/schemas/libraryMeta";
 import {evaluatePerformance} from "../src/performance/evaluate";
@@ -122,4 +122,30 @@ test('native orientation and binding events use scene-relative motor time',async
   const skeletonViews=Object.fromEntries(FIGURE_VIEWS.map((view)=>[view,artwork.views[view].skeleton])) as Record<FigureView,Skeleton>;
   const movie=bakeSceneMotor({durationSec:2,startSec:9,actors:{hero:{at:[.4,.8],scale:.6,skeleton:artwork.views.front.skeleton,skeletonViews}},objects:{cup:{at:[.46,.72],size:[30,40]}},tracks:[{subject:'hero',events:[{start:9,end:10,tracks:[{kind:'bone',events:[{at:0,value:{orientation:'right'}}]},{kind:'binding',events:[{at:0,value:{operation:'bind',object:'cup',holder:'hero'}}]}]}]}]},{width:1280,height:720});
   assert.ok(movie?.actors.hero?.some((f)=>f.holds==='cup'),'later-scene grab must actually run');
+});
+
+test('native fall: the rendered FK puts the collapsed body on the ground',async () => {
+  const artwork=await artworkFixture();
+  const skeletonViews=Object.fromEntries(FIGURE_VIEWS.map((view)=>[view,artwork.views[view].skeleton])) as Record<FigureView,Skeleton>;
+  const manifest={video:{width:1280,height:720,fps:24},durationInFrames:48,actors:[{id:'hero',artwork,skeleton:artwork.views.front.skeleton,placement:{at:[640,650],scale:.6}}]} as unknown as PerformanceManifest;
+  const base=evaluatePerformance(manifest,0).actors[0]!;
+  const movie=simulateScene({durationSec:2,actors:[{id:'hero',x:640,groundY:650,facing:1,scale:.6,skeleton:artwork.views.front.skeleton,skeletonViews,orientations:[{at:0,orientation:'front'}],intents:[{at:.2,duration:1,intent:'fall'}]}],props:[],groundY:650,resolveX:()=>640});
+  const frame=movie.actors.hero!.at(-1)!;
+  assert.ok((frame.crouch??0)>.9,'the motor frame must carry the full collapse crouch');
+  const actor={...base,...frame,y:650,orientation:'front' as const,skeleton:artwork.views.front.skeleton,motor:true,flip:false};
+  const figure=solveActorFigure(actor);
+  const solved=figure.solved!;
+  assert.ok(solved,'the fallen pose must solve through the shared skeleton FK');
+  const toWorld=(point:[number,number])=>designHandToWorld(actor,point,figure.space,false);
+  const waist=toWorld(solved.joints.waist!),shoulder=toWorld(solved.joints.shoulder_r!);
+  const sk=artwork.views.front.skeleton;
+  const drop=nativeCrouchDrop(sk);
+  // Full crouch: the waist sits at (groundToWaist − crouch drop) above ground.
+  const waistHeight=650-waist[1];
+  const expected=(sk.space.height-sk.joints.waist![1]-drop)*.6;
+  assert.ok(Math.abs(waistHeight-expected)<3,`collapsed waist must sit at the crouch-drop height (${waistHeight.toFixed(1)} vs ${expected.toFixed(1)})`);
+  // The torso lies nearly flat: the shoulder ends up at waist height, well
+  // forward of it (hinged into the fall, not upright).
+  assert.ok(Math.abs(shoulder[1]-waist[1])<20,`torso must hinge over, not stay upright (shoulder ${(waist[1]-shoulder[1]).toFixed(1)}px off waist height)`);
+  assert.ok(shoulder[0]-waist[0]>60,`torso must hinge toward the fall (${(shoulder[0]-waist[0]).toFixed(1)}px forward)`);
 });

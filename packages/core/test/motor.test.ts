@@ -190,11 +190,12 @@ test("stagger: recovery steps catch momentum (balance stepping)", () => {
   assert.equal(new Set(tail).size, 1, "pushee must come to rest after recovery steps");
 });
 
-test("stagger: beyond step capacity the slide is long (fall territory)", () => {
+test("stagger: beyond step capacity balance cuts and the figure collapses (slice 4 fall)", () => {
   const scene: MotorScene = {
     ...baseScene,
+    durationSec: 6,
     actors: [
-      { ...baseScene.actors[0]!, intents: [{ at: 0.2, duration: 2, intent: "push", target: "awei", reach: 0.1, forceSec: 1.5, force: 1 }] },
+      { ...baseScene.actors[0]!, intents: [{ at: 0.2, duration: 2, intent: "push", target: "awei", reach: 0.1, forceSec: 1.5, force: 2 }] },
       baseScene.actors[1]!,
     ],
   };
@@ -202,9 +203,39 @@ test("stagger: beyond step capacity the slide is long (fall territory)", () => {
   const awei = trajectory.actors.awei!;
   const totalSlide = Math.abs(awei.at(-1)!.x - awei[0]!.x);
   // With a sustained shove past the step capacity, the body travels much
-  // farther than the stepping body — fall territory (fall poses are future
-  // work; the dynamics already distinguish the two regimes).
+  // farther than the stepping body — and the failure mode is a fall, not a
+  // permanent stagger.
   assert.ok(totalSlide > 150, `sustained shove should travel far: ${Math.round(totalSlide)}px`);
+  // The collapse: hip sinks to the full crouch drop and the waist hinges into
+  // the fall (the shove travels left, the figure falls onto its back:
+  // negative waist).
+  const down = awei.filter((f) => (f.crouch ?? 0) > 0.9 && Math.abs(f.waist ?? 0) > 60);
+  assert.ok(down.length > 12, `capacity exhaustion must collapse the figure (${down.length} frames down)`);
+  // Balance stays cut: no recovery step can plant once the collapse begins.
+  const firstDown = awei.findIndex((f) => (f.crouch ?? 0) > 0.5);
+  assert.ok(firstDown > 0, "the figure must lose height during the collapse");
+  assert.equal(awei.slice(firstDown).some((f) => (f as {step?: number}).step === 1), false, "no stepping after balance cuts");
+  // The figure stays down (get-up is out of scope).
+  assert.equal(awei.slice(-6).every((f) => (f.crouch ?? 0) > 0.9 && Math.abs(f.waist ?? 0) > 60), true, "the fallen figure must stay down");
+});
+
+test("fall intent: a fall-classified event cuts balance; the figure collapses toward facing and stays down", () => {
+  const scene: MotorScene = {
+    ...baseScene,
+    actors: [
+      { ...baseScene.actors[0]!, intents: [{ at: 0.3, duration: 1.1, intent: "fall" }] },
+      baseScene.actors[1]!,
+    ],
+  };
+  const trajectory = simulateScene(scene);
+  const aqiang = trajectory.actors.aqiang!;
+  // Upright and planted until the authored beat (frame k samples at (k+1)/24).
+  assert.equal(aqiang.slice(0, 7).every((f) => (f.crouch ?? 0) === 0 && !f.waist && f.x === aqiang[0]!.x), true, "upright until the beat");
+  const peak = Math.max(...aqiang.map((f) => f.waist ?? 0));
+  assert.ok(peak > 60, `collapse hinges the waist into the fall: ${peak.toFixed(1)}deg`);
+  // Stays down: no auto recovery.
+  assert.equal(aqiang.slice(-6).every((f) => (f.crouch ?? 0) > 0.9 && Math.abs(f.waist ?? 0) > 60), true, "the figure must stay down");
+  assert.deepEqual(trajectory, simulateScene(scene), "falls are deterministic");
 });
 
 test("gesture bow: the waist hinges forward and returns upright inside the authored duration", () => {

@@ -23,7 +23,7 @@ export interface MotorIntent {
   at: number;
   duration: number;
   intent: "move" | "push" | "grab" | "release"
-    | "bow" | "nod" | "shiver" | "point" | "wave" | "raise" | "think";
+    | "bow" | "nod" | "shiver" | "point" | "wave" | "raise" | "think" | "fall";
   target?: string;
   /** Stylized force 0..1 for push. */
   force?: number;
@@ -161,6 +161,9 @@ const BOW_PITCH = 28; // deg forward at the waist
 const NOD_PITCH = 7.5; // deg per dip
 const SHIVER_AMP = 2.4; // deg lean oscillation
 const SHIVER_HZ = 9;
+/** Slice 4 fall (balance-cut collapse, shared FK — not a ragdoll). */
+const FALL_PITCH = 80; // deg waist hinge at full collapse
+const FALL_DUR = 0.75; // s collapse span
 
 /** Per-actor body geometry, all derived from the declared skeleton. */
 interface ActorBody {
@@ -438,6 +441,10 @@ interface ActorState {
   stepPlanted?: boolean;
   /** Accumulated slide for the current stagger event (px). */
   staggerSlide: number;
+  /** Slice 4 fall: the active collapse envelope; `fallen` keeps the body
+   *  down (get-up is out of scope) and blocks every balance recovery. */
+  fall: {t: number; dur: number; dir: 1 | -1} | null;
+  fallen: boolean;
   /** Torso-pitch gesture in flight (bow/nod/shiver): the waist/lean follows a
    *  fixed envelope; weight stays planted, nothing translates or contacts. */
   gesture: {kind: "bow" | "nod" | "shiver"; t: number; dur: number} | null;
@@ -494,6 +501,29 @@ function propOpenHand(state: ActorState, props: Map<string, PropState>, free = f
   state.retract = state.reach !== null;
 }
 
+/** Slice 4 fall (docs/WORLD_PUPPET_MOTOR.md): balance is cut — stepping,
+ *  posture recovery, drives and gestures end; the collapse envelope drops the
+ *  body through the shared FK and it stays down (get-up is out of scope). */
+function startFall(state: ActorState, dir: 1 | -1, dur = FALL_DUR): void {
+  if (state.fall || state.fallen) return;
+  for (const foot of state.feet ? [state.feet.l, state.feet.r] : []) {
+    if (foot.swing) { foot.target = [...foot.landing]; foot.swing = false; }
+  }
+  state.walkPhase = 0;
+  state.fall = {t: 0, dur, dir};
+  state.fallen = true;
+  state.staggerSlide = 0;
+  state.handDrive = null;
+  state.gesture = null;
+  state.handGesture = null;
+  state.grab = null;
+  state.grabTarget = null;
+  state.pursue = null;
+  state.moveTarget = null;
+  // An in-flight reach retracts through the shared path — no arm snap.
+  state.retract = state.retract || state.reach !== null;
+}
+
 /** Walk arrival hooks: a pending grab starts, and a push drive takes over
  *  from the walk. Shared by the normal arrival and the clamp-pinned arrival. */
 function geometryFacing(state: ActorState): 1|-1 {
@@ -534,7 +564,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     scene.actors.map((actor) => [actor.id, {
       id: actor.id, x: actor.x, vx: 0, facing: actor.facing, groundY: actor.groundY, scale: actor.scale,
       walkPhase: 0, lean: 0, moveTarget: null, grab: null, holding: null, holdRel: null, handDrive: null, reach: null, retract: false, retractInfluence: 1, retractElapsed: 0, retractDuration: .65, wristAtBind: 0, propAngleAtBind: 0, grip: null, gripGoal: null, pursue: null, place: null,
-      stagger: 0, stepsTaken: 0, staggerSlide: 0, gesture: null, handGesture: null, body: bodyOf((actor.skeletonViews?.front??actor.skeleton) as Skeleton,actor.skeletonViews!==undefined),
+      stagger: 0, stepsTaken: 0, staggerSlide: 0, gesture: null, handGesture: null, fall: null, fallen: false, body: bodyOf((actor.skeletonViews?.front??actor.skeleton) as Skeleton,actor.skeletonViews!==undefined),
       skeleton: actor.skeletonViews?.front??actor.skeleton, skeletonViews:actor.skeletonViews, orientation:actor.skeletonViews?'front':undefined, waist: 0, crouch: 0,
     }]),
   );
@@ -775,6 +805,13 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             if (tx !== undefined) state.facing = (Math.sign(tx - state.x) || state.facing) as 1 | -1;
           }
           state.handGesture = {kind: intent.intent, target: intent.target ?? "", t: 0, dur: Math.max(0.3, intent.duration)};
+        } else if (intent.intent === "fall") {
+          // Fall-classified event (slice 4): balance cuts directly; the
+          // authored duration scales the collapse span (face the target first,
+          // same as the reach gestures — a body falls where it faces).
+          const tx = intent.target !== undefined ? scene.resolveX(intent.target) : undefined;
+          if (tx !== undefined) state.facing = (Math.sign(tx - state.x) || state.facing) as 1 | -1;
+          startFall(state, state.facing, clamp(Number(intent.duration) || FALL_DUR, 0.35, 1.5));
         }
       }
     }
@@ -951,7 +988,33 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             arriveMotorWalk(state, actors, props);
           }
         }
-      } else if (Math.abs(state.stagger) > 1) {
+      } else if (state.fall || (state.fallen && Math.abs(state.stagger) > 1)) {
+        // Slice 4 collapse: balance is cut — no stepping, no recovery. The
+        // hip sinks through the shared FK crouch, the waist hinges into the
+        // fall direction, momentum skids the body until friction kills it,
+        // and the feet drag along (support is gone once balance cuts).
+        const f = state.fall!;
+        f.t += delta;
+        const p = smoothstep01(Math.min(1, f.t / f.dur));
+        const direction = f.dir;
+        const slide = Math.min(Math.abs(state.stagger), 140 * delta);
+        state.x += direction * slide;
+        state.stagger -= direction * slide;
+        state.lean *= 0.9;
+        state.crouch = Math.max(state.crouch, p);
+        state.waist = direction * state.facing * FALL_PITCH * p;
+        if (state.feet) {
+          // Skid only horizontally: each ankle target already carries its
+          // declared rest height above the ground (the sole rides the same
+          // ground projection — moving target[1] would sink it below ground).
+          for (const side of ["l", "r"] as const) {
+            state.feet[side].target[0] += direction * slide;
+          }
+        }
+        // The envelope holds the down pose; the branch stays alive only
+        // while momentum remains to skid.
+        if (f.t >= f.dur && Math.abs(state.stagger) <= 1) state.fall = null;
+      } else if (Math.abs(state.stagger) > 1 && !state.fallen) {
         // Stagger: momentum slides the body with foot friction; when the
         // slide exceeds the declared step allowance, the feet take a
         // recovery step that catches part of the remaining momentum
@@ -964,14 +1027,19 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         state.walkPhase = (state.walkPhase + delta * 3) % 1;
         state.lean *= 0.96;
         // Recovery step: after ~stepLength of slide the feet reposition and
-        // catch catchFraction of the remaining momentum. Beyond maxSteps the
-        // imbalance exceeds capacity — the figure is falling (future work:
-        // fall poses; for now the lean grows and friction settles it).
-        if (state.staggerSlide >= state.body.stepLength && state.stepsTaken < state.body.maxSteps) {
-          state.stagger -= direction * Math.abs(state.stagger) * state.body.catchFraction;
-          state.staggerSlide = 0;
-          state.stepsTaken += 1;
-          state.stepPlanted = true;
+        // catch catchFraction of the remaining momentum. Once maxSteps are
+        // spent and the slide demand still passes stepLength, the imbalance
+        // exceeds capture capacity — balance cuts and the figure falls
+        // (slice 4).
+        if (state.staggerSlide >= state.body.stepLength) {
+          if (state.stepsTaken < state.body.maxSteps) {
+            state.stagger -= direction * Math.abs(state.stagger) * state.body.catchFraction;
+            state.staggerSlide = 0;
+            state.stepsTaken += 1;
+            state.stepPlanted = true;
+          } else {
+            startFall(state, direction as 1 | -1);
+          }
         }
       } else {
         state.stagger = 0;
@@ -990,8 +1058,9 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           const phase=state.walkPhase%1;
           const boundary=phase<.5?.5:1;
           // Do not wrap into the next swing before support has landed and
-          // tested the completed stride in this same atomic proposal.
-          state.walkPhase=settled?0:Math.min(boundary,phase+delta*nativeCadence(state));
+          // tested the completed stride in this same atomic proposal. A
+          // fallen body never steps again (balance is cut).
+          state.walkPhase=settled||state.fallen?0:Math.min(boundary,phase+delta*nativeCadence(state));
         } else if (!state.reach) state.walkPhase = 0;
       }
       // Body separation (I1): hard projection — two actors cannot share
@@ -1112,9 +1181,12 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           }
           // The posture returns to neutral at real joint rates; the hand keeps
           // its shoulder-relative shape (the arm holds the object as the body
-          // straightens), then relaxes to the carry pose.
-          state.waist = approach(state.waist, 0, WAIST_RATE * dt);
-          state.crouch = recoverCrouch(state, dt);
+          // straightens), then relaxes to the carry pose. A fallen holder
+          // keeps the down pose; the carried prop rides the hand down (I4).
+          if (!state.fallen) {
+            state.waist = approach(state.waist, 0, WAIST_RATE * dt);
+            state.crouch = recoverCrouch(state, dt);
+          }
           if(state.skeletonViews){
             carryGoal=carryHandAt(state);
             if(recipient){
@@ -1226,8 +1298,9 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           state.retract = true;
         }
       }
-      // Posture return when nothing is held or grabbed.
-      if (!state.grab && !state.holding && !state.gesture && (state.waist !== 0 || state.crouch !== 0)) {
+      // Posture return when nothing is held or grabbed. A fallen body keeps
+      // the down pose (slice 4: get-up is out of scope).
+      if (!state.fallen && !state.grab && !state.holding && !state.gesture && (state.waist !== 0 || state.crouch !== 0)) {
         state.waist = approach(state.waist, 0, WAIST_RATE * delta);
         state.crouch = recoverCrouch(state,delta);
       }
@@ -1432,7 +1505,7 @@ export function bakeSceneMotor(
         if (recipe.kind !== "motor") continue;
         for (const item of recipe.events ?? []) {
           const intent = (item.value ?? item) as Record<string, unknown>;
-          const GESTURE_INTENTS = ["bow", "nod", "shiver", "point", "wave", "raise", "think"] as const;
+          const GESTURE_INTENTS = ["bow", "nod", "shiver", "point", "wave", "raise", "think", "fall"] as const;
           const kind = String(intent.intent);
           if (kind !== "move" && kind !== "push" && kind !== "release" && kind !== "grab" && !(GESTURE_INTENTS as readonly string[]).includes(kind)) continue;
           // An intent may drive an actor other than the invoking subject

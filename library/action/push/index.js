@@ -6,13 +6,13 @@ import { track } from "@anim/core/stdlib";
 
 const D = 2.2;
 
-export function push(subject, target, force = 1.4) {
+export function push(subject, target, force = 1.4, forceSec = 0.25) {
   return {
     durationSec: D,
     mode: "block",
     *run(world) {
       track(world, "motor", subject.id, [
-        { at: 0, duration: D, intent: "push", target: target.id, reach: 0.35, forceSec: 0.25, force },
+        { at: 0, duration: D, intent: "push", target: target.id, reach: 0.35, forceSec, force },
       ]);
       // Impact thump lands after the approach window, on contact. The
       // "push-thump" sfx is NOT rendered: the cue was never shipped under
