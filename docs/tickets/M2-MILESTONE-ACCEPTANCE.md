@@ -22,11 +22,20 @@ docs only — no code, media, audio, history, staging or production path.
   The user did not itemize listening or lip-sync; actual listening therefore
   remains unitemized, not verified.
 - **production-open** — from: user-judgment. author: agent. origin: same
-  occasion. scope: general. status: current. producer: this ticket. Conclusion:
-  the judgment is not production asset approval. No production-path/default
-  replacement, publication, re-render or new spending was approved; the
-  production asset-path approval gate stays open, and this record must never be
-  upgraded into production asset approval.
+  occasion. scope: general. status: withdrawn 2026-10-16 — superseded by
+  **production-gate-linb** below (the user approved the production path for
+  `lin_b_draft` specifically). producer: this ticket. Original conclusion: the
+  judgment is not production asset approval; no production-path/default
+  replacement, publication, re-render or new spending was approved then.
+- **production-gate-linb** — from: none (primary). author: user. origin:
+  2026-10-16, after the M2 milestone acceptance, when confirming integration
+  of the accepted draft figure. The user approved `figure/lin_b_draft` as the
+  top-choice production character: “old characters shall still be there, just
+  not the top choice”. scope: specific — this opens the production-path gate
+  for `figure/lin_b_draft` only; it grants no publication, no spending and no
+  other character's production approval. status: current. producer: this
+  ticket. evidence: this record; integration commit on branch
+  `m2-lin-b-production-integration`.
 
 ## Roll-up and exact-revision binding
 
@@ -56,6 +65,8 @@ docs only — no code, media, audio, history, staging or production path.
 
 - Actual listening, lip-sync/subtitle/balance judgment: not itemized by the
   user; unverified, not blocking the recorded judgment.
-- Production asset-path/default replacement approval: open user gate.
+- Production asset-path/default replacement approval: opened for
+  `figure/lin_b_draft` only (production-gate-linb, 2026-10-16); other
+  characters' production approval remains an open user gate.
 - Full-speed real-time perceptual re-walk by the user was not itemized; static
   and sampled-media coverage stands as reviewed.

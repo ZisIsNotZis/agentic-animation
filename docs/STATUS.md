@@ -16,9 +16,12 @@ The approved [M0–M8 roadmap](ART_PRODUCTION_UPGRADE.md) remains active.
 production approval. [M1](ART_DIRECTION_M1.md) is accepted with B selected and
 A/B/C preserved. **M2 milestone judgment is met:** the user accepted the current
 candidate (“我感觉没啥问题，自动推进”) at the trusted `m2-facial-object-20261014T0010`
-entry; he did not itemize listening/lip-sync, no production rig/library approval
-is claimed and no production-path replacement was approved — that gate stays open.
-Facts and accepted-revision binding:
+entry; he did not itemize listening/lip-sync. On 2026-10-16 he opened the
+production-path gate for `figure/lin_b_draft` only (“old characters shall still
+be there, just not the top choice”): it is now the preferred production figure
+via the figure category manifest `use` recommendation, while old figures stay
+installed. No publication or spending was approved. Facts and accepted-revision
+binding:
 [tickets/M2-MILESTONE-ACCEPTANCE.md](tickets/M2-MILESTONE-ACCEPTANCE.md).
 Current M2 evidence, remaining limits and next actions are owned only by
 [ART_CHARACTER_M2](ART_CHARACTER_M2.md).

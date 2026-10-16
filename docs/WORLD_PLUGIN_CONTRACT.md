@@ -62,8 +62,7 @@ resources that do not physically exist (for example fetched or generated at
 load/use time) — the plugin hands over real factories and data regardless.
 Every identity is a path: `library/action/slam` is `action.slam`;
 `library/effect/manga-impact-star` likewise. No `id`, `version`,
-`implementationKey`, or `aliases` anywhere. The category manifest may declare
-plugin order metadata (`before`, `after`, `priority`) plus category-owned data.
+`implementationKey`, or `aliases` anywhere. The category manifest may declare plugin order metadata (`before`, `after`, `priority`), the `use` recommendation naming the category's preferred resource (for example the figure category's `use: figure/lin_b_draft`), plus other category-owned data (`kind`, `procedures`).
 
 ## Invocations: descriptor protocol
 

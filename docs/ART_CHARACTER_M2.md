@@ -1,6 +1,6 @@
 # M2 — B-direction character production
 ## Outcome and authority
-**Milestone judgment met; production asset-path approval remains open.** The user accepted the current candidate — “我感觉没啥问题，自动推进” — after being shown the trusted entry `m2-facial-object-20261014T0010/index.html` and its AV checklist; facts and accepted-revision binding: [tickets/M2-MILESTONE-ACCEPTANCE.md](tickets/M2-MILESTONE-ACCEPTANCE.md).
+**Milestone judgment met; production path opened for `figure/lin_b_draft` (2026-10-16).** The user accepted the current candidate — “我感觉没啥问题，自动推进” — after being shown the trusted entry `m2-facial-object-20261014T0010/index.html` and its AV checklist; facts and accepted-revision binding: [tickets/M2-MILESTONE-ACCEPTANCE.md](tickets/M2-MILESTONE-ACCEPTANCE.md). On 2026-10-16 the user approved `lin_b_draft` as the top-choice production character (“old characters shall still be there, just not the top choice”), opening the production-path gate for that figure only; old library figures stay installed and selectable, with the preference recorded by the figure category manifest `use` recommendation ([WORLD_PLUGIN_CONTRACT](WORLD_PLUGIN_CONTRACT.md)).
 The user did not itemize listening/lip-sync; this is not production asset
 approval. Deliver one reusable B-direction lin character whose better identity,
 silhouette and face survive canonical speech, orientation, articulation and
@@ -50,10 +50,11 @@ broad engine rewrite is authorized. Licensing boundaries remain in
   scenarios and unavailable coverage honestly. Self-review/stream metadata is not
   independent acceptance or listening. Fix blocking defects before presentation.
 - Present current actual artifact and comparisons for user milestone judgment;
-  production asset-path approval is a user gate. Do not proceed into dependent
-  default-production replacement on an unapproved draft.
+  production asset-path approval is a per-character user gate. Do not proceed
+  into dependent default-production replacement for a figure whose gate is not
+  approved (`figure/lin_b_draft` was approved 2026-10-16).
 ## Current implementation and evidence
-Canonical native artwork integration exists in the dirty working tree; old lin
+`figure/lin_b_draft` is the preferred production figure: the user-approved svg-bone-parts draft now lives in `library/figure/lin_b_draft/`, the figure category manifest recommends it via `use`, and every showcase episode's default cast points at it. Canonical native artwork integration exists in the dirty working tree; old lin
 remains unchanged. `tools/art-direction-study/lin_parts.py` generates the draft.
 `figureArtwork` schema/registry, native geometry in compiler/motor/evaluator and
 `ArtFigure.tsx` consume it through PerformanceActor. Native handover stops at
@@ -161,7 +162,7 @@ Gravity/drop behavior needs proof; no-breakage partial rebound is
 deferred in [tickets/BACKLOG-PROP-DROP-BOUNCE.md](tickets/BACKLOG-PROP-DROP-BOUNCE.md),
 not an additional M2 gate. Automatic rebound is the confirmed target behavior,
 not a claim that the current motor implements it.
-Current supplemental source-binding entry: `m2-facial-object-20261014T0010/index.html` under the archive root; [continuity ticket](tickets/M2-EXPRESSION-CONTINUITY.md) owns repair/proof. `m2-final-packaging-20261013T2348/index.html` is the historical blocked H3 combined presentation; supplemental receipts determine current-source equivalence and inventories. Speech-bearing reused contact/support clips contain audio; new acting/overlap clips are video-only silent, not speech evidence. The user's milestone judgment on this entry is recorded in [tickets/M2-MILESTONE-ACCEPTANCE.md](tickets/M2-MILESTONE-ACCEPTANCE.md) with the immutable acceptance archive `m2-acceptance-20261014T2133+0800/`; he did not itemize listening or lip-sync, and actual listening therefore remains unitemized rather than verified. No production-path replacement was approved.
+Current supplemental source-binding entry: `m2-facial-object-20261014T0010/index.html` under the archive root; [continuity ticket](tickets/M2-EXPRESSION-CONTINUITY.md) owns repair/proof. `m2-final-packaging-20261013T2348/index.html` is the historical blocked H3 combined presentation; supplemental receipts determine current-source equivalence and inventories. Speech-bearing reused contact/support clips contain audio; new acting/overlap clips are video-only silent, not speech evidence. The user's milestone judgment on this entry is recorded in [tickets/M2-MILESTONE-ACCEPTANCE.md](tickets/M2-MILESTONE-ACCEPTANCE.md) with the immutable acceptance archive `m2-acceptance-20261014T2133+0800/`; he did not itemize listening or lip-sync, and actual listening therefore remains unitemized rather than verified. Production-path replacement was not approved on that occasion; it was opened for `figure/lin_b_draft` on 2026-10-16 ([production-gate-linb](tickets/M2-MILESTONE-ACCEPTANCE.md)).
 ## Next-session entry and recovery
 1. Read this contract, the roadmap and linked schema/motor owners. Compare fresh
    `git status` and source hashes with the ticket/audit evidence. HEAD remains

@@ -3,7 +3,9 @@
 Minimal episodes, each demonstrating one capability slice of the evaluated
 invocation pipeline (docs/WORLD_PLUGIN_CONTRACT.md). Each is a single scene,
 under fifteen seconds, with edge-tts voices. Compile with `make`, render with
-`render-yaml`.
+`render-yaml`. The default cast artwork is the category-recommended production
+figure `figure/lin_b_draft` (`library/figure/manifest.json` `use`); voices stay
+bound to their own voice resources.
 
 | Episode | Demonstrates |
 | --- | --- |
