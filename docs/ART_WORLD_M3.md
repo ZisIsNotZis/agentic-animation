@@ -31,7 +31,7 @@ The M3 set is the canteen counter scene of `episodes/showcase-props`
 - M2 already hit the declared-versus-painted defect here: the original
   canteen declares the counter support at y450 while the painted top sits
   near y390; M2's draft realigned it to y390. The M3 set paints and declares
-  the counter together, so the defect class is closed at the source.
+  the counter together (y400), so the defect class is closed at the source.
 - The other five sets (`agent_stage`, `qingyun_*`, `school_corridor`) are
   untouched demonstrations; one coherent set is the whole milestone scope.
 
@@ -69,6 +69,16 @@ Both are confirmed root causes in `library/set/qingyun_dormitory/scene.svg`
 one draft set; generalizing the coherent treatment to the remaining canonical
 sets is future-milestone work per exclusion 4 (roadmap M7/M8), recorded here
 so the finding is not lost.
+
+## Gate-repair entry 2026-10-17 (independent review P1/P2 round)
+The gate review routed the putdown-visibility failure here with a pure-staging
+fix hypothesis; the hypothesis was falsified — every route is refused by the
+whole-body proposal (post-bind posture, held-prop mirror), and the repair was
+routed to M5 per exclusion 7 with the criterion honestly marked failing. The
+integrator sanctioned two pre-existing motor defect fixes (vacuous
+self-pursuit, direction-blind walk clamps) that the falsification required;
+they change no existing episode trajectory (see
+docs/tickets/M3-WORLD-ART.md, 2026-10-17 sections).
 
 ## Engine capability additions
 
@@ -126,8 +136,8 @@ contact; the M2 motor is unchanged. The rule the M3 set must satisfy: each
 declared support's normalized surface equals the painted surface it names,
 within a small fixed tolerance, validated at load (WP2) and confirmed at
 sampled putdown/rest frames (the M0 f160 defect). The counter is the
-canonical case: the painted counter top (y390 in draft units) is declared at
-y390, not y450.
+canonical case: the painted counter top (y400 in set units) is declared at
+y400, not y450.
 
 ## Composition: available levers, untouchable owners
 

@@ -129,3 +129,60 @@ to the parent's fresh review (WP4) and the user gate.
   repo + checkpoint when needed).
 - WP4 owns the durable episode swap (`episodes/` copy in its own bundle) —
   the two `/tmp` episode copies are disposable scratch, archived under `ir/`.
+
+## 2026-10-17 — committed-art rework provenance (supersedes the 10-14 hashes above)
+
+- 2026-10-17, WP4 repair worker (recorded fact, source: the WP4 gate-repair
+  dispatch): the committed `library/set/canteen_counter_m3` artwork is a
+  2026-10-16 rework by the WP3 worker agent, entering the repository in
+  commit `d9ef6d2` (2026-10-16 22:53 +0800, "WP3 art, reusable assets only").
+  The archived 10-14 draft (hashes above; bundle
+  `m3-set-art-20261014T2217+0800`) is the superseded draft, not the committed
+  art. Reconstruction from the artwork itself (marked as such): the rework
+  refined the draft to the committed composition — new horizon (wall base
+  y640), redrawn window, cooler/crates repositioned, chalkboard and stool
+  added — keeping the numeric declarations at Δ0.
+- 2026-10-17, WP4 repair worker: committed-art sha256 (sha256sum at head
+  `948ae11`): `scene.svg`
+  `b2d5d5c6c2491734461a6495c1b53e59285e458f4631fe8d36c4105ca67b1867`,
+  `manifest.json`
+  `4da9b4ce9e8345b93428222f96c3c37230bc0eec30507513da2fec4d509afe46`,
+  `preview.png`
+  `d98e24e59545f1a38dce87ea0227c827e9ac114f2a11297c7438eee41fff097c`.
+  Every WP3-era record above binds the 10-14 draft only.
+- 2026-10-17, WP4 repair worker: declared==painted re-verified against the
+  COMMITTED art through the load-time validator (`normalizeSetWorld`):
+  counter declared y400 (normalized 0.37037) == painted
+  `data-support-top="400"` on `counter_top_surface`, |Δ|=0 ≤ 8, PASS; layers
+  backdrop/floor/furniture/counter/foreground_counter all painted; safeArea
+  normalized 0.1146/0.1667/0.7708/0.6667. Output archived in the gate bundle
+  `probes/committed-support-check.json`.
+
+## 2026-10-17 — gate-repair round: sanctioned motor exceptions and P1-1 outcome
+
+- 2026-10-17, WP4 repair worker (integrator-sanctioned): two pre-existing
+  motor defect fixes in `packages/core/src/motor/index.ts`, needed because no
+  authored coordinates exist and the putdown staging could not be repaired
+  inside the episode otherwise: (1) vacuous self-pursuit — a self-target
+  `movement.to(x, x)` overwrote its staged-mark target with the actor's live
+  position and no-op'd; now it walks to the staged mark. (2) Direction-blind
+  walk clamps — the arrival/step body clamps treated bodies BEHIND the
+  walker as obstacles, teleporting the walker up to hundreds of px against
+  the clamp's own no-backward-correction contract; they now bind only in the
+  direction of travel. Regression test in `packages/core/test/motor.test.ts`;
+  full suite 257/0; the untouched M2 comparison episodes recompile with
+  byte-identical trajectories (corpus check, bundle `probes/`).
+- 2026-10-17, WP4 repair worker: P1-1 (putdown not visibly reading between
+  the clustered actors) remains OPEN and is routed to M5 with the honest
+  criterion state — the rest lands at x≈871 between the bodies (lin 998,
+  awei 795 after the handover adjacency halt; invariant under every legal
+  staging permutation). Three further routes were probed and are refused by
+  the whole-body proposal, each a real motor-behavior question, not a defect
+  fix: an empty-handed step-back walk is rejected on first-swing joint rates
+  from the post-bind posture (arms mirror 84–150px in one substep at the
+  facing flip); a carried walk is rejected on prop-rate for the same mirror;
+  a turn-while-holding is rejected likewise. A turn-in-place behavior and a
+  post-bind walk-start ease are M5-domain design work (docs/ART_WORLD_M3.md
+  non-goal 7). The third sanctioned-exception request (walk-start ease) was
+  withdrawn as infeasible under the 720px/s joint-rate law and no ramp was
+  committed; the episode stays at its committed HEAD state.

@@ -749,12 +749,15 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
               state.grabTarget = intent.grab ?? (isProp ? intent.target! : null);
               state.grabContactAt = intent.contactAt;
               // A moving actor target is pursued LIVE (the staged stop point
-              // goes stale the moment the target walks).
-              state.pursue = !isProp && actors.has(intent.target!) ? intent.target! : null;
+              // goes stale the moment the target walks). A self-target is not
+              // pursued — resolveX already returned the actor's staged mark,
+              // and live self-pursuit would overwrite it with the actor's own
+              // position, turning "return to your mark" into a no-op.
+              state.pursue = !isProp && actors.has(intent.target!) && intent.target !== state.id ? intent.target! : null;
             } else {
               state.moveTarget = tx;
               state.grabTarget = null;
-              state.pursue = actors.has(intent.target!) ? intent.target! : null;
+              state.pursue = actors.has(intent.target!) && intent.target !== state.id ? intent.target! : null;
             }
           } else {
             state.moveTarget = state.x;
@@ -999,6 +1002,10 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           let arrival = state.moveTarget;
           for (const other of actors.values()) {
             if (other.id === state.id) continue;
+            // A body bounds the walk only in the direction of travel; a body
+            // behind the walker must not clamp the arrival (it would reverse
+            // the step — the backward correction the walk contract forbids).
+            if ((other.x - state.x) * (arrival - state.x) <= 0) continue;
             const required = state.body.halfWidth * state.scale + other.body.halfWidth * other.scale;
             if (arrival >= state.x) arrival = Math.min(arrival, other.x - required);
             else arrival = Math.max(arrival, other.x + required);
@@ -1015,6 +1022,8 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           let clampedBy: ActorState | null = null;
           for (const other of actors.values()) {
             if (other.id === state.id) continue;
+            // Direction-of-travel guard: see the arrival clamp above.
+            if ((other.x - state.x) * direction <= 0) continue;
             const required = state.body.halfWidth * state.scale + other.body.halfWidth * other.scale;
             const before = stepX;
             if (direction > 0) stepX = Math.min(stepX, other.x - required);

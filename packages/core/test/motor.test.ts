@@ -301,3 +301,26 @@ test("gesture point: the actor faces the target and the hand travels to the aim,
   const cleared = frames.findIndex((f, i) => i > Math.round(1.1 * 24) && !f.reach);
   assert.ok(cleared > 0, "the arm retracts after the point ends");
 });
+
+test("move: a self-target walk returns the actor to his staged mark (pursuit of self is vacuous)", () => {
+  // resolveX returns the STAGED mark (600) while the actor stands elsewhere
+  // (900, e.g. after a handover adjacency halt). The walk must travel to the
+  // staged mark instead of no-oping on live self-pursuit. Episode staging
+  // (showcase-props-m3 P1-1 repair) is the only known user of self-targets;
+  // grep confirms no other episode authors movement.to(x, x).
+  const scene: MotorScene = {
+    ...baseScene,
+    actors: [
+      { ...baseScene.actors[0]!, x: 900, intents: [{ at: 0.2, duration: 1.2, intent: "move", to: "aqiang", target: "aqiang" }] },
+      baseScene.actors[1]!,
+    ],
+    resolveX: (id) => (id === "aqiang" ? 600 : id === "awei" ? 1248 : undefined),
+  };
+  const frames = simulateScene(scene).actors.aqiang!;
+  assert.equal(frames[0]!.x, 900, "starts displaced from the mark");
+  const arrived = frames.findIndex((f) => Math.abs(f.x - 600) <= 1);
+  assert.ok(arrived > 0, "the walk never reached the staged mark");
+  const end = frames.at(-1)!;
+  assert.ok(Math.abs(end.x - 600) <= 1, `actor must stand on the mark at the end, got ${end.x}`);
+  assert.equal(end.facing, -1, "a leftward walk ends facing left");
+});
