@@ -1,6 +1,6 @@
 # World Puppet Motor
 Physical motion SSOT; [WORLD_PLUGIN_CONTRACT](WORLD_PLUGIN_CONTRACT.md) owns authoring.
-Status: motor slices 1–2 are rendered/verified (showcase-actions push, showcase-camera walk); vocabulary migration (3) is in progress — seven actions are motor intents with their regex pose paths deleted (bow, nod, point, shiver, raise_hand, dismiss, think); falls (4) are pending. Eight-view orientation/fabric is shipped separately.
+Status: motor slices 1–2 are shipped and motor slice 3 (vocabulary migration: seven actions) is reviewed; see [Slices](#slices). Falls (4) are pending. Eight-view orientation/fabric is shipped separately.
 ## Why
 The previous renderer *imagined* motion: bone tracks carried English prose,
 the renderer regex-matched it into poses, and positions were eased lerps. A
@@ -200,6 +200,8 @@ staring into the camera; the camera view is "front".
    oscillation), `point`, `raise_hand`, `dismiss`, `think` (reach gestures:
    face-target raise/wave, overhead, chin) — the gesture family in
    `motor/index.ts`; planted support, no contact, shared retract recovery.
+   `think` now reaches with the dominant (right) hand; the legacy regex recipe
+   posed the left arm.
    `push`/`move`/`grab`/`release` were already motor (slices 1–2). Still
    legacy: hand-to-face/contact gestures (check_watch, cover_mouth,
    scratch_head, tap_head, touch_hair, sip, pat — need a self/prop contact
@@ -210,5 +212,7 @@ staring into the camera; the camera view is "front".
    Repaired pre-existing defect: `action.push` referenced the never-shipped
    "push-thump" cue, failing every push render at the renderer's cue gate;
    the dead reference is removed — push renders without impact audio until
-   a real cue asset is produced.
+   a real cue asset is produced. The migrated `shiver` emits "shiver-rattle",
+   which has the same never-shipped-cue status — see
+   [tickets/BACKLOG-SHIVER-RATTLE-CUE.md](tickets/BACKLOG-SHIVER-RATTLE-CUE.md).
 4. **Falls** — pending: failed recovery cuts balance for physical collapse; later full Verlet ragdoll if needed.
