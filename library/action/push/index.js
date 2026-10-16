@@ -14,8 +14,11 @@ export function push(subject, target, force = 1.4) {
       track(world, "motor", subject.id, [
         { at: 0, duration: D, intent: "push", target: target.id, reach: 0.35, forceSec: 0.25, force },
       ]);
-      // Impact thump lands after the approach window, on contact.
-      track(world, "sfx", undefined, [{ at: 1.15, duration: 0.18, cue: "push-thump", kind: "sfx", gain: 0.65, loop: false, operation: "play" }]);
+      // Impact thump lands after the approach window, on contact. The
+      // "push-thump" sfx is NOT rendered: the cue was never shipped under
+      // library/sound/, so every push render failed the renderer's cue gate
+      // (pre-existing defect, repaired during slice 3). Disclosed audio
+      // regression; restore only with a real cue asset — never a placeholder.
       yield D;
     },
   };
