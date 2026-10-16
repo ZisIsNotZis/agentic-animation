@@ -60,6 +60,16 @@ Refining the M3 recon overreach list into exclusions:
 10. No long-form/180s renders, no raised comparison budget, no new
     dependencies or services, no publication.
 
+## Entry findings 2026-10-16 (user-raised, routed here)
+During the falls demo review the user flagged: (a) canonical sets read as the
+old schematic style against the accepted B-direction figure, and (b) actors
+appear to stand in the air because canonical sets paint no readable ground.
+Both are confirmed root causes in `library/set/qingyun_dormitory/scene.svg`
+(primitive rects, no painted floor). Within M3 scope they close only for the
+one draft set; generalizing the coherent treatment to the remaining canonical
+sets is future-milestone work per exclusion 4 (roadmap M7/M8), recorded here
+so the finding is not lost.
+
 ## Engine capability additions
 
 **Open decision, decided:** the set manifest's declared-but-unconsumed fields
