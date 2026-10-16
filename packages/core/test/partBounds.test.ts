@@ -3,7 +3,7 @@
 // packages/studio/src/components/performance/Actor.tsx. If anyone edits the
 // drawing without re-running `npx tsx scripts/part-bounds.ts write`, these
 // tests fail — the colliders can never silently drift from the art.
-import {readFileSync} from "node:fs";
+import {readFileSync, existsSync} from "node:fs";
 import {join} from "node:path";
 import {test} from "node:test";
 import assert from "node:assert/strict";
@@ -21,12 +21,14 @@ test("drawn geometry is extractable and self-consistent", () => {
   assert.deepEqual(shapes.anchors.hip, [[158, 500], [242, 500]]);
 });
 
+// Legacy paper-doll figures share the one drawn Actor.tsx puppet, so their
+// colliders must equal the shared drawing. Native svg-bone-parts figures
+// (artwork.json) own their per-view geometry: the registry serves the
+// artwork's front skeleton as the runtime skeleton (registry.ts), so the
+// declared skeleton.json must mirror it exactly instead.
+const hasArtwork = (dir: string): boolean => existsSync(join(ROOT, "library/figure", dir, "artwork.json"));
+
 for (const dir of figureDirs(ROOT)) {
-  test(`${dir}: declared part colliders == drawn geometry`, () => {
-    const manifest = JSON.parse(readFileSync(join(ROOT, "library/figure", dir, "skeleton.json"), "utf8"));
-    assert.equal(verifyFigure(ROOT, dir, shapes), null);
-    assert.deepEqual(manifest.parts, computeParts(shapes, manifest.joints));
-  });
   test(`${dir}: skeleton.json passes the strict skeleton schema (registry path)`, () => {
     const raw = JSON.parse(readFileSync(join(ROOT, "library/figure", dir, "skeleton.json"), "utf8"));
     // The registry wraps the skeleton with path-derived identity/kind, then
@@ -34,4 +36,18 @@ for (const dir of figureDirs(ROOT)) {
     const parsed = FigureAssetManifestSchema.safeParse({identity: `figure/${dir}`, kind: "figure", skeleton: raw});
     assert.equal(parsed.success, true, JSON.stringify(parsed.success ? [] : parsed.error.issues, null, 1));
   });
+
+  if (hasArtwork(dir)) {
+    test(`${dir}: native artwork front skeleton == declared skeleton.json`, () => {
+      const skeleton = JSON.parse(readFileSync(join(ROOT, "library/figure", dir, "skeleton.json"), "utf8"));
+      const artwork = JSON.parse(readFileSync(join(ROOT, "library/figure", dir, "artwork.json"), "utf8"));
+      assert.deepEqual(artwork.views.front.skeleton, skeleton);
+    });
+  } else {
+    test(`${dir}: declared part colliders == drawn geometry`, () => {
+      const manifest = JSON.parse(readFileSync(join(ROOT, "library/figure", dir, "skeleton.json"), "utf8"));
+      assert.equal(verifyFigure(ROOT, dir, shapes), null);
+      assert.deepEqual(manifest.parts, computeParts(shapes, manifest.joints));
+    });
+  }
 }

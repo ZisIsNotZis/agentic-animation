@@ -53,6 +53,12 @@ Legacy built-in view art still has procedural paths; see M0 for observed gaps
 between attractive source assumptions and actual rendered contact.
 M2's optional `artwork.json` carries native view geometry and vector layers.
 Its body state selects the same view skeleton in motor baking and rendering;
+the registry serves the artwork's front skeleton as the runtime skeleton.
+Collider provenance follows the format: legacy figures (no `artwork.json`)
+share the one procedural Actor.tsx drawing, so `scripts/part-bounds.ts`
+derives their colliders from it and `partBounds.test.ts` pins them to the
+drawing; native figures own their per-view geometry in `artwork.json`, whose
+front skeleton must equal the declared `skeleton.json` (same test).
 hand-center reach excludes the contact radius (radius belongs to the separate
 contact circle). Shared FK supports body drop and articulated leg angles so
 crouches can lower hips while preserving foot support. Root anchors stay fixed

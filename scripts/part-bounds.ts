@@ -209,17 +209,19 @@ const main = (): void => {
   const mode = process.argv[2] ?? "write";
   const source = readFileSync(ACTOR_TSX, "utf8");
   const shapes = extractShapes(source);
-  const dirs = figureDirs();
+  // Native svg-bone-parts figures (artwork.json) own their geometry; the
+  // shared-puppet write/verify never applies to them.
+  const dirs = figureDirs().filter((d) => !existsSync(join(FIGURE_DIR, d, "artwork.json")));
   if (mode === "write") {
     for (const dir of dirs) writeFigure(".", dir, shapes);
-    console.log(`part-bounds: wrote exact parts for ${dirs.length} figures (fist r=${shapes.fistRadius}, limb r=${shapes.limbRadius})`);
+    console.log(`part-bounds: wrote exact parts for ${dirs.length} legacy figures (fist r=${shapes.fistRadius}, limb r=${shapes.limbRadius})`);
   }
   const bad = dirs.map((d) => verifyFigure(".", d, shapes)).filter((v): v is string => v !== null);
   if (bad.length) {
     console.error(bad.join("\n"));
     process.exit(1);
   }
-  console.log(`part-bounds: ${dirs.length} figures match the drawing`);
+  console.log(`part-bounds: ${dirs.length} legacy figures match the drawing`);
 };
 
 if (process.argv[1]?.endsWith("part-bounds.ts")) main();
