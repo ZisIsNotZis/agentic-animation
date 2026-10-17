@@ -1,0 +1,64 @@
+episode:
+  id: m5_acting
+  title: 表演节拍（M5）
+  language: zh-CN
+
+# M5 WP3 acting study (docs/ART_ACTING_M5.md): six named beats on the accepted
+# M3 set and the accepted production figure, retimed so each reads with a
+# preparation, a key pose, an accent and a settle. Silent on purpose — audio is
+# M6/M8 and out of M5 scope, so each statement is ellipsis only; the ellipsis
+# beats are the scene clock and the pauses between the beats.
+#
+# Beats:
+#   1 pickup      lin lifts the thermos off the floor      (anticipation + accent + hold settle)
+#   2 handover    awei walks to lin and binds on contact  (accent approach + held settle)
+#   3 step clear  awei carries the thermos back to his mark, stepping back
+#                 without turning so the prop stays continuous
+#   4 putdown     awei places the thermos on the painted counter, its rest
+#                 clear of both bodies (anticipation + outward settle)
+#   5 point       awei points at lin                      (anticipation + accent + settle)
+#   6 surprise    lin recoils, startled                   (anticipation + accent + settle)
+#   7 push        awei shoves lin; lin staggers and takes recovery steps
+#
+# `…` contributes the configured silent beat; the calls after the first are
+# scheduled against those beats, not against the previous call's duration.
+
+actors:
+  lin:
+    use: figure/lin_b_draft
+    voice: voice/zh/lin
+  awei:
+    use: figure/lin_b_draft
+    voice: voice/zh/awei
+
+locations:
+  canteen:
+    use: set/canteen_counter_m3
+
+objects:
+  thermos:
+    use: prop/thermos
+
+scenes:
+  - id: beats
+    location: canteen
+    actors:
+      lin: {facing: awei}
+      awei: {facing: lin}
+    objects:
+      thermos: center
+    script:
+      # 1 pickup — five beats give the waist bend and the grab their time.
+      - lin: "{...prop.pickup(lin, thermos), anticipation: 0.3, accent: 0.8, settle: 0.5}……………"
+      # 2 handover — two beats hold the bind and its settling weight shift.
+      - awei: "{...prop.handover(lin, thermos, awei), accent: 0.85, settle: 0.55}……"
+      # 3 step clear — the receiver returns to his mark, still facing the giver.
+      - awei: "{movement.to(awei, awei)}"
+      # 4 putdown — the placing hand carries the prop outward before it opens.
+      - awei: "{...prop.putdown(awei, thermos), anticipation: 0.25, settle: 0.7}……"
+      # 5 point — a direct accusation at lin.
+      - awei: "{...action.point(awei, lin), anticipation: 0.22, accent: 0.8, settle: 0.6}…"
+      # 6 surprise — a startle gesture under the shocked face (non-blocking).
+      - lin: "{...emotion.shocked(lin), mode: \"nonblock\"}{...action.raise_hand(lin), anticipation: 0.3, accent: 0.9, settle: 0.65}……"
+      # 7 push — the shove; lin's balance controller takes the recovery steps.
+      - awei: "{...action.push(awei, lin), anticipation: 0.25}…"
