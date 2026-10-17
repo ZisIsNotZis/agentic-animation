@@ -82,7 +82,7 @@ selects backgrounds by compiled location instance rather than scene names.
 
 A motor intent (the `motor` track recipe's event value) may carry `anticipation` (seconds, clamped 0..0.4), `accent` (0..1) and `settle` (0..1); absent means 0, and 0 is the pre-M5 motion, so every existing bake keeps byte-identical trajectories.
 The call form is the existing override syntax `{...action.point(a, b), accent: 0.6}`; the compiler stamps the three values onto the motor intents that call emits (a value the procedure set itself wins) and the motor applies them per [WORLD_PUPPET_MOTOR.md](WORLD_PUPPET_MOTOR.md).
-No frame field is added to the bake: the shapes appear in `lean` (anticipation), `x` (a deferred beat's start) and `reach` (accent and settle), and a clamped anticipation is reported in `motor.diagnostics` (`make` prints it as `motor warning:`).
+No frame field is added to the bake: the shapes appear in `lean` (anticipation), `x` (a deferred beat's start) and `reach`/the carried prop (accent, settle, the shaped hold and the shaped placement), and a clamped anticipation is reported in `motor.diagnostics` (`make` prints it as `motor warning:`).
 
 ## Prop grip geometry (M2 additive implementation)
 

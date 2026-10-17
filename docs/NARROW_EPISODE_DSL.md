@@ -74,7 +74,7 @@ A timed beat may carry three additive acting-shape modifiers on the call, which 
 
 - `anticipation` — seconds of preparation before the beat moves (clamped 0..0.4, default 0).
 - `accent` — 0..1 timing contrast into the key pose (default 0).
-- `settle` — 0..1 decaying overshoot past the key pose (default 0).
+- `settle` — 0..1 decaying overshoot past the key pose (default 0); on a grab it shapes the following hold, and on a placing release the outward hand travel that keeps the rest clear of the holder.
 
 0 is the shape every pre-M5 episode was authored with, so leaving them out keeps a beat's trajectory exactly as it was. Which beats carry which shape, and every clamp and fallback, is the motor's contract ([WORLD_PUPPET_MOTOR](WORLD_PUPPET_MOTOR.md)); a shape a beat cannot use is ignored rather than reinterpreted.
 
