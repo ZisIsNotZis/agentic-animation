@@ -16,6 +16,15 @@ the set is [ART_WORLD_M3](ART_WORLD_M3.md); the treatment is
 [ART_MATERIALS_M4](ART_MATERIALS_M4.md); authoring stays
 [NARROW_EPISODE_DSL](NARROW_EPISODE_DSL.md).
 
+## Current state (2026-10-18)
+
+The renderer draws the bake at every beat key frame. The second image review
+read the renderer as broken because its nine stills were pictures of the 12.15 s
+pre-fix bake carrying the 14.35 s bake's frame numbers — see
+[Evidence identity](#evidence-identity-the-second-review-judged-another-bakes-pictures).
+One acting finding stays open: the pre-roll hinges the waist instead of bending
+the knees ([ticket](tickets/BACKLOG-M5-PRE-ROLL-KNEES.md)).
+
 ## What "acting" means here (derived from the M5 row)
 
 The motor already moves bodies correctly. What it lacks is *performance
@@ -142,13 +151,17 @@ Ownership through the bake: `lin` holds frames 47–118, `awei` 119–188, 0 fra
 
 **Evidence** (`/tmp/m5view3/`, never in Git): 960-wide JPEGs shot at the frames the bake derives — `pickup-prep` f5, `pickup-key` f48, `handover-prep` f95, `handover-key` f119, `putdown-key` f189, `putdown-rest` f204 and a `putdown-rest-crop.jpg`, `point-key` f229, `surprise-key` f268 — plus `probe.json` with the drawn-vs-bake table. `putdown-rest` is f204, the settle's end: at f190 the prop has reached its rest but the placing arm is still settling (reach influence 0.963), which is what the review read as a frozen shelf. A fresh image review of this set is the next gate; WP4 owns the moving clips and the bundle.
 
-## Render truth: the second image review and what it found
+## Evidence identity: the second review judged another bake's pictures
 
-A second image review reported that the render contradicted the bake on all four acting defects. A marker probe — one figure part repainted in a copy of the manifest, then that part's ink located in the rendered PNG — finds the renderer obeys its bake at every beat key frame: each drawn pose channel equals the baked one within 0.5°, the drawn hand sits on the baked reach within 2–5 px (the hand art's own centre offset), and the drawn prop follows the baked anchor. The reviewed stills were pictures of the **12.15 s pre-fix bake** carrying the 14.35 s bake's frame numbers: frame 5 agrees with a current render (0 differing px) while frame 53 differs by 24 855 px and draws the holder's body at stage x 657.5 where the 14.35 s bake puts him at 748.7. The number was right and the picture was of another revision — the M4 failure mode again, in the evidence path rather than in the renderer.
+A second image review reported that the render contradicted the bake on all four acting defects. It did not: a marker probe — one figure part repainted in a copy of the manifest, then that part's ink located in the rendered PNG — finds the renderer obeys its bake at every beat key frame. Each drawn pose channel equals the baked one within 0.5°, the drawn hand sits on the baked reach within 2–5 px (the hand art's own centre offset), and the drawn prop follows the baked anchor.
+
+The reviewed stills were pictures of the **12.15 s pre-fix bake** carrying the 14.35 s bake's frame numbers: frame 5 agrees with a current render (0 differing px), while frame 53 differs by 24 855 px and draws the holder's body at stage x 657.5 where the 14.35 s bake puts him at 748.7. The number was right and the picture was another revision — the M4 failure mode again, in the evidence path rather than in the renderer.
+
+**The rule this leaves.** An evidence image carries the identity of the bake it came from — duration, frame count, a hash of the compiled manifest or motor track, and the repository revision — and its frames are derived from the bake, never copied. A picture without that identity is not evidence (`.agents/knowledge/ssot-and-evidence.md`). The current set is `/tmp/m5view3/`, whose `bake-identity.json` records 345 frames, 14.350 s, motor sha256 `c9048001fd39ada2633e3bb116eae39b58d760838a66769e609945a76a189281` and episode sha256 `b2f24afb869aaf21c54b18c0952d94648ab4068795d46857caf9809bd30df1c8`, byte-identical to a fresh compile at the revision that reviewed it.
 
 **Closed mechanically.** `packages/studio/test/renderTruth.test.ts` derives each beat's key frame from the compiled bake (its call cues plus the bake's own bind, lift, release and aim), then judges what the renderer draws there through the renderer's pose path (`evaluatePerformance` → `solveActorFigure` → `designHandToWorld`): the pose, the hand on its reach, the prop on its declared line, the elbow's bend, the crouch. A negative control asserts the same measurement fails when pointed at another frame, so a stale index cannot pass. Evidence frames now come from that derivation, never from a copied number.
 
-**Open finding: the pre-roll hinges the waist** (review item 4). Anticipation shifts the weight with a 10° waist lean on straight legs. Bending the knees needs the crouch, and the crouch is not a free acting channel: a pre-roll crouch leaves a planted-foot support reserve and puts the point's fixed world aim 7 px outside the arm's bone reach, so the whole-body proposal rejects the beat (`palm-contact/hand_r 6.958 > 0.020`, measured on the attempted shape). The proper fix re-solves the reach aim against the posture — a motor posture change beyond this round, so the attempt is reverted rather than tuned in.
+**Open finding: the pre-roll hinges the waist** (review item 4). Anticipation shifts the weight with a 10° waist lean on straight legs. Bending the knees needs the crouch, and the crouch is not a free acting channel: a pre-roll crouch leaves a planted-foot support reserve and puts the point's fixed world aim 7 px outside the arm's bone reach, so the whole-body proposal rejects the beat (`palm-contact/hand_r 6.958 > 0.020`, measured on the attempted shape). The fix re-solves the reach aim against the posture — a motor posture change, routed with its measured blocker to [BACKLOG-M5-PRE-ROLL-KNEES](tickets/BACKLOG-M5-PRE-ROLL-KNEES.md) rather than tuned in here.
 
 **Residual limits.** The study is silent; the receiver's bind arm is at full stretch (173.5°) while the giver's is folded — a shaped bind would need a closer adjacency, which trades against the readable head gap; the surprise's accent contrast is limited by a short travel; the push's accent/settle live in the target's stagger by motor contract; a reach posture may exceed the declared waist envelope when the object is low enough to need it (`figure/lin_b_draft` measures 45° with the crouch spent). No moving clip is claimed here.
 
