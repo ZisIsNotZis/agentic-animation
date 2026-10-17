@@ -22,15 +22,23 @@ advancing. This document is the single home of that inventory and its state.
 
 ## Consequential loss (worth rescuing)
 
-1. **Cue audio is entirely absent.** `library/sound/plugin.js` calls
-   `enumerateCueAssets(import.meta.url, "sfx")`, which reads
-   `library/sound/cues/*.{wav,mp3,ogg}`; likewise `library/music/cues/`. Neither
-   directory exists in the repository and no `.wav` exists anywhere in it, so
+1. **Cue audio is absent — because of a path seam, not a lost asset.**
+   `library/sound/plugin.js` calls `enumerateCueAssets(import.meta.url, "sfx")`,
+   which reads `library/sound/cues/*.{wav,mp3,ogg}`; likewise
+   `library/music/cues/`. Neither directory exists and no `.wav` is tracked, so
    **every `sfx` and `music` cue resolves to nothing and is silently dropped**,
-   and `packages/adapters/renderer-remotion/test/index.test.ts` points at
-   `library/music/cues/ending-cadence.wav`, which does not exist. The overlays
-   carry 20 `sound/cues` and 2 `music/cues` files (1.7 MB) under exactly the
-   expected names. **Rescue: audio cues.**
+   and `packages/adapters/renderer-remotion/test/index.test.ts` fails on
+   `missing audio cue asset "ending-cadence"`. The overlays carry 21
+   `sound/cues` and 2 `music/cues` files under exactly the expected names.
+   Measured cause: the tracked generator `tools/audio-qa/generate-cues.mjs`
+   reproduces **all 21 sfx and `ending-cadence.wav` byte-for-byte**, but writes
+   them to `library/audio/{sfx,music}/` plus a `catalog.json` that nothing reads,
+   while the plugins enumerate `library/sound/cues/` and `library/music/cues/`.
+   So the audio is not lost work: it is regenerable output written to the wrong
+   place. `.gitignore:49` (`*.wav`) is therefore correct for those files.
+   `xuehua-piaopiao.wav` is the one genuine loss — the generator does not
+   reproduce it and `library/music/xuehua` plays it in `episodes/showcase-snow`.
+   **Rescue: close the seam and keep the one non-reproducible cue.**
 2. **The thermos handle `grip` declaration.** Present in all thirteen overlays,
    absent from the repository; it gates both the handle socket and the
    wrist-driven prop rotation. Owning register:
@@ -61,7 +69,7 @@ advancing. This document is the single home of that inventory and its state.
 
 | WP | Owner area | Outcome | Acceptance |
 |---|---|---|---|
-| R1 | `library/sound/cues`, `library/music/cues` | 20 + 2 cue files restored; enumeration reports them | `enumerateCueAssets` returns 20 sfx and 2 music; the adapter audio-cue test that referenced `ending-cadence.wav` passes; `npm test` stays green |
+| R1 | `tools/audio-qa/generate-cues.mjs`, `package.json`, `.gitignore`, `library/music/cues` | The generator writes where the plugins enumerate, one command materialises all cues, and the single non-reproducible cue is tracked | Regenerating from empty yields 21 sfx and 2 music and `ending-cadence` resolves; the adapter audio-cue test passes; `npm test` green; only `xuehua-piaopiao.wav` is tracked, with the reason recorded |
 | R2 | `episodes/qa-orientations` | Eight orientation fixtures that still `check` against the current library | `anim check` green for each restored fixture; fixtures whose set was retired are recorded as retired with the reason |
 | R3 | `library/prop/*`, motor, M5 tests | Every grabbable prop declares `grip`; the thermos is held by the handle and tilts with the wrist | A held-property assertion on the socket and the tilt; M5 derived keys re-derived, invariants and render truth green |
 | R4 | `figureArtwork`, `library/figure`, renderer | A grasp hand shape wired from the existing `*/grips/*.svg` art and selected while holding | The holding hand draws `grip`, not `fist`; stills reviewed |
