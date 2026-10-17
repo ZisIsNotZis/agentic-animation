@@ -102,12 +102,11 @@ dropping declared passes from the compiled IR in a disposable scratch tool —
 the delivered candidate is always the unmodified episode, and the ablation is
 never a production entry point:
 
-- **A0** M3 committed art (regression baseline) → **A1** +pigment →
-  **A2** +detail → **A3** +paper → **A4** +lighting (full candidate).
-- **Leave-one-out** from A4: −pigment, −detail, −paper, −shade, −key.
+- **A0** M3 committed art → **A1** +pigment → **A2** +detail → **A3** +paper
+  → **A4** +lighting (full candidate); **leave-one-out** from A4 on each pass.
 
 Judged by the numeric checks of the acceptance criteria below plus human
-perception; the millisecond cost of each ablation step is reported.
+perception; each ablation step's cost is reported.
 
 ## Non-goals
 
@@ -180,6 +179,10 @@ declaration are recorded in the set manifest.
   detail lost) is deferred to the parent's fresh visual review and the user
   gate; the mechanical checks above are the worker's falsifiable substitute and
   are reported as such.
+- **Known inconsistency (outside the npm gates):** `tools/asset-qa/check.ts`
+  rejects `gradient`/`filter`/raster for the 23-asset `ai-work-adventure`
+  materializer only; M4 uses gradients legitimately and nothing fails today,
+  but pointing that tool at M4 sets needs a deliberate rule decision.
 - Next: parent arranges the fresh artifact review (stills + at least one clip)
   and presents the accepted-set comparison at the user gate; production
   replacement stays gated exactly as for M3.
