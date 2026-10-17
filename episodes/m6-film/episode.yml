@@ -1,0 +1,75 @@
+episode:
+  id: m6_film
+  title: 最后一桶汤（M6）
+  language: zh-CN
+
+# M6 film-language slice: one short canteen scene on the accepted M3 set, the
+# accepted production figure and the existing camera/sfx/music factories. The
+# scene is cut as a shot ladder instead of one continuous move: each `camera.*`
+# call is a shot, and each shot change is motivated by who or what currently
+# holds the attention.
+#
+# Shots (base composition is the medium two-shot at zoom 1.0):
+#   1 establish   medium two-shot, no camera call — the room and both bodies
+#                 are read before anyone is singled out.
+#   2 push lin    camera.punch_in(lin) lands as she lifts the flask; the close
+#                 shot holds while she acts, so the lift is the subject.
+#   3 hold close  same frame; she drinks. The sip cue is the accent (semantic:
+#                 the flask is already hers).
+#   4 pull wide   camera.wide() because she now holds the flask and he does
+#                 not: the move back to the room restores the pair as the unit
+#                 of interest while he asks for a share.
+#   5 push thermos camera.punch_in(thermos) is the reveal join: a 0.72 -> 1.35
+#                 scale jump out of the wide onto the object, because the
+#                 object is now the point of the scene. reveal-chime lands on
+#                 the same frame.
+#   6 pull wide   camera.wide() on the punchline: awei shrinks in frame, which
+#                 is his loss of standing; laugh + ending cadence finish it.
+#
+# Audio is one accent per shot: sip (3), reveal-chime (5), laugh + ending
+# cadence (6). Shots 1, 2 and 4 are deliberately silent so the accents read.
+
+actors:
+  lin:
+    use: figure/lin_b_draft
+    voice: voice/zh/lin
+  awei:
+    use: figure/lin_b_draft
+    voice: voice/zh/awei
+
+locations:
+  canteen:
+    use: set/canteen_counter_m3
+
+objects:
+  thermos:
+    use: prop/thermos
+
+scenes:
+  - id: last_flask
+    location: canteen
+    actors:
+      lin: {facing: awei}
+      awei: {facing: lin}
+    objects:
+      thermos: center
+    script:
+      # 1 establish — medium two-shot, no camera move and no cue.
+      - awei: "师傅，这桶汤，还有吗？"
+      # 2 push lin — the flask is hers, so attention (and the shot) goes to her.
+      # The push is its own beat and lands before she acts, so the close frame is
+      # already held when the lift starts.
+      - lin: "{...camera.punch_in(lin)}…"
+      - lin: "{...prop.pickup(lin, thermos), anticipation: 0.3}…最后一桶。"
+      # 3 hold close — she drinks in the same frame; the sip is the accent.
+      - lin: "{...action.sip(lin, thermos)}……我妈给我装的。"
+      # 4 pull wide — she has the flask, so the room comes back and the pair is
+      # read as two bodies again, while he asks for a share.
+      - awei: "{camera.wide(), emotion.skeptical(awei)}那……分我一口？"
+      # 5 push thermos — the reveal join: the shot leaves the pair and lands on
+      # the object, before she opens the flask toward him.
+      - lin: "{...camera.punch_in(thermos)}…"
+      - lin: "{...action.present(lin, thermos), accent: 0.6}…没了。"
+      # 6 pull wide — his standing shrinks with the frame; the cadence closes.
+      - awei: "{camera.wide(), action.laugh(awei), emotion.desperate(awei)}就剩个桶底……"
+      - awei: "{...music.ending(), mode: \"nonblock\"}……"
