@@ -356,19 +356,20 @@
        Layered treatment composited through the declared set-layer seam:
          material_pigment — region palettes: each region its own pigment family,
                             warm key glaze left / cool ambient fill right;
-         material_detail  — scale-keyed contours: small props restated at their own
-                            fine scale, near/large silhouettes weighted, far art thin;
-         material_paper   — paper tooth, 45-degree halftone in shade regions, dry-brush
-                            ink edges, paper kept in reserve over the window glass;
+         material_detail  — scale-keyed contours: visible prop ink and speculars
+                            restored, near/large silhouettes weighted, far art thin;
+         material_paper   — paper tooth keyed per ground (wall, mid planes, floor),
+                            45-degree fibre hatch in shade, dry-brush ink edges,
+                            paper kept in reserve over the window glass;
          lighting_shade   — one light map: falloff from the left window, ambient
                             occlusion bands, cast shadows to the right, cool fill;
          lighting_key     — the same source as warm key: window pool, rim highlight
-                            and the actors' lit side (declared above the actor plane);
-         ink_contour      — the final ink, above every wash: the props' linework, the
-                            chalk/marker lines and the steamer's steam.
+                            and the actors' lit side (declared above the actor plane).
        The M4 washes hold themselves off the ten drawn props through one shared
        feathered matte (m4_prop_hold_off, defined in the backdrop defs), so no wash
-       sits on a prop's ink and no matte edge is a step.
+       sits on a prop's ink and no matte edge is a step. No pass above the actor
+       plane restates a prop: a restated outline is also painted over the parts the
+       base art hides, which reads as a wireframe (docs/ART_MATERIALS_M4.md).
        Every mark is static art: no pass has a temporal term, so no pass can flicker.
        No filters, no raster, no per-actor projected shadow (see the M4 non-goals).
   -->
@@ -399,9 +400,7 @@
     <path d="M1300 1080 L1920 900 L1920 952 L1420 1080 Z" fill="#dcb086" opacity="0.13"/>
     </g>
     <!-- the small props carry their own pigment family inside their own box -->
-    <rect x="108" y="496" width="204" height="264" fill="#c08a63" opacity="0.10"/>
     <rect x="592" y="232" width="348" height="164" fill="#f7e8c3" opacity="0.06"/>
-    <rect x="1602" y="504" width="224" height="178" fill="#587f7a" opacity="0.08"/>
     <rect x="1432" y="300" width="164" height="106" fill="#eadcbb" opacity="0.07"/>
     <rect x="326" y="254" width="250" height="124" fill="#dbe4e0" opacity="0.07"/>
     <rect x="1630" y="880" width="222" height="178" fill="#c79878" opacity="0.08"/>
@@ -422,52 +421,46 @@
       <path d="M420 436 L420 654 M600 436 L600 654 M780 436 L780 654 M960 436 L960 654 M1140 436 L1140 654 M1320 436 L1320 654 M1500 436 L1500 654" stroke="#d9a884" stroke-width="1.2" opacity="0.3"/>
       <path d="M1300 1080 L1920 900" stroke="#e6c39b" stroke-width="3" opacity="0.4"/>
     </g>
-    <!-- small props restated at their own fine scale, plus restored speculars -->
+    <!-- Props are drawn by the M3 art alone. A pass above the set that restates their
+         outlines also restates the parts the base art hides: the drinks cooler stands
+         behind the counter, so its rectangle drawn from here lands on the counter's
+         front face as a box (VISION-REVIEW-2.md P0). The washes are held off the props
+         by the shared matte, so their ink needs no restatement anyway, and what it
+         needed is raised in the base art where the occlusion is drawn. What remains
+         here is drawn on surfaces nothing hides: the props that stand in front of the
+         counter, the cloth runner and the openings on the wall. -->
     <g fill="none" stroke="#424e46" stroke-width="1.6" opacity="0.52" stroke-linecap="round">
       <path d="M622 272 h58 v58 h-58 Z M696 284 h48 v46 h-48 Z M762 252 h66 v78 h-66 Z M846 280 h52 v50 h-52 Z"/>
       <path d="M640 346 L664 372 M912 346 L888 372"/>
-      <path d="M1636 536 h22 v40 h-22 Z M1666 540 h20 v36 h-20 Z M1694 536 h22 v40 h-22 Z M1724 542 h20 v34 h-20 Z M1752 536 h22 v40 h-22 Z"/>
-      <path d="M1638 612 h20 v40 h-20 Z M1666 616 h22 v36 h-22 Z M1696 612 h20 v40 h-20 Z M1724 618 h22 v34 h-22 Z M1754 612 h20 v40 h-20 Z"/>
       <path d="M1444 366 L1580 366 L1568 394 L1456 394 Z M1448 338 L1576 338 L1578 366 L1446 366 Z M1452 310 L1572 310 L1574 338 L1450 338 Z"/>
       <path d="M330 356 h240 M342 268 h216 v90 h-216 Z"/>
       <path d="M1656 1002 L1830 955 L1830 992 L1656 1039 Z M1656 962 L1830 915 L1830 953 L1656 1000 Z M1664 992 L1822 949 M1664 980 L1822 937 M1664 968 L1822 925"/>
       <path d="M1700 946 L1792 921 L1792 899 L1700 924 Z"/>
-      <path d="M1700 924 L1792 899 M1656 962 L1830 915 M1656 1002 L1830 955 M1672 1015 L1846 968"/>
-      <path d="M1676 1000 L1676 1036 M1712 990 L1712 1026 M1748 980 L1748 1016 M1784 970 L1784 1006"/>
+      <path d="M1700 924 L1792 899 M1656 962 L1830 915 M1656 1002 L1830 955"/>
       <path d="M648 352 h44 v34 h-44 Z"/>
-      <path d="M1636 536 h22 M1666 540 h20 M1694 536 h22 M1724 542 h20 M1752 536 h22 M1638 612 h20 M1666 616 h22 M1696 612 h20 M1724 618 h22 M1754 612 h20"/>
-      <path d="M1638 540 v30 M1668 544 v28 M1696 540 v30 M1726 546 v26 M1754 540 v30 M1640 616 v30 M1668 620 v28 M1698 616 v30 M1726 622 v26 M1756 616 v30"/>
       <path d="M1444 338 a66 6 0 0 0 132 0 M1452 366 a66 6 0 0 0 124 0 M1444 366 a66 6 0 0 0 136 0 M1448 310 a62 6 0 0 0 128 0"/>
       <path d="M1452 312 v50 M1572 312 v48 M1456 340 v52 M1568 340 v50 M1446 368 v24 M1578 368 v24"/>
-      <path d="M1638 536 h20 M1638 574 h20 M1668 540 h18 M1668 574 h18 M1696 536 h20 M1696 574 h20 M1726 542 h18 M1726 574 h18 M1754 536 h20 M1754 574 h20"/>
-      <path d="M1640 612 h18 M1640 650 h18 M1668 616 h20 M1668 650 h20 M1698 612 h18 M1698 650 h18 M1726 618 h20 M1726 650 h20 M1756 612 h18 M1756 650 h18"/>
       <path d="M634 280 h34 M708 292 h24 M774 286 h42 M858 288 h28 M634 318 h34 M708 322 h24 M858 322 h28"/>
+      <path d="M1694 536 h22 v40 h-22 Z M1724 542 h20 v34 h-20 Z M1752 536 h22 v40 h-22 Z"/>
       <path d="M1656 978 L1830 931 M1656 1020 L1830 973 M1700 935 L1792 910"/>
       <path d="M166 535 L196 527 M204 526 L234 536 M243 536 L270 545"/>
     </g>
-    <!-- mid-scale props and openings restated at their own weight: the contour
-         follows the size of the form, so crates, case, stool, window and sign
-         read as drawn rather than as flat plates -->
+    <!-- mid-scale openings on the wall and the runner's ends: both stand in front of
+         nothing, so restating them cannot put a line over a hidden surface -->
     <g fill="none" stroke="#424e46" stroke-width="1.5" opacity="0.3" stroke-linecap="round">
-      <path d="M118 642 h180 v100 h-180 Z M136 544 h150 v98 h-150 Z"/>
       <path d="M46 796 h128 v26 h-128 Z M62 822 L54 900 M158 822 L166 900 M110 822 L110 902"/>
-      <path d="M1600 470 h230 v310 h-230 Z M1622 492 h186 v262 h-186 Z"/>
       <path d="M1672 800 L1730 590 L1810 590 L1878 800 M1706 616 h132 v150 h-132 Z"/>
-      <path d="M334 258 h232 M330 356 h240"/>
       <path d="M140 130 h360 v280 h-360 Z M760 98 h400 v114 h-400 Z"/>
       <path d="M330 372 L322 392 M1590 372 L1598 392"/>
     </g>
     <g fill="#fdf3d9" opacity="0.5">
       <circle cx="634" cy="282" r="1.8"/><circle cx="770" cy="262" r="1.8"/><circle cx="856" cy="290" r="1.5"/>
-      <circle cx="1646" cy="544" r="1.4"/><circle cx="1704" cy="544" r="1.4"/><circle cx="1762" cy="544" r="1.4"/>
-      <circle cx="1648" cy="620" r="1.3"/><circle cx="1706" cy="620" r="1.3"/><circle cx="1764" cy="620" r="1.3"/>
       <circle cx="1462" cy="322" r="1.5"/><circle cx="1466" cy="348" r="1.5"/><circle cx="1460" cy="374" r="1.4"/>
       <circle cx="1700" cy="1006" r="1.5"/><circle cx="1704" cy="966" r="1.5"/>
       <circle cx="1460" cy="338" r="1.5"/><circle cx="1462" cy="366" r="1.5"/><circle cx="1466" cy="312" r="1.4"/>
       <circle cx="1746" cy="912" r="1.6"/><circle cx="1706" cy="928" r="1.4"/><circle cx="1790" cy="903" r="1.3"/>
-      <circle cx="1660" cy="540" r="1.3"/><circle cx="1728" cy="546" r="1.3"/><circle cx="1698" cy="618" r="1.2"/>
     </g>
-    <!-- fruit, thermos band and runner edges recovered over the pigment -->
+    <!-- fruit and runner edges recovered over the pigment -->
     <g fill="none" stroke="#424e46" stroke-width="1.3" opacity="0.4" stroke-linecap="round">
       <path d="M166 519 a17 17 0 1 0 0.1 0 M204 508 a18 18 0 1 0 0.1 0 M243 521 a16 16 0 1 0 0.1 0"/>
       <path d="M322 372 L1598 372 M322 392 L1598 392"/>
@@ -480,40 +473,54 @@
 
   <g id="material_paper">
     <defs>
-      <!-- one cheap tile: a single hatch stroke and one grain dot, repeated by the
-           renderer over the region fills (per-tile shape count drives fill cost) -->
-      <pattern id="m4_paper_tooth" width="12" height="12" patternUnits="userSpaceOnUse">
-        <path d="M2.2 3.4 L4.6 2.2" stroke="#6b6152" stroke-width="0.8" stroke-linecap="round" opacity="0.15"/>
-        <circle cx="8.4" cy="8.6" r="0.6" fill="#5c5346" opacity="0.13"/>
+      <!-- Paper tooth per surface: a tooth is a fibre with a direction, so each
+           ground gets its own cross-section instead of one dot cell averaged over
+           the whole picture. A round dot on a square cell repeats at a fixed pitch,
+           which is what reads as a screen raster the eye can lock onto; a few
+           short fibres of differing direction and length do not. -->
+      <pattern id="m4_tooth_wall" width="14" height="14" patternUnits="userSpaceOnUse">
+        <path d="M3.1 4.2 L4.3 9.8" stroke="#6b6152" stroke-width="0.7" stroke-linecap="round" opacity="0.15"/>
+        <path d="M9.6 2.4 L10.2 6.1" stroke="#5c5346" stroke-width="0.6" stroke-linecap="round" opacity="0.12"/>
+        <path d="M6.4 11.8 L11.2 12.2" stroke="#6b6152" stroke-width="0.6" stroke-linecap="round" opacity="0.11"/>
       </pattern>
-      <!-- the dot screen is the loudest thing in the pass: at 0.55 it filled the
-           paper between the strokes with 20-40 levels of its own contrast, which is
-           what read as a screen-space noise overlay rather than absorbency -->
-      <pattern id="m4_halftone" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-        <circle cx="4" cy="4" r="1.5" fill="#424e46" opacity="0.24"/>
+      <pattern id="m4_tooth_ground" width="12" height="12" patternUnits="userSpaceOnUse">
+        <path d="M2.2 3.4 L4.6 2.2" stroke="#6b6152" stroke-width="1.0" stroke-linecap="round" opacity="0.24"/>
+        <circle cx="8.4" cy="8.6" r="0.7" fill="#5c5346" opacity="0.20"/>
+      </pattern>
+      <pattern id="m4_tooth_floor" width="22" height="9" patternUnits="userSpaceOnUse">
+        <path d="M2.5 4.1 L13.6 4.6" stroke="#6b6152" stroke-width="1.0" stroke-linecap="round" opacity="0.26"/>
+        <path d="M16.2 7.4 L19.9 7.5" stroke="#5c5346" stroke-width="0.9" stroke-linecap="round" opacity="0.21"/>
+        <path d="M6.1 1.4 L8.9 1.5" stroke="#5c5346" stroke-width="0.8" stroke-linecap="round" opacity="0.18"/>
+      </pattern>
+      <!-- Shade is carried by short 45-degree fibres, not by a dot plate: at 0.24
+           the dots filled the paper between the strokes with 20-40 levels of their
+           own contrast and read as a screen-space noise overlay. -->
+      <pattern id="m4_shade_hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <path d="M2.4 3.0 L6.5 3.6" stroke="#424e46" stroke-width="1.2" stroke-linecap="round" opacity="0.22"/>
       </pattern>
     </defs>
-    <!-- Paper tooth, keyed to the painted surface: the wall carries it at 0.24 and
-         the mid-tone planes (wainscot, counter, floor) at full strength, so the
-         tooth follows the tone instead of laying one dot field over every surface.
-         The split sits on the dado line at y=470, a painted edge. The window glass
-         stays in reserve and the drawn props are held out by the shared matte, so
-         the tooth never sits on their line art. -->
-    <g fill="url(#m4_paper_tooth)" opacity="0.24" mask="url(#m4_prop_hold_off)">
+    <!-- The wall carries the fine tooth; the mid-tone planes (wainscot, counter)
+         carry the mixed one; the floor carries fibres drawn out flat, as a floor
+         scuffed by use looks. The window glass stays in reserve and the drawn props
+         are held out by the shared matte, so no tooth sits on their line art. -->
+    <g fill="url(#m4_tooth_wall)" opacity="0.24" mask="url(#m4_prop_hold_off)">
       <rect x="0" y="0" width="1920" height="126"/>
       <rect x="0" y="126" width="134" height="344"/>
       <rect x="506" y="126" width="1414" height="344"/>
     </g>
-    <g fill="url(#m4_paper_tooth)" mask="url(#m4_prop_hold_off)">
-      <rect x="0" y="470" width="1920" height="610"/>
+    <g fill="url(#m4_tooth_ground)" mask="url(#m4_prop_hold_off)">
+      <rect x="0" y="470" width="1920" height="170"/>
     </g>
-    <!-- 45-degree halftone confined to the shade regions of the light model, held
-         off the props by the shared matte so the dot field never sits on line art -->
-    <g fill="url(#m4_halftone)" mask="url(#m4_prop_hold_off)">
-      <path d="M1180 0 L1920 0 L1920 640 L1130 640 L1290 330 Z" opacity="0.5"/>
-      <path d="M1250 430 L1680 430 L1680 660 L1210 660 Z" opacity="0.45"/>
-      <path d="M0 946 L880 962 L1420 990 L1920 1030 L1920 1080 L0 1080 Z" opacity="0.5"/>
-      <path d="M256 660 L1680 660 L1680 726 L240 726 Z" opacity="0.45"/>
+    <g fill="url(#m4_tooth_floor)" mask="url(#m4_prop_hold_off)">
+      <rect x="0" y="640" width="1920" height="440"/>
+    </g>
+    <!-- 45-degree fibres confined to the shade regions of the light model, held off
+         the props by the shared matte so the mark never sits on line art -->
+    <g fill="url(#m4_shade_hatch)" mask="url(#m4_prop_hold_off)">
+      <path d="M1180 0 L1920 0 L1920 640 L1130 640 L1290 330 Z" opacity="0.34"/>
+      <path d="M1250 430 L1680 430 L1680 660 L1210 660 Z" opacity="0.30"/>
+      <path d="M0 946 L880 962 L1420 990 L1920 1030 L1920 1080 L0 1080 Z" opacity="0.34"/>
+      <path d="M256 660 L1680 660 L1680 726 L240 726 Z" opacity="0.30"/>
     </g>
     <!-- dry-brush ink edges: ink gathers where planes meet, never a blur -->
     <g fill="none" stroke="#424e46" stroke-linecap="round">
@@ -635,63 +642,4 @@
     </g>
   </g>
 
-  <g id="ink_contour">
-    <defs>
-      <!-- The final ink, drawn last so the paper and the shade cannot sit on it
-           (review: "the dark vignette + paper pass sit over the ink"). Every mark
-           below is authored once, at the weight the art draws it, and painted in
-           one <use>, so the pass owns one copy of the linework. The washes hold
-           themselves off these props (shared matte), which is what keeps the local contrast
-           the wash took away, which is how ink on sized paper actually behaves.
-           Marks carry no paint of their own, so both <use> layers choose it. -->
-      <g id="m4_ink_marks">
-        <!-- jar shelf -->
-        <path d="M600 330 h320 v16 h-320 Z M600 346 h320 M640 346 L640 372 L664 346 M912 346 L912 372 L888 346"/>
-        <path d="M622 272 h58 v58 h-58 Z M634 262 h34 v14 h-34 Z M696 284 h48 v46 h-48 Z M706 274 h28 v12 h-28 Z M762 252 h66 v78 h-66 Z M846 280 h52 v50 h-52 Z"/>
-        <path d="M632 286 v30 M706 296 v22 M856 292 v26 M634 280 h34 M708 292 h24 M774 286 h42 M858 288 h28 M634 318 h34 M708 322 h24 M858 322 h28"/>
-        <!-- display case and the small jar beside it -->
-        <path d="M334 258 h232 v12 h-232 Z M342 268 h216 v90 h-216 Z M342 314 h216 M330 356 h240"/>
-        <path d="M648 352 h44 v34 h-44 Z M658 344 h24 v10 h-24 Z"/>
-        <!-- drinks cooler: case, shelves and bottles -->
-        <path d="M1600 470 h230 v310 h-230 Z M1600 470 h230 v34 h-230 Z M1622 492 h186 v262 h-186 Z M1622 576 h186 M1622 652 h186"/>
-        <path d="M1636 536 h22 v40 h-22 Z M1666 540 h20 v36 h-20 Z M1694 536 h22 v40 h-22 Z M1724 542 h20 v34 h-20 Z M1752 536 h22 v40 h-22 Z"/>
-        <path d="M1638 612 h20 v40 h-20 Z M1666 616 h22 v36 h-22 Z M1696 612 h20 v40 h-20 Z M1724 618 h22 v34 h-22 Z M1754 612 h20 v40 h-20 Z"/>
-        <path d="M1636 536 h22 M1666 540 h20 M1694 536 h22 M1724 542 h20 M1752 536 h22 M1638 612 h20 M1666 616 h22 M1696 612 h20 M1724 618 h22 M1754 612 h20"/>
-        <path d="M1638 540 v30 M1668 544 v28 M1696 540 v30 M1726 546 v26 M1754 540 v30 M1640 616 v30 M1668 620 v28 M1698 616 v30 M1726 622 v26 M1756 616 v30"/>
-        <!-- stacked bowls -->
-        <path d="M1444 366 L1580 366 L1568 394 L1456 394 Z M1448 338 L1576 338 L1578 366 L1446 366 Z M1452 310 L1572 310 L1574 338 L1450 338 Z"/>
-        <path d="M1452 312 v50 M1572 312 v48 M1456 340 v52 M1568 340 v50 M1446 368 v24 M1578 368 v24"/>
-        <!-- crate stack and its fruit -->
-        <path d="M136 544 h150 v98 h-150 Z M118 642 h180 v100 h-180 Z"/>
-        <path d="M136 578 h150 M136 610 h150 M118 676 h180 M118 708 h180 M150 642 v100 M266 642 v100"/>
-        <path d="M166 519 a17 17 0 1 0 0.1 0 M204 508 a18 18 0 1 0 0.1 0 M243 521 a16 16 0 1 0 0.1 0 M222 529 a15 15 0 1 0 0.1 0"/>
-        <path d="M166 535 L196 527 M204 526 L234 536 M243 536 L270 545"/>
-        <!-- the foreground steamer: plates, slats, knob, ribs and its base rim -->
-        <path d="M1656 962 L1830 915 L1830 953 L1656 1000 Z M1656 1002 L1830 955 L1830 992 L1656 1039 Z"/>
-        <path d="M1664 992 L1822 949 M1664 980 L1822 937 M1664 968 L1822 925 M1656 978 L1830 931 M1656 1020 L1830 973"/>
-        <path d="M1700 946 L1792 921 L1792 899 L1700 924 Z M1700 924 L1792 899 M1700 935 L1792 910"/>
-        <path d="M1746 901 a7 7 0 1 0 0.1 0"/>
-        <path d="M1676 1000 v36 M1712 990 v36 M1748 980 v36 M1784 970 v36 M1672 1015 L1846 968 M1656 1039 L1830 992"/>
-        <!-- chalkboard and A-board frames -->
-        <path d="M1400 150 h340 v240 h-340 Z M1392 390 h356 v14 h-356 Z"/>
-        <path d="M1672 800 L1730 590 L1810 590 L1878 800 M1706 616 h132 v150 h-132 Z"/>
-      </g>
-      <!-- chalk and marker lines: light marks on dark grounds, which the multiply
-           washes and the dot screen were flattening into the board -->
-      <g id="m4_ink_chalk">
-        <text x="1570" y="212" text-anchor="middle" font-family="'Noto Sans CJK SC','Noto Sans SC',sans-serif" font-size="34" font-weight="700">今日供应</text>
-        <path d="M1436 252 h124 M1596 252 h108 M1436 292 h72 M1544 292 h96 M1672 292 h32 M1436 332 h112 M1584 332 h84 M1436 366 h60 M1528 366 h64"/>
-        <path d="M1724 650 h70 M1724 682 h96 M1724 714 h56 M1724 742 h82"/>
-      </g>
-      <!-- the steamer's drawn steam, restated so the sheet cannot fade it -->
-      <g id="m4_ink_steam">
-        <path d="M1716 892 Q1696 852 1720 822 Q1742 794 1724 760" stroke-width="9" opacity="0.6"/>
-        <path d="M1762 882 Q1786 846 1764 814 Q1744 786 1764 752" stroke-width="7" opacity="0.45"/>
-        <path d="M1680 900 Q1664 870 1682 844" stroke-width="6" opacity="0.35"/>
-      </g>
-    </defs>
-    <use href="#m4_ink_marks" fill="none" stroke="#424e46" stroke-opacity="0.9" stroke-width="2.6" stroke-linecap="round"/>
-    <use href="#m4_ink_chalk" fill="#d5c49b" stroke="#d5c49b" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
-    <use href="#m4_ink_steam" fill="none" stroke="#f7f1de" stroke-linecap="round"/>
-  </g>
 </svg>
