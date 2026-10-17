@@ -5,6 +5,29 @@ regression**: these were recorded as open M2 acceptance criteria, routed as
 "the next cohesive engine package", and then overtaken by the M3→M4→M5
 sequence. The register below is the durable fix for that failure mode.
 
+## THE FIX EXISTS — in the M2 draft workspace, never merged (found 2026-10-17)
+
+The user was right that this was fixed once. It was, in the disposable draft
+workspace, and the result never reached the repository:
+
+- the repo's `library/prop/thermos/manifest.json` has **no `grip`**;
+- the archived workspaces (`workspace/library/prop/thermos/manifest.json` in
+  `m2-contact-media-20261013T041200Z`, `m2-final-media…`, `m2-support-media…`,
+  `m2-residual-20261013`, and others) all declare
+  `"grip": {"at": [148, 76], "radius": 2, "depth": "front"}`.
+- The eight-direction grip stills the user remembers
+  (`contact-{front,back,left,right,front-left,front-right,back-left,back-right}-grip.jpg`
+  in `m2-contact-media-20261013T041200Z`) were rendered from that workspace
+  library.
+
+Both behaviours are **gated on that one declaration**: the motor's handle
+socket (`packages/core/src/motor/index.ts:855`, `p.grip?.at ?? offset`) and the
+wrist-driven prop rotation (`:1551-1558`, `if (prop.grip) { … }`). With the data
+missing, neither runs, so the hand carries the prop at its centre and the
+thermos never tilts. Restoring the block re-enables both — and invalidates the
+M5 bake, because the attachment point moves (measured: 7 M5 tests go red,
+including the render-truth keys), which is why it is a package, not an edit.
+
 ## What the user sees, and the measured cause
 
 1. **Hand grips the middle of the thermos instead of the handle.**
