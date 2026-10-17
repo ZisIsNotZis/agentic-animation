@@ -1001,13 +1001,13 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             const surface = (scene.supports ?? [])
               .filter((s) => prop.x + supportPoint(prop).x >= s.x0 && prop.x + supportPoint(prop).x <= s.x1 && s.y < scene.groundY!)
               .reduce((best, s) => Math.min(best, s.y), scene.groundY ?? 720);
-            // `place` is an authored placement whether or not the prop still
-            // needs lifting: with a declared handle socket the carried prop
-            // already clears the top, so the old height heuristic would drop it
-            // where it is carried (inside the holder) instead of travelling out.
-            const placement = intent.releaseMode === "place"
-              || (intent.releaseMode !== "free" && surface < prop.y + supportPoint(prop).y - 4);
-            if (placement) {
+            // A `place` release is an authored putdown even when the prop
+            // already clears the top: the handle socket carries the prop high
+            // enough that the height heuristic reads "nothing to lift", and
+            // opening the hand there drops the prop on the holder (the M5
+            // episode rested 9.9 px from the body instead of travelling out).
+            if (intent.releaseMode === "place"
+                || (intent.releaseMode !== "free" && surface < prop.y + supportPoint(prop).y - 4)) {
               state.place = surface;
               state.placeOut = Math.min(1, Math.max(0, Number(intent.settle ?? 0)));
             } else {
@@ -1144,7 +1144,6 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       }
       // Arm constraint: a taut arm drags the body (I3).
       const k = state.scale;
-      if (process.env.WDBG === state.id) console.log("drive", state.id, "x", state.x.toFixed(1), "hand", drive.hand[0].toFixed(0), drive.hand[1].toFixed(0), "phase", drive.phase, "t", drive.t.toFixed(2), "contactT", drive.contactT?.toFixed(2));
       const sh = geometryShoulder(state);
       const dx = drive.hand[0] - sh[0];
       const dy = drive.hand[1] - sh[1];
@@ -1518,25 +1517,30 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           } else if (state.place !== null) {
             // Placing: raise the hand (the prop rides the grip) until the prop
             // base clears the support surface, then open the hand. A shaped
-            // release also carries the prop outward (M5 putdown visibility):
+            // release also carries the hand outward (M5 putdown visibility):
             // the prop comes to rest clear of the holder's body, against the
             // open painted top, and 0 keeps the previous vertical placement.
+            // The travel is the PROP's, so a DECLARED handle socket puts the
+            // hand mark back along the carried offset: the prop hangs that far
+            // off its hand and a hand-sized mark would leave it short of the
+            // authored clearance. A bind-captured carry keeps the hand mark.
             const base = carryHandAt(state);
+            const carried = heldProp.grip
+              ? rotateVector([state.grip?.ox ?? 0, state.grip?.oy ?? 0], heldProp.rotation - state.propAngleAtBind)
+              : null;
             const outward = base[0] + geometryFacing(state)
               * PLACE_OUT_FRACTION * state.body.armReach * state.scale * state.placeOut;
-            // The authored outward travel is the PROP's displacement, so the
-            // hand target is that mark back along the DECLARED handle socket. A
-            // centre carry has no declared socket and keeps the hand mark, so a
-            // prop that was already above the top is placed where it was held.
-            const socket: [number, number] = heldProp.grip
-              ? rotateVector([-heldProp.grip.at[0], -heldProp.grip.at[1]], heldProp.rotation) : [0, 0];
+            const prev: [number, number] = state.reach ? [state.reach.tx, state.reach.ty] : [base[0], base[1]];
+            const outX = clampHandToReach(state, [outward - (carried?.[0] ?? 0), prev[1]])[0];
             const targetHandY = state.place - supportPoint(heldProp).y - 6 - (state.grip?.oy ?? 0);
             // Travel from the PREVIOUS hand position (the carry pose recomputes
             // every substep and would otherwise swallow the accumulated lift).
-            const prev: [number, number] = state.reach ? [state.reach.tx, state.reach.ty] : [base[0], base[1]];
-            const outX = clampHandToReach(state, [outward - socket[0], prev[1]])[0];
             const outStep = clamp(outX - prev[0], -480 * dt, 480 * dt);
-            const liftY = Math.max(targetHandY, prev[1] - 260 * dt);
+            // The placement LIFTS the prop until its base clears the top; it
+            // never lowers the hand, because a prop already above the top needs
+            // only the outward travel and the arm cannot always reach a low
+            // surface (a forced descent froze the rotated putdown).
+            const liftY = targetHandY < prev[1] ? Math.max(targetHandY, prev[1] - 260 * dt) : prev[1];
             const liftHand = clampHandToReach(state, [prev[0] + outStep, liftY]);
             heldProp.x = liftHand[0] + (state.grip?.ox ?? 0);
             heldProp.y = liftHand[1] + (state.grip?.oy ?? 0);
@@ -1574,6 +1578,10 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
               prop.x=hand[0]+offset[0];prop.y=hand[1]+offset[1];
             }
           }
+          // Open only after the wrist block has put the prop where the drawn
+          // socket holds it: releasing before that rotation leaves the prop at
+          // the un-rotated grip offset, a 9.7 px jump the whole-body proposal
+          // rightly rejects (the M5 putdown freezes on it).
           if (openHand && state.holding) propOpenHand(state, props);
         };
         advance(delta);
