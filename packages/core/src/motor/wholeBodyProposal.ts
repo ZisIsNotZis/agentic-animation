@@ -1,6 +1,6 @@
 import {isDeepStrictEqual} from 'node:util';
 import {solveSkeleton,legDropInterval,type SkeletonPose} from './skeleton';
-import {renderedHandWorld} from './reach';
+import {renderedHandWorld,renderedShoulderWorld} from './reach';
 import type {Skeleton} from '../schemas/libraryMeta';
 
 type Point = [number,number];
@@ -133,10 +133,21 @@ function validateState(before:WholeBodyState,after:WholeBodyState,elapsed:number
       // solveSkeleton's arm chain mirrors the rest vectors by `facing` and is
       // not the render truth for a mirrored native figure: at a raised aim the
       // two diverge by the hand radius and the proposal freezes the beat.
-      const drawnHand=renderedHandWorld({x:a.x,y:a.y+(a.pose.waistY??0)*a.scale,scale:a.scale,
-        flip:a.flipped,motor:true,waist:a.pose.waistPitch??0,lean:0,skeleton:a.skeleton},
-        a.pose.armR??{upper:0,lower:0},a.flipped);
-      check('palm-contact',distance(drawnHand,a.palmTarget),.02,{actor:id,joint:'hand_r'});
+      const surface={x:a.x,y:a.y+(a.pose.waistY??0)*a.scale,scale:a.scale,
+        flip:a.flipped,motor:true,waist:a.pose.waistPitch??0,lean:0,skeleton:a.skeleton};
+      const drawnHand=renderedHandWorld(surface,a.pose.armR??{upper:0,lower:0},a.flipped);
+      // Compare like with like at the reach cap: a target beyond the drawn
+      // arm's bone reach is reached at the cap, not at the aim, so the hand is
+      // judged against the reached point in the aim's direction. Inside the
+      // reach the reached point IS the aim, so the check stays exact.
+      const shoulder=renderedShoulderWorld(surface,a.flipped);
+      const reach=(a.skeleton.arm.upper+a.skeleton.arm.fore)*a.scale;
+      const aim:Point=[a.palmTarget[0]-shoulder[0],a.palmTarget[1]-shoulder[1]];
+      const span=Math.hypot(aim[0],aim[1]);
+      const reached:Point=span>reach&&span>0
+        ? [shoulder[0]+aim[0]/span*reach,shoulder[1]+aim[1]/span*reach] : a.palmTarget;
+      check('palm-contact',distance(drawnHand,reached),.02,{actor:id,joint:'hand_r'});
+      if(process.env.WBDBG&&distance(drawnHand,reached)>.02)console.error('PALM',id,'drawn',drawnHand.map(v=>v.toFixed(2)).join(','),'target',a.palmTarget.map(v=>v.toFixed(2)).join(','),'reached',reached.map(v=>v.toFixed(2)).join(','),'gap',distance(drawnHand,reached).toFixed(3),'shoulder',shoulder.map(v=>v.toFixed(1)).join(','),'reach',reach.toFixed(1));
       const loaded=Object.values(after.props).some(p=>p.owner===id)||Object.values(before.props).some(p=>p.owner===id);
       if(old.palmTarget&&!loaded)check('incoming-palm-rate',distance(a.palmTarget,old.palmTarget),480*elapsed,{actor:id,joint:'hand_r'});
     }
@@ -144,6 +155,7 @@ function validateState(before:WholeBodyState,after:WholeBodyState,elapsed:number
   for(const [id,p] of Object.entries(after.props)){
     const old=before.props[id]!;
     check('prop-rate',distance([p.x,p.y],[old.x,old.y]),720*elapsed,{prop:id});
+    if(process.env.WBDBG&&distance([p.x,p.y],[old.x,old.y])>720*elapsed)console.error('PROP',id,'from',old.x.toFixed(2),old.y.toFixed(2),'to',p.x.toFixed(2),p.y.toFixed(2),'rot',old.rotation.toFixed(2),'->',p.rotation.toFixed(2),'owner',old.owner??'-','->',p.owner??'-');
     check('prop-angle-rate',angleDelta(p.rotation,old.rotation),(p.owner?90:840)*elapsed,{prop:id});
     if(!p.owner)continue;
     const owner=after.actors[p.owner];
@@ -152,7 +164,13 @@ function validateState(before:WholeBodyState,after:WholeBodyState,elapsed:number
     }
     const r=p.rotation*Math.PI/180,[sx,sy]=p.socket;
     const socket:Point=[p.x+sx*Math.cos(r)-sy*Math.sin(r),p.y+sx*Math.sin(r)+sy*Math.cos(r)];
-    check('grip-socket',distance(worldJoints(owner).hand_r!,socket),Math.min(p.radius,1.6),{actor:p.owner,prop:id,joint:'hand_r'});
+    // The socket must sit on the hand the renderer DRAWS (same composition as
+    // the palm check): solveSkeleton's arm chain is not the render truth once
+    // a raised or far-reaching aim reflects the elbow branch.
+    const hand=renderedHandWorld({x:owner.x,y:owner.y+(owner.pose.waistY??0)*owner.scale,scale:owner.scale,
+      flip:owner.flipped,motor:true,waist:owner.pose.waistPitch??0,lean:0,skeleton:owner.skeleton},
+      owner.pose.armR??{upper:0,lower:0},owner.flipped);
+    check('grip-socket',distance(hand,socket),Math.min(p.radius,1.6),{actor:p.owner,prop:id,joint:'hand_r'});
   }
   return errors;
 }

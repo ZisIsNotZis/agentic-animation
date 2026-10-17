@@ -624,6 +624,15 @@ function geometryFacing(state: ActorState): 1|-1 {
 function geometryShoulder(state: ActorState, pitch=state.waist, crouch=state.crouch): [number,number] {
   return shoulderAt(state.x,state.groundY,state.scale,geometryFacing(state),state.body,pitch+(state.skeletonViews?state.lean:0),crouch);
 }
+/** The drawn arm's reachable envelope: a hand target farther from the shoulder
+ *  than the arm's bone reach cannot be drawn (the IK clamps and the palm falls
+ *  short), so the hold proposes only hands the arm can actually reach. */
+function clampHandToReach(state: ActorState, hand: [number,number]): [number,number] {
+  if (!state.skeletonViews) return hand;
+  const sh=geometryShoulder(state),reach=state.body.armReach*state.scale;
+  const dx=hand[0]-sh[0],dy=hand[1]-sh[1],d=Math.hypot(dx,dy);
+  return d>reach ? [sh[0]+dx/d*reach,sh[1]+dy/d*reach] : hand;
+}
 
 function arriveMotorWalk(
   state: ActorState,
@@ -995,7 +1004,11 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             const surface = (scene.supports ?? [])
               .filter((s) => prop.x + supportPoint(prop).x >= s.x0 && prop.x + supportPoint(prop).x <= s.x1 && s.y < scene.groundY!)
               .reduce((best, s) => Math.min(best, s.y), scene.groundY ?? 720);
-            if (intent.releaseMode !== "free" && surface < prop.y + supportPoint(prop).y - 4) {
+            // `place` is a placement whether or not the prop still needs
+            // lifting: the outward travel and the open hand are one authored
+            // verb, and a prop already above the top would otherwise drop
+            // wherever it happened to be carried, inside the holder.
+            if (intent.releaseMode !== "free") {
               state.place = surface;
               state.placeOut = Math.min(1, Math.max(0, Number(intent.settle ?? 0)));
             } else {
@@ -1492,7 +1505,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             const desired:[number,number]=[sh[0]+rel[0],sh[1]+rel[1]];
             const breath = holdBreath(state, dt);
             state.holdBreath = breath;
-            const hand: [number, number] = [desired[0] + breath[0], desired[1] + breath[1]];
+            const hand = clampHandToReach(state,[desired[0] + breath[0], desired[1] + breath[1]]);
             heldProp.x = hand[0] + (gripNow?.ox ?? 0);
             heldProp.y = hand[1] + (gripNow?.oy ?? 0);
             heldProp.vx = 0;
@@ -1505,19 +1518,30 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           } else if (state.place !== null) {
             // Placing: raise the hand (the prop rides the grip) until the prop
             // base clears the support surface, then open the hand. A shaped
-            // release also carries the hand outward (M5 putdown visibility):
+            // release also carries the PROP outward (M5 putdown visibility):
             // the prop comes to rest clear of the holder's body, against the
             // open painted top, and 0 keeps the previous vertical placement.
+            // The travel is the prop's displacement, so the handle socket's
+            // offset between hand and prop origin cannot swallow it: the hand
+            // target is that distance back along the rotated grip.
             const base = carryHandAt(state);
-            const outX = base[0] + geometryFacing(state)
+            const carrier = rotateVector([state.grip?.ox ?? 0, state.grip?.oy ?? 0], heldProp.rotation - state.propAngleAtBind);
+            const outward = base[0] + geometryFacing(state)
               * PLACE_OUT_FRACTION * state.body.armReach * state.scale * state.placeOut;
             const targetHandY = state.place - supportPoint(heldProp).y - 6 - (state.grip?.oy ?? 0);
             // Travel from the PREVIOUS hand position (the carry pose recomputes
             // every substep and would otherwise swallow the accumulated lift).
             const prev: [number, number] = state.reach ? [state.reach.tx, state.reach.ty] : [base[0], base[1]];
+            // The hand never asks for more than the arm can reach, so the open
+            // condition below tests the travel the body could actually make.
+            const outX = clampHandToReach(state, [outward - carrier[0], prev[1]])[0];
             const outStep = clamp(outX - prev[0], -480 * dt, 480 * dt);
-            const liftY = Math.max(targetHandY, prev[1] - 260 * dt);
-            const liftHand: [number, number] = [prev[0] + outStep, liftY];
+            // A placement lifts the prop out of the surface but never lowers
+            // the hand: a prop already above the top keeps its height and
+            // falls the last few px when the hand opens.
+            const liftY = targetHandY < prev[1] ? Math.max(targetHandY, prev[1] - 260 * dt) : prev[1];
+            const liftHand = clampHandToReach(state, [prev[0] + outStep, liftY]);
+            // The wrist block below rotates this offset onto the prop's angle.
             heldProp.x = liftHand[0] + (state.grip?.ox ?? 0);
             heldProp.y = liftHand[1] + (state.grip?.oy ?? 0);
             heldProp.vx = 0;
@@ -1526,7 +1550,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             // The shaped placement finishes its outward travel before the hand
             // opens, so the prop's rest is clear of the body rather than
             // wherever the lift happened to clear the surface.
-            if (heldProp.y + supportPoint(heldProp).y <= state.place + 2
+            if (liftHand[1] + carrier[1] + supportPoint(heldProp).y <= state.place + 2
                 && Math.abs(outX - liftHand[0]) < 0.5) {
               propOpenHand(state, props);
             }
@@ -1538,13 +1562,12 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             const hand = state.skeletonViews||state.offer?.prop===state.holding ? travelHand(previous,carryGoal,0.1,480,dt) : carryGoal;
             const breath = holdBreath(state, dt);
             state.holdBreath = breath;
-            hand[0] += breath[0];
-            hand[1] += breath[1];
-            heldProp.x = hand[0] + (state.grip?.ox ?? 0);
-            heldProp.y = hand[1] + (state.grip?.oy ?? 0);
+            const reached = clampHandToReach(state,[hand[0] + breath[0], hand[1] + breath[1]]);
+            heldProp.x = reached[0] + (state.grip?.ox ?? 0);
+            heldProp.y = reached[1] + (state.grip?.oy ?? 0);
             heldProp.vx = 0;
             heldProp.falling = false;
-            state.reach = {tx: hand[0], ty: hand[1], target: state.holding, contact: true};
+            state.reach = {tx: reached[0], ty: reached[1], target: state.holding, contact: true};
           }
           if (state.holding && state.reach) {
             state.carryShoulder=geometryShoulder(state);
