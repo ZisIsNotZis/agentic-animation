@@ -16,9 +16,11 @@ The authored input is `episode.yml`; ordered category plugins compile its world 
   `production-pipeline`.
 - Crop, camera, off-screen actor, or overlap: `camera-staging` and `qa-stills`.
 - TTS, timing, subtitles, lips, or speech mouth state: `audio-performance-qa`.
-- New or changed puppet/assets: `make-character` and `qa-stills`; use the
-  immutable `algorithmic-art`, `canvas-design`, or `svg-creator` skill only for
-  their native asset formats.
+- New or changed puppet/assets: `make-character` (category integration and
+  approval) and `qa-stills`; producing a figure or set at the accepted art bar
+  uses `art-asset-production`.
+- Use the immutable `algorithmic-art`, `canvas-design`, or `svg-creator` skill
+  only for their native asset formats.
 - Remotion markup, captions, multimedia, studio, or rendering implementation:
   use the relevant upstream Remotion skill, then apply local QA contracts.
 - Propose or autonomously improve the engine, skills, or docs:
