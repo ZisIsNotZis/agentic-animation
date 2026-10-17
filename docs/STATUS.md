@@ -54,7 +54,16 @@ assumed: +65% wall time over the M3 baseline (53–70% across three sessions) at
 concurrency 4. Routed onward: cross-session render non-determinism
 ([ticket](tickets/BACKLOG-RENDER-NONDETERMINISM.md)), and counter/floor staging
 depth plus vector-puppet joint stiffness at the handover (M5).
-M5–M8 are planned, not delivered.
+M5 is delivered and awaiting the user's milestone judgment: `episodes/m5-acting`
+performs six beats (pickup, handover, putdown, point, surprise, push) with
+anticipation, accent and settle, and the third perceptual review returned
+ACTING PASS on corrected evidence ([ART_ACTING_M5](ART_ACTING_M5.md), bundle
+`m5-20261017T225432+0800`). Acting shapes are additive motor-intent data
+(`anticipation`/`accent`/`settle`, defaults 0) — 11 existing episodes re-bake
+byte-identically — and three invariants now guard the class: no actor-body
+overlap, a placed prop's base on its declared support, and joint angles inside
+their documented envelopes.
+M6–M8 are planned, not delivered.
 
 ## Motion and demonstrations
 
