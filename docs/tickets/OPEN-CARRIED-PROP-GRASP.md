@@ -80,6 +80,33 @@ including the render-truth keys), which is why it is a package, not an edit.
    capacity also folds both knees to screen-left because the declared legs are
    not mirror-symmetric. Those are the R5 defects now.
 
+## Measured blocker (2026-10-17): no hand art can fix this yet
+
+Working back from the rejected art attempt gave the real chain, and it is not
+art. Three defects stack, and any one of them keeps the handle outside the hand:
+
+1. **The declared socket is not on the handle.** `placement.grip.at` is
+   `(148,76)` while the handle bar's ink runs x 153.5..162.5 with its centreline
+   at x 158. The socket sits 10 art units from the bar, inside the strap's
+   hollow, so the hand is placed beside the bar rather than on it.
+2. **The motor's socket bookkeeping is frozen at bind.** The declared socket
+   lands 18.2–19.7 px from the drawn hand point on every held frame (bind 18.2,
+   carried key 18.4) because `state.grip` holds the bind-time offset instead of
+   re-solving each substep.
+3. **The wrist tilt swings the handle 68°.** The prop rotates 3.1° at bind and
+   70.9° at the carried key while the hand sprite only turns with the forearm, so
+   even a perfect wrap cannot stay aligned through the carry.
+
+Also measured: the figure's hands are drawn at roughly half human scale for the
+720-design figure (34–40 px across) against a prop whose handle loop is 44 px
+and whose bar is 9 px, so a grasp has very little room to read at all.
+
+**A failed check class to remember.** R3's "hand→handle 0.00 px" was measured
+from the motor's hand point to the motor's socket, so it verified the motor
+against itself: it necessarily reads 0.00 whatever the socket declares. A contact
+claim has to consume the renderer's DRAWn geometry — the handle's ink against the
+hand's ink — or it proves nothing.
+
 ## Prior record (why this is not new)
 
 `docs/tickets/M2-CONTACT-CONTINUITY.md` lists as **open higher-level AC**:
