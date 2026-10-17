@@ -147,7 +147,6 @@ function validateState(before:WholeBodyState,after:WholeBodyState,elapsed:number
       const reached:Point=span>reach&&span>0
         ? [shoulder[0]+aim[0]/span*reach,shoulder[1]+aim[1]/span*reach] : a.palmTarget;
       check('palm-contact',distance(drawnHand,reached),.02,{actor:id,joint:'hand_r'});
-      if(process.env.WBDBG&&distance(drawnHand,reached)>.02)console.error('PALM',id,'drawn',drawnHand.map(v=>v.toFixed(2)).join(','),'target',a.palmTarget.map(v=>v.toFixed(2)).join(','),'reached',reached.map(v=>v.toFixed(2)).join(','),'gap',distance(drawnHand,reached).toFixed(3),'shoulder',shoulder.map(v=>v.toFixed(1)).join(','),'reach',reach.toFixed(1));
       const loaded=Object.values(after.props).some(p=>p.owner===id)||Object.values(before.props).some(p=>p.owner===id);
       if(old.palmTarget&&!loaded)check('incoming-palm-rate',distance(a.palmTarget,old.palmTarget),480*elapsed,{actor:id,joint:'hand_r'});
     }
@@ -155,7 +154,6 @@ function validateState(before:WholeBodyState,after:WholeBodyState,elapsed:number
   for(const [id,p] of Object.entries(after.props)){
     const old=before.props[id]!;
     check('prop-rate',distance([p.x,p.y],[old.x,old.y]),720*elapsed,{prop:id});
-    if(process.env.WBDBG&&distance([p.x,p.y],[old.x,old.y])>720*elapsed)console.error('PROP',id,'from',old.x.toFixed(2),old.y.toFixed(2),'to',p.x.toFixed(2),p.y.toFixed(2),'rot',old.rotation.toFixed(2),'->',p.rotation.toFixed(2),'owner',old.owner??'-','->',p.owner??'-');
     check('prop-angle-rate',angleDelta(p.rotation,old.rotation),(p.owner?90:840)*elapsed,{prop:id});
     if(!p.owner)continue;
     const owner=after.actors[p.owner];
