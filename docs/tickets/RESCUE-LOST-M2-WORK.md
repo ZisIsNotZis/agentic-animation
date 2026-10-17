@@ -94,7 +94,7 @@ move the same bake.
   Eleven overlays carry these episodes in two variants; the later variant was
   restored, and its only semantic change is the retired draft set swapped for
   the accepted `set/canteen_counter_m3`.
-- **R3 in progress under decision (A).** Restoring the grip achieves the goal —
+- **R3 merged** — Restoring the grip achieves the goal —
   hand-to-handle distance 0.00 px and the thermos rotates 104.8° with the wrist —
   but it then exposes a **motor defect**: the hold path targets
   `shoulder + eased rel + breath` without clamping to the drawn arm's reach, so
