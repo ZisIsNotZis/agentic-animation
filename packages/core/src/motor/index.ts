@@ -170,7 +170,9 @@ const PLACE_OUT_FRACTION = 0.5;
 /** M5 putdown visibility: seconds a carrying step-back spends replanting its
  *  feet under the body before it translates. */
 const WALK_EASE_SEC = 0.3;
-/** World-px corridor kept between two drawn bodies (torso+head). */
+/** Extra world-px corridor between two drawn bodies. 0: the torso/head boxes
+ *  are already the outer bound of the art, and any padding resolves a
+ *  non-overlap by sliding a standing actor instead of the pose that intruded. */
 const BODY_GAP = 0;
 /** A shaped reach gesture's hand travels at 55% of the 480 px/s cap away from
  *  the key pose, so its authored interval must cover the slow leg plus a held
@@ -716,14 +718,6 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     return [sh[0] + (0.35 / d) * state.body.armReach * k * 0.6 * geometryFacing(state), sh[1] + (0.94 / d) * state.body.armReach * k * 0.6];
   };
   const supportPoint = (prop:PropState) => prop.solid ? solidSupport(prop.solid,prop.rotation) : {x:0,y:0};
-  /** The waist pitch the figure's own artwork is drawn for (skeleton.json
-   *  `waist.pitchMax`). Authored acting stays inside it. A reach posture is a
-   *  physical necessity, not an acting choice: it may pitch as far as the
-   *  engine limit, but only after the search below has spent the least pitch
-   *  that touches, so a floor object is reached by squatting first. */
-  const actingPitchMax = (state: ActorState): number =>
-    Math.min(SPINE_MAX, state.skeleton?.waist?.pitchMax ?? SPINE_MAX);
-  const grabPitchMax = (state: ActorState): number => SPINE_MAX;
   /**
    * How far the DRAWN body (torso+head boxes, rotated about the waist by the
    * pose's waist pitch) reaches from the actor's root toward world `dir`.
@@ -757,16 +751,17 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     + drawnBodyReach(b, Math.sign(a.x - b.x) >= 0 ? 1 : -1) + BODY_GAP;
   /** Least-touch grab posture: least |waist pitch| first, then least crouch, so
    *  a floor object is reached by squatting instead of folding the torso to the
-   *  point where the drawn figure reads as a ragdoll. */
+   *  point where the drawn figure reads as a ragdoll. Authored acting stays
+   *  inside `skeleton.waist.pitchMax`; a reach posture may pitch as far as the
+   *  engine limit because the object's height, not the acting choice, decides. */
   const minimalTouchPosture = (state: ActorState, touches: (pitch: number, crouch: number) => boolean): {pitch: number; crouch: number} => {
-    const cap = grabPitchMax(state);
-    for (let p = 0; p <= cap; p += 1) {
+    for (let p = 0; p <= SPINE_MAX; p += 1) {
       for (let c = 0; c <= 1.0001; c += 0.25) {
         if (touches(p, c)) return {pitch: p, crouch: c};
         if (touches(-p, c)) return {pitch: -p, crouch: c};
       }
     }
-    return {pitch: cap * ((state.skeleton ? 1 : state.facing)), crouch: 1};
+    return {pitch: state.facing * SPINE_MAX, crouch: 1};
   };
   /** M5 joint shaping (docs/WORLD_PUPPET_MOTOR.md): a shaped hold breathes —
    *  the hand (and the carried prop with it) drifts a few px against the
@@ -1388,7 +1383,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         // from its previous target (or rest) before testing the live touch box.
         state.retract = false;
         if(state.skeletonViews){
-          // Minimal-touch posture: least crouch, then least |pitch|.
+          // Least-touch posture: least waist pitch, then least crouch.
           const goal = minimalTouchPosture(state, touches);
           const onset = state.skeletonViews ? smoothstep01(g.t / .5) : 1;
           state.waist = approach(state.waist, goal.pitch, WAIST_RATE * delta * onset);
@@ -1440,7 +1435,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           state.grab = null;
           state.retract = true;
         } else if(!state.skeletonViews) {
-          // Minimal-touch posture: least crouch, then least |pitch|.
+          // Least-touch posture: least waist pitch, then least crouch.
           const goal = minimalTouchPosture(state, touches);
           const onset = state.skeletonViews ? smoothstep01(g.t / .5) : 1;
           state.waist = approach(state.waist, goal.pitch, WAIST_RATE * delta * onset);
