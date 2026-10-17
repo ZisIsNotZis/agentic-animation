@@ -65,6 +65,14 @@ overlap, a placed prop's base on its declared support, and joint angles inside
 their documented envelopes.
 M6–M8 are planned, not delivered.
 
+## Open acceptance carried from M2 (user-raised 2026-10-17)
+
+Carried-prop grasp: handle socket instead of centre, live prop orientation
+while held, a grasp hand shape, and knee flexion under crouch. Recorded as open
+M2 acceptance that was routed as "the next engine package" and then overtaken by
+M3–M5 — not a regression, but a criterion that fell out of sight. Owning
+register: [OPEN-CARRIED-PROP-GRASP](tickets/OPEN-CARRIED-PROP-GRASP.md).
+
 ## Motion and demonstrations
 
 Motor slices 1–2 are shipped, vocabulary migration (3) is delivered:
