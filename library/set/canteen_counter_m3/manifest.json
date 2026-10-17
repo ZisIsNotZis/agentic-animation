@@ -18,12 +18,6 @@
       "foreground": true
     },
     {
-      "id": "material_paper",
-      "foreground": true,
-      "blend": "multiply",
-      "opacity": 0.8
-    },
-    {
       "id": "lighting_shade",
       "foreground": true,
       "blend": "multiply"
@@ -56,7 +50,7 @@
     "license": "Repository license (see LICENSE at the repository root); the artwork is original to this project.",
     "styleAnchor": "Accepted M1 B-direction (docs/ART_DIRECTION_M1.md) and figure/lin_b_draft palette: outline #424e46, muted teal #477c7b, cream #eadcbb, terracotta #b96a55, warm woods, flat fills with opacity overlays, no filters.",
     "supportAgreement": "Declared support counter y=400 equals the painted data-support-top=400 on counter_top_surface (top quad back edge y368, front edge y430, resting line y400); closes the M0/M2 declared-vs-painted defect class at the source.",
-    "materials": "M4 layer passes (docs/ART_MATERIALS_M4.md), declared through the M3 set-layer seam: material_pigment = region palettes (each region its own light/shade pigment family, warm key glaze left, cool ambient fill right); material_detail = scale-keyed contours and detail recovery (near silhouettes weighted, far art thinned, speculars restored, on surfaces nothing hides - never over a prop the base art puts behind the counter); material_paper = paper tooth keyed to the painted surface (wall, mid grounds, floor each with its own fibre), 45-degree fibres in shade regions, dry-brush ink edges, paper reserve kept over the window glass; lighting_shade + lighting_key = one declared light model (source: the left window; key #f7e8c3, ambient fill #5f6a72, radial falloff around x330 y290 art units; shadows cast to the right/back, feathered as elliptical pools rather than polygonal mattes), composited above the actor plane so set and actors share the source. The ink_contour pass of the first candidate was deleted in the v3 fix round: it restated the props' linework above every wash, including the parts of a prop the base art hides, so its rectangles landed on the counter front as a wireframe (VISION-REVIEW-2.md P0). One shared feathered matte (m4_prop_hold_off) holds the pigment, paper, shade and key washes off the ten drawn props with an elliptical alpha ramp, exactly zero inside each prop box and a quarter of the box wide outside it, which is what keeps each prop's own ink at its drawn contrast without any pass redrawing it. All marks are static vector art; no filters, no raster, no per-actor projected shadow. Blending is the M4 declared-layer extension (blend/opacity).",
+    "materials": "M4 layer passes (docs/ART_MATERIALS_M4.md), declared through the M3 set-layer seam: material_pigment = region palettes (each region its own light/shade pigment family, warm key glaze left, cool ambient fill right); material_detail = scale-keyed contours and detail recovery (near silhouettes weighted, far art thinned, speculars restored, on surfaces nothing hides - never over a prop the base art puts behind the counter); lighting_shade + lighting_key = one declared light model (source: the left window; key #f7e8c3, ambient fill #5f6a72, radial falloff around x330 y290 art units; shadows cast to the right/back), composited above the actor plane so set and actors share the source. Round 5 withdrew two things the fourth perceptual review saw as geometry: the shared feathered prop matte (m4_prop_hold_off) that held the washes off the ten drawn props, and the whole material_paper pass (per-ground fibre tiles, shade hatch, dry-brush bands) plus material_detail's seven fibre joint plates. Each remaining pass covers the whole frame as one gradient with no cut-outs and no prop exclusions, so a prop takes the light like everything else and no wash ends on a boundary the art does not draw; nothing tiles, so nothing repeats at a pitch. All marks are static vector art; no filters, no raster, no per-actor projected shadow. Blending is the M4 declared-layer extension (blend/opacity).",
     "date": "2026-10-18"
   }
 }
