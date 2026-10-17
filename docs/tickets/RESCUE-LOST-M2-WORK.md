@@ -104,6 +104,31 @@ move the same bake.
   target and make the contact residual honest at the cap), not in the data —
   raising the tolerance only moved the freeze.
 
+### The tilt is real but over-rotated (found 2026-10-17)
+
+Restoring the socket also re-armed the wrist-driven rotation, and measuring it
+shows the mechanism is too crude for this rig:
+
+- `wristDirection` is the **forearm's absolute world angle**, and the rig has no
+  wrist joint, so the whole arm swing becomes prop rotation: 0° at bind, 104.8°
+  at the carried key frame, 87.32° at the putdown rest. The thermos is carried
+  and placed on its side.
+- The drawn hand sprite **does not rotate**, so the object turns against a hand
+  that visibly does not — which is why it reads as wrong rather than as tipping.
+- The putdown itself is correct: at 87.32° `solidSupport` gives 44.89 and the
+  drawn base is 355.11 + 44.89 = 400.00, exactly the painted top. The M5
+  invariant failed only because it measured the anchor while
+  `docs/ART_ACTING_M5.md:144` says the **drawn base** is the value to measure —
+  the ±8 slack had been absorbing the 4-unit ink offset. That assertion is
+  corrected to measure the base at 1 px.
+
+Decision deferred to a package (R8): either give the rig a wrist so the drawn
+hand rotates with the tilt, or hold a carried object at its authored
+orientation because a point socket transmits no torque and let tilt be an
+authored intent (pour, lie down). The second is closer to a real handle grip,
+the first is what makes the current mechanism legible. This is a
+product-visible choice and is reported to the user, not decided silently.
+
 ### Grip socket rule
 
 A `placement.grip` is declared only where the artwork has a real handle. The
