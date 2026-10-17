@@ -1,10 +1,15 @@
 #!/usr/bin/env node
-/** Generate the small, deterministic cue library used by the renderer QA path. */
+/** Generate the small, deterministic cue library used by the renderer QA path.
+ * It writes exactly the files `enumerateCueAssets` reads: `library/sound/cues`
+ * for sfx and `library/music/cues` for music, as wired by the sound and music
+ * category plugins. Cue audio is generated, not authored, so those files stay
+ * gitignored; run `npm run cues` (part of `pretest`) to restore them. */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "../..");
-const audioDir = join(root, "library", "audio");
+const sfxDir = join(root, "library", "sound", "cues");
+const musicDir = join(root, "library", "music", "cues");
 const sampleRate = 48_000;
 
 const cues = {
@@ -56,13 +61,9 @@ function wav(kind, duration, frequency) {
   return Buffer.concat([header, data]);
 }
 
-mkdirSync(join(audioDir, "sfx"), { recursive: true });
-mkdirSync(join(audioDir, "music"), { recursive: true });
-const catalog = { version: 1, generatedBy: "tools/audio-qa/generate-cues.mjs", cues: {} };
+mkdirSync(sfxDir, { recursive: true });
+mkdirSync(musicDir, { recursive: true });
 for (const [cue, [kind, duration, frequency]] of Object.entries(cues)) {
-  const folder = kind === "music" ? "music" : "sfx";
-  const path = join(folder, `${cue}.wav`);
-  writeFileSync(join(audioDir, path), wav(kind, duration, frequency));
-  catalog.cues[cue] = { kind, path };
+  const folder = kind === "music" ? musicDir : sfxDir;
+  writeFileSync(join(folder, `${cue}.wav`), wav(kind, duration, frequency));
 }
-writeFileSync(join(audioDir, "catalog.json"), `${JSON.stringify(catalog, null, 2)}\n`);

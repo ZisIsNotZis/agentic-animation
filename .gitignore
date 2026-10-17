@@ -55,6 +55,11 @@ episodes/*/golden.json
 *.srt
 *.vtt
 
+# One cue is not reproducible: the synthesized homage loop library/music/xuehua
+# plays has no recipe in tools/audio-qa/generate-cues.mjs, so that single file
+# is tracked instead of the whole cue library.
+!library/music/cues/xuehua-piaopiao.wav
+
 # --- OS / editor cruft ---------------------------------------------------------
 .DS_Store
 Thumbs.db
