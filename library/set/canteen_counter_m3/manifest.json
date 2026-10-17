@@ -7,12 +7,36 @@
     "floor",
     "furniture",
     "counter",
-    { "id": "material_pigment" },
-    { "id": "material_detail" },
-    { "id": "foreground_counter", "foreground": true },
-    { "id": "material_paper", "foreground": true, "blend": "multiply", "opacity": 0.8 },
-    { "id": "lighting_shade", "foreground": true, "blend": "multiply" },
-    { "id": "lighting_key", "foreground": true, "blend": "screen" }
+    {
+      "id": "material_pigment"
+    },
+    {
+      "id": "material_detail"
+    },
+    {
+      "id": "foreground_counter",
+      "foreground": true
+    },
+    {
+      "id": "material_paper",
+      "foreground": true,
+      "blend": "multiply",
+      "opacity": 0.8
+    },
+    {
+      "id": "lighting_shade",
+      "foreground": true,
+      "blend": "multiply"
+    },
+    {
+      "id": "lighting_key",
+      "foreground": true,
+      "blend": "screen"
+    },
+    {
+      "id": "ink_contour",
+      "foreground": true
+    }
   ],
   "safeActorArea": {
     "x": 220,
@@ -23,7 +47,10 @@
   "supports": [
     {
       "name": "counter",
-      "x": [270, 1650],
+      "x": [
+        270,
+        1650
+      ],
       "y": 400,
       "paint": "counter_top_surface"
     }
@@ -33,7 +60,7 @@
     "license": "Repository license (see LICENSE at the repository root); the artwork is original to this project.",
     "styleAnchor": "Accepted M1 B-direction (docs/ART_DIRECTION_M1.md) and figure/lin_b_draft palette: outline #424e46, muted teal #477c7b, cream #eadcbb, terracotta #b96a55, warm woods, flat fills with opacity overlays, no filters.",
     "supportAgreement": "Declared support counter y=400 equals the painted data-support-top=400 on counter_top_surface (top quad back edge y368, front edge y430, resting line y400); closes the M0/M2 declared-vs-painted defect class at the source.",
-    "materials": "M4 layer passes (docs/ART_MATERIALS_M4.md), declared through the M3 set-layer seam: material_pigment = region palettes (each region its own light/shade pigment family, warm key glaze left, cool ambient fill right); material_detail = scale-keyed contours and detail recovery (small props restated at their own fine scale, near silhouettes weighted, far art thinned, speculars restored); material_paper = paper tooth, 45-degree halftone confined to shade regions, dry-brush ink edges, paper reserve kept over the window glass; lighting_shade + lighting_key = one declared light model (source: the left window; key #f7e8c3, ambient fill #5f6a72, falloff radial around x330 y290 art units; shadows cast to the right/back), composited above the actor plane so set and actors share the source. All marks are static vector art; no filters, no raster, no per-actor projected shadow. Blending is the M4 declared-layer extension (blend/opacity).",
+    "materials": "M4 layer passes (docs/ART_MATERIALS_M4.md), declared through the M3 set-layer seam: material_pigment = region palettes (each region its own light/shade pigment family, warm key glaze left, cool ambient fill right); material_detail = scale-keyed contours and detail recovery (small props restated at their own fine scale, near silhouettes weighted, far art thinned, speculars restored); material_paper = paper tooth keyed to the painted surface, 45-degree halftone in shade regions, dry-brush ink edges, paper reserve kept over the window glass; lighting_shade + lighting_key = one declared light model (source: the left window; key #f7e8c3, ambient fill #5f6a72, radial falloff around x330 y290 art units; shadows cast to the right/back, feathered as elliptical pools rather than polygonal mattes), composited above the actor plane so set and actors share the source; ink_contour = the final ink drawn above every wash (props' linework at its drawn weight, chalk/marker lines, the steamer's steam). One shared feathered matte (m4_prop_hold_off) holds the pigment, paper, shade and key washes off the ten drawn props with an elliptical alpha ramp, exactly zero inside each prop box and a quarter of the box wide outside it. All marks are static vector art; no filters, no raster, no per-actor projected shadow. Blending is the M4 declared-layer extension (blend/opacity).",
     "date": "2026-10-16"
   }
 }
