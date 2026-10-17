@@ -204,32 +204,6 @@
     <path d="M330 372 L1590 372 L1598 392 L322 392 Z" fill="#477c7b" opacity="0.85"/>
     <path d="M330 372 L1590 372 L1591.5 376 L328.5 376 Z" fill="#eadcbb" opacity="0.9"/>
 
-    <!-- glass display case, left end (kept off the resting band) -->
-    <g>
-      <rect x="330" y="356" width="240" height="18" fill="#ad8062" stroke="#424e46" stroke-width="3"/>
-      <rect x="342" y="268" width="216" height="90" fill="#dbe4e0" opacity="0.4"/>
-      <rect x="342" y="268" width="216" height="90" fill="none" stroke="#424e46" stroke-width="3"/>
-      <path d="M342 314 L558 314" stroke="#424e46" stroke-width="2.5" opacity="0.8"/>
-      <g stroke="#424e46" stroke-width="2.5">
-        <path d="M366 306 q14 -16 30 0 q14 12 -4 14 l-24 0 q-12 -4 -2 -14 Z" fill="#eadcbb"/>
-        <path d="M412 306 q14 -16 30 0 q14 12 -4 14 l-24 0 q-12 -4 -2 -14 Z" fill="#e4cf9f"/>
-        <path d="M458 306 q14 -16 30 0 q14 12 -4 14 l-24 0 q-12 -4 -2 -14 Z" fill="#eadcbb"/>
-        <circle cx="516" cy="312" r="9" fill="#b96a55"/>
-        <circle cx="536" cy="314" r="7" fill="#c47a4d"/>
-      </g>
-      <rect x="334" y="258" width="232" height="12" fill="#b57c61" stroke="#424e46" stroke-width="3"/>
-    </g>
-
-    <!-- stacked bowls, right end (kept off the resting band) -->
-    <g>
-      <path d="M1444 366 L1580 366 L1568 394 L1456 394 Z" fill="#eadcbb" stroke="#424e46" stroke-width="3"/>
-      <path d="M1444 366 L1580 366 L1577 373 L1447 373 Z" fill="#477c7b"/>
-      <path d="M1448 338 L1576 338 L1578 366 L1446 366 Z" fill="#eadcbb" stroke="#424e46" stroke-width="3"/>
-      <path d="M1448 338 L1576 338 L1575 345 L1449 345 Z" fill="#477c7b"/>
-      <path d="M1452 310 L1572 310 L1574 338 L1450 338 Z" fill="#eadcbb" stroke="#424e46" stroke-width="3"/>
-      <path d="M1452 310 L1572 310 L1571 317 L1453 317 Z" fill="#477c7b"/>
-    </g>
-
     <!-- small jar and chopstick cup, right of the case, clear of center -->
     <g>
       <rect x="648" y="352" width="44" height="34" rx="6" fill="#587f7a" stroke="#424e46" stroke-width="3"/>
@@ -247,20 +221,6 @@
     <path d="M1300 1080 L1920 900 L1920 1080 Z" fill="#cfa382" stroke="#424e46" stroke-width="5"/>
     <path d="M1338 1080 L1920 900 L1920 930 L1382 1080 Z" fill="#b98f70" opacity="0.65"/>
     <path d="M1620 1042 L1920 928 L1920 952 L1672 1080 Z" fill="#dcb086" opacity="0.5"/>
-    <!-- steamer stack on the return -->
-    <g>
-      <path d="M1656 1002 L1830 955 L1830 992 L1656 1039 Z" fill="#c79878" stroke="#424e46" stroke-width="4"/>
-      <path d="M1656 962 L1830 915 L1830 953 L1656 1000 Z" fill="#ad8062" stroke="#424e46" stroke-width="4"/>
-      <path d="M1664 992 L1822 949 M1664 980 L1822 937 M1664 968 L1822 925" stroke="#75694e" stroke-width="2.5" opacity="0.8" fill="none"/>
-      <path d="M1700 946 L1792 921 L1792 899 L1700 924 Z" fill="#c79878" stroke="#424e46" stroke-width="3.5"/>
-      <circle cx="1746" cy="908" r="7" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
-    </g>
-    <!-- drawn steam: flat strokes, no filters -->
-    <g stroke="#f7f1de" stroke-linecap="round" fill="none">
-      <path d="M1716 892 Q1696 852 1720 822 Q1742 794 1724 760" stroke-width="9" opacity="0.6"/>
-      <path d="M1762 882 Q1786 846 1764 814 Q1744 786 1764 752" stroke-width="7" opacity="0.45"/>
-      <path d="M1680 900 Q1664 870 1682 844" stroke-width="6" opacity="0.35"/>
-    </g>
   </g>
 
   <!-- ==================== M4 material passes (docs/ART_MATERIALS_M4.md) ====================
@@ -498,6 +458,66 @@
       <path d="M1404 152 L1404 388 M1410 150 L1412 388" stroke-width="1.4" opacity="0.12"/>
       <path d="M1680 592 L1680 796 M1686 590 L1688 796" stroke-width="1.4" opacity="0.12"/>
       <path d="M766 100 L766 208 M772 98 L774 208" stroke-width="1.4" opacity="0.2"/>
+    </g>
+  </g>
+
+  <!-- ==================== props: drawn props, above every wash ====================
+       M4 holds no matte. The props the reviews measured losing their ink are the ones
+       the M3 composition draws in front of the whole set - no actor pixel covers them
+       and no set layer hides a part of them - so declaring them as their own layer
+       above material_pigment, material_detail, lighting_shade and lighting_key keeps
+       the strokes the art draws at their drawn contrast without a cut-out, a clip or a
+       hole, and therefore without any wash boundary the art does not draw. The washes
+       cover the environment; a prop is lit through its own art instead of being cut out
+       of the light (docs/ART_MATERIALS_M4.md).
+       Moved verbatim, in their original relative order: nothing here is redrawn.
+       A prop the art draws BEHIND something stays in its base layer, because a layer
+       above the washes is above the counter and the actor plane too: the hanging sign,
+       the jar shelf, the small jar and the cloth runner are behind the actors, and the
+       drinks cooler, the crates, the A-board and the wall chalkboard are behind the
+       counter.
+  -->
+  <g id="props">
+    <!-- glass display case, left end (kept off the resting band) -->
+    <g>
+      <rect x="330" y="356" width="240" height="18" fill="#ad8062" stroke="#424e46" stroke-width="3"/>
+      <rect x="342" y="268" width="216" height="90" fill="#dbe4e0" opacity="0.4"/>
+      <rect x="342" y="268" width="216" height="90" fill="none" stroke="#424e46" stroke-width="3"/>
+      <path d="M342 314 L558 314" stroke="#424e46" stroke-width="2.5" opacity="0.8"/>
+      <g stroke="#424e46" stroke-width="2.5">
+        <path d="M366 306 q14 -16 30 0 q14 12 -4 14 l-24 0 q-12 -4 -2 -14 Z" fill="#eadcbb"/>
+        <path d="M412 306 q14 -16 30 0 q14 12 -4 14 l-24 0 q-12 -4 -2 -14 Z" fill="#e4cf9f"/>
+        <path d="M458 306 q14 -16 30 0 q14 12 -4 14 l-24 0 q-12 -4 -2 -14 Z" fill="#eadcbb"/>
+        <circle cx="516" cy="312" r="9" fill="#b96a55"/>
+        <circle cx="536" cy="314" r="7" fill="#c47a4d"/>
+      </g>
+      <rect x="334" y="258" width="232" height="12" fill="#b57c61" stroke="#424e46" stroke-width="3"/>
+    </g>
+
+    <!-- stacked bowls, right end (kept off the resting band) -->
+    <g>
+      <path d="M1444 366 L1580 366 L1568 394 L1456 394 Z" fill="#eadcbb" stroke="#424e46" stroke-width="3"/>
+      <path d="M1444 366 L1580 366 L1577 373 L1447 373 Z" fill="#477c7b"/>
+      <path d="M1448 338 L1576 338 L1578 366 L1446 366 Z" fill="#eadcbb" stroke="#424e46" stroke-width="3"/>
+      <path d="M1448 338 L1576 338 L1575 345 L1449 345 Z" fill="#477c7b"/>
+      <path d="M1452 310 L1572 310 L1574 338 L1450 338 Z" fill="#eadcbb" stroke="#424e46" stroke-width="3"/>
+      <path d="M1452 310 L1572 310 L1571 317 L1453 317 Z" fill="#477c7b"/>
+    </g>
+
+    <!-- steamer stack on the return -->
+    <g>
+      <path d="M1656 1002 L1830 955 L1830 992 L1656 1039 Z" fill="#c79878" stroke="#424e46" stroke-width="4"/>
+      <path d="M1656 962 L1830 915 L1830 953 L1656 1000 Z" fill="#ad8062" stroke="#424e46" stroke-width="4"/>
+      <path d="M1664 992 L1822 949 M1664 980 L1822 937 M1664 968 L1822 925" stroke="#75694e" stroke-width="2.5" opacity="0.8" fill="none"/>
+      <path d="M1700 946 L1792 921 L1792 899 L1700 924 Z" fill="#c79878" stroke="#424e46" stroke-width="3.5"/>
+      <circle cx="1746" cy="908" r="7" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
+    </g>
+
+    <!-- drawn steam: flat strokes, no filters -->
+    <g stroke="#f7f1de" stroke-linecap="round" fill="none">
+      <path d="M1716 892 Q1696 852 1720 822 Q1742 794 1724 760" stroke-width="9" opacity="0.6"/>
+      <path d="M1762 882 Q1786 846 1764 814 Q1744 786 1764 752" stroke-width="7" opacity="0.45"/>
+      <path d="M1680 900 Q1664 870 1682 844" stroke-width="6" opacity="0.35"/>
     </g>
   </g>
 
