@@ -128,7 +128,7 @@ export interface MotorTrajectory {
   props: Record<string, MotorPropFrame[]>;
 }
 
-import { circleOverlapsBox, solveSkeleton, solveArmIK,legDropInterval,nativeCrouchDrop,type SkeletonPose } from "./skeleton";
+import { circleOverlapsBox, solveSkeleton,legDropInterval,nativeCrouchDrop,type SkeletonPose } from "./skeleton";
 import {accentSpeed, anticipationEnvelope, anticipationLean, settleOffset, smoothstep01,
   ANTICIPATION_LEAN, ANTICIPATION_MAX_SEC} from "./acting";
 import {solveActorFigure,type PoseActor} from './actorPose';
@@ -289,18 +289,6 @@ function rotateVector(v: [number,number], deg: number): [number,number] {
   return [v[0]*c-v[1]*s,v[0]*s+v[1]*c];
 }
 function angleDelta(deg: number): number { return ((deg+180)%360+360)%360-180; }
-/** Same native IK branch/rest vectors as the renderer, in the torso frame. */
-function wristDirection(state: ActorState, hand: [number,number]): number {
-  const sk=state.skeleton!;const facing=geometryFacing(state);
-  const w=sk.joints.waist!,sh=sk.joints.shoulder_r!,e=sk.joints.elbow_r!,h=sk.joints.hand_r!;
-  const pitch=state.waist+state.lean;
-  const design: [number,number]=[w[0]+facing*(hand[0]-state.x)/state.scale,sk.space.height+(hand[1]-state.groundY)/state.scale-state.body.crouchDrop*state.crouch];
-  const rel=rotateVector([design[0]-w[0],design[1]-w[1]],-pitch);
-  const u: [number,number]=[e[0]-sh[0],e[1]-sh[1]],v: [number,number]=[h[0]-e[0],h[1]-e[1]];
-  const ik=solveArmIK({x:w[0]+rel[0],y:w[1]+rel[1]},{shoulder:sh,upper:sk.arm.upper,fore:sk.arm.fore,upperDir:u,foreDir:v},1,u[0]*v[1]-u[1]*v[0]<0?-1:1);
-  const a=(Math.atan2(v[1],v[0])*180/Math.PI+ik.upper+ik.lower+pitch)*Math.PI/180;
-  return Math.atan2(Math.sin(a),facing*Math.cos(a))*180/Math.PI;
-}
 
 function approach(current: number, goal: number, maxDelta: number): number {
   return current < goal ? Math.min(goal, current + maxDelta) : Math.max(goal, current - maxDelta);
@@ -506,7 +494,6 @@ interface ActorState {
   retractInfluence: number;
   retractElapsed: number;
   retractDuration: number;
-  wristAtBind: number;
   propAngleAtBind: number;
   /** Impulse queue for stagger momentum. */
   stagger: number;
@@ -670,7 +657,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
   let actors = new Map<string, ActorState>(
     scene.actors.map((actor) => [actor.id, {
       id: actor.id, x: actor.x, vx: 0, facing: actor.facing, groundY: actor.groundY, scale: actor.scale,
-      walkPhase: 0, lean: 0, moveTarget: null, walkBackward: false, walkEase: 0, grab: null, holding: null, holdRel: null, holdShape: 0, holdT: 0, holdBreath: [0, 0], handDrive: null, reach: null, retract: false, retractInfluence: 1, retractElapsed: 0, retractDuration: .65, wristAtBind: 0, propAngleAtBind: 0, grip: null, gripGoal: null, pursue: null, place: null, placeOut: 0,
+      walkPhase: 0, lean: 0, moveTarget: null, walkBackward: false, walkEase: 0, grab: null, holding: null, holdRel: null, holdShape: 0, holdT: 0, holdBreath: [0, 0], handDrive: null, reach: null, retract: false, retractInfluence: 1, retractElapsed: 0, retractDuration: .65, propAngleAtBind: 0, grip: null, gripGoal: null, pursue: null, place: null, placeOut: 0,
       stagger: 0, stepsTaken: 0, staggerSlide: 0, gesture: null, handGesture: null, prep: null, fall: null, fallen: false, body: bodyOf((actor.skeletonViews?.front??actor.skeleton) as Skeleton,actor.skeletonViews!==undefined),
       skeleton: actor.skeletonViews?.front??actor.skeleton, skeletonViews:actor.skeletonViews, orientation:actor.skeletonViews?'front':undefined, waist: 0, crouch: 0,
     }]),
@@ -1429,7 +1416,6 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
               other.gripGoal = null;
             }
           }
-          state.wristAtBind = wristDirection(state, hand);
           state.propAngleAtBind = liveProp.rotation;
           state.holding = g.propId;
           state.grab = null;
@@ -1574,19 +1560,21 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             state.carryShoulder=geometryShoulder(state);
             const prop=props.get(state.holding)!;
             if (prop.grip) {
+              // A carried prop keeps its authored orientation. The rig has no
+              // wrist joint, so driving the rotation from the forearm's
+              // absolute angle turned the whole arm swing into object rotation
+              // (the thermos read 70.9deg at the carried key, spilling).
               const hand: [number,number]=[state.reach.tx,state.reach.ty];
-              const goal=state.propAngleAtBind+angleDelta(wristDirection(state,hand)-state.wristAtBind);
-              prop.rotation += clamp(angleDelta(goal-prop.rotation),-90*dt,90*dt);
-              // The declared socket is re-solved against the prop's CURRENT
-              // rotation every substep, so the hand point sits on the drawn
-              // socket through the whole carry: a bind-time offset carried into
-              // the rotation drifts off the hand as the wrist turns.
+              // The declared socket is re-solved against the prop's rotation
+              // every substep, so the hand point sits on the drawn socket
+              // through the whole carry instead of drifting on a bind-time
+              // offset.
               const socket=rotateVector(prop.grip.at,prop.rotation);
               prop.x=hand[0]-socket[0];prop.y=hand[1]-socket[1];
             }
           }
-          // Open only after the wrist block has put the prop where the drawn
-          // socket holds it: releasing before that rotation leaves the prop at
+          // Open only after the socket block has put the prop where the drawn
+          // socket holds it: releasing before that placement leaves the prop at
           // the un-rotated grip offset, a 9.7 px jump the whole-body proposal
           // rightly rejects (the M5 putdown freezes on it).
           if (openHand && state.holding) propOpenHand(state, props);

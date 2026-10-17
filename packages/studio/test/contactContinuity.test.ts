@@ -101,7 +101,7 @@ test('solveReach follows the declared rest elbow branch when returning to rest',
   assert.ok(Math.abs(before.upper-after.upper)<.01,'clearing reach must not reveal a delayed gesture');
 });
 
-test('local handle socket prevents body-center pickup and carries rotated contact continuously',async()=>{
+test('local handle socket prevents body-center pickup and carries its authored orientation continuously',async()=>{
   const art=await artworkFixture();
   const skeletonViews=Object.fromEntries(FIGURE_VIEWS.map(v=>[v,art.views[v].skeleton])) as Record<FigureView,Skeleton>;
   const movie=simulateScene({durationSec:3,actors:[{id:'hero',x:500,groundY:650,facing:1,scale:.6,skeleton:art.views.front.skeleton,skeletonViews,intents:[{at:0,duration:1,intent:'grab',target:'cup'},{at:2,duration:.1,intent:'release',target:'cup'}]}],
@@ -117,7 +117,10 @@ test('local handle socket prevents body-center pickup and carries rotated contac
     assert.equal(actor.gripDepth,'front');
     if(i)assert.ok(Math.abs((prop.rotation??0)-(movie.props.cup![i-1]!.rotation??0))<10,'orientation must not snap');
   }
-  assert.ok(movie.props.cup!.some(f=>Math.abs((f.rotation??0)-25)>1),'wrist motion must affect prop orientation');
+  // A carried prop keeps its AUTHORED orientation (25deg here): the rig has no
+  // wrist joint, so a wrist-driven rotation turns the whole forearm swing into
+  // object rotation, and only an authored rotation may move it.
+  assert.ok(frames.every((frame,index)=>!frame.holds||(movie.props.cup![index]!.rotation??0)===25),'a carried prop keeps its authored orientation');
 });
 
 test('handover bake prepares before cue, gates contact and diagnoses insufficient pre-roll',async()=>{

@@ -229,7 +229,11 @@ test("m5-acting: the drawn prop follows the bake at the pickup and putdown keys"
   assert.ok(Math.abs(rest.drawn - support.y * STAGE_HEIGHT) <= 2,
     `putdown rest: drawn prop base ${rest.drawn.toFixed(2)} is not on the declared line ${(support.y * STAGE_HEIGHT).toFixed(2)}`);
   // The placing hand returns to rest after the release instead of holding a shelf.
-  const releaseFrame = firstFrame(scene.motor.actors.awei!, release, release + FPS, (frame) => frame.reachInfluence === 0);
+  // The retract influence decays over .65 s on substeps, so a sampled frame can
+  // miss the exact 0; a settled retract is the influence effectively gone.
+  const RETRACT_SETTLED = 0.01;
+  const releaseFrame = firstFrame(scene.motor.actors.awei!, release, release + FPS,
+    (frame) => frame.reachInfluence !== undefined && frame.reachInfluence <= RETRACT_SETTLED);
   const released = drawn(manifest, scene, releaseFrame, "awei");
   const arm = released.figure.pose.armRight;
   assert.ok(Math.abs(arm.upper) <= POSE_TOLERANCE && Math.abs(arm.lower) <= POSE_TOLERANCE,

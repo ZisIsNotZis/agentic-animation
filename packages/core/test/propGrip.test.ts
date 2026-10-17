@@ -43,7 +43,7 @@ test('registry carries a validated handle socket from prop placement',async(t)=>
   assert.deepEqual((asset as {placement?:{grip:unknown}}).placement?.grip,{at:[148,76],radius:3,depth:'behind'});
 });
 
-test('a declared handle socket puts the DRAWN hand on the drawn handle, not beside it',async()=>{
+test('a declared handle socket puts the DRAWN hand on the drawn handle, and a carried prop keeps its authored orientation',async()=>{
   // The socket is authored in art units and the engine places the drawn hand on
   // it, so the socket itself must lie inside the DRAWN handle bar's ink (a
   // 9-art-unit stroke about the curve at x 158). The previous check measured the
@@ -102,13 +102,21 @@ test('a declared handle socket puts the DRAWN hand on the drawn handle, not besi
   const centred=hold(480,false);
   assert.ok(offHandle(centred,settledFrame(centred))>0,'the centre carry must not pass the handle check');
 
-  // The wrist drives the held rotation: two holds whose reach to the prop
-  // differs end tilted differently, and the centre carry never tilts at all.
+  // A carried prop keeps its AUTHORED orientation: its rotation does not change
+  // while it is carried. The rig has no wrist joint, so a wrist-driven rotation
+  // turned the whole forearm swing into object rotation (the thermos read
+  // 70.9deg at the M5 carried key and spilled), and it dragged the handle out of
+  // the hand's wrap. Nothing here authors a rotation, so the contract is a
+  // constant 0 — and two holds whose reach to the prop differs must end at the
+  // SAME angle instead of tilting with the wrist.
   const high=hold(430),low=hold(540);
   const tilt=rotationAt(high,settledFrame(high))-rotationAt(low,settledFrame(low));
-  assert.ok(Math.abs(tilt)>20,`a changed wrist direction moved the held prop only ${tilt.toFixed(1)}deg`);
-  const rotations=heldFrames(carried).map(frame=>rotationAt(carried,frame));
-  assert.ok(Math.max(...rotations)-Math.min(...rotations)>10,`the held prop never tilts (${(Math.max(...rotations)-Math.min(...rotations)).toFixed(1)}deg)`);
+  assert.equal(tilt,0,`a changed wrist direction moved the held prop ${tilt.toFixed(1)}deg`);
+  for(const [propY,movie] of [[480,carried],[430,high],[540,low]] as const){
+    const rotations=heldFrames(movie).map(frame=>rotationAt(movie,frame));
+    assert.equal(Math.min(...rotations),0,`the carried prop at ${propY}px is not at its authored 0deg (min ${Math.min(...rotations).toFixed(1)}deg)`);
+    assert.equal(Math.max(...rotations),0,`the carried prop at ${propY}px is not at its authored 0deg (max ${Math.max(...rotations).toFixed(1)}deg)`);
+  }
   for(const propY of [430,540]){
     const still=hold(propY,false);
     assert.equal(rotationAt(still,settledFrame(still)),0,`the centre carry rotated ${propY}px prop`);
