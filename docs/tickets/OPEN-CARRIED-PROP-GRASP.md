@@ -107,6 +107,34 @@ against itself: it necessarily reads 0.00 whatever the socket declares. A contac
 claim has to consume the renderer's DRAWn geometry — the handle's ink against the
 hand's ink — or it proves nothing.
 
+## What landed, and what is blocked on the tilt (2026-10-17)
+
+Landed: the socket now sits on the handle bar's centreline (`at [158,76]` against
+bar ink x 153.5..162.5) and the motor re-solves the declared socket against the
+prop's current rotation every substep instead of carrying a bind-time offset, so
+the drawn hand point and the socket coincide to 0.00 px on all 147 held frames.
+The contact check now measures the drawn handle's ink against the drawn hand,
+which fails on the old value and would have caught the 10-unit error that the
+old hand-point-against-own-socket check could not. Measured on the shipped art:
+`THERMOS_ART` in `packages/studio/src/components/performance/Prop.tsx` paints the
+thermos, not `library/prop/thermos/art.svg`, which is a coarser placeholder.
+
+Blocked: **grasp hand art cannot be judged while the prop rotates against a hand
+that does not.** Two agent-drawn attempts were rejected on vision review, and the
+second review named the structural reason: at the carried key the prop is rotated
+70.9° while the hand sprite only turns with the forearm, so *the handle escapes
+the hand's aperture whatever the drawing is* — the reviewer saw the hand drift
+onto the bottle body with the handle empty beside it. The same review rejected the
+sheet on its own terms too: front and quarter were near-identical clones, back and
+quarter_back were another pair of clones, and `side` closed the aperture entirely,
+so no threaded handle is possible there.
+
+Therefore the tilt policy is a prerequisite for the grasp, not a cosmetic matter:
+a point socket cannot keep a handle inside a drawn wrap while the prop rotates
+independently of the hand. Decide the tilt (give the rig a wrist so the hand turns
+with the prop, or hold a carried object at its authored orientation) before
+commissioning the art.
+
 ## Prior record (why this is not new)
 
 `docs/tickets/M2-CONTACT-CONTINUITY.md` lists as **open higher-level AC**:
