@@ -110,15 +110,17 @@ function keyFrames(scene: MotorScene) {
   const [pointStart, pointEnd] = beatWindow(scene, "action.point");
   const [surpriseStart, surpriseEnd] = beatWindow(scene, "action.raise_hand");
   const [pushStart] = beatWindow(scene, "action.push");
-  const extreme = (frames: MotorFrame[], from: number, to: number, pick: (a: number, b: number) => number, key: "x" | "y") => {
-    let best = from;
+  /** The frame whose baked reach is furthest along `axis` (the aim/apex). */
+  const extreme = (frames: MotorFrame[], from: number, to: number, better: (value: number, best: number) => boolean, axis: 0 | 1) => {
+    let found = -1;
+    let best = 0;
     for (let frame = from; frame < to && frame < frames.length; frame++) {
-      const value = frames[frame]!.reach?.[key === "x" ? 0 : 1];
-      const current = frames[best]!.reach?.[key === "x" ? 0 : 1];
+      const value = frames[frame]!.reach?.[axis];
       if (value === undefined) continue;
-      if (current === undefined || pick(value, current) !== current) best = frame;
+      if (found < 0 || better(value, best)) { found = frame; best = value; }
     }
-    return best;
+    assert.ok(found >= 0, `no baked reach in [${from}, ${to})`);
+    return found;
   };
   const bind = firstFrame(lin, pickupStart, pickupEnd, (frame) => frame.holds !== undefined);
   // The pickup's key pose is the LIFT, not the grip: the first frame after the
@@ -133,25 +135,25 @@ function keyFrames(scene: MotorScene) {
     pickup: {frame: lift, cue: pickupStart, actor: "lin"},
     handover: {frame: firstFrame(awei, handoverStart, handoverEnd, (frame) => frame.holds !== undefined), cue: handoverStart, actor: "awei"},
     putdown: {frame: firstFrame(awei, putdownStart, putdownEnd, (frame, index) => index > putdownStart && frame.holds === undefined), cue: putdownStart, actor: "awei"},
-    point: {frame: extreme(awei, pointStart, pointEnd, Math.max, "x"), cue: pointStart, actor: "awei"},
-    surprise: {frame: extreme(lin, surpriseStart, surpriseEnd, Math.min, "y"), cue: surpriseStart, actor: "lin"},
+    point: {frame: extreme(awei, pointStart, pointEnd, (value, best) => value > best, 0), cue: pointStart, actor: "awei"},
+    surprise: {frame: extreme(lin, surpriseStart, surpriseEnd, (value, best) => value < best, 1), cue: surpriseStart, actor: "lin"},
     push: {frame: firstFrame(awei, pushStart, awei.length, (frame) => frame.contact === true), cue: pushStart, actor: "awei"},
   };
 }
 
 /** The pose the renderer draws at `frame`, in world stage px. */
-function drawn(manifest: PerformanceManifest, scene: MotorScene, frame: number, id: string) {
+function drawn(manifest: PerformanceManifest, _scene: MotorScene, frame: number, id: string) {
   const state = evaluatePerformance(manifest, frame);
   const actor = state.actors.find((candidate) => candidate.id === id);
   assert.ok(actor, `actor ${id} missing from frame ${frame}`);
   const figure = solveActorFigure(actor);
   const joints = figure.solved!.joints as unknown as Record<string, [number, number]>;
-  const world = (joint: "hand_r" | "elbow_r" | "shoulder_r" | "knee_r") => {
+  const world = (joint: "hand_r" | "elbow_r" | "shoulder_r") => {
     const design = joints[joint];
     assert.ok(design, `drawn ${joint} missing at frame ${frame}`);
     return designHandToWorld(actor, design, figure.space, figure.flipped);
   };
-  return {actor, figure, world, staging: scene.staging.actors[id]!};
+  return {actor, figure, world};
 }
 
 /** Distance between the drawn right hand and the bake's own reach point. A
@@ -213,7 +215,7 @@ test("m5-acting: the drawn prop follows the bake at the pickup and putdown keys"
     return {drawn: prop.y + support.y, x: prop.x + support.x, bake: scene.motor.props.thermos![frame]!};
   };
   const keys = keyFrames(scene);
-  const floorY = keys.pickup && scene.staging.actors.lin!.at[1] * STAGE_HEIGHT;
+  const floorY = scene.staging.actors.lin!.at[1] * STAGE_HEIGHT;
   const pickup = drawnProp(keys.pickup.frame);
   assert.ok(Math.abs(pickup.drawn - (pickup.bake.y + solidSupport(solid, pickup.bake.rotation ?? 0).y)) <= 1.5,
     `pickup f${keys.pickup.frame}: the drawn prop follows a different position than the bake`);
