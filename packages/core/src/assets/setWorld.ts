@@ -83,11 +83,19 @@ export function normalizeSetWorld(input: SetWorldInput): NormalizedSetWorld {
   const painted = new Set(svgGroupIds(sceneSvg));
   const seen = new Set<string>();
   const layers = parsed.layers.map((entry) => {
-    const layer = typeof entry === "string" ? {id: entry, foreground: false} : {id: entry.id, foreground: true};
+    const layer = typeof entry === "string"
+      ? {id: entry, foreground: false, blend: "normal" as const, opacity: 1}
+      : entry;
     if (seen.has(layer.id)) throw new Error(`duplicate layer id: ${layer.id}`);
     seen.add(layer.id);
     if (!painted.has(layer.id)) throw new Error(`declared layer "${layer.id}" has no <g id> group in scene.svg`);
-    return layer;
+    // Defaults are omitted: an undeclared layer keeps the pre-M4 IR and rendering.
+    return {
+      id: layer.id,
+      foreground: layer.foreground,
+      ...(layer.blend === "normal" ? {} : {blend: layer.blend}),
+      ...(layer.opacity === 1 ? {} : {opacity: layer.opacity}),
+    };
   });
   const supports = parsed.supports.map((surface) => {
     if (surface.x[0] > surface.x[1]) throw new Error(`support "${surface.name}" x range must be [min, max]`);

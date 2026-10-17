@@ -10,6 +10,7 @@ import {
   svgGroupElement,
   svgGroupIds,
 } from "../src/assets/setWorld";
+import {SET_LAYER_BLENDS} from "../src/schemas/libraryMeta";
 
 // Synthetic fixture sets only; library/ is never written by tests.
 function worldScene(counterTop = 390): string {
@@ -28,6 +29,28 @@ function worldManifest(y = 390): string {
     safeActorArea: {x: 96, y: 90, width: 768, height: 360},
     supports: [{name: "counter", x: [120, 840], y, paint: "counter-top-rect"}],
   });
+}
+
+/** World manifest whose layers declare compositing (M4 declaration). */
+function compositedManifest(): string {
+  return JSON.stringify({
+    coordinateSpace: "960x540",
+    layers: [
+      "backdrop",
+      {id: "pigment", blend: "multiply", opacity: 0.5},
+      {id: "key-light", foreground: true, blend: "screen"},
+      {id: "counter-front", foreground: true},
+    ],
+  });
+}
+
+function compositedScene(): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">`
+    + `<g id="backdrop"><rect width="960" height="540" fill="#f0d59b"/></g>`
+    + `<g id="pigment"><rect width="960" height="540" fill="#8a6a4a"/></g>`
+    + `<g id="key-light"><rect width="960" height="540" fill="#f7e8c3"/></g>`
+    + `<g id="counter-front"><rect y="400" width="960" height="140" fill="#70432f"/></g>`
+    + `</svg>`;
 }
 
 /** A minimal synthetic library with one set; resolves like library/ does. */
@@ -55,6 +78,44 @@ async function registryWithMissingManifest(sceneSvg: string) {
     rmSync(root, {recursive: true, force: true});
   }
 }
+
+test("declared layer compositing is carried, defaulted to normal/1, and validated", async () => {
+  const world = normalizeSetWorld({manifest: JSON.parse(compositedManifest()), sceneSvg: compositedScene()});
+  assert.deepEqual(world.layers, [
+    {id: "backdrop", foreground: false},
+    {id: "pigment", foreground: false, blend: "multiply", opacity: 0.5},
+    {id: "key-light", foreground: true, blend: "screen"},
+    {id: "counter-front", foreground: true},
+  ]);
+  const registry = await registryWith(compositedManifest(), compositedScene());
+  const asset = registry.resolveAsset("set/fixture") as {world?: {layers: unknown[]}};
+  assert.deepEqual(asset.world!.layers, world.layers);
+  // Invalid declarations fail loading rather than silently rendering normal.
+  await assert.rejects(
+    registryWith(compositedManifest().replace("\"multiply\"", "\"overlay\""), compositedScene()),
+    /blend|overlay|Invalid/i,
+  );
+  await assert.rejects(
+    registryWith(compositedManifest().replace("0.5", "1.5"), compositedScene()),
+    /opacity|less than or equal/i,
+  );
+});
+
+test("every declared blend mode is carried through normalization, M3 modes unchanged", () => {
+  for (const blend of SET_LAYER_BLENDS) {
+    const manifest = {
+      coordinateSpace: "960x540",
+      layers: ["backdrop", {id: "pigment", blend}],
+    };
+    const world = normalizeSetWorld({manifest, sceneSvg: compositedScene()});
+    assert.deepEqual(world.layers[1], blend === "normal"
+      ? {id: "pigment", foreground: false}
+      : {id: "pigment", foreground: false, blend}, `blend ${blend} must reach the normalized layer`);
+  }
+  // The M4 seam only widened additively: the pre-M4 modes are still exactly these.
+  assert.deepEqual(SET_LAYER_BLENDS.slice(0, 3), ["normal", "multiply", "screen"]);
+  assert.deepEqual(SET_LAYER_BLENDS.slice(3), ["hue", "saturation", "color", "luminosity", "soft-light"]);
+});
 
 test("normalizes world declarations once from coordinateSpace units", () => {
   const world = normalizeSetWorld({manifest: JSON.parse(worldManifest()), sceneSvg: worldScene()});

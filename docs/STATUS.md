@@ -35,8 +35,10 @@ the gate bundle `m3-20261016T2305+0800`
 while every legacy set stays installed. One M3 criterion is honestly failing
 and routed onward: the putdown is geometrically on the painted top but
 occluded by the clustered receiver
-([ticket](tickets/BACKLOG-M5-PUTDOWN-VISIBILITY.md)). M4–M8 are planned, not
-delivered.
+([ticket](tickets/BACKLOG-M5-PUTDOWN-VISIBILITY.md)). M4 is in progress: the materials/light
+treatment's ink criterion is met with no matte and no raised prop layer
+([ART_MATERIALS_M4](ART_MATERIALS_M4.md)), and its art gate is the seventh review's.
+M5–M8 are planned, not delivered.
 
 ## Motion and demonstrations
 

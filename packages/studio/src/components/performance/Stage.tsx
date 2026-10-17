@@ -1,4 +1,5 @@
 import React from "react";
+import type {SetLayerBlend} from "@anim/core";
 import type { PerformanceManifest } from "../../performance";
 
 const INK = "#272331";
@@ -15,8 +16,9 @@ export interface PerformanceSceneContext {
   location: string;
   theme: PerformanceSceneTheme;
   sceneSvg?: string;
-  /** Declared world layers with preloaded group text, back-to-front (M3). */
-  setLayers?: Array<{id: string; foreground: boolean; text: string}>;
+  /** Declared world layers with preloaded group text, back-to-front (M3); a
+   * layer may declare compositing (M4 `blend`/`opacity`). */
+  setLayers?: Array<{id: string; foreground: boolean; blend?: SetLayerBlend; opacity?: number; text: string}>;
   /** Intrinsic coordinateSpace extents of the set art (SVG viewBox). */
   setViewBox?: [number, number];
 }
@@ -42,7 +44,13 @@ export function sceneForFrame(manifest: PerformanceManifest, frame: number): Per
   const location = scene.location || scene.layout || "office";
   const setLayers = (scene.setLayers ?? []).flatMap((layer) => {
     const text = manifest.locationScenes?.[`${location}/${layer.id}`];
-    return typeof text === "string" ? [{id: layer.id, foreground: layer.foreground === true, text}] : [];
+    return typeof text === "string" ? [{
+      id: layer.id,
+      foreground: layer.foreground === true,
+      ...(layer.blend ? {blend: layer.blend} : {}),
+      ...(layer.opacity === undefined ? {} : {opacity: layer.opacity}),
+      text,
+    }] : [];
   });
   return {
     id,
@@ -68,7 +76,7 @@ function setViewBoxOf(scene: PerformanceSceneContext): {width: number; height: n
 }
 
 /** One declared set layer: intrinsic-space art scaled onto the 1920x1080 stage. */
-const SetLayerSvg: React.FC<{scene: PerformanceSceneContext; layer: {id: string; foreground: boolean; text: string}; zIndex: number}> = ({scene, layer, zIndex}) => {
+const SetLayerSvg: React.FC<{scene: PerformanceSceneContext; layer: {id: string; foreground: boolean; blend?: SetLayerBlend; opacity?: number; text: string}; zIndex: number}> = ({scene, layer, zIndex}) => {
   const viewBox = setViewBoxOf(scene);
   return (
     <svg
@@ -78,12 +86,17 @@ const SetLayerSvg: React.FC<{scene: PerformanceSceneContext; layer: {id: string;
       data-location={scene.location}
       data-set-layer={layer.id}
       data-set-foreground={layer.foreground ? "true" : undefined}
+      data-set-blend={layer.blend}
       data-layer={layer.foreground ? "set-foreground" : "set-background"}
       viewBox={`0 0 ${viewBox.width} ${viewBox.height}`}
       width="1920"
       height="1080"
       dangerouslySetInnerHTML={{__html: layer.text}}
-      style={{position: "absolute", inset: 0, zIndex, display: "block", overflow: "hidden"}}
+      style={{
+        position: "absolute", inset: 0, zIndex, display: "block", overflow: "hidden",
+        ...(layer.blend && layer.blend !== "normal" ? {mixBlendMode: layer.blend} : {}),
+        ...(layer.opacity === undefined ? {} : {opacity: layer.opacity}),
+      }}
     />
   );
 };

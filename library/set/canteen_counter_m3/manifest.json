@@ -7,7 +7,27 @@
     "floor",
     "furniture",
     "counter",
-    { "id": "foreground_counter", "foreground": true }
+    {
+      "id": "material_pigment",
+      "blend": "color"
+    },
+    {
+      "id": "material_detail"
+    },
+    {
+      "id": "foreground_counter",
+      "foreground": true
+    },
+    {
+      "id": "lighting_shade",
+      "foreground": true,
+      "blend": "soft-light"
+    },
+    {
+      "id": "lighting_key",
+      "foreground": true,
+      "blend": "soft-light"
+    }
   ],
   "safeActorArea": {
     "x": 220,
@@ -18,7 +38,10 @@
   "supports": [
     {
       "name": "counter",
-      "x": [270, 1650],
+      "x": [
+        270,
+        1650
+      ],
       "y": 400,
       "paint": "counter_top_surface"
     }
@@ -28,6 +51,7 @@
     "license": "Repository license (see LICENSE at the repository root); the artwork is original to this project.",
     "styleAnchor": "Accepted M1 B-direction (docs/ART_DIRECTION_M1.md) and figure/lin_b_draft palette: outline #424e46, muted teal #477c7b, cream #eadcbb, terracotta #b96a55, warm woods, flat fills with opacity overlays, no filters.",
     "supportAgreement": "Declared support counter y=400 equals the painted data-support-top=400 on counter_top_surface (top quad back edge y368, front edge y430, resting line y400); closes the M0/M2 declared-vs-painted defect class at the source.",
-    "date": "2026-10-16"
+    "materials": "M4 layer passes (docs/ART_MATERIALS_M4.md), declared through the M3 set-layer seam. Round 7 is the ink answer: each wash declares the blend mode that does its job without moving the drawn values, so no matte, clip, hole or raised prop layer exists anywhere in the set. material_pigment = region palettes (each region its own pigment family, warm key glaze left, cool ambient fill right) composited `color`: hue and saturation come from the glaze, luminosity stays the art's, so the ink keeps its contrast; material_detail = scale-keyed contours (near/large silhouettes weighted, far art thinned, speculars, the visible prop ink that nothing hides) on the normal blend - it draws marks, it does not wash; lighting_shade + lighting_key = one declared light model (source: the left window; key #f7e8c3, ambient fill #5f6a72, radial falloff around x330 y290 art units; shadows cast to the right/back) composited `soft-light`, which darkens under a dark source and lightens under a warm one while its change scales with the surface, so ink keeps its contrast and the picture keeps one light direction. Both are declared foreground, above the actor plane, so set and actors share the source. Withdrawn, with reasons, and not in this file: round 3's ink_contour pass (drew wireframe boxes); round 5's shared feathered prop matte m4_prop_hold_off (its exclusions presented boundaries the art does not draw), material_paper (per-ground fibre tiles, shade hatch and dry-brush bands - the pass was the tiling) and material_detail's fibre joint plates; round 6's `props` layer, which raised the display case, bowl stack and steamer above every wash to escape a wash that destroyed ink - the declared blends no longer destroy it, so the layer has no job and the props sit in their base layers again; and round 7 withdrew the last straight restatements of drawn edges in material_detail (the window frame's verticals and inner opening, the chalkboard shelf's top edge), which the band detector reported as straight bands. Each remaining pass covers the whole frame as one gradient with no cut-outs and no prop exclusions; nothing tiles, so nothing repeats at a pitch. All marks are static vector art; no filters, no raster, no per-actor projected shadow. Blending is the M4 declared-layer extension (blend/opacity).",
+    "date": "2026-10-18"
   }
 }
