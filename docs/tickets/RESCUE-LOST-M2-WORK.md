@@ -80,11 +80,17 @@ move the same bake.
 
 ## State (2026-10-17)
 
-- **R1 done** — the seam is closed in the generator, `npm run cues` is wired into
-  `pretest`, and only `library/music/cues/xuehua-piaopiao.wav` is tracked
-  (639 KB, the one cue the synthesis recipes cannot reproduce). Regeneration is
-  byte-identical to the archived overlay for all 23 files.
-- **R2 done** — eight `episodes/qa-orientations/<name>/episode.yml` restored.
+- **R1 merged** — the seam is closed in the generator, `npm run cues` is wired
+  into both `pretest` and `pretest:all` (npm only runs the hook of the invoked
+  script, and `test:all` is the documented gate), and only
+  `library/music/cues/xuehua-piaopiao.wav` is tracked (639 KB, the one cue the
+  synthesis recipes cannot reproduce). Regeneration is byte-identical to the
+  archived overlay for all 23 files. Verified on the integration branch from a
+  deleted-cues state: `npm run test:all` regenerates 21 sfx + `ending-cadence`
+  and the audio-cue test passes. Hazard worth knowing: the tracked cue sits
+  inside the generated directory, so deleting that directory needs a
+  `git restore` of the one file.
+- **R2 merged** — eight `episodes/qa-orientations/<name>/episode.yml` restored.
   Eleven overlays carry these episodes in two variants; the later variant was
   restored, and its only semantic change is the retired draft set swapped for
   the accepted `set/canteen_counter_m3`.
@@ -113,5 +119,9 @@ centre, which is the correct behaviour rather than a gap.
   fail for the same class of seam the cues had. They need a generator or an
   explicit tracked exception, decided once rather than per test.
 - **R7** — `enumerateCueAssets` treats a missing cues directory as valid, so a
-  clone that skips `pretest` silently drops sfx again and only the music case is
-  caught, by a direct file read. Cue presence needs one loud gate.
+  clone that skips the test hooks silently drops every sfx, and only the music
+  case is caught, by a direct file read. `make` has a loud missing-asset check
+  but it sits *inside* `Object.entries(cueAssets)`, so it is unreachable when
+  nothing was enumerated: a manifest is written with `audio.cues: {}` and exits
+  0, and the failure only surfaces at render. The gate must compare the compiled
+  performance's cue references against the embedded cues, in the pipeline.
