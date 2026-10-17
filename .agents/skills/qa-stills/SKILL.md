@@ -22,10 +22,13 @@ renders and record defects by scene and frame.
 
 ## Loop
 
-1. Render start/mid/end frames, camera transitions, entrances, interactions,
+1. For art iteration, render targeted stills at matched narrative beats first,
+   inspect each at full resolution, and iterate 2–3 times before spending on
+   clips (see [art-asset-production](../art-asset-production/SKILL.md)).
+2. Render start/mid/end frames, camera transitions, entrances, interactions,
    focus changes, and dense groups.
-2. Inspect each frame, fix the YAML/asset/engine owner, regenerate, and inspect
+3. Inspect each frame, fix the YAML/asset/engine owner, regenerate, and inspect
    again. Require two iterations for changed visual behavior.
-3. Record a receipt keyed to the current build before final render.
+4. Record a receipt keyed to the current build before final render.
 
 Completion: every sample has a verdict and no blocking visual defect remains.
