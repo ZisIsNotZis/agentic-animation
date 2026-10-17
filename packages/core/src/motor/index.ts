@@ -164,6 +164,12 @@ const GRAVITY = 2600;
 /** Hand drive acceleration/top speed per unit force (stage px/s², px/s). */
 const HAND_ACC = 1500;
 const HAND_MAX = 560;
+/** M5 putdown visibility: outward share of the arm's reach a shaped placing
+ *  release adds before opening the hand (settle 1). 0 stays the old drop. */
+const PLACE_OUT_FRACTION = 0.5;
+/** M5 putdown visibility: seconds a carrying step-back spends replanting its
+ *  feet under the body before it translates. */
+const WALK_EASE_SEC = 0.3;
 /** Gesture envelopes (slice 3 vocabulary): stylized joint-space magnitudes —
  *  the invariants (planted support, no contact) are what matter. */
 const BOW_PITCH = 28; // deg forward at the waist
@@ -352,6 +358,13 @@ function advanceSupport(state:ActorState,previousX:number,dt:number):void {
   for(const side of ['l','r'] as const){
     const foot=state.feet[side],local=side==='l'?phase%1:(phase+.5)%1;
     const swing=phase>0&&local<.5;
+    // During a carrying step-back start the feet replant under the still body:
+    // an in-flight landing was aimed along the old direction. The landing
+    // eases to the rest point (never jumps) so the drawn leg stays continuous.
+    if(swing&&state.walkEase>0){
+      const target=rest(side,state.x);
+      foot.landing=[approach(foot.landing[0],target[0],420*dt),approach(foot.landing[1],target[1],420*dt)];
+    }
     if(swing&&!foot.swing){
       foot.from=[...foot.target];
       const remaining=state.moveTarget===null?0:state.moveTarget-state.x;
@@ -409,12 +422,19 @@ interface ActorState {
   /** Crouch 0..1. */
   crouch: number;
   walkPhase: number;
+  /** M5 putdown visibility: settle the planted feet under the body before a
+   *  carrying step-back translates it (a mid-swing landing belongs to the old
+   *  direction and would overstretch the stance leg). */
+  walkEase: number;
   supportMinimum?:number;
   feet?:Record<'l'|'r',{target:[number,number];from:[number,number];landing:[number,number];swing:boolean}>;
   skeletonPose?:SkeletonPose;
   lean: number;
   /** Motor-driven destination while a move intent is active. */
   moveTarget: number | null;
+  /** M5 putdown visibility: a holder walking to a mark behind its facing
+   *  steps back without turning, so the held prop is never mirrored. */
+  walkBackward: boolean;
   /** Prop id a completed move intent should grab (transient). */
   grabTarget?: string | null;
   grabContactAt?: number;
@@ -425,6 +445,15 @@ interface ActorState {
   grab: {propId: string; t: number; notBefore?: number; accent: number; span?: number} | null;
   /** Acting-shape accent carried from the intent to the grab it arms. */
   grabAccent?: number;
+  /** Acting-shape settle carried from a move+grab to the hold it starts. */
+  grabSettle?: number;
+  /** M5 joint shaping: 0..1 weight shift carried by a shaped held prop, so a
+   *  bind/hold never locks the elbow and wrist (0 = still hold, pre-M5). */
+  holdShape: number;
+  holdT: number;
+  /** The breath offset currently applied to the hand (absolute, so it is
+   *  removed before the next travel step instead of accumulating). */
+  holdBreath: [number, number];
   /** Acting-shape pre-roll in flight (M5 anticipation): the beat waits while
    *  the torso shifts weight opposite the intended motion. */
   prep: {t: number; dur: number; peak: number; sign: 1 | -1} | null;
@@ -451,6 +480,9 @@ interface ActorState {
   /** Placing: the support surface y the held prop is being lifted onto;
    *  the hand rises until the prop base clears the surface, then releases. */
   place: number | null;
+  /** M5 putdown visibility: 0..1 outward hand travel while placing, so a
+   *  shaped release rests the prop clear of the holder's body. */
+  placeOut: number;
   /** Reaching/exerting/holding state: the world-space point the hand is at. */
   reach: { tx: number; ty: number; target: string; contact: boolean } | null;
   /** Preserve the outgoing contact hand until it has returned to rest. */
@@ -530,9 +562,13 @@ function propOpenHand(state: ActorState, props: Map<string, PropState>, free = f
   }
   state.holding = null;
   state.holdRel = null;
+  state.holdShape = 0;
+  state.holdT = 0;
+  state.holdBreath = [0, 0];
   state.grip = null;
   state.gripGoal = null;
   state.place = null;
+  state.placeOut = 0;
   state.retract = state.reach !== null;
 }
 
@@ -596,6 +632,13 @@ function arriveMotorWalk(
     state.handDrive.speed = 0;
   }
   state.pursue = null;
+  // A shaped handover (or a carrying step-back) settles its feet under the
+  // body after the walk: a landing computed on the last moving substep can sit
+  // a fraction of a px off the rest point, and an unresolved swing would keep
+  // the walk cycling.
+  state.walkEase = state.walkPhase > 0 && (state.walkBackward || (state.grabSettle ?? 0) > 0)
+    ? WALK_EASE_SEC : 0;
+  state.walkBackward = false;
 }
 
 export function simulateScene(scene: MotorScene): MotorTrajectory {
@@ -605,7 +648,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
   let actors = new Map<string, ActorState>(
     scene.actors.map((actor) => [actor.id, {
       id: actor.id, x: actor.x, vx: 0, facing: actor.facing, groundY: actor.groundY, scale: actor.scale,
-      walkPhase: 0, lean: 0, moveTarget: null, grab: null, holding: null, holdRel: null, handDrive: null, reach: null, retract: false, retractInfluence: 1, retractElapsed: 0, retractDuration: .65, wristAtBind: 0, propAngleAtBind: 0, grip: null, gripGoal: null, pursue: null, place: null,
+      walkPhase: 0, lean: 0, moveTarget: null, walkBackward: false, walkEase: 0, grab: null, holding: null, holdRel: null, holdShape: 0, holdT: 0, holdBreath: [0, 0], handDrive: null, reach: null, retract: false, retractInfluence: 1, retractElapsed: 0, retractDuration: .65, wristAtBind: 0, propAngleAtBind: 0, grip: null, gripGoal: null, pursue: null, place: null, placeOut: 0,
       stagger: 0, stepsTaken: 0, staggerSlide: 0, gesture: null, handGesture: null, prep: null, fall: null, fallen: false, body: bodyOf((actor.skeletonViews?.front??actor.skeleton) as Skeleton,actor.skeletonViews!==undefined),
       skeleton: actor.skeletonViews?.front??actor.skeleton, skeletonViews:actor.skeletonViews, orientation:actor.skeletonViews?'front':undefined, waist: 0, crouch: 0,
     }]),
@@ -662,6 +705,18 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     return [sh[0] + (0.35 / d) * state.body.armReach * k * 0.6 * geometryFacing(state), sh[1] + (0.94 / d) * state.body.armReach * k * 0.6];
   };
   const supportPoint = (prop:PropState) => prop.solid ? solidSupport(prop.solid,prop.rotation) : {x:0,y:0};
+  /** M5 joint shaping (docs/WORLD_PUPPET_MOTOR.md): a shaped hold breathes —
+   *  the hand (and the carried prop with it) drifts a few px against the
+   *  shoulder, so the elbow and forearm keep moving instead of locking.
+   *  0 is the still pre-M5 hold; the ramp keeps the start continuous. */
+  const holdBreath = (state: ActorState, dt: number): [number, number] => {
+    if (!(state.holdShape > 0) || state.fallen) return [0, 0];
+    state.holdT += dt;
+    const ramp = smoothstep01(state.holdT / 0.28);
+    const w = (2 * Math.PI / 1.3) * state.holdT;
+    return [state.facing * Math.sin(w) * 7 * ramp * state.holdShape * state.scale,
+      (Math.cos(w) - 1) * 4 * ramp * state.holdShape * state.scale];
+  };
   const supportYAt = (x: number, currentY: number): number => {
     let best = scene.groundY ?? scene.actors[0]?.groundY ?? 720;
     for (const surface of scene.supports ?? []) {
@@ -771,6 +826,17 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         if (intent.intent === "move") {
           const tx = intent.target !== undefined ? scene.resolveX(intent.target) : undefined;
           if (tx !== undefined) {
+            // M5 putdown visibility (docs/WORLD_PUPPET_MOTOR.md): a holder
+            // sent to a mark behind its facing steps back instead of turning.
+            // The facing is what mirrors a held prop, so a carrying turn would
+            // teleport it; the backward step keeps the prop continuous.
+            const travel = Math.sign(tx - state.x) || 0;
+            state.walkBackward = !intent.grab && state.holding !== null && travel !== 0 && travel !== state.facing;
+            // A carrying step-back from a mid-stride pose settles its feet
+            // under the body first; the walk then translates without an
+            // overstretched stance leg (the earlier move's landing belonged to
+            // the outgoing direction).
+            state.walkEase = state.walkBackward && state.walkPhase > 0 ? WALK_EASE_SEC : 0;
             // Moves at props halt at the prop's edge: pick up, do not walk through.
             const isProp = !actors.has(intent.target!) && scene.props.some((prop) => prop.id === intent.target);
             const dir = Math.sign(tx - state.x) || state.facing;
@@ -806,6 +872,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
               state.grabTarget = intent.grab ?? (isProp ? intent.target! : null);
               state.grabContactAt = intent.contactAt;
               state.grabAccent = Math.min(1, Math.max(0, Number(intent.accent ?? 0)));
+              state.grabSettle = Math.min(1, Math.max(0, Number(intent.settle ?? 0)));
               // A moving actor target is pursued LIVE (the staged stop point
               // goes stale the moment the target walks). A self-target is not
               // pursued — resolveX already returned the actor's staged mark,
@@ -823,16 +890,21 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         } else if (intent.intent === "push") {
           const tx = intent.target !== undefined ? scene.resolveX(intent.target) : undefined;
           if (tx !== undefined && state.handDrive === null) {
-            const dir = (Math.sign(tx - state.x) || state.facing) as 1 | -1;
+            const target = actors.get(intent.target!);
+            // The target's LIVE mark, not its staged mark: a target that has
+            // already moved (or was walked by an earlier beat) would otherwise
+            // leave the approach stop behind its own body and the walk would
+            // press the adjacency clamp forever instead of arriving.
+            const aimX = target?.x ?? tx;
+            const dir = (Math.sign(aimX - state.x) || state.facing) as 1 | -1;
             state.facing = dir;
             const rest = restHandAt(state);
             // Walk into arm's range first: stop where the extended hand can
             // touch the target's near edge (real locomotion, no teleport).
-            const target = actors.get(intent.target!);
             const stopGap = target
               ? (state.body.halfWidth + target.body.halfWidth) * state.scale + state.body.armReach * state.scale
               : 140 * state.scale;
-            state.moveTarget = tx - dir * stopGap;
+            state.moveTarget = aimX - dir * stopGap;
             state.handDrive = {
               target: intent.target!, force: clamp(intent.force ?? 0.7, 0.1, 2),
               t: 0, sec: intent.forceSec ?? 0.25, speed: 0, hand: [rest[0], rest[1]], contact: false, phase: "approach", contactT: null,
@@ -867,7 +939,9 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
               .reduce((best, s) => Math.min(best, s.y), scene.groundY ?? 720);
             if (intent.releaseMode !== "free" && surface < prop.y + supportPoint(prop).y - 4) {
               state.place = surface;
+              state.placeOut = Math.min(1, Math.max(0, Number(intent.settle ?? 0)));
             } else {
+              state.placeOut = 0;
               propOpenHand(state, props, intent.releaseMode === 'free');
             }
           }
@@ -1078,10 +1152,19 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           arriveMotorWalk(state, actors, props);
         } else {
           const direction = Math.sign(distance) as 1 | -1;
-          state.facing = direction;
+          if (!state.walkBackward) state.facing = direction;
+          if (state.walkEase > 0) {
+            // The feet settle under the body at zero velocity; the walk then
+            // starts from a coherent stance instead of the old swing.
+            state.walkEase = Math.max(0, state.walkEase - delta);
+            state.walkPhase = (state.walkPhase + delta * nativeCadence(state)) % 1;
+          } else {
           // Clamp the step at every other body's edge — a walker never
-          // overlaps and never gets a backward correction.
-          let stepX = state.x + direction * WALK_SPEED * delta;
+          // overlaps and never gets a backward correction. A carrying
+          // step-back travels at half speed, so each backward step lands
+          // inside the stance leg's reach instead of overstretching it.
+          const walkSpeed = state.walkBackward ? WALK_SPEED * 0.5 : WALK_SPEED;
+          let stepX = state.x + direction * walkSpeed * delta;
           let clampedBy: ActorState | null = null;
           for (const other of actors.values()) {
             if (other.id === state.id) continue;
@@ -1101,6 +1184,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             state.moveTarget = null;
             state.pursue = null;
             arriveMotorWalk(state, actors, props);
+          }
           }
         }
       } else if (state.fall || (state.fallen && Math.abs(state.stagger) > 1)) {
@@ -1161,13 +1245,23 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           // Finish the stride at its rest endpoint rather than deleting a
           // nonzero leg target when root travel stops.
           const sk=state.skeleton!,facing=geometryFacing(state);
+          // A shaped beat settles within the last step's sub-pixel remainder:
+          // its stance anchors were placed at an earlier root mark and are
+          // never rewritten, so an exact rest test would cycle forever. The
+          // swing test uses the phase (not last substep's flag), so the check
+          // does not see a foot that is about to be landed this substep.
+          const settleTolerance=(state.grabSettle??0)>0||state.walkBackward?2:.02;
+          const settlePhase=state.walkPhase%1;
           const settled=state.feet&&(['l','r'] as const).every(side=>{
             const foot=sk.joints[`foot_${side}`]!;
             const restX=state.x+facing*(foot[0]-sk.space.width/2)*state.scale;
-            return Math.abs(state.feet![side].target[0]-restX)<.02&&!state.feet![side].swing;
+            const local=side==='l'?settlePhase:(settlePhase+.5)%1;
+            const inSwing=state.walkPhase>0&&local<.5;
+            return !inSwing&&Math.abs(state.feet![side].target[0]-restX)<settleTolerance;
           });
           const phase=state.walkPhase%1;
           const boundary=phase<.5?.5:1;
+          state.walkEase=Math.max(0,state.walkEase-delta);
           // Do not wrap into the next swing before support has landed and
           // tested the completed stride in this same atomic proposal. A
           // fallen body never steps again (balance is cut).
@@ -1266,6 +1360,9 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           state.propAngleAtBind = liveProp.rotation;
           state.holding = g.propId;
           state.grab = null;
+          state.holdShape = state.grabSettle ?? 0;
+          state.holdT = 0;
+          state.holdBreath = [0, 0];
           const sh = geometryShoulder(state);
           // The grip starts where the hand physically touched, then eases to
           // the CENTER grip: the box center sits at the hand point (small
@@ -1341,7 +1438,9 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
               state.holdRel.from[1] + ((carry[1] - sh[1]) - state.holdRel.from[1]) * blend,
             ];
             const desired:[number,number]=[sh[0]+rel[0],sh[1]+rel[1]];
-            const hand: [number, number] = desired;
+            const breath = holdBreath(state, dt);
+            state.holdBreath = breath;
+            const hand: [number, number] = [desired[0] + breath[0], desired[1] + breath[1]];
             heldProp.x = hand[0] + (gripNow?.ox ?? 0);
             heldProp.y = hand[1] + (gripNow?.oy ?? 0);
             heldProp.vx = 0;
@@ -1353,27 +1452,42 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             }
           } else if (state.place !== null) {
             // Placing: raise the hand (the prop rides the grip) until the prop
-            // base clears the support surface, then open the hand.
-            const hand = carryHandAt(state);
+            // base clears the support surface, then open the hand. A shaped
+            // release also carries the hand outward (M5 putdown visibility):
+            // the prop comes to rest clear of the holder's body, against the
+            // open painted top, and 0 keeps the previous vertical placement.
+            const base = carryHandAt(state);
+            const outX = base[0] + geometryFacing(state)
+              * PLACE_OUT_FRACTION * state.body.armReach * state.scale * state.placeOut;
             const targetHandY = state.place - supportPoint(heldProp).y - 6 - (state.grip?.oy ?? 0);
-            // Rise from the PREVIOUS hand position (the carry pose recomputes
+            // Travel from the PREVIOUS hand position (the carry pose recomputes
             // every substep and would otherwise swallow the accumulated lift).
-            const prevY = state.reach?.ty ?? hand[1];
-            const liftY = Math.max(targetHandY, prevY - 260 * dt);
-            const liftHand: [number, number] = [hand[0], liftY];
+            const prev: [number, number] = state.reach ? [state.reach.tx, state.reach.ty] : [base[0], base[1]];
+            const outStep = clamp(outX - prev[0], -480 * dt, 480 * dt);
+            const liftY = Math.max(targetHandY, prev[1] - 260 * dt);
+            const liftHand: [number, number] = [prev[0] + outStep, liftY];
             heldProp.x = liftHand[0] + (state.grip?.ox ?? 0);
             heldProp.y = liftHand[1] + (state.grip?.oy ?? 0);
             heldProp.vx = 0;
             heldProp.falling = false;
             state.reach = {tx: liftHand[0], ty: liftHand[1], target: state.holding, contact: true};
-            if (heldProp.y + supportPoint(heldProp).y <= state.place + 2) {
+            // The shaped placement finishes its outward travel before the hand
+            // opens, so the prop's rest is clear of the body rather than
+            // wherever the lift happened to clear the surface.
+            if (heldProp.y + supportPoint(heldProp).y <= state.place + 2
+                && Math.abs(outX - liftHand[0]) < 0.5) {
               propOpenHand(state, props);
             }
           } else {
             const sh=geometryShoulder(state),oldSh=state.carryShoulder??sh;
             const previous: [number,number]=state.reach
-              ? [state.reach.tx+(state.skeletonViews?sh[0]-oldSh[0]:0),state.reach.ty+(state.skeletonViews?sh[1]-oldSh[1]:0)] : carryGoal;
+              ? [state.reach.tx+(state.skeletonViews?sh[0]-oldSh[0]:0)-state.holdBreath[0],
+                state.reach.ty+(state.skeletonViews?sh[1]-oldSh[1]:0)-state.holdBreath[1]] : carryGoal;
             const hand = state.skeletonViews||state.offer?.prop===state.holding ? travelHand(previous,carryGoal,0.1,480,dt) : carryGoal;
+            const breath = holdBreath(state, dt);
+            state.holdBreath = breath;
+            hand[0] += breath[0];
+            hand[1] += breath[1];
             heldProp.x = hand[0] + (state.grip?.ox ?? 0);
             heldProp.y = hand[1] + (state.grip?.oy ?? 0);
             heldProp.vx = 0;
