@@ -94,6 +94,22 @@ move the same bake.
   Eleven overlays carry these episodes in two variants; the later variant was
   restored, and its only semantic change is the retired draft set swapped for
   the accepted `set/canteen_counter_m3`.
+- **R5 blocked on a product decision, work preserved on `worker/r5-crouch-knee-flexion`
+  (`a81147c`).** The declared-envelope machinery is written and its invariant test
+  is strong, but the declared value exposes a genuine art/reach conflict. Measured:
+  the art-supported ceiling is `flexionMax 113.595°` (107.03 design px of hip drop;
+  beyond it the right knee's ink, then the joint, sinks below its ankle and through
+  the ground plane at y 720), while the sixteen native pickup cases need about
+  117.5–125.7 px. Worse, the two constraints are not independent: the figure's
+  declared legs are **asymmetric and shin-starved** — left thigh 162.44 / shin
+  93.72 (ratio 1.73), right 170.47 / 89.32 (1.91), where human femurs and tibiae
+  are close to equal. A short shin makes a deep squat fold the knee almost
+  horizontal, which is why the knee crosses the floor line and why both knees fold
+  to screen-left. So the conflict is a rig-proportion defect, not a tuning
+  problem, and it needs either re-proportioned leg art or a lower pickup demand.
+  Decision is the user's because it changes the approved figure or the accepted
+  M5 staging.
+
 - **R3 merged** — Restoring the grip achieves the goal —
   hand-to-handle distance 0.00 px and the thermos rotates 104.8° with the wrist —
   but it then exposes a **motor defect**: the hold path targets
