@@ -37,8 +37,14 @@ and routed onward: the putdown is geometrically on the painted top but
 occluded by the clustered receiver
 ([ticket](tickets/BACKLOG-M5-PUTDOWN-VISIBILITY.md)). M5 WP3 closes it on
 `episodes/m5-acting`: the rest is clear of the bodies with the carrying
-step-back and shaped placement (measured in [ART_ACTING_M5](ART_ACTING_M5.md));
-M5 remains at its own gate. M4 is delivered and awaiting the
+step-back and shaped placement (measured in [ART_ACTING_M5](ART_ACTING_M5.md)).
+A fresh image review of the WP3 evidence set failed three hard defects — the
+two actors' drawn bodies colliding at the handover, the placed prop resting one
+pixel high with the report comparing its anchor, and the pickup/point poses
+folding instead of acting. All three are closed at their causes (drawn-body
+separation, the scaled prop solid on the painted line, least-pitch grab
+postures and a shaped, completed point) and pinned by
+`packages/core/test/actingInvariants.test.ts`. M5 remains at its own gate. M4 is delivered and awaiting the
 user's milestone judgment: the materials/light treatment composites with
 non-luminance blend modes (`color` for pigment, `soft-light` for both light
 passes), so ink contrast is 0.964–1.063 in all eight regions with no matte,
