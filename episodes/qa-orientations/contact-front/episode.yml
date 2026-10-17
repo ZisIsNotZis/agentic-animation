@@ -1,0 +1,38 @@
+episode:
+  id: showcase_props
+  title: 展示：道具拿取与交接
+  language: zh-CN
+
+# Minimal showcase: physical prop choreography — the thermos starts on the
+# FLOOR so the pickup demonstrates the physics-driven waist bend + crouch;
+# the handover binds on real hand contact; the putdown drops it onto the
+# declared counter support.
+
+actors:
+  lin:
+    use: figure/lin_b_draft
+    voice: voice/zh/lin
+  awei:
+    use: figure/lin_b_draft
+    voice: voice/zh/awei
+
+locations:
+  canteen:
+    use: set/canteen_counter_m3
+
+objects:
+  thermos:
+    use: prop/thermos
+
+scenes:
+  - id: props
+    location: canteen
+    actors:
+      lin: {facing: awei}
+      awei: {facing: lin}
+    objects:
+      thermos: center
+    script:
+      - lin: "{pose.orient(lin, 'front'), pose.orient(awei, 'front')}{prop.pickup(lin, thermos)}你的保温杯，掉地上了，捡到了。"
+      - lin: "{prop.handover(lin, thermos, awei)}给。"
+      - awei: "谢了，放柜台上。"
