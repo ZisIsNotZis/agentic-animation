@@ -79,6 +79,23 @@ test("declared blend and opacity reach the layer element; defaults add nothing",
   assert.match(foreground, /mix-blend-mode:screen/);
 });
 
+test("luminosity-preserving blend modes reach the layer element (M4 ink seam)", () => {
+  const manifest = layeredManifest();
+  manifest.sceneTrack![0]!.setLayers = [
+    {id: "backdrop", foreground: false},
+    {id: "counter", foreground: false, blend: "color"},
+    {id: "counter-front", foreground: true, blend: "soft-light"},
+  ] as never;
+  const scene = sceneForFrame(manifest, 0);
+  const background = renderToStaticMarkup(React.createElement(PerformanceStage, {scene}));
+  // The declared mode is applied verbatim: `color` keeps the backdrop's
+  // luminosity, which is what stops the wash flattening the drawn ink.
+  assert.match(background, /mix-blend-mode:color/);
+  assert.match(background, /data-set-blend="color"/);
+  const foreground = renderToStaticMarkup(React.createElement(PerformanceForegroundLayers, {scene}));
+  assert.match(foreground, /mix-blend-mode:soft-light/);
+});
+
 test("sets without declared layers keep the flat single-background path", () => {
   const manifest: PerformanceManifest = {
     video: {width: 1920, height: 1080, fps: 10},

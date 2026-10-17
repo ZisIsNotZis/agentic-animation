@@ -10,6 +10,7 @@ import {
   svgGroupElement,
   svgGroupIds,
 } from "../src/assets/setWorld";
+import {SET_LAYER_BLENDS} from "../src/schemas/libraryMeta";
 
 // Synthetic fixture sets only; library/ is never written by tests.
 function worldScene(counterTop = 390): string {
@@ -98,6 +99,22 @@ test("declared layer compositing is carried, defaulted to normal/1, and validate
     registryWith(compositedManifest().replace("0.5", "1.5"), compositedScene()),
     /opacity|less than or equal/i,
   );
+});
+
+test("every declared blend mode is carried through normalization, M3 modes unchanged", () => {
+  for (const blend of SET_LAYER_BLENDS) {
+    const manifest = {
+      coordinateSpace: "960x540",
+      layers: ["backdrop", {id: "pigment", blend}],
+    };
+    const world = normalizeSetWorld({manifest, sceneSvg: compositedScene()});
+    assert.deepEqual(world.layers[1], blend === "normal"
+      ? {id: "pigment", foreground: false}
+      : {id: "pigment", foreground: false, blend}, `blend ${blend} must reach the normalized layer`);
+  }
+  // The M4 seam only widened additively: the pre-M4 modes are still exactly these.
+  assert.deepEqual(SET_LAYER_BLENDS.slice(0, 3), ["normal", "multiply", "screen"]);
+  assert.deepEqual(SET_LAYER_BLENDS.slice(3), ["hue", "saturation", "color", "luminosity", "soft-light"]);
 });
 
 test("normalizes world declarations once from coordinateSpace units", () => {

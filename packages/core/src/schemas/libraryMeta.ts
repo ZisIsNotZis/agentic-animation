@@ -78,8 +78,14 @@ export const SetSupportSurfaceSchema = SupportSurfaceSchema.extend({
 }).strict();
 export type SetSupportSurface = z.infer<typeof SetSupportSurfaceSchema>;
 
-/** Compositing a declared set layer may request (M4 declaration). */
-export const SET_LAYER_BLENDS = ["normal", "multiply", "screen"] as const;
+/** Compositing a declared set layer may request (M4 declaration).
+ *
+ * `hue`/`saturation`/`color` are the CSS non-separable modes that keep the
+ * backdrop's luminosity, so a declared wash tints the drawn art without
+ * flattening its ink; `luminosity` is their counterpart and `soft-light` is the
+ * separable mode whose change scales with the backdrop (measured in
+ * docs/ART_MATERIALS_M4.md). All are applied verbatim as `mix-blend-mode`. */
+export const SET_LAYER_BLENDS = ["normal", "multiply", "screen", "hue", "saturation", "color", "luminosity", "soft-light"] as const;
 export type SetLayerBlend = typeof SET_LAYER_BLENDS[number];
 
 /**
