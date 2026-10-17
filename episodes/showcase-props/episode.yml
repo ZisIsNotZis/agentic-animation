@@ -18,7 +18,7 @@ actors:
 
 locations:
   canteen:
-    use: set/school_canteen
+    use: set/canteen_counter_m3
 
 objects:
   thermos:

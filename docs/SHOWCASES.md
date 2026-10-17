@@ -13,7 +13,7 @@ bound to their own voice resources.
 | `showcase-actions` | Blocking timed actions, per-call `{...call, durationSec}` override, `mode: "nonblock"` layering |
 | `showcase-camera` | `camera.punch_in` / `camera.wide`, semantic `movement.to` locomotion |
 | `showcase-effects` | `effect.*` resources (`lights_down`, `ai_glitch`, `screen_error`) layered with `sound.*` cues |
-| `showcase-props` | Object-subject `prop.pickup` / `prop.handover` / `prop.putdown` with support settling |
+| `showcase-props` | Object-subject `prop.pickup` / `prop.handover` / `prop.putdown` with support settling; rendered on the M3 set `set/canteen_counter_m3` |
 | `showcase-voice` | `voice.speed` state, `voice.interrupt` cut-in, `music.ending` closing cue |
 | `showcase-snow` | `particle.snow` deterministic snowfall, `music.xuehua` BGM loop, collapse + scream beat |
 

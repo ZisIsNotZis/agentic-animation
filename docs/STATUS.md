@@ -28,7 +28,15 @@ Current M2 evidence, remaining limits and next actions are owned only by
 Task history and independent documentation findings live in the
 [readiness ticket](tickets/M2-DOC-READINESS.md); historical STATUS evidence is
 preserved in the [STATUS repair ticket](tickets/M2-STATUS-REPAIR.md).
-M3–M8 are planned, not delivered.
+M3–M8: M3 is delivered and judged met — the user said “Looks good enough” at
+the gate bundle `m3-20261016T2305+0800`
+([tickets/M3-MILESTONE-ACCEPTANCE.md](tickets/M3-MILESTONE-ACCEPTANCE.md));
+`set/canteen_counter_m3` now backs the canteen scene in `showcase-props`,
+while every legacy set stays installed. One M3 criterion is honestly failing
+and routed onward: the putdown is geometrically on the painted top but
+occluded by the clustered receiver
+([ticket](tickets/BACKLOG-M5-PUTDOWN-VISIBILITY.md)). M4–M8 are planned, not
+delivered.
 
 ## Motion and demonstrations
 
