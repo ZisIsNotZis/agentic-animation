@@ -374,39 +374,82 @@
        No filters, no raster, no per-actor projected shadow (see the M4 non-goals).
   -->
   <g id="material_pigment">
+    <defs>
+      <!-- A region glaze ends on drawn geometry or not at all: where a wash's own
+           footprint stops on flat art, its fill is a ramp in the element's own box
+           (objectBoundingBox) instead of a flat colour, so the wash fades out over
+           120-190 art units rather than stepping. The direction is the one that is
+           free; the other sides already sit on a painted edge. Five definitions,
+           five users, and no glaze presents a straight edge over plain paper, which
+           is what the third review named as composite seam cuts
+           (VISION-REVIEW-3.md P0). -->
+      <linearGradient id="m4_pig_dado_low" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#c9b78f" stop-opacity="0"/>
+        <stop offset="1" stop-color="#c9b78f" stop-opacity="0.104"/>
+      </linearGradient>
+      <linearGradient id="m4_pig_floor_depth" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#dcb086" stop-opacity="0.13"/>
+        <stop offset="0.4" stop-color="#8a745a" stop-opacity="0.10"/>
+        <stop offset="1" stop-color="#8a745a" stop-opacity="0.14"/>
+      </linearGradient>
+      <radialGradient id="m4_pig_floor_cool">
+        <stop offset="0" stop-color="#7d7f78" stop-opacity="0.13"/>
+        <stop offset="0.6" stop-color="#7d7f78" stop-opacity="0.08"/>
+        <stop offset="1" stop-color="#7d7f78" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="m4_pig_counter_low" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#8a5a40" stop-opacity="0"/>
+        <stop offset="1" stop-color="#8a5a40" stop-opacity="0.13"/>
+      </linearGradient>
+      <linearGradient id="m4_pig_board_ground" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#8a745a" stop-opacity="0"/>
+        <stop offset="1" stop-color="#8a745a" stop-opacity="0.104"/>
+      </linearGradient>
+      <linearGradient id="m4_pig_cooler" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#587f7a" stop-opacity="0.156"/>
+        <stop offset="1" stop-color="#587f7a" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
     <g mask="url(#m4_prop_hold_off)">
     <!-- region palettes: each region its own pigment family, warm key glaze on the
          window side, cool ambient fill on the shaded side. The broad glazes are held
          off the drawn props by the shared feathered matte, so a glaze cannot flatten
-         a prop's ink (the props' own pigment rects below are unaffected); see
-         ART_MATERIALS_M4.md for the measured ink retention and render cost. -->
+         a prop's ink, and the props carry no pigment rect of their own: a wash laid
+         inside a prop's box is a translucent panel whose edges the art does not draw
+         (the bowl stack's cream panel was a visible box on the dark chalkboard).
+         See ART_MATERIALS_M4.md for the measured ink retention and render cost. -->
     <path d="M0 0 L1000 0 L960 300 L1010 470 L980 640 L0 640 Z" fill="#f7e8c3" opacity="0.13"/>
     <path d="M1230 0 L1920 0 L1920 640 L1170 640 L1290 330 Z" fill="#8f9a93" opacity="0.104"/>
     <path d="M0 96 L520 78 L1080 104 L1520 84 L1920 108 L1920 0 L0 0 Z" fill="#c9b78f" opacity="0.156"/>
-    <path d="M0 552 L460 536 L980 566 L1440 540 L1920 572 L1920 640 L0 640 Z" fill="#c9b78f" opacity="0.104"/>
+    <path d="M0 552 L460 536 L980 566 L1440 540 L1920 572 L1920 640 L0 640 Z" fill="url(#m4_pig_dado_low)"/>
     <rect x="0" y="470" width="1920" height="170" fill="#a8977a" opacity="0.117"/>
-    <path d="M0 640 L1920 640 L1920 726 L0 726 Z" fill="#dcb086" opacity="0.13"/>
-    <path d="M60 700 L700 690 L1180 714 L1620 698 L1920 730 L1920 878 L0 878 Z" fill="#8a745a" opacity="0.104"/>
-    <path d="M1060 866 L1920 842 L1920 1080 L940 1080 Z" fill="#7d7f78" opacity="0.104"/>
-    <path d="M0 900 L660 918 L1180 936 L1920 980 L1920 1080 L0 1080 Z" fill="#8a745a" opacity="0.104"/>
+    <rect x="0" y="640" width="1920" height="440" fill="url(#m4_pig_floor_depth)"/>
+    <rect x="940" y="860" width="980" height="220" fill="url(#m4_pig_floor_cool)"/>
     <path d="M240 430 L740 430 L720 660 L240 660 Z" fill="#c98d6b" opacity="0.208"/>
     <path d="M1220 430 L1680 430 L1680 660 L1180 660 Z" fill="#8a5a40" opacity="0.182"/>
-    <path d="M240 596 L1680 596 L1680 660 L240 660 Z" fill="#8a5a40" opacity="0.13"/>
+    <path d="M240 596 L1680 596 L1680 660 L240 660 Z" fill="url(#m4_pig_counter_low)"/>
     <path d="M300 368 L1620 368 L1640 392 L286 392 Z" fill="#dcb086" opacity="0.234"/>
     <path d="M1180 368 L1620 368 L1680 430 L1300 430 Z" fill="#b98f70" opacity="0.156"/>
-    <path d="M1600 470 L1690 470 L1690 780 L1600 780 Z" fill="#587f7a" opacity="0.156"/>
-    <path d="M1672 600 L1878 600 L1878 800 L1672 800 Z" fill="#8a745a" opacity="0.104"/>
+    <path d="M1600 470 L1690 470 L1690 780 L1600 780 Z" fill="url(#m4_pig_cooler)"/>
+    <path d="M1672 600 L1878 600 L1878 800 L1672 800 Z" fill="url(#m4_pig_board_ground)"/>
     <path d="M322 372 L1598 372 L1598 392 L322 392 Z" fill="#355f63" opacity="0.182"/>
     <path d="M1300 1080 L1920 900 L1920 952 L1420 1080 Z" fill="#dcb086" opacity="0.13"/>
     </g>
-    <!-- the small props carry their own pigment family inside their own box -->
-    <rect x="592" y="232" width="348" height="164" fill="#f7e8c3" opacity="0.06"/>
-    <rect x="1432" y="300" width="164" height="106" fill="#eadcbb" opacity="0.07"/>
-    <rect x="326" y="254" width="250" height="124" fill="#dbe4e0" opacity="0.07"/>
-    <rect x="1630" y="880" width="222" height="178" fill="#c79878" opacity="0.08"/>
   </g>
 
   <g id="material_detail">
+    <defs>
+      <!-- A joint gathers ink: short 45-degree fibres in a narrow band over the
+           painted seam, as a pattern rather than a stroke or a ramp, so the band has
+           no straight edge of its own. A flat 1.2-unit stroke here changed the
+           composite by five levels along a straight line (VISION-REVIEW-3.md P0) and
+           a 16-unit ramp measured 6.0; a pattern boundary is ragged at the fibre
+           scale, which is what makes the mark carry weight without an edge. -->
+      <pattern id="m4_joint_ink" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
+        <path d="M1.6 2.2 L5.4 2.8" stroke="#d9a884" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
+        <path d="M3.4 5.4 L6.2 5.9" stroke="#e6c39b" stroke-width="1.1" stroke-linecap="round" opacity="0.38"/>
+      </pattern>
+    </defs>
     <!-- far art: thin, low-contrast secondary lines (aerial perspective) -->
     <g stroke="#6b7a72" fill="none" stroke-width="1.6" opacity="0.4" stroke-linecap="round">
       <path d="M140 130 L500 130 M140 410 L500 410 M112 102 L112 462 M528 102 L528 462"/>
@@ -418,8 +461,18 @@
       <path d="M300 368 L1620 368" stroke="#e6c39b" stroke-width="2.6" opacity="0.5"/>
       <path d="M240 430 L1680 430" stroke="#6d4630" stroke-width="2.4" opacity="0.45"/>
       <path d="M250 690 L1670 690" stroke="#5c4a3a" stroke-width="3" opacity="0.35"/>
-      <path d="M420 436 L420 654 M600 436 L600 654 M780 436 L780 654 M960 436 L960 654 M1140 436 L1140 654 M1320 436 L1320 654 M1500 436 L1500 654" stroke="#d9a884" stroke-width="1.2" opacity="0.3"/>
       <path d="M1300 1080 L1920 900" stroke="#e6c39b" stroke-width="3" opacity="0.4"/>
+    </g>
+    <!-- the counter's seven board joints: the base art draws the seam, the pass
+         carries the joint's weight as a feathered band over it (m4_joint_band) -->
+    <g>
+      <rect x="408" y="430" width="24" height="230" fill="url(#m4_joint_ink)"/>
+      <rect x="588" y="430" width="24" height="230" fill="url(#m4_joint_ink)"/>
+      <rect x="768" y="430" width="24" height="230" fill="url(#m4_joint_ink)"/>
+      <rect x="948" y="430" width="24" height="230" fill="url(#m4_joint_ink)"/>
+      <rect x="1128" y="430" width="24" height="230" fill="url(#m4_joint_ink)"/>
+      <rect x="1308" y="430" width="24" height="230" fill="url(#m4_joint_ink)"/>
+      <rect x="1488" y="430" width="24" height="230" fill="url(#m4_joint_ink)"/>
     </g>
     <!-- Props are drawn by the M3 art alone. A pass above the set that restates their
          outlines also restates the parts the base art hides: the drinks cooler stands
@@ -498,6 +551,26 @@
       <pattern id="m4_shade_hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
         <path d="M2.4 3.0 L6.5 3.6" stroke="#424e46" stroke-width="1.2" stroke-linecap="round" opacity="0.22"/>
       </pattern>
+      <!-- Dry-brush ink is a deposit with a profile, not a stroke with two edges: a
+           flat 5-9 unit stroke on a plane junction put a 17-level step on the art it
+           sits over (VISION-REVIEW-3.md P0), so each band ramps from nothing at its
+           own top edge to a peak in the middle and back to nothing. Peaks carry the
+           same ink the strokes did: old width x old alpha over the new band height. -->
+      <linearGradient id="m4_dry_brush_h" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#424e46" stop-opacity="0"/>
+        <stop offset="0.5" stop-color="#424e46" stop-opacity="0.26"/>
+        <stop offset="1" stop-color="#424e46" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="m4_dry_brush_h_light" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#424e46" stop-opacity="0"/>
+        <stop offset="0.5" stop-color="#424e46" stop-opacity="0.18"/>
+        <stop offset="1" stop-color="#424e46" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="m4_dry_brush_v_light" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#424e46" stop-opacity="0"/>
+        <stop offset="0.5" stop-color="#424e46" stop-opacity="0.18"/>
+        <stop offset="1" stop-color="#424e46" stop-opacity="0"/>
+      </linearGradient>
     </defs>
     <!-- The wall carries the fine tooth; the mid-tone planes (wainscot, counter)
          carry the mixed one; the floor carries fibres drawn out flat, as a floor
@@ -522,12 +595,16 @@
       <path d="M0 946 L880 962 L1420 990 L1920 1030 L1920 1080 L0 1080 Z" opacity="0.34"/>
       <path d="M256 660 L1680 660 L1680 726 L240 726 Z" opacity="0.30"/>
     </g>
-    <!-- dry-brush ink edges: ink gathers where planes meet, never a blur -->
-    <g fill="none" stroke="#424e46" stroke-linecap="round">
-      <path d="M244 432 L1676 432 M250 664 L1670 664 M304 370 L1618 370" stroke-width="7" opacity="0.22"/>
-      <path d="M114 466 L524 466 M116 106 L116 458" stroke-width="5" opacity="0.18"/>
-      <path d="M1310 1076 L1914 906" stroke-width="9" opacity="0.22"/>
-      <path d="M0 642 L1920 642" stroke-width="8" opacity="0.16"/>
+    <!-- dry-brush ink edges: ink gathers where planes meet, drawn as bands that ramp
+         to zero at both of their own edges (see m4_dry_brush_* in the defs) -->
+    <g>
+      <rect x="244" y="426" width="1432" height="12" fill="url(#m4_dry_brush_h)"/>
+      <rect x="250" y="658" width="1420" height="12" fill="url(#m4_dry_brush_h)"/>
+      <rect x="304" y="364" width="1314" height="12" fill="url(#m4_dry_brush_h)"/>
+      <rect x="114" y="461" width="410" height="10" fill="url(#m4_dry_brush_h_light)"/>
+      <rect x="111" y="106" width="10" height="352" fill="url(#m4_dry_brush_v_light)"/>
+      <rect x="0" y="635" width="1920" height="10" fill="url(#m4_dry_brush_h_light)"/>
+      <path d="M1310 1076 L1914 906" stroke="#424e46" stroke-width="9" opacity="0.22" fill="none" stroke-linecap="round"/>
     </g>
   </g>
 
@@ -543,29 +620,59 @@
         <stop offset="0" stop-color="#68737a" stop-opacity="0"/>
         <stop offset="1" stop-color="#68737a" stop-opacity="0.16"/>
       </linearGradient>
+      <!-- Ambient occlusion and cast shadows as feathered pools. These have no
+           userSpaceOnUse geometry of their own: each element is filled with an
+           elliptical ramp inscribed in the element's own box (objectBoundingBox),
+           reaching zero on all four sides, so a patch can never present a straight
+           edge over art that has none. The flat-alpha bands these replace put 18-25
+           levels across one straight edge of plain wood (VISION-REVIEW-3.md P0), and
+           a peak is the flat value it replaces doubled, because an inscribed ellipse
+           averages about half its peak over its own area. One definition, fifteen
+           users: the patch footprints below are unchanged. -->
+      <radialGradient id="m4_ao_pool_20">
+        <stop offset="0" stop-color="#4a4238" stop-opacity="0.20"/>
+        <stop offset="0.5" stop-color="#4a4238" stop-opacity="0.12"/>
+        <stop offset="1" stop-color="#4a4238" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="m4_ao_pool_26">
+        <stop offset="0" stop-color="#4a4238" stop-opacity="0.26"/>
+        <stop offset="0.5" stop-color="#4a4238" stop-opacity="0.16"/>
+        <stop offset="1" stop-color="#4a4238" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="m4_ao_pool_32">
+        <stop offset="0" stop-color="#4a4238" stop-opacity="0.32"/>
+        <stop offset="0.5" stop-color="#4a4238" stop-opacity="0.19"/>
+        <stop offset="1" stop-color="#4a4238" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="m4_ao_pool_38">
+        <stop offset="0" stop-color="#4a4238" stop-opacity="0.38"/>
+        <stop offset="0.5" stop-color="#4a4238" stop-opacity="0.23"/>
+        <stop offset="1" stop-color="#4a4238" stop-opacity="0"/>
+      </radialGradient>
     </defs>
     <g mask="url(#m4_prop_hold_off)">
     <!-- one light map over the whole picture: falloff from the window plus cool fill -->
     <rect x="-240" y="-240" width="2400" height="1560" fill="url(#m4_light_falloff)"/>
     <rect x="880" y="-240" width="1280" height="1560" fill="url(#m4_cool_fill)"/>
     </g>
-    <!-- ambient occlusion where surfaces meet, and cast shadows to the right/back -->
-    <g fill="#4a4238">
-      <path d="M256 656 L1670 656 L1700 700 L232 700 Z" opacity="0.16"/>
-      <path d="M0 622 L1920 622 L1920 656 L0 656 Z" opacity="0.12"/>
-      <rect x="240" y="430" width="1440" height="10" opacity="0.18"/>
-      <path d="M1620 780 L1830 780 L1856 800 L1596 800 Z" opacity="0.14"/>
-      <path d="M118 742 L298 742 L318 762 L100 762 Z" opacity="0.14"/>
-      <path d="M136 642 L286 642 L304 660 L120 660 Z" opacity="0.12"/>
-      <path d="M46 900 L180 900 L190 918 L38 918 Z" opacity="0.14"/>
-      <path d="M1672 800 L1878 800 L1912 832 L1652 832 Z" opacity="0.12"/>
-      <path d="M1656 1039 L1830 992 L1856 1024 L1656 1074 Z" opacity="0.14"/>
-      <path d="M1300 1080 L1920 900 L1920 936 L1340 1080 Z" opacity="0.12"/>
-      <path d="M330 392 L1600 392 L1600 406 L334 406 Z" opacity="0.10"/>
-      <path d="M330 356 L570 356 L570 368 L330 368 Z" opacity="0.12"/>
-      <path d="M1444 394 L1580 394 L1580 404 L1444 404 Z" opacity="0.12"/>
-      <path d="M251 688 L1672 688 L1706 740 L226 740 Z" opacity="0.10"/>
-      <path d="M0 0 L1920 0 L1920 44 L0 44 Z" opacity="0.12"/>
+    <!-- ambient occlusion where surfaces meet, and cast shadows to the right/back,
+         each a feathered pool (see m4_ao_pool_* in the defs above) -->
+    <g>
+      <path d="M256 656 L1670 656 L1700 700 L232 700 Z" fill="url(#m4_ao_pool_32)"/>
+      <path d="M0 622 L1920 622 L1920 656 L0 656 Z" fill="url(#m4_ao_pool_26)"/>
+      <rect x="240" y="430" width="1440" height="10" fill="url(#m4_ao_pool_38)"/>
+      <path d="M1620 780 L1830 780 L1856 800 L1596 800 Z" fill="url(#m4_ao_pool_32)"/>
+      <path d="M118 742 L298 742 L318 762 L100 762 Z" fill="url(#m4_ao_pool_32)"/>
+      <path d="M136 642 L286 642 L304 660 L120 660 Z" fill="url(#m4_ao_pool_26)"/>
+      <path d="M46 900 L180 900 L190 918 L38 918 Z" fill="url(#m4_ao_pool_32)"/>
+      <path d="M1672 800 L1878 800 L1912 832 L1652 832 Z" fill="url(#m4_ao_pool_26)"/>
+      <path d="M1656 1039 L1830 992 L1856 1024 L1656 1074 Z" fill="url(#m4_ao_pool_32)"/>
+      <path d="M1300 1080 L1920 900 L1920 936 L1340 1080 Z" fill="url(#m4_ao_pool_26)"/>
+      <path d="M330 392 L1600 392 L1600 406 L334 406 Z" fill="url(#m4_ao_pool_20)"/>
+      <path d="M330 356 L570 356 L570 368 L330 368 Z" fill="url(#m4_ao_pool_26)"/>
+      <path d="M1444 394 L1580 394 L1580 404 L1444 404 Z" fill="url(#m4_ao_pool_26)"/>
+      <path d="M251 688 L1672 688 L1706 740 L226 740 Z" fill="url(#m4_ao_pool_20)"/>
+      <path d="M0 0 L1920 0 L1920 44 L0 44 Z" fill="url(#m4_ao_pool_26)"/>
     </g>
   </g>
 
