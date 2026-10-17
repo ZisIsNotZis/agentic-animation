@@ -1351,6 +1351,9 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             if (other.id !== state.id && other.holding === g.propId) {
               other.holding = null;
               other.holdRel = null;
+              other.holdShape = 0;
+              other.holdT = 0;
+              other.holdBreath = [0, 0];
               other.retract = other.reach !== null;
               other.grip = null;
               other.gripGoal = null;
