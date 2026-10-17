@@ -47,7 +47,21 @@ including the render-truth keys), which is why it is a package, not an edit.
    sampled at bind time (`state.propAngleAtBind = liveProp.rotation`, :1419)
    and never updated while held. A held object therefore stays in its
    world-upright bind orientation.
-3. **The holding hand reads as a fist, not a grasp.**
+3. **The holding hand reads as a fist, not a grasp. The obvious art is a
+   dead end (measured 2026-10-17).** The `*/grips/{l,r}.svg` files are
+   **byte-identical copies of the `fist` shape** — the same `<path d>` in 10/10
+   view/side pairs and 0 of 346 800 raster bytes different — so M2 never drew
+   grasp art, it relabelled a fist. The shape is one closed filled silhouette
+   with four crease strokes and a thumb stub *beside* the fingers, so a handle
+   cannot read as entering a wrap. An agent-drawn replacement was attempted and
+   **rejected on vision review**: it read as an angular mitten, the handle
+   stayed visibly detached, front/back/quarter were copies of one construction,
+   side was a different construction, and the thumb jutted backward. That
+   attempt is not committed. The lesson worth keeping: a grasp needs a cavity at
+   the grip anchor and a registered anchor, and the hand art's own origin must
+   coincide with that anchor or the fingers land beside the handle however the
+   socket is declared.
+   Historic note on the engine side:
    `FIGURE_HANDS = ["rest","open","point","fist","splayed"]`
    (`packages/core/src/schemas/figureArtwork.ts:8`) has no grasp shape, so
    there is nothing to render a wrapping hand with. M2 did produce
