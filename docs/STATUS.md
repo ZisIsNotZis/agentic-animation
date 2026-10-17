@@ -32,10 +32,13 @@ M3–M8: M3 is delivered and judged met — the user said “Looks good enough�
 the gate bundle `m3-20261016T2305+0800`
 ([tickets/M3-MILESTONE-ACCEPTANCE.md](tickets/M3-MILESTONE-ACCEPTANCE.md));
 `set/canteen_counter_m3` now backs the canteen scene in `showcase-props`,
-while every legacy set stays installed. One M3 criterion is honestly failing
+while every legacy set stays installed. One M3 criterion was honestly failing
 and routed onward: the putdown is geometrically on the painted top but
 occluded by the clustered receiver
-([ticket](tickets/BACKLOG-M5-PUTDOWN-VISIBILITY.md)). M4 is delivered and awaiting the
+([ticket](tickets/BACKLOG-M5-PUTDOWN-VISIBILITY.md)). M5 WP3 closes it on
+`episodes/m5-acting`: the rest is clear of the bodies with the carrying
+step-back and shaped placement (measured in [ART_ACTING_M5](ART_ACTING_M5.md));
+M5 remains at its own gate. M4 is delivered and awaiting the
 user's milestone judgment: the materials/light treatment composites with
 non-luminance blend modes (`color` for pigment, `soft-light` for both light
 passes), so ink contrast is 0.964–1.063 in all eight regions with no matte,

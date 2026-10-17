@@ -19,5 +19,6 @@ The remaining routes are M5-domain motor work: post-bind posture recovery
 before walk (walk-initiation ease), smooth carry facing flips, or handover
 separation stepping.
 
-M3 gate status: the Function putdown-visibility criterion is honestly marked
-FAILING in the bundle MANIFEST with this routing; all other criteria pass.
+M3 gate status at the time: the Function putdown-visibility criterion was
+honestly marked FAILING in the bundle MANIFEST with this routing; all other
+criteria passed. Superseded by the closure above.
