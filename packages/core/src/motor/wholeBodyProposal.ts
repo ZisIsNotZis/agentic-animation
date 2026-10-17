@@ -1,5 +1,6 @@
 import {isDeepStrictEqual} from 'node:util';
 import {solveSkeleton,legDropInterval,type SkeletonPose} from './skeleton';
+import {renderedHandWorld} from './reach';
 import type {Skeleton} from '../schemas/libraryMeta';
 
 type Point = [number,number];
@@ -127,7 +128,16 @@ function validateState(before:WholeBodyState,after:WholeBodyState,elapsed:number
       check('sole-height',Math.abs(foot[1]+a.soleOffset[side]-a.y),.02,{actor:id,joint:`foot_${side}`});
     }
     if(a.palmTarget){
-      check('palm-contact',distance(joints.hand_r!,a.palmTarget),.02,{actor:id,joint:'hand_r'});
+      // The palm check compares the DRAWN hand with the motor's world reach
+      // point, so it must use the renderer's arm composition (reach.ts).
+      // solveSkeleton's arm chain mirrors the rest vectors by `facing` and is
+      // not the render truth for a mirrored native figure: at a raised aim the
+      // two diverge by the hand radius and the proposal freezes the beat.
+      const drawnHand=renderedHandWorld({x:a.x,y:a.y+(a.pose.waistY??0)*a.scale,scale:a.scale,
+        flip:a.flipped,motor:true,waist:a.pose.waistPitch??0,lean:0,skeleton:a.skeleton},
+        a.pose.armR??{upper:0,lower:0},a.flipped);
+      if(process.env.ANIM_DEBUG_PALM==='1'&&distance(drawnHand,a.palmTarget)>0.02)console.error('PALM',id,'drawn',drawnHand.map(v=>+v.toFixed(2)),'target',a.palmTarget.map(v=>+v.toFixed(2)),'pose',JSON.stringify(a.pose.armR),'waist',a.pose.waistPitch,'drop',a.pose.waistY,'x',a.x,'y',a.y,'scale',a.scale,'flip',a.flipped);
+      check('palm-contact',distance(drawnHand,a.palmTarget),.02,{actor:id,joint:'hand_r'});
       const loaded=Object.values(after.props).some(p=>p.owner===id)||Object.values(before.props).some(p=>p.owner===id);
       if(old.palmTarget&&!loaded)check('incoming-palm-rate',distance(a.palmTarget,old.palmTarget),480*elapsed,{actor:id,joint:'hand_r'});
     }

@@ -346,8 +346,10 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
             };
           }
           const grip=placement?.grip ? {at:[(placement.grip.at[0]-100)*scale,(placement.grip.at[1]-(placement.base??160))*scale] as [number,number],radius:placement.grip.radius*scale,depth:placement.grip.depth} : undefined;
-          // Motor-driven renderer uses scale1 (propState), independently of grip staging.
-          const solid=isThermosArt(id) ? transformSolid(thermosSolid,placement?.size??[200,160],placement?.base??160,1) : undefined;
+          // The prop is drawn at its staged scale about its base anchor, so the
+          // motor's solid must be scaled the same way: otherwise a placed prop
+          // rests (4 - 4*scale) px off the surface it is drawn against.
+          const solid=isThermosArt(id) ? transformSolid(thermosSolid,placement?.size??[200,160],placement?.base??160,scale) : undefined;
           return [id, {at: staged.at, size: placement?.size, scale, touchBox, grip, solid}];
         })),
         tracks: sceneTracks as never,

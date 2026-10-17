@@ -170,6 +170,17 @@ const PLACE_OUT_FRACTION = 0.5;
 /** M5 putdown visibility: seconds a carrying step-back spends replanting its
  *  feet under the body before it translates. */
 const WALK_EASE_SEC = 0.3;
+/** World-px corridor kept between two drawn bodies (torso+head). */
+const BODY_GAP = 0;
+/** A shaped reach gesture's hand travels at 55% of the 480 px/s cap away from
+ *  the key pose, so its authored interval must cover the slow leg plus a held
+ *  key pose; otherwise the beat ends mid-travel and never shows the pose. */
+const GESTURE_SLOW_SPEED = 480 * 0.55;
+const KEYPOSE_HOLD_SEC = 0.2;
+/** A point aims along the arm's BONE reach, not at the hand-radius-inclusive
+ *  cap: at 0.94 of (upper+fore) the drawn elbow keeps a ~36° bend (interior
+ *  ~144°) — an extended arm, not a folded forearm and not a straight rod. */
+const POINT_BONE_EXTENSION = 0.94;
 /** Gesture envelopes (slice 3 vocabulary): stylized joint-space magnitudes —
  *  the invariants (planted support, no contact) are what matter. */
 const BOW_PITCH = 28; // deg forward at the waist
@@ -705,6 +716,58 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     return [sh[0] + (0.35 / d) * state.body.armReach * k * 0.6 * geometryFacing(state), sh[1] + (0.94 / d) * state.body.armReach * k * 0.6];
   };
   const supportPoint = (prop:PropState) => prop.solid ? solidSupport(prop.solid,prop.rotation) : {x:0,y:0};
+  /** The waist pitch the figure's own artwork is drawn for (skeleton.json
+   *  `waist.pitchMax`). Authored acting stays inside it. A reach posture is a
+   *  physical necessity, not an acting choice: it may pitch as far as the
+   *  engine limit, but only after the search below has spent the least pitch
+   *  that touches, so a floor object is reached by squatting first. */
+  const actingPitchMax = (state: ActorState): number =>
+    Math.min(SPINE_MAX, state.skeleton?.waist?.pitchMax ?? SPINE_MAX);
+  const grabPitchMax = (state: ActorState): number => SPINE_MAX;
+  /**
+   * How far the DRAWN body (torso+head boxes, rotated about the waist by the
+   * pose's waist pitch) reaches from the actor's root toward world `dir`.
+   * Separation must use what the artwork draws: an upright half-width leaves a
+   * bowed torso and head overlapping the other actor. Arms are excluded — a
+   * handover is a hand meeting a hand across the gap on purpose.
+   */
+  const drawnBodyReach = (state: ActorState, dir: 1 | -1): number => {
+    const sk = state.skeleton;
+    if (!sk) return state.body.halfWidth * state.scale;
+    const pose = state.skeletonPose;
+    const pitch = (pose?.waistPitch ?? state.waist + state.lean) * Math.PI / 180;
+    const c = Math.cos(pitch), s = Math.sin(pitch);
+    const waist = sk.joints.waist!;
+    const center = sk.space.width / 2;
+    let reach = 0;
+    for (const key of ['torso', 'head'] as const) {
+      const box = (sk.parts[key] as {box?: [[number, number], [number, number]]} | undefined)?.box;
+      if (!box) continue;
+      const [a, b] = box;
+      for (const p of [[a[0], a[1]], [b[0], a[1]], [b[0], b[1]], [a[0], b[1]]] as [number, number][]) {
+        const dx = waist[0] + (p[0] - waist[0]) * c - (p[1] - waist[1]) * s;
+        reach = Math.max(reach, (dx - center) * state.facing * dir * state.scale);
+      }
+    }
+    return Math.max(reach, 0);
+  };
+  /** Root-to-root distance two actors' drawn bodies need before they touch. */
+  const separationGap = (a: ActorState, b: ActorState): number =>
+    drawnBodyReach(a, Math.sign(b.x - a.x) >= 0 ? 1 : -1)
+    + drawnBodyReach(b, Math.sign(a.x - b.x) >= 0 ? 1 : -1) + BODY_GAP;
+  /** Least-touch grab posture: least |waist pitch| first, then least crouch, so
+   *  a floor object is reached by squatting instead of folding the torso to the
+   *  point where the drawn figure reads as a ragdoll. */
+  const minimalTouchPosture = (state: ActorState, touches: (pitch: number, crouch: number) => boolean): {pitch: number; crouch: number} => {
+    const cap = grabPitchMax(state);
+    for (let p = 0; p <= cap; p += 1) {
+      for (let c = 0; c <= 1.0001; c += 0.25) {
+        if (touches(p, c)) return {pitch: p, crouch: c};
+        if (touches(-p, c)) return {pitch: -p, crouch: c};
+      }
+    }
+    return {pitch: cap * ((state.skeleton ? 1 : state.facing)), crouch: 1};
+  };
   /** M5 joint shaping (docs/WORLD_PUPPET_MOTOR.md): a shaped hold breathes —
    *  the hand (and the carried prop with it) drifts a few px against the
    *  shoulder, so the elbow and forearm keep moving instead of locking.
@@ -966,6 +1029,11 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             accent: Math.min(1, Math.max(0, Number(intent.accent ?? 0))),
             settle: Math.min(1, Math.max(0, Number(intent.settle ?? 0))),
             keyAt: null};
+          // A new reach owns the arm: an unfinished retract would otherwise
+          // hold its withdrawal influence at 0 and the gesture would never be
+          // drawn (the palm stays off its own reach point).
+          state.retract = false;
+          state.retractInfluence = 1;
         } else if (intent.intent === "fall") {
           // Fall-classified event (slice 4): balance cuts directly; the
           // authored duration scales the collapse span (face the target first,
@@ -1084,7 +1152,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         let nextX = state.x + dir * excess;
         for (const other of actors.values()) {
           if (other.id === state.id) continue;
-          const required = state.body.halfWidth * state.scale + other.body.halfWidth * other.scale;
+          const required = separationGap(state, other);
           if (dir > 0) nextX = Math.min(nextX, other.x - required);
           else nextX = Math.max(nextX, other.x + required);
         }
@@ -1143,7 +1211,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             // behind the walker must not clamp the arrival (it would reverse
             // the step — the backward correction the walk contract forbids).
             if ((other.x - state.x) * (arrival - state.x) <= 0) continue;
-            const required = state.body.halfWidth * state.scale + other.body.halfWidth * other.scale;
+            const required = separationGap(state, other);
             if (arrival >= state.x) arrival = Math.min(arrival, other.x - required);
             else arrival = Math.max(arrival, other.x + required);
           }
@@ -1170,7 +1238,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             if (other.id === state.id) continue;
             // Direction-of-travel guard: see the arrival clamp above.
             if ((other.x - state.x) * direction <= 0) continue;
-            const required = state.body.halfWidth * state.scale + other.body.halfWidth * other.scale;
+            const required = separationGap(state, other);
             const before = stepX;
             if (direction > 0) stepX = Math.min(stepX, other.x - required);
             else stepX = Math.max(stepX, other.x + required);
@@ -1274,7 +1342,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       for (const other of actors.values()) {
         if (other.id <= state.id) continue;
         const gap = Math.abs(other.x - state.x);
-        const required = state.body.halfWidth * state.scale + other.body.halfWidth * other.scale;
+        const required = separationGap(state, other);
         if (gap >= required || gap === 0) continue;
         const overlap = required - gap;
         const dir = Math.sign(state.x - other.x) || (state.facing as number);
@@ -1321,17 +1389,10 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         state.retract = false;
         if(state.skeletonViews){
           // Minimal-touch posture: least crouch, then least |pitch|.
-          let goalPitch = SPINE_MAX * ((aim[0] - state.x) * state.facing >= 0 ? 1 : -1);
-          let goalCrouch = 1;
-          search: for (let c = 0; c <= 1.0001; c += 0.25) {
-            for (let p = 0; p <= SPINE_MAX; p += 5) {
-              if (touches(p, c)) { goalPitch = p; goalCrouch = c; break search; }
-              if (touches(-p, c)) { goalPitch = -p; goalCrouch = c; break search; }
-            }
-          }
+          const goal = minimalTouchPosture(state, touches);
           const onset = state.skeletonViews ? smoothstep01(g.t / .5) : 1;
-          state.waist = approach(state.waist, goalPitch, WAIST_RATE * delta * onset);
-          state.crouch = approach(state.crouch, Math.max(goalCrouch,state.supportMinimum??0), CROUCH_RATE * delta * onset);
+          state.waist = approach(state.waist, goal.pitch, WAIST_RATE * delta * onset);
+          state.crouch = approach(state.crouch, Math.max(goal.crouch,state.supportMinimum??0), CROUCH_RATE * delta * onset);
         }
         const targetHand = handTargetAt(state, aim, state.waist, state.crouch);
         const shNow=geometryShoulder(state),shBefore=state.reachShoulder??shNow;
@@ -1380,17 +1441,10 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           state.retract = true;
         } else if(!state.skeletonViews) {
           // Minimal-touch posture: least crouch, then least |pitch|.
-          let goalPitch = SPINE_MAX * ((aim[0] - state.x) * state.facing >= 0 ? 1 : -1);
-          let goalCrouch = 1;
-          search: for (let c = 0; c <= 1.0001; c += 0.25) {
-            for (let p = 0; p <= SPINE_MAX; p += 5) {
-              if (touches(p, c)) { goalPitch = p; goalCrouch = c; break search; }
-              if (touches(-p, c)) { goalPitch = -p; goalCrouch = c; break search; }
-            }
-          }
+          const goal = minimalTouchPosture(state, touches);
           const onset = state.skeletonViews ? smoothstep01(g.t / .5) : 1;
-          state.waist = approach(state.waist, goalPitch, WAIST_RATE * delta * onset);
-          state.crouch = approach(state.crouch, Math.max(goalCrouch,state.supportMinimum??0), CROUCH_RATE * delta * onset);
+          state.waist = approach(state.waist, goal.pitch, WAIST_RATE * delta * onset);
+          state.crouch = approach(state.crouch, Math.max(goal.crouch,state.supportMinimum??0), CROUCH_RATE * delta * onset);
         }
       }
       // Hold (I4): the bound prop's position IS the hand's position — through
@@ -1528,21 +1582,40 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         const g = state.handGesture;
         g.t += delta;
         const sh = geometryShoulder(state);
-        const arm = state.body.armReach * state.scale;
+        // Reach gestures aim along the arm's BONE reach, not the
+        // hand-radius-inclusive cap: a target beyond the bones is unreachable
+        // (the IK clamps, the palm misses its own reach point by the hand
+        // radius), and at the cap a point's elbow is almost straight.
+        const bone = (state.skeleton ? state.skeleton.arm.upper + state.skeleton.arm.fore : state.body.armReach) * state.scale;
         const aim: [number, number] = g.kind === "raise"
-          ? [sh[0] + state.facing * arm * 0.28, sh[1] - arm * 0.98]
+          ? [sh[0] + state.facing * bone * 0.28, sh[1] - bone * 0.98]
           : g.kind === "think"
-            ? [sh[0] + state.facing * arm * 0.06, sh[1] - arm * 0.42]
-            : [sh[0] + state.facing * arm * 0.94, sh[1] + (g.kind === "wave" ? Math.sin(g.t * 14) * arm * 0.05 : 0)];
+            ? [sh[0] + state.facing * bone * 0.06, sh[1] - bone * 0.42]
+            : g.kind === "point"
+              ? [sh[0] + state.facing * bone * POINT_BONE_EXTENSION, sh[1]]
+              : [sh[0] + state.facing * bone * 0.94, sh[1] + Math.sin(g.t * 14) * bone * 0.05];
         // M5 settle: once the key pose is reached the hand carries a decaying
         // overshoot past it (the span's direction, 6% of the span, at most
         // 14 px) and returns exactly to the aim — one overshoot, no oscillation.
         const span = Math.hypot(aim[0] - g.from[0], aim[1] - g.from[1]) || 1;
         const overshoot = settleOffset(span, g.settle, g.keyAt === null ? -1 : g.t - g.keyAt);
-        const goal: [number, number] = [aim[0] + (aim[0] - g.from[0]) / span * overshoot,
+        const overshot: [number, number] = [aim[0] + (aim[0] - g.from[0]) / span * overshoot,
           aim[1] + (aim[1] - g.from[1]) / span * overshoot];
+        // The overshoot is a hand excursion, and a hand cannot leave its arm:
+        // keep it inside the bone reach so the drawn palm still lands on the
+        // motor's reach point (the IK otherwise clamps and the palm-contact
+        // proposal rejects the beat).
+        const odx = overshot[0] - sh[0], ody = overshot[1] - sh[1], od = Math.hypot(odx, ody);
+        const goal: [number, number] = od > bone
+          ? [sh[0] + (odx / od) * bone, sh[1] + (ody / od) * bone] : overshot;
         const previous: [number, number] = state.reach ? [state.reach.tx, state.reach.ty] : restHandAt(state);
         const remaining = Math.hypot(aim[0] - previous[0], aim[1] - previous[1]);
+        // A shaped reach must reach and hold its key pose: away from the pose
+        // the accent runs at 55% of the hand cap, so an authored interval that
+        // only covers the fast leg ends mid-travel and never draws the pose.
+        if (g.keyAt === null && g.dur < g.t + remaining / GESTURE_SLOW_SPEED + KEYPOSE_HOLD_SEC) {
+          g.dur = g.t + remaining / GESTURE_SLOW_SPEED + KEYPOSE_HOLD_SEC;
+        }
         // M5 accent: hard acceleration into the key pose, slower elsewhere,
         // inside the unchanged 480 px/s hand cap.
         const hand = travelHand(previous, goal, 0,

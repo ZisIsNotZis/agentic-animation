@@ -21,7 +21,10 @@ episode:
 #   7 push        awei shoves lin; lin staggers and takes recovery steps
 #
 # `…` contributes the configured silent beat; the calls after the first are
-# scheduled against those beats, not against the previous call's duration.
+# scheduled against those beats, not against the previous call's duration. The
+# pickup statement carries nine beats on purpose: the receiver's approach starts
+# a fixed lead before the handover cue, so a short pickup would park him inside
+# the giver's bow arc and the drawn-body separation would have to slide him.
 
 actors:
   lin:
@@ -48,8 +51,9 @@ scenes:
     objects:
       thermos: center
     script:
-      # 1 pickup — five beats give the waist bend and the grab their time.
-      - lin: "{...prop.pickup(lin, thermos), anticipation: 0.3, accent: 0.8, settle: 0.5}……………"
+      # 1 pickup — nine beats: the squat-and-lift, then the time the giver
+      # needs to straighten before the receiver begins his approach.
+      - lin: "{...prop.pickup(lin, thermos), anticipation: 0.3, accent: 0.8, settle: 0.5}………………………"
       # 2 handover — two beats hold the bind and its settling weight shift.
       - awei: "{...prop.handover(lin, thermos, awei), accent: 0.85, settle: 0.55}……"
       # 3 step clear — the receiver returns to his mark, still facing the giver.

@@ -12,8 +12,16 @@
 /** Torso pre-roll: peak opposite lean (deg) and the longest pre-roll (s). */
 export const ANTICIPATION_LEAN = 10;
 export const ANTICIPATION_MAX_SEC = 0.4;
-/** Share of the pre-roll spent rising to the peak; the rest holds it. */
-export const ANTICIPATION_RISE = 0.6;
+/** Pre-roll shape, as shares of the pre-roll. A single linear ramp reads as a
+ *  rigid planar hinge, so the weight first eases the OTHER way (a small
+ *  counter-dip), then rises with a slow start and a fast release, then holds
+ *  the shifted weight until the beat starts. */
+export const ANTICIPATION_DIP = 0.2;
+export const ANTICIPATION_DIP_END = 0.3;
+export const ANTICIPATION_RISE_END = 0.72;
+/** Share of the pre-roll that actually travels up to the peak; the peak reach a
+ *  torso rate can deliver inside a pre-roll is proportional to it. */
+export const ANTICIPATION_RISE = ANTICIPATION_RISE_END - ANTICIPATION_DIP_END;
 
 export function smoothstep01(t: number): number {
   return t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
@@ -28,12 +36,22 @@ export function anticipationLean(preRollSec: number, rateDegPerSec: number): {pe
   return {peak, clamped: peak < ANTICIPATION_LEAN};
 }
 
-/** Pre-roll envelope 0..1 at `t` seconds: rise over the first 60%, then hold
- *  the shifted weight until the beat starts (the beat's own return is
- *  rate-limited by the channel it drives). */
+/** Pre-roll envelope at `t` seconds: counter-dip, slow-start/fast-release
+ *  rise, then a held shifted weight until the beat starts (the beat's own
+ *  return is rate-limited by the channel it drives). Negative values are the
+ *  dip: the envelope multiplies the peak lean, so -x is a small move the
+ *  other way. */
 export function anticipationEnvelope(t: number, preRollSec: number): number {
   if (!(preRollSec > 0)) return 0;
-  return smoothstep01(t / (preRollSec * ANTICIPATION_RISE));
+  const u = Math.min(1, Math.max(0, t / preRollSec));
+  if (u < ANTICIPATION_DIP_END) {
+    const dip = ANTICIPATION_DIP * Math.sin(Math.PI * (u / ANTICIPATION_DIP_END));
+    return dip === 0 ? 0 : -dip;
+  }
+  if (u >= ANTICIPATION_RISE_END) return 1;
+  const rise = (u - ANTICIPATION_DIP_END) / ANTICIPATION_RISE;
+  // Ease-in squared: a slower start than smoothstep, then a faster release.
+  return smoothstep01(rise) ** 2;
 }
 
 /** Accent: the acting hand's travel as a fraction of its own cap. Away from

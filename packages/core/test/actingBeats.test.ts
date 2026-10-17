@@ -128,12 +128,21 @@ test("M5 episode bake: support, ownership and the open putdown rest hold through
     const jump = Math.hypot(prop[i]!.x - prop[i - 1]!.x, prop[i]!.y - prop[i - 1]!.y);
     assert.ok(jump <= 60, `the thermos jumped ${jump.toFixed(1)}px at frame ${i}`);
   }
-  const rest = prop[150]!;
+  // The putdown rest is the released prop's settled frame: after the last time
+  // the prop moved (a released prop only falls or slides, never drifts).
+  const release = owners.every((entry) => entry.frames.length > 0)
+    ? Math.max(...owners.map((entry) => entry.frames.at(-1)!)) : -1;
+  assert.ok(release > 0, "the thermos is never released");
+  const restFrame = prop.findIndex((frame, index) => index > release
+    && Math.abs(frame.x - prop.at(-1)!.x) < 0.01 && Math.abs(frame.y - prop.at(-1)!.y) < 0.01);
+  const rest = prop[restFrame]!;
+  assert.ok(restFrame > release, "the prop never comes to rest");
   assert.ok(Math.abs(rest.y - 400) <= 8, `the putdown rest is off the painted top: y=${rest.y}`);
-  const aweiX = motor.actors.awei![150]!.x;
+  const aweiX = motor.actors.awei![restFrame]!.x;
   assert.ok(rest.x - aweiX > 110, `the rest is not clear of the holder: ${(rest.x - aweiX).toFixed(1)}px`);
   // The handover hold is shaped: the elbow and forearm keep moving.
-  const angles = motor.actors.awei!.slice(66, 136)
+  const holder = owners.find((entry) => entry.id === "awei")!;
+  const angles = motor.actors.awei!.slice(holder.frames[0]!, holder.frames.at(-1)! + 1)
     .flatMap((frame) => frame.skeletonPose?.armR ? [frame.skeletonPose.armR.upper + frame.skeletonPose.armR.lower] : []);
   assert.ok(Math.max(...angles) - Math.min(...angles) > 20, "the handover bind still locks the elbow and forearm");
 });

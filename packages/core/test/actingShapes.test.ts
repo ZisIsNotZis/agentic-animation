@@ -4,6 +4,7 @@ import {readFileSync} from "node:fs";
 import {simulateScene, type MotorActorInput, type MotorIntent, type MotorScene} from "../src/motor";
 import {
   ACCENT_NEAR, ACCENT_SLOW, ANTICIPATION_LEAN, SETTLE_MAX_PX, SETTLE_SEC,
+  ANTICIPATION_DIP, ANTICIPATION_DIP_END, ANTICIPATION_RISE, ANTICIPATION_RISE_END,
   accentSpeed, anticipationEnvelope, anticipationLean, settleOffset,
 } from "../src/motor/acting";
 
@@ -56,9 +57,27 @@ test("shape math: anticipation is bounded and clamped by the torso rate", () => 
   assert.deepEqual(anticipationLean(0.4, 120), {peak: ANTICIPATION_LEAN, clamped: false});
   const short = anticipationLean(0.02, 120);
   assert.equal(short.clamped, true);
-  assert.ok(short.peak < ANTICIPATION_LEAN && short.peak <= 120 * 0.02 * 0.6 + 1e-9, `clamped peak ${short.peak}`);
+  assert.ok(short.peak < ANTICIPATION_LEAN && short.peak <= 120 * 0.02 * ANTICIPATION_RISE + 1e-9, `clamped peak ${short.peak}`);
   assert.equal(anticipationEnvelope(0, 0.25), 0, "no lean before the beat");
   assert.equal(anticipationEnvelope(0.25, 0.25), 1, "the shifted weight is held at the beat's start");
+});
+
+test("shape math: the pre-roll counter-dips, starts slow and releases fast", () => {
+  const preRoll = 0.3;
+  const at = (u: number) => anticipationEnvelope(u * preRoll, preRoll);
+  // A rigid planar hinge would be one straight ramp; the profile is shaped.
+  assert.ok(at(0.08) < 0, `the weight first eases the other way: ${at(0.08)}`);
+  assert.ok(at(0.08) >= -ANTICIPATION_DIP - 1e-9, "the counter-dip stays small");
+  assert.equal(at(ANTICIPATION_DIP_END), 0, "the dip returns through rest before the shift");
+  const rise = [ANTICIPATION_DIP_END + 0.02, ANTICIPATION_DIP_END + 0.1, ANTICIPATION_RISE_END]
+    .map((u) => anticipationEnvelope(u * preRoll, preRoll));
+  assert.ok(rise[0]! < 0.1, `the rise starts slow: ${rise[0]}`);
+  assert.ok(rise[1]! < (rise[1]! + rise[2]!) / 2, "most of the travel happens late");
+  assert.equal(rise[2], 1, "the peak is reached before the beat starts");
+  // Late travel is faster than early travel (a release, not a linear ramp).
+  const early = at(ANTICIPATION_DIP_END + 0.12) - at(ANTICIPATION_DIP_END + 0.06);
+  const late = at(ANTICIPATION_RISE_END) - at(ANTICIPATION_RISE_END - 0.06);
+  assert.ok(late > early * 1.5, `release must be faster than the start: ${early} -> ${late}`);
 });
 
 test("anticipation: the torso leans opposite the motion and the beat starts later", () => {
@@ -83,7 +102,8 @@ test("anticipation: a pre-roll too short for the torso rate is clamped and repor
   const prepared = simulateScene(scene({intent: "move", target: "awei", anticipation: 0.02}));
   const diagnostic = (prepared.diagnostics ?? []).find((line) => line.startsWith("anticipation clamped"));
   assert.ok(diagnostic, `the clamp must be reported, got ${JSON.stringify(prepared.diagnostics)}`);
-  assert.ok(diagnostic.includes("1.4deg of the 10deg lean"), diagnostic);
+  const expected = anticipationLean(0.02, 120).peak;
+  assert.ok(diagnostic.includes(`${expected.toFixed(1)}deg of the ${ANTICIPATION_LEAN}deg lean`), diagnostic);
   // The baked lean may not exceed what the rate allows inside the pre-roll.
   const peakLean = Math.max(...prepared.actors.aqiang!.map((frame) => Math.abs(frame.lean)));
   assert.ok(peakLean <= 1.45, `clamped preparation stays inside the rate limit: ${peakLean}deg`);
