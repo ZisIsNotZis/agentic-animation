@@ -3,7 +3,12 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {simulateScene, type MotorActorInput, type MotorScene} from "../src/motor";
+import {solidSupport, thermosSolid, transformSolid} from "../src/motor/propGeometry";
 
+/** Stage space the compiled actor/prop frames are in; `supportSurfaces` is
+ *  stored normalized in stage width/height. */
+const STAGE_WIDTH = 1920;
+const STAGE_HEIGHT = 1080;
 const SKELETON: MotorActorInput["skeleton"] = JSON.parse(readFileSync(new URL("../../../library/figure/lin/skeleton.json", import.meta.url), "utf8"));
 const VIEWS: NonNullable<MotorActorInput["skeletonViews"]> = {
   front: SKELETON!, quarter: SKELETON!, side: SKELETON!, back: SKELETON!, quarter_back: SKELETON!,
@@ -137,7 +142,25 @@ test("M5 episode bake: support, ownership and the open putdown rest hold through
     && Math.abs(frame.x - prop.at(-1)!.x) < 0.01 && Math.abs(frame.y - prop.at(-1)!.y) < 0.01);
   const rest = prop[restFrame]!;
   assert.ok(restFrame > release, "the prop never comes to rest");
-  assert.ok(Math.abs(rest.y - 400) <= 8, `the putdown rest is off the painted top: y=${rest.y}`);
+  // The rest is the DRAWN base on the painted top, not the prop's anchor: the
+  // anchor is the art's base point inside a rotated solid, so comparing it with
+  // the surface measures the object's origin and goes blind to the object
+  // (an upright prop hides that; a rotated one does not). Same derivation as
+  // `actingInvariants` and the render-truth keys — `propGeometry.ts` is the one
+  // authority for the drawn contour.
+  const episodeScene = compiled.sceneTrack[0]!;
+  const placement = (compiled as unknown as {
+    assets: {objects: Record<string, {resolved?: {placement?: {size?: [number, number]; base?: number}}}>};
+  }).assets.objects.thermos?.resolved?.placement;
+  const solid = transformSolid(thermosSolid, placement?.size ?? [200, 160], placement?.base ?? 160,
+    episodeScene.staging.objects.thermos!.scale);
+  const lowest = solidSupport(solid, rest.rotation ?? 0);
+  const base = rest.y + lowest.y;
+  const surface = episodeScene.supportSurfaces?.find((entry) =>
+    rest.x + lowest.x >= entry.x[0] * STAGE_WIDTH && rest.x + lowest.x <= entry.x[1] * STAGE_WIDTH);
+  assert.ok(surface, `the putdown rest is off every declared support: x=${(rest.x + lowest.x).toFixed(2)}`);
+  assert.ok(Math.abs(base - surface.y * STAGE_HEIGHT) <= 1,
+    `the putdown rest's drawn base ${base.toFixed(2)} is not on the painted top ${(surface.y * STAGE_HEIGHT).toFixed(2)}`);
   const aweiX = motor.actors.awei![restFrame]!.x;
   assert.ok(rest.x - aweiX > 110, `the rest is not clear of the holder: ${(rest.x - aweiX).toFixed(1)}px`);
   // The handover hold is shaped: the elbow and forearm keep moving.

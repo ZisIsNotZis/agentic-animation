@@ -1528,7 +1528,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             // hand target is that mark back along the DECLARED handle socket. A
             // centre carry has no declared socket and keeps the hand mark, so a
             // prop that was already above the top is placed where it was held.
-            const socket = heldProp.grip
+            const socket: [number, number] = heldProp.grip
               ? rotateVector([-heldProp.grip.at[0], -heldProp.grip.at[1]], heldProp.rotation) : [0, 0];
             const targetHandY = state.place - supportPoint(heldProp).y - 6 - (state.grip?.oy ?? 0);
             // Travel from the PREVIOUS hand position (the carry pose recomputes
