@@ -178,9 +178,16 @@
 
   <!-- ==================== counter: top, front, kick, dressing off the resting band ==================== -->
   <g id="counter">
-    <!-- contact shadow on the floor -->
-    <path d="M256 690 L1664 690 L1700 716 L220 716 Z" fill="#4a4238" opacity="0.22"/>
-    <path d="M262 690 L1658 690 L1682 708 L238 708 Z" fill="#4a4238" opacity="0.25"/>
+    <!-- contact shadow on the floor: three nested footprints tighten the
+         value at the base so the counter reads as resting on the boards, not
+         floating above them (M4 review P2; docs/ART_ACTING_M5.md WP3) -->
+    <path d="M250 690 L1670 690 L1712 738 L208 738 Z" fill="#3c352c" opacity="0.20"/>
+    <path d="M256 690 L1664 690 L1692 716 L228 716 Z" fill="#3c352c" opacity="0.26"/>
+    <path d="M262 690 L1658 690 L1676 704 L244 704 Z" fill="#2f2a24" opacity="0.30"/>
+    <path d="M250 690 L1670 690" stroke="#2f2a24" stroke-width="4" opacity="0.35"/>
+    <!-- ambient occlusion where the base turns under at each end -->
+    <path d="M250 690 L250 660 L274 660 L274 690 Z" fill="#2f2a24" opacity="0.18"/>
+    <path d="M1670 690 L1670 660 L1646 660 L1646 690 Z" fill="#2f2a24" opacity="0.18"/>
     <!-- kick board -->
     <path d="M250 660 L1670 660 L1670 690 L250 690 Z" fill="#75694e" stroke="#424e46" stroke-width="3"/>
     <!-- front face (a step darker than the top so resting objects read against the top) -->
