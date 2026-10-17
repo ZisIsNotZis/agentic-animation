@@ -54,14 +54,17 @@ including the render-truth keys), which is why it is a package, not an edit.
    `library/figure/lin_b_draft/front/grips/{l,r}.svg`; nothing references them
    (`artwork.json` has zero occurrences of `grips`, no code path reads them) —
    orphan art.
-4. **Crouch/bend drops the hip but keeps the legs straight.**
-   `nativeCrouchDrop` returns half the shortest leg chain and its comment
-   states it "keeps at least half of each declared leg chain extended"
-   (`packages/core/src/motor/skeleton.ts:253-259`). Knee flexion exists in the
-   skeleton (`pose.legR/legL`, upper/lower angles, ±42° clamp) but is driven
-   only by the walk stride and the `collapsed` expression
-   (`packages/core/src/motor/actorPose.ts:380-382,578`), never by crouch. So a
-   low reach is a waist pivot on straight legs.
+4. **Crouch — this item was wrong and is withdrawn as stated.** Measured on the
+   native figure in the m5-acting bake at full crouch: `plantedLegAngles`
+   already solves the two-bone chain, giving 127.72° and 130.16° of knee
+   flexion with the feet exactly planted (`dx 0.0000`). The hip does not drop
+   onto straight legs. What is actually broken is narrower and was found while
+   checking: the rig **declares no leg-flexion envelope**, the ±42° gesture
+   clamp is applied in `deriveActorPose` and then overwritten so it never
+   binds, and at full crouch the drawn right knee sits at design y 724.5 with
+   the ground at 720, its ink ~20 stage px through the floor. The half-chain
+   capacity also folds both knees to screen-left because the declared legs are
+   not mirror-symmetric. Those are the R5 defects now.
 
 ## Prior record (why this is not new)
 
