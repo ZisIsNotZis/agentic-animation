@@ -29,7 +29,6 @@ document owning a contract before changing implementation or an episode.
 - [ART_CHARACTER_M2.md](ART_CHARACTER_M2.md): B-character identity/draft-rig work and canonical-engine integration boundary.
 - [ART_WORLD_M3.md](ART_WORLD_M3.md): M3 world contract — one coherent canteen set, set-metadata consumption, support agreement and package split.
 - [ART_MATERIALS_M4.md](ART_MATERIALS_M4.md): M4 materials/light contract — declared material and light passes, layer compositing declaration, layered ablation plan and limits.
-- [ART_MATERIALS_M4.md](ART_MATERIALS_M4.md): M4 materials/light contract — declared material and light passes, layer compositing declaration, layered ablation plan and limits.
 - [DECISIONS.md](DECISIONS.md): durable technology, licensing, and migration decisions.
 - [schemas/](schemas/): exported JSON Schema artifacts.
 
