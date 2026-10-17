@@ -262,4 +262,226 @@
       <path d="M1680 900 Q1664 870 1682 844" stroke-width="6" opacity="0.35"/>
     </g>
   </g>
+
+  <!-- ==================== M4 material passes (docs/ART_MATERIALS_M4.md) ====================
+       Layered treatment composited through the declared set-layer seam:
+         material_pigment — region palettes: each region its own pigment family,
+                            warm key glaze left / cool ambient fill right;
+         material_detail  — scale-keyed contours: small props restated at their own
+                            fine scale, near/large silhouettes weighted, far art thin;
+         material_paper   — paper tooth, 45-degree halftone in shade regions, dry-brush
+                            ink edges, paper kept in reserve over the window glass;
+         lighting_shade   — one light map: falloff from the left window, ambient
+                            occlusion bands, cast shadows to the right, cool fill;
+         lighting_key     — the same source as warm key: window pool, rim highlight
+                            and the actors' lit side (declared above the actor plane).
+       Every mark is static art: no pass has a temporal term, so no pass can flicker.
+       No filters, no raster, no per-actor projected shadow (see the M4 non-goals).
+  -->
+  <g id="material_pigment">
+    <!-- region palettes: each region its own pigment family, warm key glaze on the
+         window side, cool ambient fill on the shaded side. Alpha pigments only (no
+         blend modes, no masks): measured render cost, see ART_MATERIALS_M4.md. -->
+    <path d="M0 0 L1000 0 L960 300 L1010 470 L980 640 L0 640 Z" fill="#f7e8c3" opacity="0.10"/>
+    <path d="M1230 0 L1920 0 L1920 640 L1170 640 L1290 330 Z" fill="#8f9a93" opacity="0.08"/>
+    <path d="M0 96 L520 78 L1080 104 L1520 84 L1920 108 L1920 0 L0 0 Z" fill="#c9b78f" opacity="0.12"/>
+    <path d="M0 552 L460 536 L980 566 L1440 540 L1920 572 L1920 640 L0 640 Z" fill="#c9b78f" opacity="0.08"/>
+    <rect x="0" y="470" width="1920" height="170" fill="#a8977a" opacity="0.09"/>
+    <path d="M0 640 L1920 640 L1920 726 L0 726 Z" fill="#dcb086" opacity="0.10"/>
+    <path d="M60 700 L700 690 L1180 714 L1620 698 L1920 730 L1920 878 L0 878 Z" fill="#8a745a" opacity="0.08"/>
+    <path d="M1060 866 L1920 842 L1920 1080 L940 1080 Z" fill="#7d7f78" opacity="0.08"/>
+    <path d="M0 900 L660 918 L1180 936 L1920 980 L1920 1080 L0 1080 Z" fill="#8a745a" opacity="0.08"/>
+    <path d="M240 430 L740 430 L720 660 L240 660 Z" fill="#c98d6b" opacity="0.16"/>
+    <path d="M1220 430 L1680 430 L1680 660 L1180 660 Z" fill="#8a5a40" opacity="0.14"/>
+    <path d="M240 596 L1680 596 L1680 660 L240 660 Z" fill="#8a5a40" opacity="0.10"/>
+    <path d="M300 368 L1620 368 L1640 392 L286 392 Z" fill="#dcb086" opacity="0.18"/>
+    <path d="M1180 368 L1620 368 L1680 430 L1300 430 Z" fill="#b98f70" opacity="0.12"/>
+    <path d="M1600 470 L1690 470 L1690 780 L1600 780 Z" fill="#587f7a" opacity="0.12"/>
+    <path d="M1672 600 L1878 600 L1878 800 L1672 800 Z" fill="#8a745a" opacity="0.08"/>
+    <path d="M322 372 L1598 372 L1598 392 L322 392 Z" fill="#355f63" opacity="0.14"/>
+    <path d="M1300 1080 L1920 900 L1920 952 L1420 1080 Z" fill="#dcb086" opacity="0.10"/>
+    <!-- the small props carry their own pigment family inside their own box -->
+    <rect x="108" y="496" width="204" height="264" fill="#c08a63" opacity="0.10"/>
+    <rect x="592" y="232" width="348" height="164" fill="#f7e8c3" opacity="0.06"/>
+    <rect x="1602" y="504" width="224" height="178" fill="#587f7a" opacity="0.08"/>
+    <rect x="1432" y="300" width="164" height="106" fill="#eadcbb" opacity="0.07"/>
+    <rect x="326" y="254" width="250" height="124" fill="#dbe4e0" opacity="0.07"/>
+    <rect x="1630" y="880" width="222" height="178" fill="#c79878" opacity="0.08"/>
+  </g>
+
+  <g id="material_detail">
+    <!-- far art: thin, low-contrast secondary lines (aerial perspective) -->
+    <g stroke="#6b7a72" fill="none" stroke-width="1.6" opacity="0.4" stroke-linecap="round">
+      <path d="M140 130 L500 130 M140 410 L500 410 M112 102 L112 462 M528 102 L528 462"/>
+      <path d="M760 98 L1160 98 M760 212 L1160 212"/>
+      <path d="M1400 150 L1740 150 M1400 390 L1740 390"/>
+    </g>
+    <!-- big, near silhouettes carry a lighter and a darker line (contour weight) -->
+    <g fill="none" stroke-linecap="round">
+      <path d="M300 368 L1620 368" stroke="#e6c39b" stroke-width="2.6" opacity="0.5"/>
+      <path d="M240 430 L1680 430" stroke="#6d4630" stroke-width="2.4" opacity="0.45"/>
+      <path d="M250 690 L1670 690" stroke="#5c4a3a" stroke-width="3" opacity="0.35"/>
+      <path d="M420 436 L420 654 M600 436 L600 654 M780 436 L780 654 M960 436 L960 654 M1140 436 L1140 654 M1320 436 L1320 654 M1500 436 L1500 654" stroke="#d9a884" stroke-width="1.2" opacity="0.3"/>
+      <path d="M1300 1080 L1920 900" stroke="#e6c39b" stroke-width="3" opacity="0.4"/>
+    </g>
+    <!-- small props restated at their own fine scale, plus restored speculars -->
+    <g fill="none" stroke="#424e46" stroke-width="1.2" opacity="0.45" stroke-linecap="round">
+      <path d="M622 272 h58 v58 h-58 Z M696 284 h48 v46 h-48 Z M762 252 h66 v78 h-66 Z M846 280 h52 v50 h-52 Z"/>
+      <path d="M640 346 L664 372 M912 346 L888 372"/>
+      <path d="M1636 536 h22 v40 h-22 Z M1666 540 h20 v36 h-20 Z M1694 536 h22 v40 h-22 Z M1724 542 h20 v34 h-20 Z M1752 536 h22 v40 h-22 Z"/>
+      <path d="M1638 612 h20 v40 h-20 Z M1666 616 h22 v36 h-22 Z M1696 612 h20 v40 h-20 Z M1724 618 h22 v34 h-22 Z M1754 612 h20 v40 h-20 Z"/>
+      <path d="M1444 366 L1580 366 L1568 394 L1456 394 Z M1448 338 L1576 338 L1578 366 L1446 366 Z M1452 310 L1572 310 L1574 338 L1450 338 Z"/>
+      <path d="M330 356 h240 M342 268 h216 v90 h-216 Z"/>
+      <path d="M1656 1002 L1830 955 L1830 992 L1656 1039 Z M1656 962 L1830 915 L1830 953 L1656 1000 Z M1664 992 L1822 949 M1664 980 L1822 937 M1664 968 L1822 925"/>
+      <path d="M1700 946 L1792 921 L1792 899 L1700 924 Z"/>
+      <path d="M1700 924 L1792 899 M1656 962 L1830 915 M1656 1002 L1830 955 M1672 1015 L1846 968"/>
+      <path d="M1676 1000 L1676 1036 M1712 990 L1712 1026 M1748 980 L1748 1016 M1784 970 L1784 1006"/>
+      <path d="M648 352 h44 v34 h-44 Z"/>
+      <path d="M1636 536 h22 M1666 540 h20 M1694 536 h22 M1724 542 h20 M1752 536 h22 M1638 612 h20 M1666 616 h22 M1696 612 h20 M1724 618 h22 M1754 612 h20"/>
+      <path d="M1638 540 v30 M1668 544 v28 M1696 540 v30 M1726 546 v26 M1754 540 v30 M1640 616 v30 M1668 620 v28 M1698 616 v30 M1726 622 v26 M1756 616 v30"/>
+      <path d="M1444 338 a66 6 0 0 0 132 0 M1452 366 a66 6 0 0 0 124 0 M1444 366 a66 6 0 0 0 136 0 M1448 310 a62 6 0 0 0 128 0"/>
+      <path d="M1452 312 v50 M1572 312 v48 M1456 340 v52 M1568 340 v50 M1446 368 v24 M1578 368 v24"/>
+    </g>
+    <g fill="#fdf3d9" opacity="0.5">
+      <circle cx="634" cy="282" r="1.8"/><circle cx="770" cy="262" r="1.8"/><circle cx="856" cy="290" r="1.5"/>
+      <circle cx="1646" cy="544" r="1.4"/><circle cx="1704" cy="544" r="1.4"/><circle cx="1762" cy="544" r="1.4"/>
+      <circle cx="1648" cy="620" r="1.3"/><circle cx="1706" cy="620" r="1.3"/><circle cx="1764" cy="620" r="1.3"/>
+      <circle cx="1462" cy="322" r="1.5"/><circle cx="1466" cy="348" r="1.5"/><circle cx="1460" cy="374" r="1.4"/>
+      <circle cx="1700" cy="1006" r="1.5"/><circle cx="1704" cy="966" r="1.5"/>
+      <circle cx="1460" cy="338" r="1.5"/><circle cx="1462" cy="366" r="1.5"/><circle cx="1466" cy="312" r="1.4"/>
+      <circle cx="1746" cy="912" r="1.6"/><circle cx="1706" cy="928" r="1.4"/><circle cx="1790" cy="903" r="1.3"/>
+      <circle cx="1660" cy="540" r="1.3"/><circle cx="1728" cy="546" r="1.3"/><circle cx="1698" cy="618" r="1.2"/>
+    </g>
+    <!-- fruit, thermos band and runner edges recovered over the pigment -->
+    <g fill="none" stroke="#424e46" stroke-width="1.3" opacity="0.4" stroke-linecap="round">
+      <path d="M166 519 a17 17 0 1 0 0.1 0 M204 508 a18 18 0 1 0 0.1 0 M243 521 a16 16 0 1 0 0.1 0"/>
+      <path d="M322 372 L1598 372 M322 392 L1598 392"/>
+      <path d="M340 268 L540 268"/>
+    </g>
+    <g fill="#fff8e6" opacity="0.35">
+      <circle cx="159" cy="530" r="2.2"/><circle cx="197" cy="519" r="2.2"/><circle cx="237" cy="531" r="2"/>
+    </g>
+  </g>
+
+  <g id="material_paper">
+    <defs>
+      <!-- one cheap tile: a single hatch stroke and one grain dot, repeated by the
+           renderer over the region fills (per-tile shape count drives fill cost) -->
+      <pattern id="m4_paper_tooth" width="12" height="12" patternUnits="userSpaceOnUse">
+        <path d="M2.2 3.4 L4.6 2.2" stroke="#6b6152" stroke-width="0.8" stroke-linecap="round" opacity="0.18"/>
+        <circle cx="8.4" cy="8.6" r="0.6" fill="#5c5346" opacity="0.16"/>
+      </pattern>
+      <pattern id="m4_halftone" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <circle cx="4" cy="4" r="1.5" fill="#424e46" opacity="0.55"/>
+      </pattern>
+    </defs>
+    <!-- paper tooth over the sheet, kept in reserve over the window glass -->
+    <g fill="url(#m4_paper_tooth)">
+      <rect x="0" y="0" width="1920" height="126"/>
+      <rect x="0" y="126" width="134" height="292"/>
+      <rect x="506" y="126" width="1414" height="292"/>
+      <rect x="0" y="418" width="1920" height="662"/>
+    </g>
+    <!-- 45-degree halftone confined to the shade regions of the light model -->
+    <g fill="url(#m4_halftone)">
+      <path d="M1180 0 L1920 0 L1920 640 L1130 640 L1290 330 Z" opacity="0.5"/>
+      <path d="M1250 430 L1680 430 L1680 660 L1210 660 Z" opacity="0.45"/>
+      <path d="M0 946 L880 962 L1420 990 L1920 1030 L1920 1080 L0 1080 Z" opacity="0.5"/>
+      <path d="M256 660 L1680 660 L1680 726 L240 726 Z" opacity="0.45"/>
+    </g>
+    <!-- dry-brush ink edges: ink gathers where planes meet, never a blur -->
+    <g fill="none" stroke="#424e46" stroke-linecap="round">
+      <path d="M244 432 L1676 432 M250 664 L1670 664 M304 370 L1618 370" stroke-width="7" opacity="0.12"/>
+      <path d="M114 466 L524 466 M116 106 L116 458" stroke-width="5" opacity="0.1"/>
+      <path d="M1310 1076 L1914 906" stroke-width="9" opacity="0.12"/>
+      <path d="M0 642 L1920 642" stroke-width="8" opacity="0.08"/>
+    </g>
+  </g>
+
+  <g id="lighting_shade">
+    <defs>
+      <radialGradient id="m4_light_falloff" gradientUnits="userSpaceOnUse" cx="330" cy="290" r="1520">
+        <stop offset="0" stop-color="#6d6a60" stop-opacity="0"/>
+        <stop offset="0.42" stop-color="#665f57" stop-opacity="0.05"/>
+        <stop offset="0.76" stop-color="#585149" stop-opacity="0.16"/>
+        <stop offset="1" stop-color="#484239" stop-opacity="0.32"/>
+      </radialGradient>
+      <linearGradient id="m4_cool_fill" gradientUnits="userSpaceOnUse" x1="900" y1="0" x2="1920" y2="0">
+        <stop offset="0" stop-color="#5f6a72" stop-opacity="0"/>
+        <stop offset="1" stop-color="#5f6a72" stop-opacity="0.22"/>
+      </linearGradient>
+    </defs>
+    <!-- one light map over the whole picture: falloff from the window plus cool fill -->
+    <rect x="-240" y="-240" width="2400" height="1560" fill="url(#m4_light_falloff)"/>
+    <rect x="880" y="-240" width="1280" height="1560" fill="url(#m4_cool_fill)"/>
+    <!-- ambient occlusion where surfaces meet, and cast shadows to the right/back -->
+    <g fill="#4a4238">
+      <path d="M256 656 L1670 656 L1700 700 L232 700 Z" opacity="0.16"/>
+      <path d="M0 622 L1920 622 L1920 656 L0 656 Z" opacity="0.12"/>
+      <rect x="240" y="430" width="1440" height="10" opacity="0.18"/>
+      <path d="M1620 780 L1830 780 L1856 800 L1596 800 Z" opacity="0.14"/>
+      <path d="M118 742 L298 742 L318 762 L100 762 Z" opacity="0.14"/>
+      <path d="M136 642 L286 642 L304 660 L120 660 Z" opacity="0.12"/>
+      <path d="M46 900 L180 900 L190 918 L38 918 Z" opacity="0.14"/>
+      <path d="M1672 800 L1878 800 L1912 832 L1652 832 Z" opacity="0.12"/>
+      <path d="M1656 1039 L1830 992 L1856 1024 L1656 1074 Z" opacity="0.14"/>
+      <path d="M1300 1080 L1920 900 L1920 936 L1340 1080 Z" opacity="0.12"/>
+      <path d="M330 392 L1600 392 L1600 406 L334 406 Z" opacity="0.10"/>
+      <path d="M330 356 L570 356 L570 368 L330 368 Z" opacity="0.12"/>
+      <path d="M1444 394 L1580 394 L1580 404 L1444 404 Z" opacity="0.12"/>
+      <path d="M251 688 L1672 688 L1706 740 L226 740 Z" opacity="0.10"/>
+      <path d="M0 0 L1920 0 L1920 44 L0 44 Z" opacity="0.12"/>
+    </g>
+  </g>
+
+  <g id="lighting_key">
+    <defs>
+      <linearGradient id="m4_window_key" gradientUnits="userSpaceOnUse" x1="300" y1="250" x2="1780" y2="980">
+        <stop offset="0" stop-color="#fdf3d9" stop-opacity="0.16"/>
+        <stop offset="0.34" stop-color="#fdf3d9" stop-opacity="0.09"/>
+        <stop offset="0.72" stop-color="#fdf3d9" stop-opacity="0.03"/>
+        <stop offset="1" stop-color="#fdf3d9" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="m4_rim" gradientUnits="userSpaceOnUse" x1="112" y1="0" x2="560" y2="0">
+        <stop offset="0" stop-color="#fffaf0" stop-opacity="0"/>
+        <stop offset="0.5" stop-color="#fffaf0" stop-opacity="0.4"/>
+        <stop offset="1" stop-color="#fffaf0" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="m4_actor_lit" gradientUnits="userSpaceOnUse" x1="600" y1="0" x2="1380" y2="0">
+        <stop offset="0" stop-color="#fdf3d9" stop-opacity="0.07"/>
+        <stop offset="0.55" stop-color="#fdf3d9" stop-opacity="0.04"/>
+        <stop offset="1" stop-color="#fdf3d9" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <!-- the key light travelling from the window across the room, one gradient,
+         alpha-composited with a near-white pigment (the screen response at these
+         alphas) so the pass costs a fill, not a compositing layer -->
+    <!-- one even-odd fill: the whole-frame key with the small/typographic prop
+         boxes cut out as holes, so the key never washes them flat and the pass
+         costs one fill (no mask, no extra compositing layer) -->
+    <path fill-rule="evenodd" fill="url(#m4_window_key)" d="M-240 -240 H2160 V1320 H-240 Z M96 96 H548 V470 H96 Z M754 92 H1166 V218 H754 Z M592 232 H940 V396 H592 Z M326 254 H576 V378 H326 Z M1394 144 H1746 V396 H1394 Z M1432 300 H1596 V406 H1432 Z M108 496 H312 V760 H108 Z M1602 504 H1826 V682 H1602 Z M1666 586 H1884 V804 H1666 Z M1630 880 H1852 V1058 H1630 Z"/>
+    <path d="M140 462 L500 462 L780 668 L40 668 Z" fill="#fdf3d9" opacity="0.09"/>
+    <path d="M112 102 L528 102 L528 110 L112 110 Z" fill="url(#m4_rim)"/>
+    <path d="M98 438 L546 438 L546 448 L98 448 Z" fill="#fffaf0" opacity="0.22"/>
+    <!-- the same source reaching the actor plane -->
+    <path d="M596 400 L1380 400 L1380 1010 L596 1010 Z" fill="url(#m4_actor_lit)"/>
+    <!-- lit edges: the key catching the planes and the small props, which is how
+         small forms read as lit without a wash flattening their drawing -->
+    <g stroke="#fff3da" fill="none" stroke-linecap="round">
+      <path d="M300 368 L760 368" stroke-width="3" opacity="0.3"/>
+      <path d="M240 430 L520 430" stroke-width="2.5" opacity="0.22"/>
+      <path d="M1300 1080 L1920 900" stroke-width="3.5" opacity="0.26"/>
+      <path d="M622 274 L622 328 M696 286 L696 328 M762 254 L762 328 M846 282 L846 328" stroke-width="1.6" opacity="0.3"/>
+      <path d="M592 234 L940 234" stroke-width="1.6" opacity="0.22"/>
+      <path d="M1636 538 L1636 574 M1666 542 L1666 574 M1694 538 L1694 574 M1724 544 L1724 574 M1752 538 L1752 574" stroke-width="1.4" opacity="0.3"/>
+      <path d="M1446 312 L1446 362 M1450 340 L1450 364" stroke-width="1.4" opacity="0.28"/>
+      <path d="M136 546 L136 640 M118 644 L118 740" stroke-width="1.8" opacity="0.26"/>
+      <path d="M166 520 a17 17 0 0 0 -2 17 M204 509 a18 18 0 0 0 -2 17" stroke-width="1.4" opacity="0.3"/>
+      <path d="M1656 964 L1830 917 M1656 1004 L1830 957" stroke-width="1.6" opacity="0.22"/>
+      <path d="M342 270 L342 356 M348 268 L350 356" stroke-width="1.4" opacity="0.26"/>
+      <path d="M1404 152 L1404 388 M1410 150 L1412 388" stroke-width="1.4" opacity="0.2"/>
+      <path d="M1680 592 L1680 796 M1686 590 L1688 796" stroke-width="1.4" opacity="0.2"/>
+      <path d="M766 100 L766 208 M772 98 L774 208" stroke-width="1.4" opacity="0.2"/>
+    </g>
+  </g>
 </svg>
