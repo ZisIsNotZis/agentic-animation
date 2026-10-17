@@ -65,6 +65,13 @@ overlap, a placed prop's base on its declared support, and joint angles inside
 their documented envelopes.
 M6–M8 are planned, not delivered.
 
+## Rescue of lost M2 work (in progress 2026-10-17)
+
+The remote branches carry nothing; the archives' `workspace/library/` overlays
+carry the delta. Consequential loss: all cue audio, the thermos handle `grip`
+declaration, and the eight orientation QA episodes. Inventory, homes and
+acceptance: [RESCUE-LOST-M2-WORK](tickets/RESCUE-LOST-M2-WORK.md).
+
 ## Open acceptance carried from M2 (user-raised 2026-10-17)
 
 Carried-prop grasp: handle socket instead of centre, live prop orientation
