@@ -23,6 +23,19 @@ preserving weak artwork. Vector, layered raster, and limited sprite approaches
 are candidates, not already supported promises. Inspect renderer capabilities
 before selecting an integration. Physical geometry must match changed art.
 
+## Quality bar: coarse is correct (user decision 2026-10-17)
+
+Delivery was slower than the user wants, so the bar is explicit: a defect counts
+only when it is visible at **normal viewing size**, without a close-up. Inside
+that, prefer the convenient mechanism over the physically complete one, and
+spend effort on not looking wrong rather than on being exact. Two bounds the
+user named keep their force: a carried item must not read as spilling (a tilted
+cup, a thermos hanging at 90°) and a hand must not read as passing through the
+middle of a prop. Detail that only shows under magnification is not a defect to
+chase. Applied immediately: a carried prop keeps its authored orientation instead
+of swinging with the forearm, and a low reach may be split between crouch and
+waist rather than requiring one exact squat depth.
+
 ## Production sequence
 
 Story intent → art direction → visible keyframe → production-ready assets →
