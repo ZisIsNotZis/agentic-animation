@@ -167,9 +167,12 @@ declaration are recorded in the set manifest.
 
 ## Evidence, limits and next actions
 
-- Ablation stills and the numeric review live in a named archive bundle outside
-  Git (`/home/z/.local/share/agentic-animation/art-baselines/…`); no generated
-  media is committed and no evidence archive is touched.
+- Ablation stills, the numeric review and the recovery note live in the archive
+  bundle `m4-20261017T110548+0800`
+  (`/home/z/.local/share/agentic-animation/art-baselines/`), which carries
+  `analysis.json`, `stills/ablation/{a0..a4,loo-*}`, `clips/`, `scripts/` and
+  `RECOVERY.md`; no generated media is committed and no evidence archive is
+  touched.
 - **Limit, disclosed:** this worker session has no image modality, so criterion
   "inspected by you" cannot be a perceptual claim from this worker. The
   perceptual verdict (does it read as one medium, is the light coherent, is any
