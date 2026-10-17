@@ -1,4 +1,4 @@
-import {isThermosArt,thermosSolid,transformSolid} from "../motor/propGeometry";
+import {isThermosArt,stagedGrip,thermosSolid,transformSolid} from "../motor/propGeometry";
 import {
   type NarrowEpisode,
   type ProcedureCall,
@@ -345,7 +345,7 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
               b: [(bx1 - 100) * scale, -(base - by1) * scale],
             };
           }
-          const grip=placement?.grip ? {at:[(placement.grip.at[0]-100)*scale,(placement.grip.at[1]-(placement.base??160))*scale] as [number,number],radius:placement.grip.radius*scale,depth:placement.grip.depth} : undefined;
+          const grip=placement?.grip ? stagedGrip(placement.grip,placement.base??160,scale) : undefined;
           // The prop is drawn at its staged scale about its base anchor, so the
           // motor's solid must be scaled the same way: otherwise a placed prop
           // rests (4 - 4*scale) px off the surface it is drawn against.

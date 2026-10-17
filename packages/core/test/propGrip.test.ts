@@ -9,7 +9,23 @@ import type {Skeleton} from '../src/schemas/libraryMeta';
 import {FIGURE_VIEWS,type FigureView} from '../src/schemas/figureArtwork';
 import {loadAssetRegistry} from '../src/assets/registry';
 import {simulateScene} from '../src/motor';
+import {stagedGrip,thermosHandle,thermosSolid,transformSolid,type PropSolid} from '../src/motor/propGeometry';
+import {renderedHandWorld} from '../src/motor/reach';
 import {nativeDraftArtworkFixture} from './helpers/figureArtwork';
+
+/** Distance from a point to a prop's DRAWN ink, in prop-local staged px: `<= 0`
+ *  means the point lies on painted geometry. The solid's quadratics are sampled,
+ *  which is exact at the curve nodes a handle bar is authored on. */
+const inkDistance=(solid:PropSolid,point:[number,number]):number=>Math.min(...solid.map(shape=>{
+  let nearest=Infinity;
+  for(let step=0;step<=32;step++){
+    const t=step/32,u=1-t,[a,b,d]=shape.points;
+    const x=d?u*u*a[0]+2*u*t*b[0]+t*t*d[0]:u*a[0]+t*b[0];
+    const y=d?u*u*a[1]+2*u*t*b[1]+t*t*d[1]:u*a[1]+t*b[1];
+    nearest=Math.min(nearest,Math.hypot(point[0]-x,point[1]-y));
+  }
+  return nearest-shape.ink[0];
+}));
 
 test('prop placement validates optional intrinsic handle geometry without changing legacy placement',()=>{
   const legacy=PropPlacementSchema.parse({base:132});
@@ -27,62 +43,74 @@ test('registry carries a validated handle socket from prop placement',async(t)=>
   assert.deepEqual((asset as {placement?:{grip:unknown}}).placement?.grip,{at:[148,76],radius:3,depth:'behind'});
 });
 
-test('a declared handle socket carries the prop by the handle and tilts it with the wrist',async()=>{
-  // Data (SCHEMAS.md "Prop grip geometry"): the thermos draws its loop handle
-  // on the body's right, so a socket inside the body box would be the centre
-  // carry this test must reject.
+test('a declared handle socket puts the DRAWN hand on the drawn handle, not beside it',async()=>{
+  // The socket is authored in art units and the engine places the drawn hand on
+  // it, so the socket itself must lie inside the DRAWN handle bar's ink (a
+  // 9-art-unit stroke about the curve at x 158). The previous check measured the
+  // motor's hand point against the motor's own socket and read 0.00 whatever the
+  // data declared; that is how a socket 10 art units off the bar survived review.
   const {placement}=JSON.parse(readFileSync(new URL('../../../library/prop/thermos/manifest.json',import.meta.url),'utf8')) as
-    {placement:{body:[number,number,number,number];grip?:{at:[number,number];radius:number;depth:'front'|'behind'}}};
+    {placement:{base:number;size:[number,number];stageWidth:number;grip?:{at:[number,number];radius:number;depth:'front'|'behind'}}};
   assert.ok(placement.grip,'the thermos must declare placement.grip');
-  const [bodyX0,bodyY0,bodyX1,bodyY1]=placement.body,[socketX,socketY]=placement.grip.at;
-  // The renderer's handle ink spans x 133..158, y 54..98 about the body box.
-  assert.ok(socketX>bodyX1&&socketX<=158&&socketY>bodyY0&&socketY<bodyY1,
-    `the declared socket ${socketX},${socketY} is not inside the drawn handle (body right edge ${bodyX1}, handle ink 133..158 x 54..98)`);
+  const scale=placement.stageWidth/placement.size[0];
+  const socket=stagedGrip(placement.grip,placement.base,scale);
+  const handleInk=transformSolid(thermosHandle,placement.size,placement.base,scale);
+  const socketOffInk=inkDistance(handleInk,socket.at);
+  assert.ok(socketOffInk<=0,
+    `the declared socket ${placement.grip.at.join(',')} sits ${(socketOffInk/scale).toFixed(1)} art units outside the drawn handle's ink`);
 
   const art=await nativeDraftArtworkFixture();
   const views=Object.fromEntries(FIGURE_VIEWS.map(view=>[view,art.views[view].skeleton])) as Record<FigureView,Skeleton>;
-  /** The same socket in prop-local staged units, off the object's box. */
-  const socket={at:[9,-14] as [number,number],radius:2,depth:'front' as const};
-  /** `declared` null is the old centre carry: the same prop, no socket. */
-  const hold=(propY:number,declared:typeof socket|null=null)=>simulateScene({
+  const solid=transformSolid(thermosSolid,placement.size,placement.base,scale);
+  /** `declared` false is the old centre carry: the same prop, no socket. */
+  const hold=(propY:number,declared=true)=>simulateScene({
     durationSec:6,
-    actors:[{id:'hero',x:500,groundY:650,scale:.6,facing:1,skeleton:art.views.front.skeleton,skeletonViews:views,
-      intents:[{at:0,duration:1,intent:'grab',target:'cup'}]}],
-    props:[{id:'cup',x:580,y:propY,size:[50,40],intents:[],...(declared?{grip:declared}:{})}],
+    actors:[{id:'hero',x:500,groundY:650,scale:.6,facing:1,skeleton:art.views.front.skeleton,skeletonViews:views,poseTracks:[],
+      intents:[{at:0,duration:1,intent:'grab',target:'thermos'}]}],
+    props:[{id:'thermos',x:580,y:propY,size:placement.size,solid,intents:[],...(declared?{grip:socket}:{})}],
     supports:[{x0:0,x1:1280,y:570}],groundY:650,resolveX:()=>580,
   });
   type Movie=ReturnType<typeof hold>;
-  const heldFrames=(movie:Movie)=>movie.actors.hero!.map((frame,index)=>frame.holds==='cup'?index:-1).filter(index=>index>=0);
+  const heldFrames=(movie:Movie)=>movie.actors.hero!.map((frame,index)=>frame.holds==='thermos'?index:-1).filter(index=>index>=0);
   const settledFrame=(movie:Movie)=>heldFrames(movie).at(-1)!;
-  const handAt=(movie:Movie,frame:number)=>movie.actors.hero![frame]!.reach!;
-  const socketAt=(movie:Movie,frame:number)=>{
-    const prop=movie.props.cup![frame]!,radians=(prop.rotation??0)*Math.PI/180;
-    return [prop.x+socket.at[0]*Math.cos(radians)-socket.at[1]*Math.sin(radians),
-      prop.y+socket.at[0]*Math.sin(radians)+socket.at[1]*Math.cos(radians)] as [number,number];
+  const rotationAt=(movie:Movie,frame:number)=>movie.props.thermos![frame]!.rotation??0;
+  /** The point the renderer DRAWS for the right hand (its own arm composition
+   *  over the baked pose), in the prop's staged local frame. */
+  const drawnHandLocal=(movie:Movie,frame:number)=>{
+    const actor=movie.actors.hero![frame]!,pose=actor.skeletonPose;
+    assert.ok(pose?.armR,`frame ${frame} carries no drawn arm`);
+    const flipped=actor.facing===-1;
+    const hand=renderedHandWorld({x:actor.x,y:650+(pose.waistY??0)*.6,scale:.6,flip:flipped,motor:true,
+      waist:pose.waistPitch??0,lean:0,skeleton:art.views.front.skeleton},pose.armR,flipped);
+    const prop=movie.props.thermos![frame]!,radians=(prop.rotation??0)*Math.PI/180,dx=hand[0]-prop.x,dy=hand[1]-prop.y;
+    return [dx*Math.cos(radians)+dy*Math.sin(radians),-dx*Math.sin(radians)+dy*Math.cos(radians)] as [number,number];
   };
-  const gapToSocket=(movie:Movie,frame:number)=>{const hand=handAt(movie,frame),at=socketAt(movie,frame);return Math.hypot(hand[0]-at[0],hand[1]-at[1]);};
-  const rotationAt=(movie:Movie,frame:number)=>movie.props.cup![frame]!.rotation??0;
+  const offHandle=(movie:Movie,frame:number)=>inkDistance(handleInk,drawnHandLocal(movie,frame));
 
-  // The bound, settled hold puts the hand ON the socket: the prop hangs where
-  // the fingers touched it instead of being carried by its bounding box.
-  const carried=hold(480,socket),carriedFrame=settledFrame(carried);
-  const socketGap=gapToSocket(carried,carriedFrame);
-  assert.ok(socketGap<=0.5,`the hand is ${socketGap.toFixed(2)}px off the declared socket at the settled hold`);
+  // Throughout the carry the DRAWN hand sits on the DRAWN handle bar: the prop
+  // is placed from the socket at its live rotation every substep, so no frame
+  // carries a bind-time offset.
+  const carried=hold(480),carriedFrame=settledFrame(carried);
+  assert.ok(heldFrames(carried).length>48,'the thermos is never held');
+  const carriedOff=offHandle(carried,carriedFrame);
+  assert.ok(carriedOff<=0,`the drawn hand is ${(carriedOff/scale).toFixed(1)} art units off the drawn handle at the settled carry`);
+  const worst=Math.max(...heldFrames(carried).map(frame=>offHandle(carried,frame)));
+  assert.ok(worst<=0,`the drawn hand is ${(worst/scale).toFixed(1)} art units off the drawn handle on a held frame`);
+
   // Falsification: the same scene without the declaration is the old centre
-  // carry, a handle offset away from the socket this test measures.
-  const centred=hold(480);
-  const centreGap=gapToSocket(centred,settledFrame(centred));
-  assert.ok(centreGap>20,`the centre carry is only ${centreGap.toFixed(2)}px from the declared socket`);
+  // carry, which the same DRAWN check rejects.
+  const centred=hold(480,false);
+  assert.ok(offHandle(centred,settledFrame(centred))>0,'the centre carry must not pass the handle check');
 
   // The wrist drives the held rotation: two holds whose reach to the prop
   // differs end tilted differently, and the centre carry never tilts at all.
-  const high=hold(430,socket),low=hold(540,socket);
+  const high=hold(430),low=hold(540);
   const tilt=rotationAt(high,settledFrame(high))-rotationAt(low,settledFrame(low));
   assert.ok(Math.abs(tilt)>20,`a changed wrist direction moved the held prop only ${tilt.toFixed(1)}deg`);
   const rotations=heldFrames(carried).map(frame=>rotationAt(carried,frame));
   assert.ok(Math.max(...rotations)-Math.min(...rotations)>10,`the held prop never tilts (${(Math.max(...rotations)-Math.min(...rotations)).toFixed(1)}deg)`);
   for(const propY of [430,540]){
-    const still=hold(propY);
+    const still=hold(propY,false);
     assert.equal(rotationAt(still,settledFrame(still)),0,`the centre carry rotated ${propY}px prop`);
   }
 });

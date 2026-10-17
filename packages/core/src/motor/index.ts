@@ -481,7 +481,10 @@ interface ActorState {
    *  legitimate locomotion); "drive" extends the hand and conducts force. */
   handDrive: {target: string; force: number; t: number; sec: number; speed: number; hand: [number, number]; contact: boolean; phase: "approach" | "drive"; contactT: number | null} | null;
   /** Where the hand grips the held prop relative to the hand point (the prop
-   *  never teleports to the hand — it stays exactly where the grip landed). */
+   *  never teleports to the hand — it stays exactly where the grip landed).
+   *  A declared socket supersedes it: the wrist block re-solves the socket
+   *  against the live rotation, so `grip` only shapes the settle and the
+   *  placement lift. */
   grip: {ox: number; oy: number} | null;
   /** The settled grip: the prop origin relative to the hand when the hand
    *  sits at the object's box CENTER (small objects are carried at their
@@ -1574,8 +1577,12 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
               const hand: [number,number]=[state.reach.tx,state.reach.ty];
               const goal=state.propAngleAtBind+angleDelta(wristDirection(state,hand)-state.wristAtBind);
               prop.rotation += clamp(angleDelta(goal-prop.rotation),-90*dt,90*dt);
-              const offset=rotateVector([prop.x-hand[0],prop.y-hand[1]],prop.rotation-state.propAngleAtBind);
-              prop.x=hand[0]+offset[0];prop.y=hand[1]+offset[1];
+              // The declared socket is re-solved against the prop's CURRENT
+              // rotation every substep, so the hand point sits on the drawn
+              // socket through the whole carry: a bind-time offset carried into
+              // the rotation drifts off the hand as the wrist turns.
+              const socket=rotateVector(prop.grip.at,prop.rotation);
+              prop.x=hand[0]-socket[0];prop.y=hand[1]-socket[1];
             }
           }
           // Open only after the wrist block has put the prop where the drawn
