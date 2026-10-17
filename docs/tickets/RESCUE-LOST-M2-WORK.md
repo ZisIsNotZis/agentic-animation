@@ -94,6 +94,17 @@ move the same bake.
   Eleven overlays carry these episodes in two variants; the later variant was
   restored, and its only semantic change is the retired draft set swapped for
   the accepted `set/canteen_counter_m3`.
+- **R5 deferred by the speed decision.** The envelope work is complete and measured
+  (per-view ceilings 113° front-type / 103° side, capacity 106.07 / 105.06, feet
+  planted to 0.0000, drawn knee clearing the ground line), and two agent attempts
+  plus integrator repair could not close it without cost that is not worth the
+  delay: bounding the crouch to the art ceiling leaves the side view 19.1 design
+  px short of a floor pickup, and the tolerance that bridges it stops the placing
+  arm returning to rest after the putdown (8.4/−78.5° two seconds after release).
+  Since the crouch already solves the leg chain and the only visible residue is a
+  knee ink grazing the floor line at the deepest crouch, it is preserved on
+  `worker/r5-crouch-knee-flexion` (`8d1045c`) and revisited after M6, not merged
+  red.
 - **R5 blocked on a product decision, work preserved on `worker/r5-crouch-knee-flexion`
   (`a81147c`).** The declared-envelope machinery is written and its invariant test
   is strong, but the declared value exposes a genuine art/reach conflict. Measured:
