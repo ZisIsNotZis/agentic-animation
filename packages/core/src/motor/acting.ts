@@ -45,8 +45,8 @@ export const ACCENT_NEAR = 0.35;
 export function accentSpeed(remaining: number, span: number, accent: number): number {
   if (!(accent > 0) || !(span > 0)) return 1;
   const share = Math.min(1, Math.max(0, remaining / span));
-  const near = 1 - Math.min(1, share / ACCENT_NEAR);
-  return 1 - ACCENT_SLOW * Math.min(1, accent) * smoothstep01(near);
+  const approach = 1 - Math.min(1, share / ACCENT_NEAR);
+  return 1 - ACCENT_SLOW * Math.min(1, accent) * (1 - smoothstep01(approach));
 }
 
 /** Settle: a decaying overshoot past the key pose, in px, `t` seconds after
