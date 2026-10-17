@@ -78,6 +78,22 @@ checked-in location assets, the Remotion adapter adds a transient
 browser evaluation; this keeps filesystem access out of frame rendering and
 selects backgrounds by compiled location instance rather than scene names.
 
+## Motor intent acting shape (M5 additive implementation)
+
+A motor intent (the `motor` track recipe's event value) may carry
+`anticipation` (seconds, clamped 0..0.4), `accent` (0..1) and `settle` (0..1).
+Absent means 0, and 0 is the pre-M5 motion, so every existing bake keeps byte-
+identical trajectories. The call form is the override syntax
+`{...action.point(a, b), accent: 0.6, ...}`; the compiler stamps the three
+values onto the motor intents that call emits (a value the procedure already
+sets wins), and the motor applies them per its own contract in
+[WORLD_PUPPET_MOTOR.md](WORLD_PUPPET_MOTOR.md). No new frame field is added to
+the bake: the shapes appear in `lean` (anticipation), `x` (a deferred beat's
+start) and `reach` (accent and settle). A clamped anticipation is reported in
+`motor.diagnostics`; `make` prints it as `motor warning:`. An intent that leaves
+the value out, or a beat whose motion has no shaped channel, renders exactly as
+before.
+
 ## Prop grip geometry (M2 additive implementation)
 
 Prop placement may declare `grip: {at: [x,y], radius, depth}` in intrinsic art

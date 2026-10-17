@@ -64,6 +64,20 @@ Brace contents are real JavaScript expressions evaluated against live instance h
 
 Blocking calls must declare `durationSec` (their own or via override); unknown instances, missing exports, and argument errors fail at `check`/`make` dry-run, never mid-render.
 
+## Acting shape
+
+A timed beat may carry three additive acting-shape modifiers on the call, which the compiler stamps onto the motor intents that call emits:
+
+```yaml
+{...action.point(awei, door), anticipation: 0.2, accent: 0.6, settle: 0.5}
+```
+
+- `anticipation` — seconds of preparation before the beat moves (clamped 0..0.4, default 0).
+- `accent` — 0..1 timing contrast into the key pose (default 0).
+- `settle` — 0..1 decaying overshoot past the key pose (default 0).
+
+0 is the shape every pre-M5 episode was authored with, so leaving them out keeps a beat's trajectory exactly as it was. Which beats carry which shape, and every clamp and fallback, is the motor's contract ([WORLD_PUPPET_MOTOR](WORLD_PUPPET_MOTOR.md)); a shape a beat cannot use is ignored rather than reinterpreted.
+
 ## Speech and silence
 
 Braces split dialogue into audio chunks. Calls never enter voice or captions.

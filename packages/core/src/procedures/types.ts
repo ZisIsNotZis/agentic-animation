@@ -15,7 +15,9 @@ export type ProcedureTrackKind =
   | "vfx"
   | "sfx"
   | "music"
-  | "lifecycle";
+  | "lifecycle"
+  /** Physical trajectory intent; the compiler bakes it with the motor. */
+  | "motor";
 
 /** Kept for consumers of the original authored intent shape. */
 export type ProcedureChannel = "body" | "face" | "gaze" | "camera" | "vfx" | "sfx" | "music";

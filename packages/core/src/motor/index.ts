@@ -41,6 +41,13 @@ export interface MotorIntent {
   forceSec?: number;
   /** The former holder of a released object (from binding tracks). */
   holder?: string;
+  /** Acting shape (M5, docs/WORLD_PUPPET_MOTOR.md): seconds the beat holds
+   *  while the torso shifts weight opposite the intended motion. */
+  anticipation?: number;
+  /** Acting shape: 0..1 timing contrast into the key pose (acting hand). */
+  accent?: number;
+  /** Acting shape: 0..1 decaying overshoot past the key pose (acting hand). */
+  settle?: number;
 }
 
 export interface MotorActorInput {
@@ -122,6 +129,8 @@ export interface MotorTrajectory {
 }
 
 import { circleOverlapsBox, solveSkeleton, solveArmIK,legDropInterval,nativeCrouchDrop,type SkeletonPose } from "./skeleton";
+import {accentSpeed, anticipationEnvelope, anticipationLean, settleOffset, smoothstep01,
+  ANTICIPATION_LEAN, ANTICIPATION_MAX_SEC} from "./acting";
 import {solveActorFigure,type PoseActor} from './actorPose';
 import {resolveWholeBodyProposal,type WholeBodyState,type OwnershipEvent} from './wholeBodyProposal';
 import type { Skeleton } from "../schemas/libraryMeta";
@@ -293,10 +302,6 @@ function travelHand(from: [number, number], to: [number, number], settleSec = 0,
   return [from[0] + (to[0] - from[0]) * fraction, from[1] + (to[1] - from[1]) * fraction];
 }
 
-function smoothstep01(t: number): number {
-  return t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
-}
-
 /** Bow envelope: bend in over the first 45%, hold to 62%, return upright. */
 function bowEnvelope(t: number, dur: number): number {
   const t1 = dur * 0.45, t2 = dur * 0.62;
@@ -415,8 +420,14 @@ interface ActorState {
   grabContactAt?: number;
   offer?: {recipient: string; prop: string; until: number};
   /** Active grab controller: reach/bend/crouch until the hand physically
-   * touches the object's declared body box — then bind (I4). */
-  grab: {propId: string; t: number; notBefore?: number} | null;
+   * touches the object's declared body box — then bind (I4). `span` is the
+   * first-seen hand-to-aim distance the accent shape measures against. */
+  grab: {propId: string; t: number; notBefore?: number; accent: number; span?: number} | null;
+  /** Acting-shape accent carried from the intent to the grab it arms. */
+  grabAccent?: number;
+  /** Acting-shape pre-roll in flight (M5 anticipation): the beat waits while
+   *  the torso shifts weight opposite the intended motion. */
+  prep: {t: number; dur: number; peak: number; sign: 1 | -1} | null;
   /** The prop bound to the hand; position = hand every substep until release. */
   holding: string | null;
   carryShoulder?:[number,number];
@@ -466,7 +477,15 @@ interface ActorState {
   gesture: {kind: "bow" | "nod" | "shiver"; t: number; dur: number} | null;
   /** Reach gesture in flight (point/wave/raise/think): the hand travels to a
    *  fixed aim at real hand speed, holds, then returns via the shared retract. */
-  handGesture: {kind: "point" | "wave" | "raise" | "think"; target: string; t: number; dur: number} | null;
+  handGesture: {
+    kind: "point" | "wave" | "raise" | "think"; target: string; t: number; dur: number;
+    /** Hand position when the beat started: the accent/settle span origin. */
+    from: [number, number];
+    accent: number;
+    settle: number;
+    /** Beat time the hand first reached the key pose (settle starts here). */
+    keyAt: number | null;
+  } | null;
 }
 
 interface PropState {
@@ -541,6 +560,8 @@ function startFall(state: ActorState, dir: 1 | -1, dur = FALL_DUR): void {
   state.grabTarget = null;
   state.pursue = null;
   state.moveTarget = null;
+  // Balance is cut: a preparation cannot finish and nothing settles.
+  state.prep = null;
   // An in-flight reach retracts through the shared path — no arm snap.
   state.retract = state.retract || state.reach !== null;
 }
@@ -564,7 +585,7 @@ function arriveMotorWalk(
   const propId = state.grabTarget;
   if (propId) {
     const prop = props.get(propId);
-    if (prop && !state.holding && !state.grab) state.grab = {propId, t: 0, notBefore:state.grabContactAt};
+    if (prop && !state.holding && !state.grab) state.grab = {propId, t: 0, notBefore:state.grabContactAt, accent: state.grabAccent ?? 0};
     state.grabTarget = null;
   }
   if (state.handDrive?.phase === "approach") {
@@ -585,7 +606,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     scene.actors.map((actor) => [actor.id, {
       id: actor.id, x: actor.x, vx: 0, facing: actor.facing, groundY: actor.groundY, scale: actor.scale,
       walkPhase: 0, lean: 0, moveTarget: null, grab: null, holding: null, holdRel: null, handDrive: null, reach: null, retract: false, retractInfluence: 1, retractElapsed: 0, retractDuration: .65, wristAtBind: 0, propAngleAtBind: 0, grip: null, gripGoal: null, pursue: null, place: null,
-      stagger: 0, stepsTaken: 0, staggerSlide: 0, gesture: null, handGesture: null, fall: null, fallen: false, body: bodyOf((actor.skeletonViews?.front??actor.skeleton) as Skeleton,actor.skeletonViews!==undefined),
+      stagger: 0, stepsTaken: 0, staggerSlide: 0, gesture: null, handGesture: null, prep: null, fall: null, fallen: false, body: bodyOf((actor.skeletonViews?.front??actor.skeleton) as Skeleton,actor.skeletonViews!==undefined),
       skeleton: actor.skeletonViews?.front??actor.skeleton, skeletonViews:actor.skeletonViews, orientation:actor.skeletonViews?'front':undefined, waist: 0, crouch: 0,
     }]),
   );
@@ -650,6 +671,40 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
   };
 
   const presentationSampling = scene.actors.some(actor => actor.skeletonViews !== undefined);
+
+  /** The world-x direction the intent moves the actor toward (0 = the beat has
+   *  no direction of its own, e.g. a bow). */
+  const intentDirection = (state: ActorState, intent: MotorIntent): 1 | 0 | -1 => {
+    if (intent.target === undefined) return 0;
+    const tx = actors.get(intent.target)?.x ?? props.get(intent.target)?.x ?? scene.resolveX(intent.target);
+    return tx === undefined ? 0 : (Math.sign(tx - state.x) || 0) as 1 | 0 | -1;
+  };
+  /**
+   * M5 anticipation (docs/WORLD_PUPPET_MOTOR.md): a shaped beat holds for its
+   * pre-roll while the torso shifts weight opposite the intended motion, then
+   * starts. The intent is re-queued with its preparation spent, so every
+   * existing beat path runs unmodified and 0 stays the pre-M5 timing.
+   */
+  const startAnticipation = (state: ActorState, intent: MotorIntent, now: number, queue: MotorIntent[]): boolean => {
+    const sec = Math.min(ANTICIPATION_MAX_SEC, Math.max(0, Number(intent.anticipation ?? 0)));
+    // A fall has no balance to prepare, and a planned offer is bilateral
+    // (its cue timing is agreed with the receiver), so neither is delayed.
+    if (!(sec > 0) || intent.intent === "fall" || intent.offerTo || state.fallen || state.fall) return false;
+    const {peak, clamped} = anticipationLean(sec, WAIST_RATE);
+    if (!(peak > 0)) return false;
+    const motion = intentDirection(state, intent);
+    if (motion !== 0) state.facing = motion;
+    // The baked lean is drawn in the facing frame: -peak is backward unless the
+    // actor travels against its drawn facing (an explicit native orientation).
+    const sign = (motion === 0 ? -1 : -(motion * geometryFacing(state))) as 1 | -1;
+    state.prep = {t: 0, dur: sec, peak, sign};
+    queue.push({...intent, at: now + sec, anticipation: 0});
+    queue.sort((a, b) => a.at - b.at);
+    if (clamped) {
+      diagnostics.push(`anticipation clamped: ${state.id} ${intent.intent} at ${now.toFixed(3)}s; a ${sec}s pre-roll reaches ${peak.toFixed(1)}deg of the ${ANTICIPATION_LEAN}deg lean at the ${WAIST_RATE}deg/s waist rate`);
+    }
+    return true;
+  };
   interface LiveState extends WholeBodyState {
     controllers:{actors:Map<string,ActorState>;props:Map<string,PropState>;queues:Map<string,MotorIntent[]>;
       diagnostics:string[];exhaustedActors:Set<string>};
@@ -711,6 +766,8 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       const state = actors.get(id)!;
       while (queue.length && queue[0]!.at <= now) {
         const intent = queue.shift()!;
+        // M5 anticipation: the beat waits out its pre-roll and is re-queued.
+        if (startAnticipation(state, intent, now, queue)) continue;
         if (intent.intent === "move") {
           const tx = intent.target !== undefined ? scene.resolveX(intent.target) : undefined;
           if (tx !== undefined) {
@@ -748,6 +805,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
               // declared `grab` for receiver moves (handover).
               state.grabTarget = intent.grab ?? (isProp ? intent.target! : null);
               state.grabContactAt = intent.contactAt;
+              state.grabAccent = Math.min(1, Math.max(0, Number(intent.accent ?? 0)));
               // A moving actor target is pursued LIVE (the staged stop point
               // goes stale the moment the target walks). A self-target is not
               // pursued — resolveX already returned the actor's staged mark,
@@ -792,8 +850,9 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           }
           if (state.holding !== targetId && state.grab?.propId !== targetId) {
             const prop = props.get(targetId);
-            if (prop && state.moveTarget === null) state.grab = {propId: targetId, t: 0, notBefore:intent.contactAt};
-            else if (prop) state.grabTarget = targetId; // grab on arrival
+            const accent = Math.min(1, Math.max(0, Number(intent.accent ?? 0)));
+            if (prop && state.moveTarget === null) state.grab = {propId: targetId, t: 0, notBefore:intent.contactAt, accent};
+            else if (prop) { state.grabTarget = targetId; state.grabAccent = accent; } // grab on arrival
           }
         } else if (intent.intent === "release") {
           const targetId = intent.target!;
@@ -828,7 +887,11 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             const tx = intent.target !== undefined ? scene.resolveX(intent.target) : undefined;
             if (tx !== undefined) state.facing = (Math.sign(tx - state.x) || state.facing) as 1 | -1;
           }
-          state.handGesture = {kind: intent.intent, target: intent.target ?? "", t: 0, dur: Math.max(0.3, intent.duration)};
+          state.handGesture = {kind: intent.intent, target: intent.target ?? "", t: 0, dur: Math.max(0.3, intent.duration),
+            from: state.reach ? [state.reach.tx, state.reach.ty] : restHandAt(state),
+            accent: Math.min(1, Math.max(0, Number(intent.accent ?? 0))),
+            settle: Math.min(1, Math.max(0, Number(intent.settle ?? 0))),
+            keyAt: null};
         } else if (intent.intent === "fall") {
           // Fall-classified event (slice 4): balance cuts directly; the
           // authored duration scales the collapse span (face the target first,
@@ -1092,7 +1155,8 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         state.stagger = 0;
         state.staggerSlide = 0;
         state.stepsTaken = 0;
-        state.lean *= 0.9;
+        // A pre-roll holds its own weight shift; the idle decay would fight it.
+        if (!state.prep) state.lean *= 0.9;
         if (state.skeletonViews) {
           // Finish the stride at its rest endpoint rather than deleting a
           // nonzero leg target when root travel stops.
@@ -1131,6 +1195,16 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     }
     // Actor integration.
     for (const state of actors.values()) {
+      // M5 anticipation pre-roll: the beat waits while the torso shifts weight
+      // opposite the intended motion; the release is the same rate-limited
+      // return the waist already obeys (no snap into the beat's first frame).
+      if (state.prep) {
+        const p = state.prep;
+        p.t += delta;
+        const goal = p.t < p.dur ? p.sign * p.peak * anticipationEnvelope(p.t, p.dur) : 0;
+        state.lean = approach(state.lean, goal, WAIST_RATE * delta);
+        if (p.t >= p.dur && state.lean === 0) state.prep = null;
+      }
       // Grab controller (I2/I4): bend the waist and crouch — the MINIMUM
       // posture whose fully-extended hand physically touches the object's
       // declared body box — then bind. The posture motion is the body's own
@@ -1169,7 +1243,13 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         const shNow=geometryShoulder(state),shBefore=state.reachShoulder??shNow;
         const previousHand: [number, number] = state.reach
           ? [state.reach.tx+(state.skeletonViews?shNow[0]-shBefore[0]:0),state.reach.ty+(state.skeletonViews?shNow[1]-shBefore[1]:0)] : restHandAt(state);
-        const hand = travelHand(previousHand, targetHand, 0, 480 * smoothstep01(g.t / .25),delta);
+        // M5 accent: the approach runs slower away from the object and at the
+        // full 480 px/s cap through the final approach into the bind (the key
+        // pose). The cap itself is unchanged — contrast, not new speed.
+        const span = g.span ?? (g.span = Math.hypot(targetHand[0] - previousHand[0], targetHand[1] - previousHand[1]) || 1);
+        const approachSpeed = 480 * smoothstep01(g.t / .25)
+          * accentSpeed(Math.hypot(targetHand[0] - previousHand[0], targetHand[1] - previousHand[1]), span, g.accent);
+        const hand = travelHand(previousHand, targetHand, 0, approachSpeed, delta);
         state.reach = {tx: hand[0], ty: hand[1], target: g.propId, contact: false};
         if (contact(hand) && now >= (g.notBefore ?? 0)) {
           // The grip takes the weight: any previous holder's hand opens.
@@ -1332,13 +1412,25 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         g.t += delta;
         const sh = geometryShoulder(state);
         const arm = state.body.armReach * state.scale;
-        const goal: [number, number] = g.kind === "raise"
+        const aim: [number, number] = g.kind === "raise"
           ? [sh[0] + state.facing * arm * 0.28, sh[1] - arm * 0.98]
           : g.kind === "think"
             ? [sh[0] + state.facing * arm * 0.06, sh[1] - arm * 0.42]
             : [sh[0] + state.facing * arm * 0.94, sh[1] + (g.kind === "wave" ? Math.sin(g.t * 14) * arm * 0.05 : 0)];
+        // M5 settle: once the key pose is reached the hand carries a decaying
+        // overshoot past it (the span's direction, 6% of the span, at most
+        // 14 px) and returns exactly to the aim — one overshoot, no oscillation.
+        const span = Math.hypot(aim[0] - g.from[0], aim[1] - g.from[1]) || 1;
+        const overshoot = settleOffset(span, g.settle, g.keyAt === null ? -1 : g.t - g.keyAt);
+        const goal: [number, number] = [aim[0] + (aim[0] - g.from[0]) / span * overshoot,
+          aim[1] + (aim[1] - g.from[1]) / span * overshoot];
         const previous: [number, number] = state.reach ? [state.reach.tx, state.reach.ty] : restHandAt(state);
-        const hand = travelHand(previous, goal, 0, 480 * smoothstep01(g.t / 0.25), delta);
+        const remaining = Math.hypot(aim[0] - previous[0], aim[1] - previous[1]);
+        // M5 accent: hard acceleration into the key pose, slower elsewhere,
+        // inside the unchanged 480 px/s hand cap.
+        const hand = travelHand(previous, goal, 0,
+          480 * smoothstep01(g.t / 0.25) * accentSpeed(remaining, span, g.accent), delta);
+        if (g.keyAt === null && remaining <= 1) g.keyAt = g.t;
         state.reach = {tx: hand[0], ty: hand[1], target: g.target, contact: false};
         if (g.t >= g.dur) {
           state.handGesture = null;
@@ -1586,7 +1678,10 @@ export function bakeSceneMotor(
       const cue=intent.at;
       const earlier=actor.intents.filter(i=>i!==intent&&(i.contactAt??i.at)<cue);
       const earliest=Math.max(0,...earlier.map(i=>(i.contactAt??i.at)+i.duration));
-      const lead=Math.abs(actor.x-giver.x)/(actor.skeletonViews?WALK_SPEED/2:WALK_SPEED) + .85;
+      const lead=Math.abs(actor.x-giver.x)/(actor.skeletonViews?WALK_SPEED/2:WALK_SPEED) + .85
+        // A prepared receiver spends his pre-roll before he walks: the lead
+        // carries the anticipation so the plan stays honest to the cue.
+        + Math.min(ANTICIPATION_MAX_SEC, Math.max(0, Number(intent.anticipation ?? 0)));
       intent.at=Math.max(earliest,cue-lead);
       intent.contactAt=cue;
       planned.push({actor:actor.id,prop:intent.grab,cue});

@@ -617,6 +617,7 @@ async function makeCall(
   const {elapsedSec} = runInvocationSync(descriptor, world, {id: `${call.path}.${sequence}`, category: call.namespace, asset: call.terminal, declaredSec});
   const duration = descriptor.durationSec ?? elapsedSec;
   const tracks = world.canvas.tracks;
+  stampActingShape(descriptor, tracks);
   const resolution = {
     durationSec: duration,
     performance: {kind: "procedure" as const, id: call.path, durationSec: duration, params: [], phases: [], body: [], expression: [], gaze: [], camera: [], vfx: [], audio: [], recipe: {tracks}},
@@ -661,6 +662,29 @@ async function compileInterruption(
     speed,
   });
   return {kind: "speech", subject, start: round(start), end: round(start + timing.durationSec), text, speed, ...(timing.boundaries ? {boundaries: timing.boundaries} : {}), interruption: true};
+}
+
+/**
+ * M5 acting shape (docs/NARROW_EPISODE_DSL.md): the call-site modifiers
+ * `anticipation` (s), `accent` (0..1) and `settle` (0..1) of an override group
+ * (`{...action.point(a,b), accent: .6}`) become motor intent fields on the
+ * beats that call emits. A value the procedure set itself wins, so the recipe
+ * stays the owner of its default and absent stays 0 (the pre-M5 trajectory).
+ */
+function stampActingShape(descriptor: Invocation, tracks: World["canvas"]["tracks"]): void {
+  const shape: Record<string, number> = {};
+  for (const key of ["anticipation", "accent", "settle"]) {
+    const value = (descriptor as unknown as Record<string, unknown>)[key];
+    if (typeof value === "number" && Number.isFinite(value)) shape[key] = value;
+  }
+  if (Object.keys(shape).length === 0) return;
+  for (const track of tracks) {
+    if (track.kind !== "motor") continue;
+    for (const event of track.events ?? []) {
+      const value = (event as {value?: Record<string, unknown>}).value ?? (event as unknown as Record<string, unknown>);
+      for (const [key, amount] of Object.entries(shape)) if (value[key] === undefined) value[key] = amount;
+    }
+  }
 }
 
 function callEvent(call: ProcedureCall, start: number, end: number, concurrent: boolean, resolution: ProcedureResolution): CallPerformanceEvent {
