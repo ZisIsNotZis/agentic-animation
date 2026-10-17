@@ -172,7 +172,8 @@ declaration are recorded in the set manifest.
   (`/home/z/.local/share/agentic-animation/art-baselines/`), which carries
   `analysis.json`, `stills/ablation/{a0..a4,loo-*}`, `clips/`, `scripts/` and
   `RECOVERY.md`; no generated media is committed and no evidence archive is
-  touched.
+  touched; the iteration that closed both failing verdicts is measured there by
+  `analysis-iterated.json`, `ITERATION.md` and `stills/ablation-iterated/`.
 - **Limit, disclosed:** this worker session has no image modality, so criterion
   "inspected by you" cannot be a perceptual claim from this worker. The
   perceptual verdict (does it read as one medium, is the light coherent, is any

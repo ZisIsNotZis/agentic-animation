@@ -325,7 +325,7 @@
       <path d="M1300 1080 L1920 900" stroke="#e6c39b" stroke-width="3" opacity="0.4"/>
     </g>
     <!-- small props restated at their own fine scale, plus restored speculars -->
-    <g fill="none" stroke="#424e46" stroke-width="1.2" opacity="0.45" stroke-linecap="round">
+    <g fill="none" stroke="#424e46" stroke-width="1.6" opacity="0.52" stroke-linecap="round">
       <path d="M622 272 h58 v58 h-58 Z M696 284 h48 v46 h-48 Z M762 252 h66 v78 h-66 Z M846 280 h52 v50 h-52 Z"/>
       <path d="M640 346 L664 372 M912 346 L888 372"/>
       <path d="M1636 536 h22 v40 h-22 Z M1666 540 h20 v36 h-20 Z M1694 536 h22 v40 h-22 Z M1724 542 h20 v34 h-20 Z M1752 536 h22 v40 h-22 Z"/>
@@ -341,6 +341,23 @@
       <path d="M1638 540 v30 M1668 544 v28 M1696 540 v30 M1726 546 v26 M1754 540 v30 M1640 616 v30 M1668 620 v28 M1698 616 v30 M1726 622 v26 M1756 616 v30"/>
       <path d="M1444 338 a66 6 0 0 0 132 0 M1452 366 a66 6 0 0 0 124 0 M1444 366 a66 6 0 0 0 136 0 M1448 310 a62 6 0 0 0 128 0"/>
       <path d="M1452 312 v50 M1572 312 v48 M1456 340 v52 M1568 340 v50 M1446 368 v24 M1578 368 v24"/>
+      <path d="M1638 536 h20 M1638 574 h20 M1668 540 h18 M1668 574 h18 M1696 536 h20 M1696 574 h20 M1726 542 h18 M1726 574 h18 M1754 536 h20 M1754 574 h20"/>
+      <path d="M1640 612 h18 M1640 650 h18 M1668 616 h20 M1668 650 h20 M1698 612 h18 M1698 650 h18 M1726 618 h20 M1726 650 h20 M1756 612 h18 M1756 650 h18"/>
+      <path d="M634 280 h34 M708 292 h24 M774 286 h42 M858 288 h28 M634 318 h34 M708 322 h24 M858 322 h28"/>
+      <path d="M1656 978 L1830 931 M1656 1020 L1830 973 M1700 935 L1792 910"/>
+      <path d="M166 535 L196 527 M204 526 L234 536 M243 536 L270 545"/>
+    </g>
+    <!-- mid-scale props and openings restated at their own weight: the contour
+         follows the size of the form, so crates, case, stool, window and sign
+         read as drawn rather than as flat plates -->
+    <g fill="none" stroke="#424e46" stroke-width="1.5" opacity="0.3" stroke-linecap="round">
+      <path d="M118 642 h180 v100 h-180 Z M136 544 h150 v98 h-150 Z"/>
+      <path d="M46 796 h128 v26 h-128 Z M62 822 L54 900 M158 822 L166 900 M110 822 L110 902"/>
+      <path d="M1600 470 h230 v310 h-230 Z M1622 492 h186 v262 h-186 Z"/>
+      <path d="M1672 800 L1730 590 L1810 590 L1878 800 M1706 616 h132 v150 h-132 Z"/>
+      <path d="M334 258 h232 M330 356 h240"/>
+      <path d="M140 130 h360 v280 h-360 Z M760 98 h400 v114 h-400 Z"/>
+      <path d="M330 372 L322 392 M1590 372 L1598 392"/>
     </g>
     <g fill="#fdf3d9" opacity="0.5">
       <circle cx="634" cy="282" r="1.8"/><circle cx="770" cy="262" r="1.8"/><circle cx="856" cy="290" r="1.5"/>
@@ -403,12 +420,12 @@
       <radialGradient id="m4_light_falloff" gradientUnits="userSpaceOnUse" cx="330" cy="290" r="1520">
         <stop offset="0" stop-color="#6d6a60" stop-opacity="0"/>
         <stop offset="0.42" stop-color="#665f57" stop-opacity="0.05"/>
-        <stop offset="0.76" stop-color="#585149" stop-opacity="0.16"/>
-        <stop offset="1" stop-color="#484239" stop-opacity="0.32"/>
+        <stop offset="0.76" stop-color="#625c52" stop-opacity="0.13"/>
+        <stop offset="1" stop-color="#565047" stop-opacity="0.26"/>
       </radialGradient>
       <linearGradient id="m4_cool_fill" gradientUnits="userSpaceOnUse" x1="900" y1="0" x2="1920" y2="0">
-        <stop offset="0" stop-color="#5f6a72" stop-opacity="0"/>
-        <stop offset="1" stop-color="#5f6a72" stop-opacity="0.22"/>
+        <stop offset="0" stop-color="#68737a" stop-opacity="0"/>
+        <stop offset="1" stop-color="#68737a" stop-opacity="0.16"/>
       </linearGradient>
     </defs>
     <!-- one light map over the whole picture: falloff from the window plus cool fill -->
@@ -459,8 +476,16 @@
     <!-- one even-odd fill: the whole-frame key with the small/typographic prop
          boxes cut out as holes, so the key never washes them flat and the pass
          costs one fill (no mask, no extra compositing layer) -->
-    <path fill-rule="evenodd" fill="url(#m4_window_key)" d="M-240 -240 H2160 V1320 H-240 Z M96 96 H548 V470 H96 Z M754 92 H1166 V218 H754 Z M592 232 H940 V396 H592 Z M326 254 H576 V378 H326 Z M1394 144 H1746 V396 H1394 Z M1432 300 H1596 V406 H1432 Z M108 496 H312 V760 H108 Z M1602 504 H1826 V682 H1602 Z M1666 586 H1884 V804 H1666 Z M1630 880 H1852 V1058 H1630 Z"/>
-    <path d="M140 462 L500 462 L780 668 L40 668 Z" fill="#fdf3d9" opacity="0.09"/>
+    <!-- Even-odd parity counts subpaths, so a reserved box that overlaps another
+         reserved box is inside three subpaths and would be lit again: every
+         pairwise overlap is punched a second time below (window x case,
+         chalkboard x bowl stack, bottle band x menu board). -->
+    <path fill-rule="evenodd" fill="url(#m4_window_key)" d="M-240 -240 H2160 V1320 H-240 Z M96 96 H548 V470 H96 Z M754 92 H1166 V218 H754 Z M592 232 H940 V396 H592 Z M326 254 H576 V378 H326 Z M1394 144 H1746 V396 H1394 Z M1432 300 H1596 V406 H1432 Z M108 496 H312 V760 H108 Z M1602 504 H1826 V682 H1602 Z M1666 586 H1884 V804 H1666 Z M1630 880 H1852 V1058 H1630 Z M326 254 H548 V378 H326 Z M1432 300 H1596 V396 H1432 Z M1666 586 H1826 V682 H1666 Z"/>
+    <!-- the wall spill stops at the crate reserve: the run below is split in two
+         so the warm light never washes the crate stack (an even-odd hole cannot
+         be used here, because a hole reaching outside the shape paints the part
+         beyond its edge) -->
+    <path d="M140 462 L500 462 L546 496 L123 496 Z M312 496 L546 496 L780 668 L312 668 Z" fill="#fdf3d9" opacity="0.09"/>
     <path d="M112 102 L528 102 L528 110 L112 110 Z" fill="url(#m4_rim)"/>
     <path d="M98 438 L546 438 L546 448 L98 448 Z" fill="#fffaf0" opacity="0.22"/>
     <!-- the same source reaching the actor plane -->
