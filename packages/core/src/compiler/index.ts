@@ -9,7 +9,7 @@ import {buildScope, calleeOf, evaluateExpression, runInvocationSync, splitExpres
 import type {Invocation, LoadedPlugin, World} from "../invocation/types";
 import {stageScene, type StageRect, type StagingResult} from "../staging";
 import {bakeSceneMotor} from "../motor";
-import type {Skeleton, NormalizedSetWorld} from "../schemas/libraryMeta";
+import type {Skeleton, NormalizedSetLayer, NormalizedSetWorld} from "../schemas/libraryMeta";
 import {FIGURE_VIEWS, type FigureArtwork, type FigureView} from "../schemas/figureArtwork";
 
 export type CompilerAssetKind = "actor" | "voice" | "location" | "object";
@@ -203,7 +203,7 @@ export interface CompiledScene {
   duration: number;
   staging: StagingResult;
   /** Declared world of the scene's location, normalized (absent for legacy sets). */
-  setLayers?: ReadonlyArray<{id: string; foreground: boolean}>;
+  setLayers?: ReadonlyArray<NormalizedSetLayer>;
   safeArea?: StageRect;
   supportSurfaces?: ReadonlyArray<{name: string; x: readonly [number, number]; y: number}>;
   /** Intrinsic coordinateSpace extents of the set art (SVG viewBox). */

@@ -127,7 +127,13 @@ is under implementation; the static M2 parts alone do not establish support.
 A `library/set/<name>/manifest.json` may declare a world in
 `coordinateSpace` units (e.g. `"1920x1080"`): `layers` as an ordered
 back-to-front list of group ids in `scene.svg` (an entry may instead be
-`{id, foreground: true}` to composite in front of actors), `safeActorArea` as
+`{id, foreground?, blend?, opacity?}` to composite in front of actors, with
+`blend` one of `normal`/`multiply`/`screen`, default `normal`, and `opacity`
+in 0..1, default 1 — the stage applies them as `mix-blend-mode` and element
+opacity, which is how an authored pigment or light pass reaches the actor
+plane as well as the set, M4 additive implementation per
+[ART_MATERIALS_M4.md](ART_MATERIALS_M4.md); the defaults leave every existing
+declaration and legacy set rendering unchanged), `safeActorArea` as
 a rect, and `supports` as `{name, x: [min, max], y, paint}`. A set becomes a
 world-declaring set exactly when its `scene.svg` carries `<g id="...">`
 groups (double-quoted, like the `figureArtwork` resource opt-in); sets whose
@@ -140,7 +146,8 @@ loading (never a silent fallback) when a world-declaring set is missing
 entry whose painted element (the SVG element with id `paint`, carrying
 `data-support-top="<y>"`) disagrees with the declared `y` by more than 8
 coordinateSpace units. Legacy sets keep raw art-unit `supports` passthrough.
-The compiled scene IR carries normalized `setLayers` (`{id, foreground}`),
+The compiled scene IR carries normalized `setLayers`
+(`{id, foreground, blend, opacity}`),
 `safeArea`, `supportSurfaces`, and the intrinsic `setViewBox`; the
 renderer-remotion preloader injects per-layer group text into
 `locationScenes` keyed `"<instance>/<layerId>"` for world sets (legacy sets

@@ -57,6 +57,28 @@ test("foreground layers occlude actors and props", () => {
   assert.doesNotMatch(markup, /data-set-layer="backdrop"/);
 });
 
+test("declared blend and opacity reach the layer element; defaults add nothing", () => {
+  const manifest = layeredManifest();
+  manifest.sceneTrack![0]!.setLayers = [
+    {id: "backdrop", foreground: false},
+    {id: "counter", foreground: false, blend: "multiply", opacity: 0.5},
+    {id: "counter-front", foreground: true, blend: "screen"},
+  ] as never;
+  const scene = sceneForFrame(manifest, 0);
+  assert.deepEqual(scene.setLayers?.map((layer) => [layer.id, layer.blend, layer.opacity]), [
+    ["backdrop", undefined, undefined],
+    ["counter", "multiply", 0.5],
+    ["counter-front", "screen", undefined],
+  ]);
+  const background = renderToStaticMarkup(React.createElement(PerformanceStage, {scene}));
+  assert.match(background, /mix-blend-mode:multiply/);
+  assert.match(background, /opacity:0\.5/);
+  const flat = background.slice(background.indexOf('data-set-layer="backdrop"'), background.indexOf('data-set-layer="counter"'));
+  assert.doesNotMatch(flat, /mix-blend-mode|opacity/, "a layer without declared compositing keeps today's rendering");
+  const foreground = renderToStaticMarkup(React.createElement(PerformanceForegroundLayers, {scene}));
+  assert.match(foreground, /mix-blend-mode:screen/);
+});
+
 test("sets without declared layers keep the flat single-background path", () => {
   const manifest: PerformanceManifest = {
     video: {width: 1920, height: 1080, fps: 10},

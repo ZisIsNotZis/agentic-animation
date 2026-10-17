@@ -30,6 +30,28 @@ function worldManifest(y = 390): string {
   });
 }
 
+/** World manifest whose layers declare compositing (M4 declaration). */
+function compositedManifest(): string {
+  return JSON.stringify({
+    coordinateSpace: "960x540",
+    layers: [
+      "backdrop",
+      {id: "pigment", blend: "multiply", opacity: 0.5},
+      {id: "key-light", foreground: true, blend: "screen"},
+      {id: "counter-front", foreground: true},
+    ],
+  });
+}
+
+function compositedScene(): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">`
+    + `<g id="backdrop"><rect width="960" height="540" fill="#f0d59b"/></g>`
+    + `<g id="pigment"><rect width="960" height="540" fill="#8a6a4a"/></g>`
+    + `<g id="key-light"><rect width="960" height="540" fill="#f7e8c3"/></g>`
+    + `<g id="counter-front"><rect y="400" width="960" height="140" fill="#70432f"/></g>`
+    + `</svg>`;
+}
+
 /** A minimal synthetic library with one set; resolves like library/ does. */
 async function registryWith(manifest: string, sceneSvg: string) {
   const root = mkdtempSync(join(tmpdir(), "anim-setworld-"));
@@ -55,6 +77,28 @@ async function registryWithMissingManifest(sceneSvg: string) {
     rmSync(root, {recursive: true, force: true});
   }
 }
+
+test("declared layer compositing is carried, defaulted to normal/1, and validated", async () => {
+  const world = normalizeSetWorld({manifest: JSON.parse(compositedManifest()), sceneSvg: compositedScene()});
+  assert.deepEqual(world.layers, [
+    {id: "backdrop", foreground: false},
+    {id: "pigment", foreground: false, blend: "multiply", opacity: 0.5},
+    {id: "key-light", foreground: true, blend: "screen"},
+    {id: "counter-front", foreground: true},
+  ]);
+  const registry = await registryWith(compositedManifest(), compositedScene());
+  const asset = registry.resolveAsset("set/fixture") as {world?: {layers: unknown[]}};
+  assert.deepEqual(asset.world!.layers, world.layers);
+  // Invalid declarations fail loading rather than silently rendering normal.
+  await assert.rejects(
+    registryWith(compositedManifest().replace("\"multiply\"", "\"overlay\""), compositedScene()),
+    /blend|overlay|Invalid/i,
+  );
+  await assert.rejects(
+    registryWith(compositedManifest().replace("0.5", "1.5"), compositedScene()),
+    /opacity|less than or equal/i,
+  );
+});
 
 test("normalizes world declarations once from coordinateSpace units", () => {
   const world = normalizeSetWorld({manifest: JSON.parse(worldManifest()), sceneSvg: worldScene()});

@@ -78,10 +78,23 @@ export const SetSupportSurfaceSchema = SupportSurfaceSchema.extend({
 }).strict();
 export type SetSupportSurface = z.infer<typeof SetSupportSurfaceSchema>;
 
-/** One declared set layer: a group id in scene.svg, optionally in front of actors. */
+/** Compositing a declared set layer may request (M4 declaration). */
+export const SET_LAYER_BLENDS = ["normal", "multiply", "screen"] as const;
+export type SetLayerBlend = typeof SET_LAYER_BLENDS[number];
+
+/**
+ * One declared set layer: a group id in scene.svg, optionally in front of
+ * actors and optionally composited (`blend`/`opacity`). Defaults are omitted
+ * from normalization so an undeclared layer keeps the pre-M4 rendering and IR.
+ */
 export const SetLayerEntrySchema = z.union([
   z.string().min(1),
-  z.object({id: z.string().min(1), foreground: z.literal(true)}).strict(),
+  z.object({
+    id: z.string().min(1),
+    foreground: z.boolean().default(false),
+    blend: z.enum(SET_LAYER_BLENDS).default("normal"),
+    opacity: z.number().min(0).max(1).default(1),
+  }).strict(),
 ]);
 export type SetLayerEntry = z.infer<typeof SetLayerEntrySchema>;
 
@@ -101,10 +114,18 @@ export const SetManifestSchema = z.object({
   supports: z.array(SetSupportSurfaceSchema).default([]),
 }).strict();
 
+/** Registry-normalized set layer: normalized geometry plus declared compositing. */
+export interface NormalizedSetLayer {
+  readonly id: string;
+  readonly foreground: boolean;
+  readonly blend?: SetLayerBlend;
+  readonly opacity?: number;
+}
+
 /** Registry-normalized set world: every value is 0..1 of the canvas. */
 export interface NormalizedSetWorld {
   readonly coordinateSpace: {readonly width: number; readonly height: number};
-  readonly layers: ReadonlyArray<{readonly id: string; readonly foreground: boolean}>;
+  readonly layers: ReadonlyArray<NormalizedSetLayer>;
   readonly safeArea?: {readonly x: number; readonly y: number; readonly width: number; readonly height: number};
   readonly supports: ReadonlyArray<{readonly name: string; readonly x: readonly [number, number]; readonly y: number}>;
 }
