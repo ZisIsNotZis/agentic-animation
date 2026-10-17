@@ -35,9 +35,16 @@ the gate bundle `m3-20261016T2305+0800`
 while every legacy set stays installed. One M3 criterion is honestly failing
 and routed onward: the putdown is geometrically on the painted top but
 occluded by the clustered receiver
-([ticket](tickets/BACKLOG-M5-PUTDOWN-VISIBILITY.md)). M4 is in progress: the materials/light
-treatment's ink criterion is met with no matte and no raised prop layer
-([ART_MATERIALS_M4](ART_MATERIALS_M4.md)), and its art gate is the seventh review's.
+([ticket](tickets/BACKLOG-M5-PUTDOWN-VISIBILITY.md)). M4 is delivered and awaiting the
+user's milestone judgment: the materials/light treatment composites with
+non-luminance blend modes (`color` for pigment, `soft-light` for both light
+passes), so ink contrast is 0.964–1.063 in all eight regions with no matte,
+cut-out, tiled texture or raised layer, and the fifth perceptual review returned
+ART PASS ([ART_MATERIALS_M4](ART_MATERIALS_M4.md)). Cost is measured, not
+assumed: +65% wall time over the M3 baseline (53–70% across three sessions) at
+concurrency 4. Routed onward: cross-session render non-determinism
+([ticket](tickets/BACKLOG-RENDER-NONDETERMINISM.md)), and counter/floor staging
+depth plus vector-puppet joint stiffness at the handover (M5).
 M5–M8 are planned, not delivered.
 
 ## Motion and demonstrations
