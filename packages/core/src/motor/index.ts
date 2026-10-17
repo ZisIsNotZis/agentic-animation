@@ -1661,6 +1661,10 @@ export function bakeSceneMotor(
             forceSec: typeof intent.forceSec === "number" ? intent.forceSec : undefined,
             grab: typeof intent.grab === "string" ? intent.grab : undefined,
             releaseMode: intent.releaseMode === 'free' ? 'free' : 'place',
+            // M5 acting shape (docs/SCHEMAS.md): data on the intent, 0 = pre-M5.
+            anticipation: typeof intent.anticipation === "number" ? intent.anticipation : undefined,
+            accent: typeof intent.accent === "number" ? intent.accent : undefined,
+            settle: typeof intent.settle === "number" ? intent.settle : undefined,
           });
         }
       }
