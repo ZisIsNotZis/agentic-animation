@@ -69,7 +69,7 @@ advancing. This document is the single home of that inventory and its state.
 
 | WP | Owner area | Outcome | Acceptance |
 |---|---|---|---|
-| R1 | `tools/audio-qa/generate-cues.mjs`, `package.json`, `.gitignore`, `library/music/cues` | The generator writes where the plugins enumerate, one command materialises all cues, and the single non-reproducible cue is tracked | Regenerating from empty yields 21 sfx and 2 music and `ending-cadence` resolves; the adapter audio-cue test passes; `npm test` green; only `xuehua-piaopiao.wav` is tracked, with the reason recorded |
+| R1 | `tools/audio-qa/generate-cues.mjs`, `package.json`, `.gitignore`, `library/music/cues` | The generator writes where the plugins enumerate, `npm run cues` runs it, and the single non-reproducible cue is tracked | Regenerating from empty yields 21 sfx and 2 music and `ending-cadence` resolves; the adapter audio-cue test passes; only `xuehua-piaopiao.wav` is tracked |
 | R2 | `episodes/qa-orientations` | Eight orientation fixtures that still `check` against the current library | `anim check` green for each restored fixture; fixtures whose set was retired are recorded as retired with the reason |
 | R3 | `library/prop/*`, motor, M5 tests | Every grabbable prop declares `grip`; the thermos is held by the handle and tilts with the wrist | A held-property assertion on the socket and the tilt; M5 derived keys re-derived, invariants and render truth green |
 | R4 | `figureArtwork`, `library/figure`, renderer | A grasp hand shape wired from the existing `*/grips/*.svg` art and selected while holding | The holding hand draws `grip`, not `fist`; stills reviewed |
@@ -77,3 +77,41 @@ advancing. This document is the single home of that inventory and its state.
 
 R1–R2 and R3 are independent by file area; R4 and R5 follow R3 because they
 move the same bake.
+
+## State (2026-10-17)
+
+- **R1 done** — the seam is closed in the generator, `npm run cues` is wired into
+  `pretest`, and only `library/music/cues/xuehua-piaopiao.wav` is tracked
+  (639 KB, the one cue the synthesis recipes cannot reproduce). Regeneration is
+  byte-identical to the archived overlay for all 23 files.
+- **R2 done** — eight `episodes/qa-orientations/<name>/episode.yml` restored.
+  Eleven overlays carry these episodes in two variants; the later variant was
+  restored, and its only semantic change is the retired draft set swapped for
+  the accepted `set/canteen_counter_m3`.
+- **R3 in progress under decision (A).** Restoring the grip achieves the goal —
+  hand-to-handle distance 0.00 px and the thermos rotates 104.8° with the wrist —
+  but it then exposes a **motor defect**: the hold path targets
+  `shoulder + eased rel + breath` without clamping to the drawn arm's reach, so
+  a 0.02 px overshoot makes `wholeBodyProposal` reject every attempt, the bake
+  freezes at 4.675 s and a single sub-pixel miss ends the performance with a prop
+  frozen 34.8 px inside the counter. The fix belongs in the motor (clamp the
+  target and make the contact residual honest at the cap), not in the data —
+  raising the tolerance only moved the freeze.
+
+### Grip socket rule
+
+A `placement.grip` is declared only where the artwork has a real handle. The
+thermos is the only current prop that qualifies (closed loop, ink x 133..158 /
+y 54..98, socket `[148,76]`). Notebook, phone, skill cards, roasted sausage,
+skill bottle, desk, mirror, scroll, flashlight and the sign are carried at the
+centre, which is the correct behaviour rather than a gap.
+
+### Follow-ups found during R1 and R2
+
+- **R6** — `packages/adapters/tts-edge/test/fixtures/boundaries.{srt,vtt}` were
+  never tracked (`.gitignore` excludes `*.srt`/`*.vtt`), so three adapter tests
+  fail for the same class of seam the cues had. They need a generator or an
+  explicit tracked exception, decided once rather than per test.
+- **R7** — `enumerateCueAssets` treats a missing cues directory as valid, so a
+  clone that skips `pretest` silently drops sfx again and only the music case is
+  caught, by a direct file read. Cue presence needs one loud gate.
