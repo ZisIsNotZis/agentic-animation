@@ -129,3 +129,48 @@ Optional extensions, not prerequisites for the closed engine milestone:
 - Bailan visual asset upgrade: three distinct outlined character puppets,
   repointed cast and upgraded cultivation/arena sets.
 - Full-episode showcase `render-yaml`; not required for rendering demos.
+
+## Restart point (2026-10-18, end of session)
+
+The work is being resumed elsewhere. This is the exact state, so nothing has to be
+re-derived.
+
+**Green and pushed:** `main` at the asset-programme commit below, 313/313 tests.
+Milestones M0–M7 are delivered; M6 and M7 carry independent viewer PASS verdicts
+([ART_FILM_LANGUAGE_M6](ART_FILM_LANGUAGE_M6.md),
+[ART_TRANSFER_M7](ART_TRANSFER_M7.md)).
+
+**Slice A (badminton) — assets complete, engine missing.** Accepted and reviewed:
+`set/badminton_hall`, `figure/athlete_a`, and the props `racket`, `shuttle`,
+`high_bar`, `teapot`, `teacup`. The engine work that slice needs was never landed:
+**E1 projectile with a struck contact** and **E4 a following camera**. Wave 0 already
+declares `prop.kind: "projectile"` with mass, restitution and a struck rule, and an
+episode using it fails loud as unimplemented. That is the first thing to build:
+`packages/core/src/motor/index.ts` (projectile state and the struck rule),
+`packages/studio/src/performance/evaluate.ts` (camera follow), and the event names
+`projectile.struck` / `projectile.settled` from
+`compiler/capabilities.ts`.
+
+**Slice B (giant swing) — capability proven, shot blocked.** The swing works:
+hanging support, both hands on one grip, a full −360° turn with grip error
+0.000000 px over 86 frames, zero diagnostics (`8c66520` and predecessors). The shot
+does not bake because of staging and sub-pixel boundaries, all recorded with numbers
+in [ART_ASSET_PROGRAM](ART_ASSET_PROGRAM.md) ("Slice B state"): the set's bar had to
+move to a reachable height, a straight-up mount is singular, the staged standing line
+is not owned by the set so a full circle cannot fit any frame, and three sub-pixel
+invariants (`leg-annulus` 0.002 px, `support-anchor` 0.029 px, a constant
+`grip-contact` 1.119 px) keep refusing the mount. `episodes/b-bar-swing/` holds the
+episode and a README with the framing measurements.
+
+**Slice C (pouring tea) — not started.** `intent pour` is declared and fails loud;
+`prop/teapot` and `prop/teacup` exist; the tea room and two cast members do not.
+
+**Working practices this session proved, worth keeping:**
+- a subagent is killed at 30 minutes, so engine work must be split into ≤20-minute
+  steps, each committed and pinned with `git -C <repo> branch -f keep/<name>`,
+  because a finished worktree is pruned and an unpinned commit is lost (that happened
+  three times);
+- mechanical gauges beat opinions: `tools/art-direction-study/silhouette-holes.mjs`
+  and `limb-depth.mjs` settled two disputes and one false review finding;
+- evidence frames are cut from the rendered video of the current revision and carry
+  `bake-identity.json`; a reused stills directory is not evidence.
