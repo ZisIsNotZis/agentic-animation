@@ -85,6 +85,9 @@ LEG_PROJECTION = {
     "quarter_back": {"l": (1.00, -2.0, 1.00), "r": (0.74, -5.0, 0.84)},
 }
 NEAR_SIDE = {"front": None, "quarter": "l", "side": "l", "back": None, "quarter_back": "l"}
+# How much of a shoe's width survives the view's turn. A frontal construction keeps
+# the whole sole; a quarter view foreshortens it, so the shoes turn with the body.
+TURN_WIDTH = {"front": 1.0, "quarter": 0.78, "back": 1.0, "quarter_back": 0.78}
 # Arms drawn behind the torso: the torso then covers the sleeve cap, so the arm
 # grows out of the jersey instead of butting against it.
 REAR_ARMS = {"front": ("l", "r"), "quarter": ("r",), "side": ("r",),
@@ -224,6 +227,13 @@ FRONT_FACE = ((204, 44), (222, 82), (226, 114), (214, 150), (200, 168),
               (186, 150), (174, 114), (178, 82))
 
 
+def collar(cx):
+    """Jersey neckline drawn over the neck's foot, so the neck meets the collar in a
+    curve instead of a hard step where two rectangles cross."""
+    return filled(f"M {pt(cx - 17, 194)} Q {pt(cx, 206)} {pt(cx + 17, 194)} L {pt(cx + 17, 214)} "
+                  f"Q {pt(cx, 218)} {pt(cx - 17, 214)} Z", JERSEY, INK, 1.4)
+
+
 def head(fr):
     v = fr.view
     if v != "side":
@@ -232,7 +242,7 @@ def head(fr):
         face_pts = tuple((200 + (p[0] - 200) * squeeze + shift, p[1]) for p in FRONT_FACE)
         cx = 200 + shift
         neck = [filled(f"M {pt(cx - 10, 152)} L {pt(cx + 10, 152)} L {pt(cx + 12, 206)} "
-                       f"L {pt(cx - 12, 206)} Z", SKIN_SHADE, INK, 1.4)]
+                       f"L {pt(cx - 12, 206)} Z", SKIN_SHADE, INK, 1.4), collar(cx)]
         nodes = neck + [filled(smooth(face_pts), SKIN, INK, 2.0)]
         # Near-side features only on a turned head: the far ear has gone round the
         # back of the skull, and a back-of-head shows no ear at all.
@@ -261,17 +271,22 @@ def head(fr):
                 nodes += [filled(f"M {pt(cx + 24, 86)} L {pt(cx + 18, 82)} L {pt(cx + 19, 118)} "
                                  f"L {pt(cx + 24, 114)} Z", HAIR, INK, 1.0)]
         else:
+            # The hairline crescent has to stay inside the skull: drawn wider, it
+            # left a background sliver between the hair's inner edge and the face
+            # outline at the temple (a hole in the head silhouette).
             nodes += [filled(f"M {pt(cx - 30, 100)} Q {pt(cx - 32, 48)} {pt(cx - 2, 40)} "
                              f"Q {pt(cx + 28, 40)} {pt(cx + 30, 74)} Q {pt(cx + 31, 96)} "
-                             f"{pt(cx + 24, 110)} L {pt(cx + 16, 96)} Q {pt(cx + 14, 60)} "
-                             f"{pt(cx - 4, 58)} Q {pt(cx - 20, 60)} {pt(cx - 22, 100)} Z",
+                             f"{pt(cx + 24, 110)} L {pt(cx + 16, 96)} Q {pt(cx + 10, 74)} "
+                             f"{pt(cx - 4, 70)} Q {pt(cx - 12, 74)} {pt(cx - 22, 100)} Z",
                              HAIR, INK, 1.8),
                       path(f"M {pt(cx - 6, 54)} Q {pt(cx + 10, 58)} {pt(cx + 16, 80)}", "none",
                            HAIR_LIGHT, 1.6)]
         return nodes
     # Profile: faces screen-right, drawn around the same neck pivot.
     neck = [filled(f"M {pt(192, 152)} L {pt(214, 152)} L {pt(216, 206)} L {pt(190, 206)} Z",
-                   SKIN_SHADE, INK, 1.4)]
+                   SKIN_SHADE, INK, 1.4),
+            filled(f"M {pt(186, 194)} Q {pt(204, 200)} {pt(222, 192)} L {pt(222, 214)} "
+                   f"Q {pt(204, 218)} {pt(186, 214)} Z", JERSEY, INK, 1.4)]
     profile = [filled(smooth([(208, 44), (226, 62), (231, 92), (233, 110), (241, 124),
                               (233, 130), (234, 138), (231, 144), (231, 156), (218, 168),
                               (200, 172), (186, 158), (180, 128), (182, 90), (190, 58)]),
@@ -280,7 +295,7 @@ def head(fr):
     hair = [filled(smooth([(188, 56), (206, 40), (226, 50), (231, 78), (230, 94), (219, 84),
                            (206, 86), (196, 110), (188, 114), (180, 98), (178, 74)]),
                    HAIR, INK, 1.8),
-            filled("M 198 42 Q 216 32 230 46 L 216 44 Q 206 38 200 48 Z", HAIR_LIGHT, HAIR_LIGHT, 0.6),
+            filled("M 198 42 Q 216 32 230 46 L 216 47 Q 206 41 200 51 Z", HAIR_LIGHT, HAIR_LIGHT, 0.6),
             filled("M 184 106 Q 178 82 186 66 L 196 74 L 190 114 Z", HAIR, INK, 1.0)]
     return neck + profile + [ear] + hair
 
@@ -371,21 +386,28 @@ def foot_part(fr, side):
     body = SHOE if not far else SHOE_SHADE
     edge = INK if not far else SHOE_SHADE
     sole = SHOE_SOLE if not far else TROUSER_SHADE
-    nodes = [socket(x, y - 8, fr.r(15.0), body),
-             filled(f"M {pt(x - 16, y - 10)} Q {pt(x, y - 17)} {pt(x + 16, y - 10)} "
-                    f"Q {pt(x + 19, y + 10)} {pt(x + 17 + toe * 0.5, y + 32)} "
-                    f"Q {pt(x + toe, y + 40)} {pt(x - 17 + toe * 0.5, y + 32)} "
-                    f"Q {pt(x - 19, y + 10)} {pt(x - 16, y - 10)} Z", body, edge, 1.8)]
+    # A foot belongs to its leg, so it turns with the body: in the two quarter views
+    # the shoe is foreshortened across the screen instead of being a front-facing
+    # copy. Its vertical extent is unchanged so the shoe still meets the sock, and
+    # narrowing only ever removes coverage, so it cannot open a background hole.
+    turn = TURN_WIDTH[fr.view] * fr.k
+    ox = lambda offset: x + offset * turn
+    nodes = [socket(x, y - 8, fr.r(15.0) * turn, body),
+             filled(f"M {pt(ox(-16), y - 10)} Q {pt(x, y - 17)} {pt(ox(16), y - 10)} "
+                    f"Q {pt(ox(19), y + 10)} {pt(ox(17 + toe * 0.5), y + 32)} "
+                    f"Q {pt(ox(toe), y + 40)} {pt(ox(-17 + toe * 0.5), y + 32)} "
+                    f"Q {pt(ox(-19), y + 10)} {pt(ox(-16), y - 10)} Z", body, edge, 1.8)]
     if fr.view in ("front", "quarter"):
-        nodes += [path(f"M {pt(x - 9, y - 6)} Q {pt(x, y - 2)} {pt(x + 9, y - 6)}", "none", SHOE_SHADE, 1.4),
-                  path(f"M {pt(x - 10, y + 4)} L {pt(x + 10, y + 4)}", "none", SHOE_SHADE, 1.2)]
+        nodes += [path(f"M {pt(ox(-9), y - 6)} Q {pt(x, y - 2)} {pt(ox(9), y - 6)}", "none", SHOE_SHADE, 1.4),
+                  path(f"M {pt(ox(-10), y + 4)} L {pt(ox(10), y + 4)}", "none", SHOE_SHADE, 1.2)]
     else:
-        nodes += [path(f"M {pt(x - 8, y - 4)} L {pt(x + 8, y - 4)}", "none", SHOE_SHADE, 1.4),
-                  path(f"M {pt(x - 9, y + 6)} L {pt(x + 9, y + 6)}", "none", SHOE_SHADE, 1.2)]
-    nodes += [path(f"M {pt(x - 11, y + 14)} L {pt(x + 11, y + 14)}", "none", JERSEY, 3.0),
-              filled(f"M {pt(x - 18, y + 28)} Q {pt(x + toe * 0.5, y + 35)} {pt(x + 18 + toe * 0.5, y + 28)} "
-                     f"L {pt(x + 17 + toe * 0.5, y + 34)} Q {pt(x + toe * 0.5, y + 43)} "
-                     f"{pt(x - 17 + toe * 0.5, y + 34)} Z", sole, sole, 0.0)]
+        nodes += [path(f"M {pt(ox(-8), y - 4)} L {pt(ox(8), y - 4)}", "none", SHOE_SHADE, 1.4),
+                  path(f"M {pt(ox(-9), y + 6)} L {pt(ox(9), y + 6)}", "none", SHOE_SHADE, 1.2)]
+    nodes += [path(f"M {pt(ox(-11), y + 14)} L {pt(ox(11), y + 14)}", "none", JERSEY, 3.0),
+              filled(f"M {pt(ox(-18), y + 28)} Q {pt(ox(toe * 0.5), y + 35)} "
+                     f"{pt(ox(18 + toe * 0.5), y + 28)} "
+                     f"L {pt(ox(17 + toe * 0.5), y + 34)} Q {pt(ox(toe * 0.5), y + 43)} "
+                     f"{pt(ox(-17 + toe * 0.5), y + 34)} Z", sole, sole, 0.0)]
     return nodes
 
 
