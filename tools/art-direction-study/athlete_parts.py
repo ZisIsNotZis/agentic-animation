@@ -58,8 +58,8 @@ JOINTS = {
     "neck": (200.0, 182.0),
     "shoulder_l": (152.0, 202.0), "elbow_l": (139.0, 278.0), "hand_l": (128.0, 356.0),
     "shoulder_r": (248.0, 202.0), "elbow_r": (261.0, 278.0), "hand_r": (272.0, 356.0),
-    "hip_l": (186.0, 352.0), "knee_l": (183.0, 509.0), "foot_l": (181.0, 668.0),
-    "hip_r": (214.0, 352.0), "knee_r": (217.0, 509.0), "foot_r": (219.0, 668.0),
+    "hip_l": (186.0, 352.0), "knee_l": (167.0, 505.0), "foot_l": (181.0, 668.0),
+    "hip_r": (214.0, 352.0), "knee_r": (233.0, 505.0), "foot_r": (219.0, 668.0),
 }
 
 # The five views are five constructions, not one drawing compressed: each has
