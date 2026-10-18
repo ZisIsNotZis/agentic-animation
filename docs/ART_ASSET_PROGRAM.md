@@ -140,6 +140,33 @@ side/front ratios, with the arms-included table printed ungated because a hangin
 arm is lateral in front and superimposed in profile). `limb-depth.mjs` fails on
 `athlete_a`, which is the control that the gauge is not a rubber stamp.
 
+### Blocked: a new figure cannot mount the swing, and the cause is a boundary, not a bug
+
+Slice B's episode is authored (`keep/slice-b`, `35bf415`) but the swing does not turn
+on `figure/gymnast_b`: the mount engages, the hands hold the pivot at 0.000000 px,
+and the rotation stays at 0° while `whole-body proposal exhausted …
+foot-reach/foot_r 0.494 > 0.020` repeats. The same staging with `lin_b_draft` bakes
+clean, so it is the figure's data, not the set or the capability.
+
+Measured cause: all three figures' rest legs are essentially straight, and the
+proposal's `foot-reach` check compares the DRAWN foot with a target that sits
+exactly on the leg chain's full extension, i.e. on the annulus boundary:
+
+| figure | chain (thigh+shin) | hip→foot | slack |
+|---|---|---|---|
+| `lin_b_draft` | 259.79 | 259.60 | 0.19 |
+| `athlete_a` | 316.04 | 316.04 | 0.00 |
+| `gymnast_b` | 318.04 | 318.04 | 0.00 |
+
+A zero-slack leg has no reachable point beyond the target, so any rounding at the
+boundary makes the solved foot land ~0.5 px short and the whole-body proposal
+rejects the substep. This is the same class as the held-hand freeze in R3, whose
+fix was to compare like with like AT THE CAP rather than to widen a tolerance: the
+foot check must compare the drawn foot with the target clamped into the leg's
+reachable annulus. That fix belongs in the motor and is queued behind the engine
+token, not worked around by bending the figures' knees, which would change art that
+has already been accepted.
+
 ## Risks
 
 - **Swing is the only capability that may not be expressible.** The spike decides
