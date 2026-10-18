@@ -193,6 +193,31 @@ test("semantic focus fits all present actors before choosing the largest useful 
   assert.ok(state.camera.z < 1.35);
 });
 
+test("a push frames its subject's head and torso instead of capping on the staged pair's height", () => {
+  const manifest: PerformanceManifest = {
+    video: {width: 1280, height: 720, fps: 24},
+    durationInFrames: 48,
+    locationScenes: {room: "<svg/>"},
+    actors: [
+      {id: "lin", placement: {at: [400, 691.2], scale: 0.88}},
+      {id: "awei", placement: {at: [800, 691.2], scale: 0.88}},
+    ],
+    tracks: [{kind: "camera", subject: "camera", events: [{frame: 0, endFrame: 24, value: {operation: "push", zoom: 1.35, target: "lin"}}]}],
+  };
+  const state = evaluatePerformance(manifest, 24);
+  const subject = state.actors.find((actor) => actor.id === "lin")!;
+  const headTop = subject.y - 720 * subject.scale;
+  const waist = subject.y - 408.24 * subject.scale;
+  const bottom = state.camera.y + manifest.video!.height / state.camera.z;
+  // The staged pair's 720*scale height no longer limits a push: at z 1.35 the
+  // viewport is 533 world px, and the shot is composed on the subject's band.
+  assert.equal(state.camera.z, 1.35);
+  assert.ok(state.camera.y <= headTop, `head inside the frame (top ${state.camera.y} vs head ${headTop})`);
+  assert.ok(bottom >= waist, `bottom edge ${bottom} cut above the waist ${waist}: the shin crop`);
+  assert.ok((subject.x - 200 * subject.scale - state.camera.x) * state.camera.z >= 0);
+  assert.ok((subject.x + 200 * subject.scale - state.camera.x) * state.camera.z <= manifest.video!.width);
+});
+
 test("runtime evaluation deterministically repels actors whose movement tracks coincide", () => {
   const manifest: PerformanceManifest = {
     video: {width: 1280, height: 720, fps: 24},

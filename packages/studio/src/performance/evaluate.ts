@@ -118,10 +118,81 @@ function cameraKeyValue(event: PerformanceTrackEvent): UnknownRecord {
   return asRecord(value.value) ?? value;
 }
 
-function cameraTargetPoint(target: unknown, actors: readonly EvaluatedActor[], fallback: [number, number]): [number, number] {
-  if (typeof target !== "string") return fallback;
-  const actor = actors.find((candidate) => candidate.id === target);
-  return actor ? [actor.x, actor.y - 360 * actor.scale] : fallback;
+/** Design-space figure height used when an actor exposes no skeleton. */
+const FIGURE_DESIGN_HEIGHT = 720;
+/** Head-to-waist share of the figure (lin_b_draft's waist joint is 408/720),
+ *  used only when the actor exposes no declared skeleton. */
+const FIGURE_WAIST_SHARE = 408.24 / 720;
+
+/**
+ * What a push frames: a person's head-and-torso band, or an object's whole
+ * silhouette. Framing the arithmetic centre instead puts the bottom edge of a
+ * z 1.35 shot above the ground line, so a standing figure is cut at the shins
+ * and the move reads as accidental scaling rather than camerawork.
+ */
+interface PushSubject {
+  /** Vertical centre of the framed band, and the band itself (world y). */
+  centre: [number, number];
+  band: [number, number];
+  /** A person is framed with the staged pair (their room is the shot); an
+   *  object is framed on its own silhouette. */
+  horizontal: "pair" | "self";
+}
+
+function actorFrameBand(actor: EvaluatedActor): [number, number] {
+  const skeleton = actor.skeleton;
+  if (!skeleton) {
+    const height = FIGURE_DESIGN_HEIGHT * actor.scale;
+    return [actor.y - height, actor.y - height * FIGURE_WAIST_SHARE];
+  }
+  // The band follows the pose the renderer draws: a folded figure's head and
+  // torso are nowhere near the standing band, and framing the standing band is
+  // what pushed a crouched subject out of her own shot.
+  const space = skeleton.space ?? {width: 400, height: FIGURE_DESIGN_HEIGHT};
+  const solved = solveSkeleton(skeleton, actor.skeletonPose ?? {});
+  const toWorld = (designY: number) => actor.y + (designY - space.height) * actor.scale;
+  let top = Number.POSITIVE_INFINITY;
+  let bottom = Number.NEGATIVE_INFINITY;
+  for (const name of ["head", "torso"]) {
+    const box = solved.parts[name]?.world;
+    if (box?.kind !== "box") continue;
+    top = Math.min(top, box.a[1], box.b[1]);
+    bottom = Math.max(bottom, box.a[1], box.b[1]);
+  }
+  return Number.isFinite(top) && Number.isFinite(bottom)
+    ? [toWorld(top), toWorld(bottom)]
+    : [actor.y - space.height * actor.scale, actor.y - space.height * actor.scale * FIGURE_WAIST_SHARE];
+}
+
+function propFrameBand(prop: EvaluatedProp): [number, number] {
+  // The prop's origin is its art origin; the declared drawn-body box measures
+  // the silhouette in art units (y down) around it.
+  const body = prop.body;
+  const scale = prop.scale || 1;
+  const top = body ? body[1] : 0;
+  const bottom = body ? body[3] : prop.size[1];
+  return [prop.y + top * scale, prop.y + bottom * scale];
+}
+
+function pushSubject(
+  target: unknown,
+  actors: readonly EvaluatedActor[],
+  props: readonly EvaluatedProp[],
+): PushSubject | undefined {
+  if (typeof target !== "string") return undefined;
+  const actor = actors.find((candidate) => candidate.id === target && candidate.present);
+  if (actor) {
+    const band = actorFrameBand(actor);
+    return {centre: [actor.x, (band[0] + band[1]) / 2], band, horizontal: "pair"};
+  }
+  const prop = props.find((candidate) => candidate.id === target);
+  if (!prop) return undefined;
+  const band = propFrameBand(prop);
+  return {centre: [prop.x, (band[0] + band[1]) / 2], band, horizontal: "self"};
+}
+
+function cameraTargetPoint(subject: PushSubject | undefined, fallback: [number, number]): [number, number] {
+  return subject ? subject.centre : fallback;
 }
 
 function repelActors(actors: readonly EvaluatedActor[]): EvaluatedActor[] {
@@ -175,16 +246,22 @@ function fitCameraToActors(
 
 function fitPushCamera(
   target: [number, number],
+  subject: PushSubject | undefined,
   actors: readonly EvaluatedActor[],
   requestedZoom: number,
   video: {width: number; height: number},
 ): {center: [number, number]; zoom: number} {
   const relevant = actors.filter((actor) => actor.present);
-  if (relevant.length < 2) return {center: target, zoom: requestedZoom};
+  // The subject's own band decides the vertical centre; the staged pair only
+  // bounds the horizontal when the subject is a person.
+  const vertical = target[1];
+  if (subject?.horizontal === "self" || relevant.length < 2) {
+    return {center: [target[0], vertical], zoom: requestedZoom};
+  }
   const left = Math.min(...relevant.map((actor) => actor.x - 200 * actor.scale)) - 36;
   const right = Math.max(...relevant.map((actor) => actor.x + 200 * actor.scale)) + 36;
   const zoom = Math.min(requestedZoom, video.width / (right - left));
-  return {center: [(left + right) / 2, target[1]], zoom};
+  return {center: [(left + right) / 2, vertical], zoom};
 }
 
 /** The camera viewport must stay inside the painted 1920x1080 stage. */
@@ -209,6 +286,7 @@ function containCamera(
   camera: EvaluatedCamera,
   actors: readonly EvaluatedActor[],
   video: {width: number; height: number},
+  subject?: PushSubject,
 ): EvaluatedCamera {
   const visible = actors.filter((actor) => actor.present);
   if (!visible.length) return camera;
@@ -221,15 +299,36 @@ function containCamera(
   // 1920x1080 canvas shrinks inside the video frame and the episode
   // background leaks in as black bands.
   const fit = Math.min(video.width / CANVAS.width, video.height / CANVAS.height);
-  const zoom = Math.max(fit, Math.min(camera.z, video.width / Math.max(1, right - left), video.height / Math.max(1, bottom - top)));
+  const band = subject?.band;
+  // A framed subject owns the shot's zoom and its vertical placement: capping
+  // the push at the staged pair's own height keeps the whole room in frame and
+  // a push that cannot get closer than the wide is not a push. The subject's
+  // band is what must fit, and the rest of the room may fall outside it.
+  const zoom = band
+    ? Math.max(fit, Math.min(
+      camera.z,
+      video.height / Math.max(1, band[1] - band[0] + 2 * margin),
+      subject!.horizontal === "pair" ? video.width / Math.max(1, right - left) : Number.POSITIVE_INFINITY,
+    ))
+    : Math.max(fit, Math.min(camera.z, video.width / Math.max(1, right - left), video.height / Math.max(1, bottom - top)));
   const viewportWidth = video.width / zoom;
   const viewportHeight = video.height / zoom;
-  const x = right - left <= viewportWidth
-    ? Math.max(left, Math.min(camera.x, right - viewportWidth))
-    : left;
-  const y = bottom - top <= viewportHeight
-    ? Math.max(top, Math.min(camera.y, bottom - viewportHeight))
-    : top;
+  const x = subject?.horizontal === "self"
+    ? camera.x
+    : right - left <= viewportWidth
+      ? Math.max(left, Math.min(camera.x, right - viewportWidth))
+      : left;
+  // A focused shot keeps its subject's band inside the viewport, with headroom
+  // above the head and the bottom edge past the subject's own lower bound; it
+  // never pins the frame to the staging's top edge, which is what cut a
+  // standing figure at the shins and read as accidental scaling.
+  const y = band
+    ? band[1] - band[0] + 2 * margin > viewportHeight
+      ? band[0] - margin
+      : Math.max(band[1] + margin - viewportHeight, Math.min(camera.y, band[0] - margin))
+    : bottom - top <= viewportHeight
+      ? Math.max(top, Math.min(camera.y, bottom - viewportHeight))
+      : top;
   // The viewport must stay inside the painted stage: with zoom at the stage
   // fit the whole canvas fills the frame, so any stage-boundary-crossing
   // offset would expose the episode background as black bands.
@@ -244,6 +343,7 @@ function containCamera(
 function cameraKeyFromEvent(
   event: PerformanceTrackEvent,
   actors: readonly EvaluatedActor[],
+  props: readonly EvaluatedProp[],
   previous: EvaluatedCamera,
   composition: EvaluatedCamera,
   viewport: {width: number; height: number},
@@ -251,12 +351,13 @@ function cameraKeyFromEvent(
   const value = cameraKeyValue(event);
   const operation = value.operation;
   const zoom = typeof value.zoom === "number" ? value.zoom : typeof value.z === "number" ? value.z : undefined;
-  const target = cameraTargetPoint(value.target, actors, [previous.x, previous.y]);
+  const subject = pushSubject(value.target, actors, props);
+  const target = cameraTargetPoint(subject, [previous.x, previous.y]);
   const nextZoom = zoom === undefined ? previous.z : zoom;
   // PerformanceFrame applies `translate(-x, -y) scale(z)`, so x/y are world
   // offsets, not already-scaled pixel translations.
   const fitted = operation === "push" || (operation === "hold" && typeof value.target === "string")
-    ? fitPushCamera(target, actors, nextZoom, viewport)
+    ? fitPushCamera(target, subject, actors, nextZoom, viewport)
     : undefined;
   const centeredX = (fitted?.center[0] ?? target[0]) - viewport.width / (2 * (fitted?.zoom ?? nextZoom));
   const centeredY = (fitted?.center[1] ?? target[1]) - viewport.height / (2 * (fitted?.zoom ?? nextZoom));
@@ -271,9 +372,34 @@ function cameraKeyFromEvent(
   return {frame: trackEventStart(event), x, y, z: fitted?.zoom ?? nextZoom, rotation: numberOr(value.rotation as number | undefined, previous.rotation), ease: event.ease ?? value.ease as PerformanceCameraKey["ease"]};
 }
 
+/** The subject of the shot in force at `frame`: the most recent push/hold with a
+ *  named target, cleared by a pull back to the room. Iteration inside
+ *  containCamera uses this band so a focused shot keeps its subject framed. */
+function shotSubjectAt(
+  tracks: readonly EvaluatedTrack[],
+  actors: readonly EvaluatedActor[],
+  props: readonly EvaluatedProp[],
+  frame: number,
+): PushSubject | undefined {
+  const events = tracks.filter((track) => track.kind === "camera")
+    .flatMap((track) => track.events)
+    .sort((a, b) => trackEventStart(a) - trackEventStart(b));
+  let found: PushSubject | undefined;
+  for (const event of events) {
+    if (trackEventStart(event) > frame) break;
+    const value = cameraKeyValue(event);
+    if (value.operation === "pull") found = undefined;
+    else if (value.operation === "push" || value.operation === "hold") {
+      found = pushSubject(value.target, actors, props) ?? found;
+    }
+  }
+  return found;
+}
+
 function cameraKeysFromTracks(
   tracks: readonly EvaluatedTrack[],
   actors: readonly EvaluatedActor[],
+  props: readonly EvaluatedProp[],
   composition: EvaluatedCamera,
   video: {width: number; height: number; fps: number},
 ): PerformanceCameraKey[] {
@@ -281,7 +407,7 @@ function cameraKeysFromTracks(
   let previous = composition;
   return events.flatMap((event) => {
     const start = previous;
-    const key = cameraKeyFromEvent(event, actors, previous, composition, video);
+    const key = cameraKeyFromEvent(event, actors, props, previous, composition, video);
     const value = cameraKeyValue(event);
     const semantic = value.operation === "push" || value.operation === "pull" || typeof value.zoom === "number";
     const end = trackEventEnd(event, trackEventStart(event));
@@ -1187,7 +1313,7 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
   );
   const explicitCameraKeys = cameraKeys(normalized.camera ?? normalized.cameraTrack);
   const composition = interpolateCamera(explicitCameraKeys, 0);
-  const projectedCameraKeys = cameraKeysFromTracks(tracks, actors, composition, normalized.video ?? {width: 1920, height: 1080, fps: 24});
+  const projectedCameraKeys = cameraKeysFromTracks(tracks, actors, evaluatedProps, composition, normalized.video ?? {width: 1920, height: 1080, fps: 24});
   const interpolatedCamera = interpolateCamera([...explicitCameraKeys, ...projectedCameraKeys], safeFrame);
   return {
     frame: safeFrame,
@@ -1195,7 +1321,7 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
     // path produced the key (containCamera, explicit camera tracks, defaults).
     camera: clampCameraToStage(
       manifest.locationScenes
-        ? containCamera(interpolatedCamera, actors, normalized.video ?? {width: 1920, height: 1080})
+        ? containCamera(interpolatedCamera, actors, normalized.video ?? {width: 1920, height: 1080}, shotSubjectAt(tracks, actors, evaluatedProps, safeFrame))
         : interpolatedCamera,
       normalized.video ?? {width: 1280, height: 720},
     ),
