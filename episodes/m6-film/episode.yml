@@ -52,7 +52,11 @@ scenes:
       lin: {facing: awei}
       awei: {facing: lin}
     objects:
-      thermos: center
+      # The thermos rests on the set's DECLARED counter support, not the floor:
+      # a canteen thermos belongs on the counter, and a counter-height pickup is
+      # a short reach the figure draws upright. On the floor it forced a 128 px
+      # hip drop the planted feet could not follow (M6 defect 1).
+      thermos: on(counter)
     script:
       # 1 establish — medium two-shot, no camera move and no cue.
       - awei: "师傅，这桶汤，还有吗？"
