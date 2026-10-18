@@ -1,0 +1,90 @@
+episode:
+  id: m7_transfer
+  title: 名册（M7）
+  language: zh-CN
+
+# M7 transfer slice. The whole point is that a NEW situation reuses the proven
+# machinery: a different set, a different cast, a different light and a
+# two-actor handover, authored from prose with no engine change.
+#
+# PROSE SOURCE (the unfriendly input — written as stage prose first, then
+# translated into the DSL by hand, not copied from another episode's skeleton):
+#
+#   黄昏，青云宗院子。石桌压着一卷外门考核名册，阿强在石圈边站着。
+#   长老：这名册在我桌上，放了半个时辰。
+#   长老（走近，拿起卷册）：考核不看情面。
+#   阿强（伸手接住，卷册从他手里过来）：弟子明白。
+#   阿强（展开卷册）：……
+#   阿强（低头）：我的编号。
+#   院子里的光暗下去。阿强：划掉了。
+#   长老（转身）：山门不养闲人。
+#
+# What the prose asked for that the DSL made me fight (the M7 finding; see the
+# transfer report on the milestone):
+#   - "卷册从他手里过来" is a real handover: `prop.handover(elder, scroll,
+#     aqiang)` is exactly that and needed no authoring. But the prose opens with
+#     the elder already holding the register ("袖里抽出"), and there is no
+#     initial-hold placement in the DSL, so the register has to be staged on a
+#     support and a 1.6 s `prop.pickup` beat is spent buying back a hand state.
+#   - "院子里的光暗下去" is one global dim (`effect.lights_down`) and the whole
+#     courtyard darkens; the effect is targetless, so light cannot be given to a
+#     person or a region. That is expressive enough here and a limit elsewhere.
+#   - The courtyard set declares no support surfaces, so `on(X)` can only name a
+#     prop support: the stone table is `prop/desk` placed at center and the
+#     register sits `on(desk)`. Nothing in the engine failed; the asset set has
+#     no declared staging metadata to reuse.
+#
+# Shot ladder (base composition is the medium two-shot at zoom 1.0):
+#   1 establish     no camera call: the courtyard, both bodies and the register
+#                   on the stone table are read before anyone is singled out.
+#   2 push elder    camera.punch_in(elder) lands before he picks the register up,
+#                   so the close frame is already held while the lift runs.
+#   3 handover      camera stays; prop.handover takes the register across the gap
+#                   on real contact, sound.paper_snap() is the accent.
+#   4 pull wide     camera.wide() because the pair is the unit again while
+#                   aqiang unrolls the register; paper-unroll is its own accent.
+#   5 push register camera.punch_in(register, 3.3): the insert is the register,
+#                   not the men holding it (the M6 lesson: an object shot needs
+#                   an authored zoom or it reads as a detail).
+#   6 dim           effect.lights_down() on the reveal: the courtyard's light
+#                   goes with his standing. power-down is the effect's own cue.
+#   7 pull wide     camera.wide() on the closing line: the elder shrinks and the
+#                   yard takes the frame; ending-cadence closes it (nonblock).
+
+actors:
+  aqiang:
+    use: figure/aqiang
+    voice: voice/zh/aqiang
+  elder:
+    use: figure/elder
+    voice: voice/zh/elder
+
+locations:
+  courtyard:
+    use: set/qingyun_courtyard
+
+objects:
+  table:
+    use: prop/desk
+  register:
+    use: prop/scroll
+
+scenes:
+  - id: register
+    location: courtyard
+    actors:
+      aqiang: {facing: elder}
+      elder: {facing: aqiang}
+    objects:
+      table: center
+      register: on(table)
+    script:
+      - elder: "这名册在我桌上，放了半个时辰。"
+      - elder: "{...camera.punch_in(elder)}…"
+      - elder: "{...prop.pickup(elder, register)}考核不看情面。"
+      - aqiang: "{prop.handover(elder, register, aqiang), sound.paper_snap()}弟子明白。"
+      - aqiang: "{camera.wide(), action.unroll(aqiang, register)}……"
+      - aqiang: "{...camera.punch_in(register, 3.3)}我的编号。"
+      - aqiang: "{effect.lights_down(), emotion.desperate(aqiang)}划掉了。"
+      - elder: "{camera.wide(), action.dismiss(elder, aqiang)}山门不养闲人。"
+      - elder: "{...music.ending(), mode: \"nonblock\"}……"
