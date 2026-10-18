@@ -47,7 +47,14 @@ including the render-truth keys), which is why it is a package, not an edit.
    sampled at bind time (`state.propAngleAtBind = liveProp.rotation`, :1419)
    and never updated while held. A held object therefore stays in its
    world-upright bind orientation.
-3. **The holding hand reads as a fist, not a grasp. The obvious art is a
+3. **CLOSED (2026-10-18): the holding hand keeps the coarse `fist` shape.** With
+   the socket on the bar and the carried prop level, an independent viewer
+   reviewing the delivered M6 insert read the shot as "the teal thermos bottle on
+   the wooden counter and the shopkeeper's hand holding its handle" and returned
+   PASS, so a dedicated grasp shape earns nothing at normal viewing size, which is
+   the agreed bar. The `grip` hand shape, its schema entry and its selection are
+   retired with that reason; the art history below stands only as the record of
+   why the obvious rescue was a dead end. **The holding hand reads as a fist, not a grasp. The obvious art is a
    dead end (measured 2026-10-17).** The `*/grips/{l,r}.svg` files are
    **byte-identical copies of the `fist` shape** — the same `<path d>` in 10/10
    view/side pairs and 0 of 346 800 raster bytes different — so M2 never drew

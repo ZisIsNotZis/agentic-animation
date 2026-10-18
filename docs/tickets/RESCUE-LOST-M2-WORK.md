@@ -94,6 +94,15 @@ move the same bake.
   Eleven overlays carry these episodes in two variants; the later variant was
   restored, and its only semantic change is the retired draft set swapped for
   the accepted `set/canteen_counter_m3`.
+- **R5 CLOSED (2026-10-18) as sub-threshold.** The envelope work is complete and
+  measured (per-view ceilings 113° front-type / 103° side, capacity 106.07 /
+  105.06, feet planted to 0.0000, drawn knee clearing the ground line) but its
+  remaining residue — a knee ink grazing the floor line at the deepest crouch —
+  is invisible at normal viewing size, and bounding the crouch costs a 19.1 design
+  px pickup shortfall whose tolerance stops the placing arm returning to rest.
+  Under the agreed bar that is not worth a regression, so it stays on
+  `worker/r5-crouch-knee-flexion` (`8d1045c`) with this reason rather than merged.
+  The original deferral note follows.
 - **R5 deferred by the speed decision.** The envelope work is complete and measured
   (per-view ceilings 113° front-type / 103° side, capacity 106.07 / 105.06, feet
   planted to 0.0000, drawn knee clearing the ground line), and two agent attempts
