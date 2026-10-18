@@ -17,6 +17,12 @@ rear construction, nothing is stroked near-white, every limb buries an unstroked
 socket in its parent, and both leg chains are identical (thigh 158.03, shin
 160.01, ratio 0.99).
 
+Depth is measured rather than eyeballed: the profile is checked by
+tools/art-direction-study/limb-depth.mjs, which compares four trunk-anchored bands
+against the same bands in the front view (chest 0.74, hip 0.80, thigh 0.92, shin
+0.92 of the front width, gates 0.62 / 0.62 / 0.80 / 0.75) and requires the quarter
+view to sit strictly between the two.
+
 Run: python3 tools/art-direction-study/gymnast_parts.py [--stills DIR] [--view NAME]
 """
 import argparse
@@ -97,14 +103,28 @@ SIDE_PROJECTION = {
     "back": {"l": (1.00, -2.0, 1.00), "r": (1.00, 2.0, 1.00)},
     "quarter_back": {"l": (1.00, -4.0, 1.00), "r": (0.70, -14.0, 0.82)},
 }
+# Legs and feet project through their own table, because a leg's depth is not the
+# arm's. An arm hangs on the flank, so the profile may draw it nearly edge-on; a leg
+# carries the body's weight, so its profile width is its depth and must stay close to
+# its frontal width. `k` is exactly that depth ratio: 1.00 front and back, 0.94 on the
+# turned views (the ellipse a round limb projects, sqrt((w^2+d^2)/2), with the profile
+# at 0.92), which is why the turned and profile legs are only a shade narrower than
+# the frontal ones. The profile's `xs` collapses the frontal lateral offset, because a
+# profile cannot see it, and its `dx` then places the near leg 22 forward and the far
+# leg 22 back, so the turned body reads as two legs instead of one column.
 LEG_PROJECTION = {
-    "front": {"l": (1.00, -1.0, 1.00), "r": (1.00, 1.0, 1.00)},
-    "quarter": {"l": (1.00, -2.0, 1.00), "r": (0.74, -6.0, 0.84)},
-    "side": {"l": (0.26, 9.0, 1.00), "r": (0.26, 1.0, 0.88)},
-    "back": {"l": (1.00, -1.0, 1.00), "r": (1.00, 1.0, 1.00)},
-    "quarter_back": {"l": (1.00, -2.0, 1.00), "r": (0.74, -6.0, 0.84)},
+    "front": {"l": (1.00, -2.0, 1.00), "r": (1.00, 2.0, 1.00)},
+    "quarter": {"l": (1.00, -4.0, 0.82), "r": (0.70, -14.0, 0.94)},
+    "side": {"l": (0.12, -12.6, 0.88), "r": (0.12, 4.6, 0.92)},
+    "back": {"l": (1.00, -2.0, 1.00), "r": (1.00, 2.0, 1.00)},
+    "quarter_back": {"l": (1.00, -4.0, 0.82), "r": (0.70, -14.0, 0.94)},
 }
 NEAR_SIDE = {"front": None, "quarter": "l", "side": "l", "back": None, "quarter_back": "l"}
+# Legs need their own near side: a turned view is painted leg_l first and leg_r over
+# it, so the leg drawn last is the one the camera sees - the right one. Naming the
+# near leg `l` drew the far leg on top of the near one, which is why the profile's
+# near thigh survived only as a sliver of lit skin.
+LEG_NEAR = {"front": None, "quarter": "r", "side": "r", "back": None, "quarter_back": "r"}
 # Lateral scale of a hand, per view. The profile sees a hand edge-on, so it collapses
 # there; the frontal and three-quarter views keep a hand the width of a palm because
 # that is the view they show. The far hand of the profile is not drawn at all, so
@@ -167,15 +187,21 @@ def socket(x, y, radius, fill):
     return circle(x, y, radius, fill, None)
 
 
-def limb(a, b, ra, rb, fill, stroke=INK, width=1.5):
-    """Tapered limb: a stroked tube closed by a round cap at each joint."""
+def limb(a, b, ra, rb, fill, stroke=INK, width=1.5, bulge=0.0, at=0.5):
+    """Tapered limb: a stroked tube closed by a round cap at each joint.
+
+    `bulge` adds that many units of radius at `at` along the axis, so the taper
+    carries a muscle belly - a quad or a calf - instead of running straight from
+    the joint radius to the next. Both sides bow together, so the outline stays
+    one closed edge and never gains a seam across the limb.
+    """
     dx, dy = b[0] - a[0], b[1] - a[1]
     length = math.hypot(dx, dy) or 1.0
     nx, ny = -dy / length, dx / length
     left_a, left_b = (a[0] + nx * ra, a[1] + ny * ra), (b[0] + nx * rb, b[1] + ny * rb)
     right_a, right_b = (a[0] - nx * ra, a[1] - ny * ra), (b[0] - nx * rb, b[1] - ny * rb)
-    mx, my = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
-    rm = (ra + rb) / 2
+    mx, my = a[0] + dx * at, a[1] + dy * at
+    rm = ra + (rb - ra) * at + bulge
     d = (f"M {pt(*left_a)} Q {pt(mx + nx * rm, my + ny * rm)} {pt(*left_b)} "
          f"L {pt(*right_b)} Q {pt(mx - nx * rm, my - ny * rm)} {pt(*right_a)} Z")
     return (filled(d, fill, stroke, width) + circle(*a, ra, fill, None) +
@@ -225,15 +251,15 @@ TORSO_OUTLINE = {
     # Profile: chest and back are separate edges, not a mirrored pair. Slice B stages
     # this view, so it has to be the same heavy body seen from the side rather than
     # the front view squeezed: the back runs thoracic curve to lumbar hollow to a
-    # glute that projects behind the hip joint (167 at the seat against hips at 180),
+    # glute that projects behind the hip joint (159 at the seat against hips at 180),
     # and the front edge carries the pectoral, then the belly out past the chest and
-    # back to the hem. Depth 72 at the chest, 68 at the belly and 73 across the seat
-    # against an 84-wide frontal hip: a shade shallower than it is wide, which is what
-    # stops the profile reading as a cut-out plank.
-    "side": {"left": ((200, 182), (176, 196), (168, 222), (171, 252), (180, 286), (184, 312),
-                       (176, 342), (167, 368), (170, 388), (182, 398)),
-             "right": ((220, 182), (233, 196), (240, 222), (242, 250), (245, 278), (249, 308),
-                       (241, 338), (240, 366), (234, 398))},
+    # back to the hem. Depth 82 at the chest and 84 across the seat, which is 0.74 of
+    # the frontal chest width and 0.80 of the frontal hip: a body, not a cut-out
+    # plank. Measured by tools/art-direction-study/limb-depth.mjs.
+    "side": {"left": ((200, 182), (174, 196), (164, 222), (168, 252), (176, 286), (180, 312),
+                       (170, 342), (159, 368), (164, 388), (178, 398)),
+             "right": ((222, 182), (236, 196), (246, 222), (247, 250), (250, 278), (254, 308),
+                       (246, 338), (243, 366), (236, 398))},
     "back": {"left": ((190, 192), (162, 198), (148, 220), (146, 262), (152, 308), (160, 354), (166, 398)),
              "right": ((210, 192), (238, 198), (252, 220), (254, 262), (248, 308), (240, 354), (234, 398))},
     "quarter_back": {"left": ((182, 192), (154, 198), (140, 220), (138, 262), (144, 308), (152, 352), (158, 398)),
@@ -497,36 +523,46 @@ def arm_parts(fr, side):
 def leg_parts(fr, side):
     """Bare thick leg out of a leotard leg opening, down to a soft gym shoe.
 
-    A far leg of a turned view is narrower, sits behind the near leg and is drawn
-    without its own outline, so its silhouette cannot cut a seam across the near
-    leg. Unstroked sockets at the hip and knee keep every join closed.
+    A far leg of a turned view is narrower, sits behind the near leg and carries a
+    thinner ink edge than the near leg rather than none: unstroked, its fill covered
+    the near leg's back edge and the profile read as one column. Unstroked sockets at
+    the hip and knee keep every join closed.
     """
     hip = fr.j(f"hip_{side}")
     knee = fr.j(f"knee_{side}")
     foot = fr.j(f"foot_{side}")
-    far = NEAR_SIDE[fr.view] is not None and side != NEAR_SIDE[fr.view]
+    far = LEG_NEAR[fr.view] is not None and side != LEG_NEAR[fr.view]
     fill = SKIN_SHADE if far else SKIN
-    edge = fill if far else INK
+    edge = INK
+    edge_width = 1.2 if far else 1.7
     shade = fill if far else SKIN_SHADE
-    r_hip, r_knee, r_ankle = fr.r(26.0), fr.r(19.0), fr.r(11.0)
+    r_hip, r_knee, r_ankle = fr.r(26.0), fr.r(19.0), fr.r(13.5)
+    # A heavy thigh is not a cone: the quadriceps belly sits two-fifths of the way to
+    # the knee and the muscle narrows into the joint. The belly is a radius bulge in
+    # the same closed outline, so the leg gains a curve rather than a crease.
     thigh = [socket(hip[0], hip[1] - 22, fr.r(27.0), LEOTARD if not far else LEOTARD_SHADE),
-             limb((hip[0], hip[1] - 16), knee, r_hip, r_knee, fill, edge, 1.7),
+             limb((hip[0], hip[1] - 16), knee, r_hip, r_knee, fill, edge, edge_width,
+                  bulge=fr.r(3.4), at=0.40),
              path(f"M {pt(hip[0] + (2 if side == 'l' else -2), knee[1] - 44)} "
                   f"Q {pt(knee[0] + (5 if side == 'l' else -5), knee[1] - 18)} "
                   f"{pt(knee[0] + (4 if side == 'l' else -4), knee[1] - 4)}",
                   "none", shade, 1.2)]
     ankle = (foot[0], foot[1] - 14)
+    # The calf is the shin's one landform: a belly a third of the way down, then the
+    # taper to a narrow ankle. Without it the lower leg is a straight taper and the
+    # profile leg ends in a stick.
     shin = [socket(knee[0], knee[1], r_knee + 2.0, fill),
-            limb(knee, ankle, r_knee * 0.98, r_ankle, fill, edge, 1.7),
+            limb(knee, ankle, r_knee * 0.98, r_ankle, fill, edge, edge_width,
+                 bulge=fr.r(3.6), at=0.30),
             limb((foot[0], foot[1] - 30), ankle, r_ankle * 1.1, r_ankle * 1.02, fill, edge, 1.4)]
     return thigh, shin
 
 
 def foot_part(fr, side):
     x, y = fr.j(f"foot_{side}")
-    far = NEAR_SIDE[fr.view] is not None and side != NEAR_SIDE[fr.view]
+    far = LEG_NEAR[fr.view] is not None and side != LEG_NEAR[fr.view]
     if fr.view == "side":
-        x += 3 if not far else -7
+        x += 3 if not far else -2
         sole = SHOE_SOLE if not far else LEOTARD_SHADE
         body = SHOE if not far else SHOE_SHADE
         edge = INK if not far else SHOE_SHADE
@@ -626,7 +662,6 @@ def hand_shape(shape, mirror, back=False):
     and by CHALK_LINE finger seams rather than by value: an unoutlined white shape at
     this size reads as a block, and fingers that share a near-white edge disappear.
     """
-    flip = -1.0 if back else 1.0
     nodes = [filled(_palm(), CHALK, INK, 1.2)]
     if back:
         nodes.append(filled("M -11 2 Q 0 -2 11 2 L 11 13 Q 0 17 -11 13 Z",
@@ -656,11 +691,13 @@ def hand_shape(shape, mirror, back=False):
         nodes.append(filled(f"M {pt(fx - 2.7, 14)} L {pt(fx + 2.7, 14)} "
                             f"L {pt(fx + 2.5 + spread, 13 + h)} Q {pt(fx + spread, 18 + h)} "
                             f"{pt(fx - 2.5 + spread, 13 + h)} Z", CHALK, CHALK_LINE, 0.8))
-    thumb = (f"M {pt(-10 * flip, 0)} Q {pt(-18 * flip, 6)} {pt(-16 * flip, 14)} "
-             f"Q {pt(-14 * flip, 20)} {pt(-9 * flip, 17)} Z")
-    nodes.append(filled(thumb, CHALK, CHALK_LINE, 1.0))
+    # A hand hanging at the side lies with its thumb against the thigh, so a dorsal
+    # hand's thumb is on the same side of the hand as a palmar one's: turned outward
+    # it read as a mitten with its thumb on the wrong edge.
+    nodes.append(filled(f"M {pt(-10, 0)} Q {pt(-18, 6)} {pt(-16, 14)} "
+                        f"Q {pt(-14, 20)} {pt(-9, 17)} Z", CHALK, CHALK_LINE, 1.0))
     if shape == "fist":
-        nodes.append(path(f"M {pt(-13 * flip, 4)} Q {pt(-4 * flip, 12)} {pt(5 * flip, 10)}",
+        nodes.append(path(f"M {pt(-13, 4)} Q {pt(-4, 12)} {pt(5, 10)}",
                           "none", CHALK_LINE, 1.1))
     if mirror:
         return [n.replace("<path", '<path data-mirror="1"') for n in nodes]
@@ -839,13 +876,14 @@ def build_view(view):
     parts = {}
     for side in ("l", "r"):
         fr = Frame(view, side)
+        lfr = Frame(view, side, LEG_PROJECTION)
         upper, forearm = arm_parts(fr, side)
         parts[f"arm_u_{side}"] = svg("".join(upper))
         parts[f"arm_l_{side}"] = svg("".join(forearm))
-        thigh, shin = leg_parts(fr, side)
+        thigh, shin = leg_parts(lfr, side)
         parts[f"leg_u_{side}"] = svg("".join(thigh))
         parts[f"leg_l_{side}"] = svg("".join(shin))
-        parts[f"foot_{side}"] = svg("".join(foot_part(fr, side)))
+        parts[f"foot_{side}"] = svg("".join(foot_part(lfr, side)))
         hand_art = hands(fr, side)
         parts[f"hand_{side}"] = hand_art["rest"]
         for shape, doc in hand_art.items():
@@ -926,7 +964,7 @@ def build():
             "Style anchor figure/lin_b_draft (svg-bone-parts format). Measured against figure/athlete_a: front silhouette 199.5x662.5 (ratio 0.30) versus 178.5x669 (0.27), head 72 wide versus 52 at the same 125 height, shoulder joints 108 versus 96, thigh radius 26 versus 18, visible neck about 12 units versus 26.",
             "Legs are mirror-symmetric with thigh 158.03 / shin 160.01 (ratio 0.99); skeleton declares leg.flexionMax 104 and waist.pitchMax 32.",
             "Back and quarter-back views carry the hair over the whole occiput, a heel construction for the shoes and a dorsal construction for the hands; no stroke is near-white.",
-            "The profile is a construction of its own, not the front view squeezed: thoracic curve, lumbar hollow, a seat that projects behind the hip joint, a belly forward of the chest and a head whose brow, nose, lips and chin are one contour; slice B stages this view.",
+            "The profile is a construction of its own, not the front view squeezed: thoracic curve, lumbar hollow, a seat that projects behind the hip joint, a belly forward of the chest and a head whose brow, nose, lips and chin are one contour; slice B stages this view. Its depth is a measurement, not a look: chest 0.74, hip 0.80, thigh 0.92 and shin 0.92 of the front width, from tools/art-direction-study/limb-depth.mjs, and the profile staggers the legs so the turned body reads as two.",
             "Regenerate with python3 tools/art-direction-study/gymnast_parts.py; not a supported CLI.",
         ],
     }, indent=2) + "\n")
