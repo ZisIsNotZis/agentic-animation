@@ -167,6 +167,26 @@ reachable annulus. That fix belongs in the motor and is queued behind the engine
 token, not worked around by bending the figures' knees, which would change art that
 has already been accepted.
 
+### Slice B: the bar is staged below the gymnast's shoulder
+
+Measured: the gymnast's shoulder stands 483 design px above the ground and his arm
+reaches 161 px, so a hanging grip needs the bar at `y ≈ 55` (95 % of arm reach
+above the shoulder). `set/outdoor_bar` declares its bar at `y = 250`, i.e. **195 px
+below the shoulder**, so the grip cannot be reached at all and the two-bone arm
+solve sits at a singular extension — which is what the last rejection
+(`segment-angle-rate/hand_r 172.4 > 35`) measured. The set passed its own visual
+review because a bar's height reads as plausible in a picture; nothing checked it
+against a figure's reach.
+
+Raising the bar to `y ≈ 55` fixes the grip, and then a second constraint bites: the
+orbit radius is ~608 design px, so the top of a full circle lands at `y ≈ −553`,
+outside the 1080 canvas. A realistic bar and a realistic figure simply cannot show a
+whole giant swing inside one frame — this is geometry, not tuning. So Slice B needs
+a framing decision, not more engine work: either the camera follows the body and the
+arc leaves and re-enters frame (normal film grammar for a giant swing), or the
+capability is demonstrated with a pull-up and landing instead, or the canvas and set
+grow to cover the orbit.
+
 ## Risks
 
 - **Swing is the only capability that may not be expressible.** The spike decides
