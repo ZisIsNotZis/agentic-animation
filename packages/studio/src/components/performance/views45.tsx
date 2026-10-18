@@ -33,23 +33,6 @@ import {
 
 type Pt = [number, number];
 
-/** Name plate; identical placement to Actor.tsx and never mirrored. */
-const Label: React.FC<{ label: string }> = ({ label }) => (
-  <text
-    x="200"
-    y="690"
-    textAnchor="middle"
-    fill="#fff0c4"
-    stroke={INK}
-    strokeWidth="5"
-    paintOrder="stroke"
-    fontSize="18"
-    fontWeight="900"
-    fontFamily="Arial, 'Noto Sans CJK SC, sans-serif'"
-  >
-    {label}
-  </text>
-);
 
 /** Hand renderer mirroring Actor.tsx's Hand shapes — but "rest" still draws
  *  a visible palm blob, so a far arm never reads as a missing hand. */
@@ -485,7 +468,6 @@ export function QuarterFrontView({
           d="M212 220Q234 226 254 218"
         />
       </g>
-      <Label label={label} />
     </svg>
   );
 }
@@ -585,7 +567,6 @@ export function BackView({ role, label, pose }: ViewProps): React.ReactElement {
           strokeWidth="10"
         />
       </g>
-      <Label label={label} />
     </svg>
   );
 }
@@ -777,7 +758,6 @@ export function SideView({
           />
         )}
       </g>
-      <Label label={label} />
     </svg>
   );
 }
@@ -905,7 +885,6 @@ export function QuarterBackView({
           strokeLinejoin="round"
         />
       </g>
-      <Label label={label} />
     </svg>
   );
 }

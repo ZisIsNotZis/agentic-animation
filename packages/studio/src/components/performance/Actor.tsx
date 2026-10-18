@@ -233,13 +233,6 @@ export const PerformanceActor: React.FC<{
               <Face expression={expression} pose={pose} />
             </g>
           </g>
-          {heldProp ? (
-            <HeldProp
-              label={heldProp.label ?? heldProp.id}
-              x={solved ? solved.hands.hand_r!.center[0] : 200 + 92}
-              y={solved ? solved.hands.hand_r!.center[1] : 720 - 208}
-            />
-          ) : null}
           {pose.slamPeak ? <SlamImpact /> : null}
           <text
             x="200"
@@ -385,32 +378,6 @@ const Hand: React.FC<{
       strokeWidth="6"
     />
   ) : null;
-const HeldProp: React.FC<{ label: string; x: number; y: number }> = ({
-  label,
-  x,
-  y,
-}) => (
-  <g aria-label={`held ${label}`} transform={`translate(${x - 30} ${y - 12})`}>
-    <rect
-      width="60"
-      height="24"
-      rx="4"
-      fill="#fff5dc"
-      stroke={INK}
-      strokeWidth="6"
-    />
-    <text
-      x="30"
-      y="17"
-      textAnchor="middle"
-      fill={INK}
-      fontSize="10"
-      fontWeight="900"
-    >
-      {label.slice(0, 5)}
-    </text>
-  </g>
-);
 const Face: React.FC<{ expression: string; pose: ActorPose }> = ({
   expression,
   pose,
