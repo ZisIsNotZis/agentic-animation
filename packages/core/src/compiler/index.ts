@@ -331,6 +331,17 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
         actors: Object.fromEntries(Object.entries(staging.actors).map(([id, staged]) => {
           const resolved = context.assets.actors[id]?.use.resolved as {skeleton?: Skeleton;artwork?:FigureArtwork} | undefined;
           const skeletonViews = resolved?.artwork ? Object.fromEntries(FIGURE_VIEWS.map(view=>[view,resolved.artwork!.views[view].skeleton])) as Record<FigureView,Skeleton> : undefined;
+          // A figure drawn from the legacy puppet parts has no articulated
+          // posture: the motor can still move a prop along its pickup path, so
+          // the object lifts while the figure never bends — a magic lift. Say so
+          // where the author will see it (check/make) instead of shipping it.
+          if (!skeletonViews) {
+            const script = JSON.stringify(scene.script);
+            const contact = /prop\.(?:pickup|handover|putdown|release|place)|action\.unroll/.test(script);
+            if (contact) {
+              process.stderr.write(`compileEpisode: warning: scene ${scene.id} actor ${id} uses a legacy puppet figure with no artwork views, but the script performs a contact procedure; the prop will move while the figure cannot bend. Use a native artwork figure (library/figure/<name>/artwork.json).\n`);
+            }
+          }
           return [id, {at: staged.at, facing: staged.facing === -1 ? -1 : 1, scale: staged.scale ?? 1, skeleton: resolved?.skeleton, skeletonViews}];
         })),
         objects: Object.fromEntries(Object.entries(staging.objects).map(([id, staged]) => {

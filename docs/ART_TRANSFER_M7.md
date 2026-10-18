@@ -115,8 +115,41 @@ Three defects found here were **general and are fixed**:
   adjacent, so that insert was removed rather than kept. M6 owns the object-insert
   grammar with the thermos, where the framing is verified.
 
+## The decisive finding: the old cast cannot act at all
+
+The user watched the segment and saw an object lift "by magic" instead of anyone
+bending to pick it up. That is not a staging slip, it is the figure technology.
+
+Measured from the bake: the M7 actors' motor frames carry only
+`x, lean, facing, walk, holds, reach, contact` — **no `skeletonPose`, no `crouch`,
+no `worldFootTargets`**. The M6 actor from `figure/lin_b_draft` carries
+`skeletonPose, crouch, worldFootTargets, footSupport, orientation`. `aqiang`,
+`elder`, `awei`, `liu` and `lin` are the legacy puppet format (`puppet.json`,
+`parts/`, `sockets.json`); `lin_b_draft` is the only native artwork figure
+(`artwork.json` with a skeleton per view). A legacy puppet has no articulated
+posture, so the motor still walks its prop along the pickup path while the figure
+never bends — the object rises on its own.
+
+That answers M7's question in the negative: **reuse of the acting machinery is a
+property of the CAST, not of the pipeline.** The pipeline, camera, cues and
+expressions crossed over; contact acting did not, because the second cast cannot
+express it.
+
+A compile warning now says so where the author will see it: a scene whose script
+performs `prop.pickup|handover|putdown|release|place` or `action.unroll` with an
+actor that has no artwork views prints
+`warning: scene <id> actor <id> uses a legacy puppet figure … the prop will move
+while the figure cannot bend`. It fires twice on this slice and never on M6, which
+is the objective confirmation that the canteen segment was fine and this one is not.
+
 ## Prerequisites for M8 (not fixed here)
 
+0. **A second native figure is the real blocker.** Every acting capability this
+   milestone relies on — crouch, knee bend, reach, contact, handover — requires
+   native artwork, and only `lin_b_draft` has it. Either author a second native
+   figure (character art, M2's pipeline) or accept that a two-character production
+   draws the same figure twice, which is what M6 does. Until then, M7's second-cast
+   claim cannot be made and any contact beat with a legacy puppet is a fake lift.
 1. **A hand-held transfer still lets the drawn bodies touch.** The clearance is
    measured on declared torso boxes (19.2 stage px), but robes draw outside those
    boxes, so the silhouettes meet. The measure must become the drawn outline.
