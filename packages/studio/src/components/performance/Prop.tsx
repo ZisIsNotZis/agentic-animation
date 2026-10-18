@@ -98,13 +98,15 @@ const Scroll: React.FC<PropArtProps> = () => (
 
 const Racket: React.FC<PropArtProps> = () => (
   <g aria-label="racket">
-    <ellipse cx="100" cy="154" rx="26" ry="5" fill="#151526" opacity=".3" />
-    <ellipse cx="100" cy="54" rx="36" ry="44" fill="#eef7f6" stroke={INK} strokeWidth="9" />
-    <path d="M84 26V84M92 22V88M100 18V92M108 22V88M116 26V84M82 34H118M78 44H122M74 56H126M78 68H122M82 78H118" stroke="#8fb3ae" strokeWidth="3" />
-    <path d="M90 90L100 110L110 90Z" fill={GOLD} stroke={INK} strokeWidth="6" />
-    <path d="M100 104V126" stroke={INK} strokeWidth="8" strokeLinecap="round" />
-    <rect x="88" y="120" width="24" height="32" rx="6" fill={RED} stroke={INK} strokeWidth="6" />
-    <path d="M90 132H110M90 142H110" stroke="#b23f33" strokeWidth="4" /><path d="M88 149H112" stroke={INK} strokeWidth="6" />
+    <ellipse cx="100" cy="154" rx="28" ry="5" fill="#151526" opacity=".3" />
+    <path d="M100 62V126" stroke={INK} strokeWidth="9" strokeLinecap="round" />
+    <path d="M100 66V122" stroke="#9fb0bf" strokeWidth="3.5" strokeLinecap="round" />
+    <path d="M91 58L109 58L103 76L97 76Z" fill={GOLD} stroke={INK} strokeWidth="5" />
+    <ellipse cx="100" cy="37" rx="27" ry="28" fill="#eef7f6" stroke={INK} strokeWidth="9" />
+    <path d="M87 19V55M94 19V55M100 19V55M106 19V55M113 19V55M84 22H116M82 30H118M82 38H118M82 46H118M86 54H114" stroke="#8fb3ae" strokeWidth="3" />
+    <rect x="91" y="120" width="18" height="32" rx="6" fill={RED} stroke={INK} strokeWidth="6" />
+    <path d="M94 131H106M94 141H106" stroke="#b23f33" strokeWidth="3.5" />
+    <path d="M91 150H109" stroke={INK} strokeWidth="7" strokeLinecap="round" />
   </g>
 );
 
