@@ -46,7 +46,6 @@ test("loads the library registry and resolves immutable asset ids", async () => 
 test("registers every asset identifier used by the AI work adventure", async () => {
   const registry = await loadAssetRegistry(libraryRoot);
   // 43 legacy + figure/lin_b_draft + set/canteen_counter_m3 + the asset programme:
-<<<<<<< HEAD
   // figure/{athlete_a,gymnast_b}, set/{badminton_hall,outdoor_bar},
   // prop/{racket,shuttle,high_bar,teapot,teacup}.
   assert.equal(registry.manifest.assets.length, 54);
