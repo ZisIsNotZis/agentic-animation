@@ -224,6 +224,10 @@ const HANG_ARM_RATE = 240;
  *  proposal's own units, hand 480 px/s = the shared hand-travel cap). */
 const MOUNT_ROOT_RATE = 240;
 const MOUNT_HAND_RATE = 480;
+/** Rate a dangling sole glides onto the hang placement (stage px/s). The mount
+ *  drops the body at MOUNT_ROOT_RATE, so the soles follow faster than it moves
+ *  them and the glide never lags the placement. */
+const HANG_FOOT_RATE = 480;
 /** Shortest turn the swing allows: 360deg over 0.6 s is 25deg per 24fps frame,
  *  inside the 35deg angle-continuity gate (teleports.ts). */
 const SWING_MIN_TURN_SEC = 0.6;
@@ -775,8 +779,11 @@ function swingAngle(hang: NonNullable<ActorState["hang"]>): number {
 }
 
 /** The dangling legs: the feet hang straight down from the hips, so their
- *  targets are the declared rest soles placed from the current rig placement. */
-function hangFeet(state: ActorState): void {
+ *  targets are the declared rest soles placed from the current rig placement.
+ *  The soles GLIDE there instead of being snapped on: at the takeover one foot
+ *  is still mid-stride, and moving it the whole way in one substep extends the
+ *  leg IK past its chain, which the whole-body proposal rejects. */
+function hangFeet(state: ActorState, dt: number): void {
   const sk = state.skeleton;
   if (!sk || !state.feet) return;
   const k = state.scale, dir = geometryFacing(state);
@@ -785,9 +792,10 @@ function hangFeet(state: ActorState): void {
     const target: [number, number] = [state.x + dir * (f[0] - sk.space.width / 2) * k,
       state.groundY + (f[1] - sk.space.height) * k];
     const foot = state.feet[side];
-    foot.target = target;
-    foot.from = [...target];
-    foot.landing = [...target];
+    foot.target = [approach(foot.target[0], target[0], HANG_FOOT_RATE * dt),
+      approach(foot.target[1], target[1], HANG_FOOT_RATE * dt)];
+    foot.from = [...foot.target];
+    foot.landing = [...foot.target];
     foot.swing = false;
   }
 }
@@ -799,13 +807,17 @@ function hangFeet(state: ActorState): void {
  * the hang at bounded rates (the whole-body proposal accepts every substep).
  * Through the turn the pose never changes: the renderer turns the whole drawn
  * body about the grip, so the joint/travel continuity checks see a rigid body.
+ *
+ * The takeover is a rate-bounded handover, not a switch: the crouch, the waist
+ * and the last half-step of the walk settle into the hang over a few substeps,
+ * and the dangling soles glide onto the grip placement, so no part of the pose
+ * snaps when the weight leaves the feet.
  */
 function advanceHang(state: ActorState, dt: number, diagnostics: string[]): void {
   const hang = state.hang;
   if (!hang) return;
   hang.t += dt;
-  // Once the grip carries the body, nothing answers to the ground: no
-  // stepping, no waist bend, no crouch, no stagger, no walk phase.
+  // Nothing answers to the ground any more: no stepping, no stagger.
   state.moveTarget = null;
   state.pursue = null;
   state.retract = false;
@@ -847,10 +859,15 @@ function advanceHang(state: ActorState, dt: number, diagnostics: string[]): void
     }
     return;
   }
-  state.walkPhase = 0;
-  state.waist = 0;
-  state.crouch = 0;
-  state.lean = 0;
+  // The grip carries the body: it settles the posture the grip holds at the
+  // rates the body already obeys. The crouch that kept the planted feet inside
+  // their chain and the last half-step of the walk are still in flight, and
+  // snapping either moves the hip ~7px and the walking knee ~35px in a single
+  // substep, which the whole-body proposal rejects.
+  state.walkPhase = approach(state.walkPhase, 0, nativeCadence(state) * dt);
+  state.waist = approach(state.waist, 0, WAIST_RATE * dt);
+  state.crouch = approach(state.crouch, 0, CROUCH_RATE * dt);
+  state.lean = approach(state.lean, 0, WAIST_RATE * dt);
   if (!hang.mounted) {
     state.x = approach(state.x, hang.x, MOUNT_ROOT_RATE * dt);
     state.groundY = approach(state.groundY, hang.groundY, MOUNT_ROOT_RATE * dt);
@@ -859,7 +876,7 @@ function advanceHang(state: ActorState, dt: number, diagnostics: string[]): void
     state.x = hang.x;
     state.groundY = hang.groundY;
   }
-  hangFeet(state);
+  hangFeet(state, dt);
   state.reach = {tx: hang.pivot[0], ty: hang.pivot[1], target: hang.support.name ?? "swing", contact: true};
 }
 
@@ -2051,7 +2068,10 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           x: round(state.x),
           // The hang placement's ground line differs from the staged one, and the
           // whole body turns about the grip: both are data the renderer needs.
-          ...(state.hang?.engaged?{y:round(state.hang.groundY),rotation:round(-swingAngle(state.hang)),
+          // `y` is the placement the body is AT, not the one it is heading for, so
+          // the mount descends continuously in the bake.
+          ...(state.hang?{y:round(state.groundY)}:{}),
+          ...(state.hang?.engaged?{rotation:round(-swingAngle(state.hang)),
             grip:[round(state.hang.grip[0]),round(state.hang.grip[1])] as [number,number]}:{}),
           lean: round(state.lean),
           facing: state.facing,
