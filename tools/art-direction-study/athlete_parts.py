@@ -291,13 +291,20 @@ def head(fr):
                               (233, 130), (234, 138), (231, 144), (231, 156), (218, 168),
                               (200, 172), (186, 158), (180, 128), (182, 90), (190, 58)]),
                       SKIN, INK, 2.0)]
-    ear = ring(204, 114, 5.4, SKIN_SHADE, INK, 1.2)
+    # The ear is part of the profile, not a mark on the cheek. Its rear edge runs just
+    # inside the skull contour and its top edge meets the hair's lower edge, so both
+    # inks merge into those outlines and no closed ear outline shows against the skin;
+    # only the shell and the helix do. Drawn as a ring at mid-cheek it read as a
+    # standalone dot floating in the face fill.
+    ear = [filled("M 181.5 112 Q 190 106 195 112 Q 199 120 195 128 Q 190 134 181.5 132 Z",
+                  SKIN_SHADE, INK, 1.0),
+           path("M 188 116 Q 193 121 189 128", "none", SKIN_LINE, 0.9)]
     hair = [filled(smooth([(188, 56), (206, 40), (226, 50), (231, 78), (230, 94), (219, 84),
                            (206, 86), (196, 110), (188, 114), (180, 98), (178, 74)]),
                    HAIR, INK, 1.8),
             filled("M 198 42 Q 216 32 230 46 L 216 47 Q 206 41 200 51 Z", HAIR_LIGHT, HAIR_LIGHT, 0.6),
             filled("M 184 106 Q 178 82 186 66 L 196 74 L 190 114 Z", HAIR, INK, 1.0)]
-    return neck + profile + [ear] + hair
+    return neck + profile + ear + hair
 
 
 # ---------------------------------------------------------------------------- arms
@@ -323,11 +330,11 @@ def arm_parts(fr, side):
              limb(shoulder, sleeve_end, r_shoulder, r_sleeve, JERSEY, INK, 1.6),
              limb(sleeve_end, elbow, r_arm, r_arm * 0.92, SKIN, INK, 1.4),
              ]
+    # Nothing is drawn down the middle of the forearm: a thin stroke there reads as a
+    # construction mark, not as the limb's own shading.
     forearm = [socket(elbow[0], elbow[1], r_arm * 0.92 + 1.4, SKIN),
                limb(elbow, band, r_fore, r_wrist * 1.1, SKIN, INK, 1.4),
-               limb(band, band_end, r_wrist * 1.1, r_wrist * 1.02, TRIM, INK, 1.0),
-               path(f"M {pt(elbow[0] + 3, elbow[1] + 12)} Q {pt(elbow[0] + 1, elbow[1] + 30)} "
-                    f"{pt(elbow[0] + 4, elbow[1] + 46)}", "none", SKIN_LINE, 0.9)]
+               limb(band, band_end, r_wrist * 1.1, r_wrist * 1.02, TRIM, INK, 1.0)]
     return upper, forearm
 
 
@@ -392,17 +399,33 @@ def foot_part(fr, side):
     # narrowing only ever removes coverage, so it cannot open a background hole.
     turn = TURN_WIDTH[fr.view] * fr.k
     ox = lambda offset: x + offset * turn
+    if fr.view in ("back", "quarter_back"):
+        # Seen from behind the toes have turned away: the shoe is a heel. No toe box,
+        # no laces and no side flash - a counter seam wrapping a centre stitch over
+        # the sole, which is what distinguishes it from the same shoe seen from the
+        # front. Width stays the shoe's own, because depth recedes rather than width.
+        return [socket(x, y - 8, fr.r(15.0) * turn, body),
+                filled(f"M {pt(ox(-15), y - 4)} Q {pt(x, y - 13)} {pt(ox(15), y - 4)} "
+                       f"Q {pt(ox(18), y + 12)} {pt(ox(17), y + 29)} "
+                       f"Q {pt(x, y + 34)} {pt(ox(-17), y + 29)} "
+                       f"Q {pt(ox(-18), y + 12)} {pt(ox(-15), y - 4)} Z", body, edge, 1.8),
+                path(f"M {pt(x, y + 2)} L {pt(x, y + 27)}", "none", SHOE_SHADE, 1.1),
+                path(f"M {pt(ox(-13), y + 18)} Q {pt(ox(-14), y + 5)} {pt(ox(-5), y + 1)}",
+                     "none", SHOE_SHADE, 1.3),
+                path(f"M {pt(ox(13), y + 18)} Q {pt(ox(14), y + 5)} {pt(ox(5), y + 1)}",
+                     "none", SHOE_SHADE, 1.3),
+                filled(f"M {pt(ox(-18), y + 27)} Q {pt(x, y + 33)} {pt(ox(18), y + 27)} "
+                       f"L {pt(ox(17), y + 33)} Q {pt(x, y + 42)} {pt(ox(-17), y + 33)} Z",
+                       sole, sole, 0.0)]
     nodes = [socket(x, y - 8, fr.r(15.0) * turn, body),
              filled(f"M {pt(ox(-16), y - 10)} Q {pt(x, y - 17)} {pt(ox(16), y - 10)} "
                     f"Q {pt(ox(19), y + 10)} {pt(ox(17 + toe * 0.5), y + 32)} "
                     f"Q {pt(ox(toe), y + 40)} {pt(ox(-17 + toe * 0.5), y + 32)} "
                     f"Q {pt(ox(-19), y + 10)} {pt(ox(-16), y - 10)} Z", body, edge, 1.8)]
-    if fr.view in ("front", "quarter"):
-        nodes += [path(f"M {pt(ox(-9), y - 6)} Q {pt(x, y - 2)} {pt(ox(9), y - 6)}", "none", SHOE_SHADE, 1.4),
-                  path(f"M {pt(ox(-10), y + 4)} L {pt(ox(10), y + 4)}", "none", SHOE_SHADE, 1.2)]
-    else:
-        nodes += [path(f"M {pt(ox(-8), y - 4)} L {pt(ox(8), y - 4)}", "none", SHOE_SHADE, 1.4),
-                  path(f"M {pt(ox(-9), y + 6)} L {pt(ox(9), y + 6)}", "none", SHOE_SHADE, 1.2)]
+    # Front construction: toe box, laces and a side flash, so the shoe is the same
+    # shoe seen from the front, whatever its turn.
+    nodes += [path(f"M {pt(ox(-9), y - 6)} Q {pt(x, y - 2)} {pt(ox(9), y - 6)}", "none", SHOE_SHADE, 1.4),
+              path(f"M {pt(ox(-10), y + 4)} L {pt(ox(10), y + 4)}", "none", SHOE_SHADE, 1.2)]
     nodes += [path(f"M {pt(ox(-11), y + 14)} L {pt(ox(11), y + 14)}", "none", JERSEY, 3.0),
               filled(f"M {pt(ox(-18), y + 28)} Q {pt(ox(toe * 0.5), y + 35)} "
                      f"{pt(ox(18 + toe * 0.5), y + 28)} "
@@ -417,7 +440,12 @@ def _palm():
     return "M -10 -8 Q 0 -11 10 -8 Q 13 4 12 18 L -12 18 Q -13 4 -10 -8 Z"
 
 
-def hand_shape(shape, mirror):
+def hand_shape(shape, mirror, back=False):
+    """One hand, palm or back. Which side the thumb sits on is the whole difference
+    between the two, so a back-facing view flips the thumb and the fist crease across
+    the hand's own axis and leaves the fingers where they are.
+    """
+    flip = -1.0 if back else 1.0
     nodes = [filled(_palm(), SKIN, INK, 1.1)]
     curl, length = {"rest": (0.55, 16), "open": (0.0, 28), "point": (0.0, 27), "fist": (1.0, 8),
                     "splayed": (-0.18, 27)}[shape]
@@ -434,10 +462,12 @@ def hand_shape(shape, mirror):
         nodes.append(filled(f"M {pt(fx - 2.7, 14)} L {pt(fx + 2.7, 14)} "
                             f"L {pt(fx + 2.5 + spread, 13 + h)} Q {pt(fx + spread, 18 + h)} "
                             f"{pt(fx - 2.5 + spread, 13 + h)} Z", SKIN, SKIN_LINE, 0.7))
-    thumb = "M -10 0 Q -18 6 -16 14 Q -14 20 -9 17 Z"
+    thumb = (f"M {pt(-10 * flip, 0)} Q {pt(-18 * flip, 6)} {pt(-16 * flip, 14)} "
+             f"Q {pt(-14 * flip, 20)} {pt(-9 * flip, 17)} Z")
     nodes.append(filled(thumb, SKIN, SKIN_LINE, 0.9))
     if shape == "fist":
-        nodes.append(path(f"M -13 4 Q -4 12 5 10", "none", SKIN_LINE, 1.1))
+        nodes.append(path(f"M {pt(-13 * flip, 4)} Q {pt(-4 * flip, 12)} {pt(5 * flip, 10)}",
+                          "none", SKIN_LINE, 1.1))
     if mirror:
         return [n.replace("<path", '<path data-mirror="1"') for n in nodes]
     return nodes
@@ -446,9 +476,10 @@ def hand_shape(shape, mirror):
 def hands(fr, side):
     x, y = fr.j(f"hand_{side}")
     mirror = side == "l"
+    back = fr.view in ("back", "quarter_back")
     parts = {}
     for shape in HANDS:
-        nodes = hand_shape(shape, mirror)
+        nodes = hand_shape(shape, mirror, back)
         inner = "".join(nodes)
         sx = -1.2 if mirror else 1.2
         parts[shape] = svg(f'<g transform="translate({r(x)} {r(y)}) scale({sx} 1.2)" '
