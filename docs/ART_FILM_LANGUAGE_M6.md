@@ -120,6 +120,17 @@ render itself is moved out of the repository because generated video is not
 committed here, even though `.gitignore` deliberately un-ignores
 `episodes/*/dist/*.mp4`.
 
+## Delivered, independent review PASS (revision `fb5baa6`)
+
+Evidence bundle `~/.local/share/agentic-animation/art-baselines/m6-20261018T0840+0800/`:
+`bake-identity.json`, five frames cut from that render, the segment itself, and the
+review. A vision reviewer judged the five frames at normal viewing size and returned
+PASS: clean framing across all shots, the frame-4 insert no longer bisects heads,
+poses and prop interactions physically coherent, the reaching figure normal, the hand
+wrapping the handle without clipping, the thermos upright, the bodies distinct.
+`main` is 288/288 at that revision. Rhubarb is absent, so lip articulation remains
+unproven while audio and subtitles are unaffected.
+
 ## Verified working in this slice
 
 The carried thermos stays upright (rotation 0 through the carry and the rest, the
