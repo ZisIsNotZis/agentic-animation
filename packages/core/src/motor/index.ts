@@ -172,15 +172,23 @@ const PLACE_OUT_FRACTION = 0.5;
 const WALK_EASE_SEC = 0.3;
 /** Extra world-px corridor between two drawn bodies. 0: the torso/head boxes
  *  are already the outer bound of the art, and any padding resolves a
- *  non-overlap by sliding a standing actor instead of the pose that intruded.
- *  A corridor wider than 0 separates the pair at the bind (m7 transfer: the
- *  drawn bodies met ink-to-ink and read as one mass), but it also shortens
- *  every handover approach: the receiver halts further from the offered prop,
- *  and at 24 px the canteen handover reports `contact cue missed` and the
- *  thermos is placed 2.56 px above its declared support. Corridor width is
- *  therefore coupled to the approach/offer reach budget and is a design
- *  decision, not a free constant (docs/ART_TRANSFER_M7.md). */
+ *  non-overlap by sliding a standing actor instead of the pose that intruded. */
 const BODY_GAP = 0;
+/** Minimum visible gap between two drawn bodies at a hand-held transfer, in
+ *  stage px (the 1280-wide stage frame, so this is 1.5% of frame width = 14.4
+ *  screen px in the delivered 960-wide frame). A handover is a hand meeting a
+ *  hand ACROSS a gap; at drawn-touch the two robes run ink-to-ink and the pair
+ *  reads as one mass regardless of how correct each body's own pose is (m7
+ *  transfer, docs/ART_TRANSFER_M7.md). The gap is a staging distance only, so
+ *  the arms bridge it: the receiver stops here instead of at adjacency, and
+ *  only the transfer pair is held this far apart — every other pair keeps
+ *  BODY_GAP, because a corridor on every approach shortens the offer reach
+ *  until a cue misses. */
+const TRANSFER_CLEARANCE = 1280 * 0.015;
+/** Rate the transfer clearance is restored at when a pair ends up inside it
+ *  (stage px/s): a readable staging distance may not snap, so it eases apart
+ *  like a step back, while a drawn-body OVERLAP stays the hard projection. */
+const TRANSFER_CLEARANCE_RATE = 96;
 /** A shaped reach gesture's hand travels at 55% of the 480 px/s cap away from
  *  the key pose, so its authored interval must cover the slow leg plus a held
  *  key pose; otherwise the beat ends mid-travel and never shows the pose. */
@@ -748,10 +756,25 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     }
     return Math.max(reach, 0);
   };
+  /** True while `a` and `b` are the two sides of a hand-held transfer: one
+   *  offers the prop, and the other is walking in to receive it or already
+   *  holds what was offered. Scoped to the offer on purpose: a clearance that
+   *  also held the plain approach apart stops the receiver short of the prop,
+   *  and the M2 handover then never binds at all (`native transfer cue` and the
+   *  canonical two-call sweep reach no contact) because those scenes have under
+   *  the clearance in reach slack. The offer phase is where the giver extends
+   *  the prop across the gap, so it is where the gap may be held. */
+  const inHandover = (a: ActorState, b: ActorState): boolean =>
+    (a.offer?.recipient === b.id && (b.grabTarget === a.offer.prop || b.holding === a.offer.prop))
+    || (b.offer?.recipient === a.id && (a.grabTarget === b.offer.prop || a.holding === b.offer.prop));
   /** Root-to-root distance two actors' drawn bodies need before they touch. */
-  const separationGap = (a: ActorState, b: ActorState): number =>
+  const drawnGap = (a: ActorState, b: ActorState): number =>
     drawnBodyReach(a, Math.sign(b.x - a.x) >= 0 ? 1 : -1)
     + drawnBodyReach(b, Math.sign(a.x - b.x) >= 0 ? 1 : -1) + BODY_GAP;
+  /** The distance this pair must keep: their drawn bodies plus, at a hand-held
+   *  transfer, the declared visible clearance. */
+  const separationGap = (a: ActorState, b: ActorState): number =>
+    drawnGap(a, b) + (inHandover(a, b) ? TRANSFER_CLEARANCE : 0);
   /** Least-touch grab posture: least |waist pitch| first, then least crouch, so
    *  a floor object is reached by squatting instead of folding the torso to the
    *  point where the drawn figure reads as a ragdoll. Authored acting stays
@@ -1187,7 +1210,11 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             const box=propBoxWorld(targetProp),sh=geometryShoulder(state);
             const aim=propAim(targetProp,true);
             const reachable=targetProp.grip ? Math.hypot(sh[0]-aim[0],sh[1]-aim[1])<=state.body.armReach*state.scale+targetProp.grip.radius : circleOverlapsBox({center:sh,radius:state.body.armReach*state.scale},box);
-            if (reachable) {
+            // Reach alone would halt at drawn-touch (root distance = the two
+            // torso reaches), which draws one mass; the transfer clearance is
+            // the rest of the stop condition, and the arms cross it.
+            const clear=giver?Math.abs(state.x-giver.x)>=separationGap(state,giver):true;
+            if (reachable&&clear) {
               state.moveTarget=null;
               arriveMotorWalk(state,actors,props);
             }
@@ -1348,9 +1375,14 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         const required = separationGap(state, other);
         if (gap >= required || gap === 0) continue;
         const overlap = required - gap;
+        // A drawn-body overlap is a hard projection. The remainder that only a
+        // transfer clearance asks for is a staging distance, restored at a
+        // walking creep so a body never snaps apart.
+        const drawn = drawnGap(state, other);
+        const push = gap < drawn ? overlap : Math.min(overlap, TRANSFER_CLEARANCE_RATE * delta);
         const dir = Math.sign(state.x - other.x) || (state.facing as number);
-        state.x += dir * overlap / 2;
-        other.x -= dir * overlap / 2;
+        state.x += dir * push / 2;
+        other.x -= dir * push / 2;
       }
     };
     const previousRoots=new Map([...actors].map(([id,a])=>[id,a.x]));

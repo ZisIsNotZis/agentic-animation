@@ -69,6 +69,22 @@ test('native handover stops at live object reach rather than crowding the giver'
   assert.ok(Math.min(...gaps)>150,'reach should preserve readable body spacing');
 });
 
+test('hand-held transfer keeps a declared visible gap between the two drawn bodies',async () => {
+  const artwork=await artworkFixture();
+  const skeletonViews=Object.fromEntries(FIGURE_VIEWS.map((v)=>[v,artwork.views[v].skeleton])) as Record<FigureView,Skeleton>;
+  const common={groundY:650,scale:.6,skeleton:artwork.views.front.skeleton,skeletonViews};
+  const movie=simulateScene({durationSec:3,actors:[{...common,id:'giver',x:750,facing:-1,intents:[{at:0,duration:.4,intent:'grab',target:'cup',offerTo:'receiver',contactAt:1.2}]},{...common,id:'receiver',x:350,facing:1,intents:[{at:1,duration:1.6,intent:'move',target:'giver',grab:'cup',contactAt:1.2}]}],props:[{id:'cup',x:680,y:540,size:[30,40],intents:[]}],groundY:650,resolveX:(id)=>id==='giver'?750:680});
+  const bind=movie.actors.receiver!.findIndex((f)=>f.holds==='cup');
+  assert.ok(bind>0,'the transfer must still bind');
+  // Drawn-touch is the two upright torso boxes meeting; a hand-held transfer
+  // must stop the receiver further out than that by the declared clearance
+  // (1.5% of the 1280 stage width), and the arms bridge the rest.
+  const sk=artwork.views.front.skeleton,centre=sk.space.width/2,torso=sk.parts.torso!.box!;
+  const half=Math.max(Math.abs(torso[0][0]-centre),Math.abs(torso[1][0]-centre))*.6;
+  const root=Math.abs(movie.actors.giver![bind]!.x-movie.actors.receiver![bind]!.x);
+  assert.ok(root-half*2>=1280*.015*.9,`drawn bodies ${(root-half*2).toFixed(1)}px apart at the bind, clearance ${(1280*.015).toFixed(1)}px`);
+});
+
 test('native motor leaves unclaimed arms resting during semantic presentation',async () => {
   const artwork=await artworkFixture();
   const manifest={video:{width:1280,height:720,fps:24},durationInFrames:24,actors:[{id:'hero',artwork,skeleton:artwork.views.front.skeleton,placement:{at:[500,650],scale:.6},tracks:[{kind:'action',events:[{frame:0,endFrame:24,value:{action:'present'}}]}]}]} as PerformanceManifest;
