@@ -9,6 +9,7 @@ import {buildScope, calleeOf, evaluateExpression, runInvocationSync, splitExpres
 import type {Invocation, LoadedPlugin, World} from "../invocation/types";
 import {stageScene, type StageRect, type StagingResult} from "../staging";
 import {bakeSceneMotor} from "../motor";
+import {assertCapabilityImplemented} from "./capabilities";
 import type {Skeleton, NormalizedSetLayer, NormalizedSetWorld} from "../schemas/libraryMeta";
 import {FIGURE_VIEWS, type FigureArtwork, type FigureView} from "../schemas/figureArtwork";
 
@@ -562,6 +563,7 @@ function evaluateCall(context: CompileContext, expression: string): {descriptor:
   const segments = callee.split(".");
   if (segments.length !== 2) throw new Error(`compileEpisode: call must be category.terminal(...): ${expression}`);
   const [namespace, terminal] = segments as [string, string];
+  assertCapabilityImplemented(terminal, calleeSource);
   const plugin = context.plugins.find((candidate) => candidate.category === namespace);
   if (!plugin) throw new Error(`compileEpisode: unknown plugin category "${namespace}" in ${expression}`);
   const evaluated = evaluateExpression(evalSource, context.scope);

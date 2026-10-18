@@ -105,7 +105,16 @@ export function normalizeSetWorld(input: SetWorldInput): NormalizedSetWorld {
     if (!Number.isFinite(paintedY) || Math.abs(paintedY - surface.y) > SUPPORT_AGREEMENT_TOLERANCE) {
       throw new Error(`support "${surface.name}" declared at y ${surface.y} but painted at ${paintedTop} (tolerance ${SUPPORT_AGREEMENT_TOLERANCE})`);
     }
-    return {name: surface.name, x: [surface.x[0] / width, surface.x[1] / width] as [number, number], y: surface.y / height};
+    return {
+      name: surface.name,
+      x: [surface.x[0] / width, surface.x[1] / width] as [number, number],
+      y: surface.y / height,
+      ...(surface.kind === undefined ? {} : {
+        kind: surface.kind,
+        grip: {x: [surface.grip!.x[0] / width, surface.grip!.x[1] / width] as [number, number], y: surface.grip!.y / height},
+        rotationLimit: surface.rotationLimit!,
+      }),
+    };
   });
   return {
     coordinateSpace: {width, height},
