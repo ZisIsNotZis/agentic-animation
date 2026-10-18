@@ -484,6 +484,46 @@ test("projects compiled staging and semantic camera procedures into visible runt
   assert.equal(wide.camera.z, 1);
 });
 
+test("a framed object push never slices a drawn head", () => {
+  // The M6 thermos insert: two figures standing at y 691 and a thermos resting on
+  // the counter at y 400. A 1.35x object push centred on the thermos puts the
+  // frame's top edge through both faces, so the shot reads as a mistake; the
+  // vertical placement instead moves to the nearer side that clears every drawn
+  // head, which here is downward, and the insert shows counter and hands with the
+  // heads wholly out of frame.
+  const build = (zoom: number) => ({
+    version: 1,
+    video: {width: 1280, height: 720, fps: 24},
+    timebase: "frames",
+    durationInFrames: 30,
+    placements: {
+      "counter.left": {at: [660, 691], scale: 0.88},
+      "counter.right": {at: [1180, 691], scale: 0.88},
+    },
+    actors: [
+      {id: "lin", placement: "counter.left"},
+      {id: "awei", placement: "counter.right"},
+    ],
+    props: [{id: "thermos", at: [960, 400], size: [40, 60]}],
+    tracks: [{kind: "camera", subject: "camera", events: [
+      {frame: 0, durationFrames: 10, value: {operation: "push", zoom, target: "thermos"}},
+    ]}],
+  }) as unknown as PerformanceManifest;
+  // Without a declared skeleton the drawn head band is the standing one, whose
+  // lower edge sits 1 - 265.44/720 (lin_b_draft's head box) of the height above
+  // the feet.
+  const headBottom = 691 - 720 * 0.88 * (1 - 265.44 / 720);
+  const held = evaluatePerformance(build(1.35), 10);
+  assert.equal(held.camera.z, 1.35);
+  // The frame is pushed clear below the chin: the head is wholly above it and the
+  // framed object is still inside it.
+  assert.equal(held.camera.y, headBottom + 24);
+  const thermos = held.props.find((prop) => prop.id === "thermos")!;
+  assert.ok(thermos.y > held.camera.y && thermos.y < held.camera.y + 720 / held.camera.z);
+  // A placement that already holds the heads whole is left where it framed them.
+  assert.equal(evaluatePerformance(build(0.9), 10).camera.y, 430 - 720 / 0.9 / 2);
+});
+
 test("detectTeleports flags implausible actor jumps", async () => {
   const { detectTeleports } = await import("../src/performance/teleports");
   const manifest = {

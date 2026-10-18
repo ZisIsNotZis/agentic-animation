@@ -32,7 +32,25 @@ onto the prop at 11.27–12.47 landing on `action.present` and the reveal chime 
 `sip`, `reveal-chime`, `laugh`, `ending-cadence`, one per beating shot, other
 shots deliberately silent.
 
-## Defects found in this slice (viewer review 2026-10-17; all three now fixed)
+## Framing rule: never slice a drawn head
+
+A framed shot — one whose push or hold names an actor or an object — never cuts a
+drawn head. The vertical placement must leave every drawn head either wholly
+inside the frame or wholly outside it; when the frame's top or bottom edge would
+cross a head, the placement moves to the nearer side that removes the
+intersection, measured on the drawn head bounds the figure FK already produces,
+so the rule follows the pose rather than a nominal standing band. Heads may be
+pushed out of frame on purpose: an object insert showing counter and hands with
+both heads above the top edge reads as a deliberate insert, while a sliced face
+reads as a mistake. During the move into or out of such a shot the travelling
+edge necessarily crosses the head; the rule governs the placement the shot lands
+on and is held at.
+
+Clearance is 24 world px beyond the drawn head's edge, and a placement the
+painted stage cannot reach is rejected: when no legal placement clears every
+head, the unshifted placement is kept rather than moving the frame off the stage.
+
+## Defects found in this slice (viewer review 2026-10-17; all four now fixed)
 
 1. **The floor pickup distorted — fixed by staging, not by the rig.** At the
    push-in the actor reaching for a thermos placed on the FLOOR read as a dive:
@@ -71,9 +89,21 @@ shots deliberately silent.
 3. **The prop does not gain emphasis — resolved by the same framing change.** A
    prop target now resolves to its live position and its silhouette instead of
    falling back to the previous camera centre, so the reveal jump is a genuine
-   object shot: the thermos is centred and 1.9× larger at z 1.35. Its cost is a
-   look the viewer should judge: as an object close-up it crops both bodies at the
-   neck, where the old shot kept them whole and unemphatic.
+   object shot: the thermos is centred and 1.9× larger at z 1.35.
+
+4. **A framed shot sliced the heads — fixed by the framing rule.** The object
+   push that centres the thermos put the frame's top edge through both faces: at
+   the held insert (frame 314, 13.10 s) the drawn head band was y 116.9–291.2
+   world while the frame covered y 231.6–764.9, so the edge cut the nose and
+   mouth and kept the full legs, shoes and floor. Both heads now sit wholly
+   above the frame: the nearer side was downward, because clearing them upward
+   needs y −440, outside the painted stage. The insert holds at y 315.2–848.5 —
+   24 world px of clearance below the chin at 291.2 — with the zoom (1.35), the
+   horizontal centre and the thermos at y 418.2 unchanged, so it is a
+   counter-and-hands shot with the heads out of frame. Held frames that slice a
+   head fall from 132 (frames 288–353) to none; the residual slices are the moving
+   frames of this push and of the pull back, where the travelling edge must cross
+   the head.
 
 ## Verified working in this slice
 
@@ -85,5 +115,5 @@ four authored cues. Reviewer frames re-rendered after the counter staging (24 fp
 frames 48, 142, 250, 314, 430): the establish at 2.00 s shows the thermos resting
 upright on the counter between the two bodies, the 5.90 s push holds the actor
 upright with both feet planted and the thermos in her hand, the wide shots at
-10.40 s and 17.90 s are unchanged, and the 13.10 s push still centres and
-enlarges the thermos.
+10.40 s and 17.90 s are unchanged, and the 13.10 s push centres and enlarges the
+thermos with both drawn heads wholly above the frame (see defect 4).

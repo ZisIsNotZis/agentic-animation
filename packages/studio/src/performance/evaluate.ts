@@ -123,6 +123,9 @@ const FIGURE_DESIGN_HEIGHT = 720;
 /** Head-to-waist share of the figure (lin_b_draft's waist joint is 408/720),
  *  used only when the actor exposes no declared skeleton. */
 const FIGURE_WAIST_SHARE = 408.24 / 720;
+/** Height of the drawn head's lower edge above the feet (lin_b_draft's head box
+ *  ends at 265.44/720 from the top), used only without a declared skeleton. */
+const FIGURE_HEAD_SHARE = 1 - 265.44 / 720;
 
 /**
  * What a push frames: a person's head-and-torso band, or an object's whole
@@ -139,29 +142,45 @@ interface PushSubject {
   horizontal: "pair" | "self";
 }
 
-function actorFrameBand(actor: EvaluatedActor): [number, number] {
+/** World y band of the named drawn skeleton parts, or undefined when the actor
+ *  exposes no such part box. */
+function actorPartBand(actor: EvaluatedActor, names: readonly string[]): [number, number] | undefined {
   const skeleton = actor.skeleton;
-  if (!skeleton) {
-    const height = FIGURE_DESIGN_HEIGHT * actor.scale;
-    return [actor.y - height, actor.y - height * FIGURE_WAIST_SHARE];
-  }
-  // The band follows the pose the renderer draws: a folded figure's head and
-  // torso are nowhere near the standing band, and framing the standing band is
-  // what pushed a crouched subject out of her own shot.
+  if (!skeleton) return undefined;
   const space = skeleton.space ?? {width: 400, height: FIGURE_DESIGN_HEIGHT};
   const solved = solveSkeleton(skeleton, actor.skeletonPose ?? {});
   const toWorld = (designY: number) => actor.y + (designY - space.height) * actor.scale;
   let top = Number.POSITIVE_INFINITY;
   let bottom = Number.NEGATIVE_INFINITY;
-  for (const name of ["head", "torso"]) {
+  for (const name of names) {
     const box = solved.parts[name]?.world;
     if (box?.kind !== "box") continue;
     top = Math.min(top, box.a[1], box.b[1]);
     bottom = Math.max(bottom, box.a[1], box.b[1]);
   }
-  return Number.isFinite(top) && Number.isFinite(bottom)
-    ? [toWorld(top), toWorld(bottom)]
-    : [actor.y - space.height * actor.scale, actor.y - space.height * actor.scale * FIGURE_WAIST_SHARE];
+  return Number.isFinite(top) && Number.isFinite(bottom) ? [toWorld(top), toWorld(bottom)] : undefined;
+}
+
+/** The band the pose actually draws for the named parts; a figure with no
+ *  skeleton is measured on its standing band, whose lower edge sits
+ *  `bottomShare` of its height above the feet. */
+function actorBand(actor: EvaluatedActor, names: readonly string[], bottomShare: number): [number, number] {
+  // The band follows the pose the renderer draws: a folded figure's head and
+  // torso are nowhere near the standing band, and framing the standing band is
+  // what pushed a crouched subject out of her own shot.
+  const drawn = actorPartBand(actor, names);
+  if (drawn) return drawn;
+  const height = (actor.skeleton?.space?.height ?? FIGURE_DESIGN_HEIGHT) * actor.scale;
+  return [actor.y - height, actor.y - height * bottomShare];
+}
+
+function actorFrameBand(actor: EvaluatedActor): [number, number] {
+  return actorBand(actor, ["head", "torso"], FIGURE_WAIST_SHARE);
+}
+
+/** The drawn head alone: the band that must never straddle a frame edge. */
+function actorHeadBand(actor: EvaluatedActor): [number, number] {
+  return actorBand(actor, ["head"], FIGURE_HEAD_SHARE);
 }
 
 function propFrameBand(prop: EvaluatedProp): [number, number] {
@@ -244,6 +263,26 @@ function fitCameraToActors(
   return {center: [x + viewportWidth / 2, y + viewportHeight / 2], zoom};
 }
 
+/**
+ * Vertical centre for a framed shot. A framed shot must never slice a drawn
+ * head (docs/ART_FILM_LANGUAGE_M6.md): a head straddling a frame edge reads as
+ * a mistake, while an insert that leaves the heads out of frame reads as a
+ * choice, so the placement moves to the nearer side of every head that would be
+ * cut. The unchanged placement is kept when no shift the painted stage allows
+ * clears them all.
+ */
+function framedCentreY(
+  centreY: number,
+  zoom: number,
+  actors: readonly EvaluatedActor[],
+  subject: PushSubject | undefined,
+  video: {width: number; height: number},
+): number {
+  if (!subject?.band) return centreY;
+  const viewportHeight = video.height / zoom;
+  return clearOfHeads(centreY - viewportHeight / 2, actors.map(actorHeadBand), viewportHeight, 24) + viewportHeight / 2;
+}
+
 function fitPushCamera(
   target: [number, number],
   subject: PushSubject | undefined,
@@ -254,14 +293,47 @@ function fitPushCamera(
   const relevant = actors.filter((actor) => actor.present);
   // The subject's own band decides the vertical centre; the staged pair only
   // bounds the horizontal when the subject is a person.
-  const vertical = target[1];
   if (subject?.horizontal === "self" || relevant.length < 2) {
-    return {center: [target[0], vertical], zoom: requestedZoom};
+    return {center: [target[0], framedCentreY(target[1], requestedZoom, relevant, subject, video)], zoom: requestedZoom};
   }
   const left = Math.min(...relevant.map((actor) => actor.x - 200 * actor.scale)) - 36;
   const right = Math.max(...relevant.map((actor) => actor.x + 200 * actor.scale)) + 36;
   const zoom = Math.min(requestedZoom, video.width / (right - left));
-  return {center: [(left + right) / 2, vertical], zoom};
+  return {center: [(left + right) / 2, framedCentreY(target[1], zoom, relevant, subject, video)], zoom};
+}
+
+/**
+ * A framed shot never slices a drawn head (docs/ART_FILM_LANGUAGE_M6.md). A
+ * head straddling the top or bottom frame edge reads as a mistake, while an
+ * insert that leaves the heads out of frame reads as a choice, so the vertical
+ * placement moves to the nearer side of every drawn head instead of leaving the
+ * intersection. The original placement is kept when no shift inside the painted
+ * stage clears every head, because leaving the painted stage is not a fix.
+ */
+function clearOfHeads(
+  y: number,
+  heads: readonly (readonly [number, number])[],
+  viewportHeight: number,
+  margin: number,
+): number {
+  // A head is framed honestly when it is wholly inside the frame or wholly
+  // outside it; only the part-in part-out case is a slice.
+  const slices = (candidate: number) => heads.some(([top, bottom]) => {
+    const inside = top >= candidate && bottom <= candidate + viewportHeight;
+    const touches = top < candidate + viewportHeight && bottom > candidate;
+    return touches && !inside;
+  });
+  if (!slices(y)) return y;
+  const highest = Math.max(0, CANVAS.height - viewportHeight);
+  let best: number | undefined;
+  for (const [top, bottom] of heads) {
+    // Below the head, or above it: the two placements that leave it whole.
+    for (const candidate of [bottom + margin, top - margin - viewportHeight]) {
+      if (candidate < 0 || candidate > highest || slices(candidate)) continue;
+      if (best === undefined || Math.abs(candidate - y) < Math.abs(best - y)) best = candidate;
+    }
+  }
+  return best ?? y;
 }
 
 /** The camera viewport must stay inside the painted 1920x1080 stage. */
@@ -329,12 +401,17 @@ function containCamera(
     : bottom - top <= viewportHeight
       ? Math.max(top, Math.min(camera.y, bottom - viewportHeight))
       : top;
+  // A framed subject band owns the vertical placement, but no framed shot may
+  // slice a drawn head: the placement moves to the nearer side that clears every
+  // head, chosen from the placements the painted stage allows.
+  const stagedY = Math.min(Math.max(y, 0), Math.max(0, CANVAS.height - viewportHeight));
+  const framedY = band ? clearOfHeads(stagedY, visible.map(actorHeadBand), viewportHeight, margin) : y;
   // The viewport must stay inside the painted stage: with zoom at the stage
   // fit the whole canvas fills the frame, so any stage-boundary-crossing
   // offset would expose the episode background as black bands.
   return {
     x: Math.min(Math.max(x, 0), Math.max(0, CANVAS.width - viewportWidth)),
-    y: Math.min(Math.max(y, 0), Math.max(0, CANVAS.height - viewportHeight)),
+    y: Math.min(Math.max(framedY, 0), Math.max(0, CANVAS.height - viewportHeight)),
     z: zoom,
     rotation: camera.rotation,
   };
