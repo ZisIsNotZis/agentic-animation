@@ -1,0 +1,77 @@
+episode:
+  id: b_bar_swing
+  title: 大回环（切片 B）
+  language: zh-CN
+
+# Slice B vertical: one giant swing on the accepted outdoor bar, filmed from the
+# SIDE — the swing plane is perpendicular to the bar, and the side view is the
+# only orientation whose two drawn hands meet at one grip point.
+#
+# Beats:
+#   1 mount   乙 turns side-on and says he is going up.
+#   2 walk    silent: he steps under the bar (movement.to).
+#   3 swing   the giant, non-blocking, so the apex beat can be timed onto it.
+#   4 call    甲 shouts encouragement while he is on his way over.
+#   5 apex    silent: her hand goes up and the laugh lands on the top of the turn.
+#   6 hold    silent: the circle finishes in silence.
+#   7 settle  he hangs off the bar, breathing.
+#   8 cadence the ending cadence closes the slice.
+#
+# Framing (measured, not guessed). The camera's widest legal shot is the stage
+# fit z 0.6667: `containCamera`/`clampCameraToStage` never pull back past it and
+# never place the viewport outside the painted 1920x1080. The drawn orbit is
+# 2 x 675.5 design px about the grip (the far foot-box corner) = 1189 world px at
+# the staged scale 0.88, and the frame is 720/z = 1080 world px tall at the
+# widest zoom, so the whole circle cannot be framed by any zoom; a zoom that
+# would fit it with a 24 px margin is 720/(1189+48) = 0.582, below the floor.
+# The bar also sits at y 250, so the top of the arc reaches y -344 while the
+# camera cannot show y < 0. The shot is therefore the full stage, and the arc is
+# cut at the top edge rather than cropped further by a closer lens.
+
+actors:
+  gymnast:
+    use: figure/gymnast_b
+    voice: voice/zh/aqiang
+  athlete:
+    use: figure/athlete_a
+    voice: voice/zh/student_a
+
+locations:
+  yard:
+    use: set/outdoor_bar
+
+objects:
+  # The athlete's shuttle, dropped on the mat while she watches. It is also the
+  # only instance the walk can name: `movement.to` resolves an actor or object
+  # id, so a set-declared support (the bar) cannot be walked to, and the
+  # two-actor staging puts the pair at x 0.35/0.65 while the bar's grip sits at
+  # 0.5 — 342.7 px from the gymnast's shoulder against his 151.1 px reach, which
+  # the motor refuses by name.
+  shuttle:
+    use: prop/shuttle
+
+scenes:
+  - id: giant_swing
+    location: yard
+    actors:
+      gymnast: {facing: right}
+      athlete: {facing: gymnast}
+    objects:
+      shuttle: center
+    script:
+      # 1 mount — the body turns side-on before the feet move.
+      - gymnast: "{pose.orient(gymnast, \"right\")}……上杠。"
+      # 2 walk — he steps under the bar. Silent: the feet are the only sound.
+      - gymnast: "{movement.to(gymnast, shuttle)}"
+      # 3 swing — non-blocking, so the apex cue can be timed onto the turn.
+      - gymnast: "{...action.swing(gymnast), mode: \"nonblock\"}"
+      # 4 call — her line ends just before the top of the turn.
+      - athlete: "好——！"
+      # 5 apex — hands up, laugh: the accent on the top of the swing.
+      - athlete: "{action.raise_hand(athlete), action.laugh(athlete)}"
+      # 6 hold — silence while the circle finishes.
+      - athlete: "……"
+      # 7 settle — he hangs off the bar, breathing.
+      - gymnast: "……稳住了。"
+      # 8 cadence — the ending cadence, silent on the beat itself.
+      - gymnast: "{...music.ending(), mode: \"nonblock\"}…"
