@@ -52,18 +52,39 @@ Clearance is 24 world px beyond the drawn head's edge, and a placement the
 painted stage cannot reach is rejected: when no legal placement clears every
 head, the unshifted placement is kept rather than moving the frame off the stage.
 
-### Open: the camera's viewport is not the rendered frame
+### The camera viewport is the rendered frame (measured)
 
-The framing maths treats the viewport as video/z (720 px tall at z 3.3), but the
-rendered frame is ~12% larger: measuring declared art against pixels gives
-~807/z tall, and the frame's top edge lands ~20 world px above the `camera.y` the
-rule computes (13.10 s insert: computed top 315.2, rendered top ≈295.6). The rule
-still holds — both heads are wholly out and nothing is sliced — but the clearance
-it promises in world px is larger than the clearance the viewer gets, and an
-object or head sitting within ~20 px of a computed edge is nearer the edge than
-the numbers say. Reconcile the two conventions in one place before any framing
-work that depends on a tight clearance; this round did not, because changing the
-viewport convention moves every shot of every episode.
+The camera maths and the renderer share one convention. `PerformanceFrame` applies
+`scale(z) translate(-x, -y)` about the composition's top-left corner, so a stage
+point lands at `z*(p - camera)` and the frame covers `video/z` world px with its
+top edge at `camera.y`. Measured on the m6-film bake (500 frames, 1280x720) by
+cutting declared set art out of the MP4 and reading its pixel row:
+
+- 0.00 s, z 0.6667, camera (0, 0): counter front face top y430 at row 287
+  (predicted 286.7), y660 at 440 (440.0), y690 at 460 (460.0).
+- 5.90 s, z 1.35, camera (455.96, 42.50): y430 at row 524 (523.1); thermos ink
+  y296.8 at 344 (343.3) and y420.3 at 511 (510.0).
+- 13.10 s, z 3.3, camera (879.76, 315.19): the counter top surface's back edge
+  y368 at row 169 (174.3) and its front edge y430 at 377 (378.9).
+
+So the viewport is `video/z` at every zoom and there is no second convention to
+reconcile. **Retracted: the ~12 % gap recorded here as open** ("~807/z tall",
+"rendered top ≈295.6"). It came from dividing a declared prop band (125.5 world
+px at z 3.3) by a measured pixel fraction (50.2 % of a 540 px still), which weighs
+the drawn prop against its declared band, not the viewport against the frame.
+
+### Open: drawn actors and props do not sit on their declared bands at z 3.3
+
+In the 13.10 insert the set art is on its computed rows and the drawn flask is
+not. Its light stripes (art y 61 and 84) render 76 px apart there — 23 art units
+x 3.3, so the *scale* is right — but 49 px lower than the bands place them:
+`propFrameBand` reports the flask's ink at y 296.7–420.2 while the drawing covers
+≈311.6–435.1. The same prop and the same actor render exactly on their declared
+rows at z 1.35, so this is neither a scale error nor the camera, and its cause is
+not established. Until it is, a probe taken from drawn figure or prop pixels
+inside the z-3.3 insert reads ≈15 world px below what placed them; if the drawn
+head drifts with it the chin sits ≈306 and the viewer gets ≈9 world px of
+clearance where the rule computes 24. The frame edge itself is unaffected.
 
 ## Defects found in this slice (viewer review 2026-10-17; all five now fixed)
 
@@ -135,11 +156,11 @@ viewport convention moves every shot of every episode.
    below the drawn object and the object push aimed under it; the band now reads
    the declared body box at the base offset. The insert is therefore a prop shot:
    the flask's declared silhouette spans y 324.2–418.2 world and its full drawn
-   extent y 296.7–422.2, the camera lands at z 3.3, and on the rendered still the
-   flask plus the gripping hand span x 412–611, y 10–280 of a 960x540 frame —
-   50.2% of frame height, its centre at 53% of frame width, with the counter line,
-   the hand and her torso giving context. Both drawn heads (y 116.9–291.2) stay
-   wholly out above the top edge.
+   extent y 296.7–422.2, the camera lands at z 3.3, and on the rendered frame the
+   flask spans x 523–846, y −13–395 of 1280x720 — 56.7% of frame height, its
+   centre at 53% of frame width, the cap cut by the top edge, with the counter
+   line, the hand and her torso giving context. Both drawn heads (y 116.9–291.2)
+   stay wholly out above the top edge.
 
    The heads and a centred flask cannot both have it: the hold puts the flask's
    top at world y 296.7 and the chin at 291.2, so a frame that keeps the heads out
