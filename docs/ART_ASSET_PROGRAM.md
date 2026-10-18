@@ -187,6 +187,36 @@ arc leaves and re-enters frame (normal film grammar for a giant swing), or the
 capability is demonstrated with a pull-up and landing instead, or the canvas and set
 grow to cover the orbit.
 
+### Slice B state: the capability works, the shot's staging does not yet
+
+The swing capability is implemented and proven (`8c66520` and its predecessors):
+a body attaches to a hanging grip, both hands hold one point, and it turns a full
+−360° with grip error 0.000000 px over 86 turning frames, 8.91°/frame, zero
+diagnostics — measured in a controlled proof with a PROP-declared hanging support
+(`prop/high_bar`) and a five-actor staging (`/tmp/swing-proof`).
+
+The shot does not yet bake, and every blocker found is a boundary or a staging
+fact, not a missing mechanism:
+
+1. **The set's own bar cannot be reached.** Shoulder 483 design px above the ground,
+   arm 161 px, so the grip must sit ~153 px above the shoulder; the set declared it
+   at y 250, i.e. 195 px BELOW the shoulder. Moving rail and support to y 130-138
+   (declaration and paint together, which the paint guard enforces) fixes the reach.
+2. **A straight-up mount is singular.** Walking the actor onto the grip sends the
+   hand through the shoulder; the arm solve has no inner-arc solution there and the
+   mount is refused. A two-phase mount (step under, then reach) removes it, and a
+   walk that stops short of the grip gives a diagonal chord instead.
+3. **Staged standing y is not owned by the set.** `setupY()` fixes it at
+   0.64×1080 = 691.2 and the narrow-episode actor accepts only `facing`, so the
+   ground line cannot be moved by authoring; the orbit (675.77 design px radius,
+   1351.5 across) can therefore never fit a 1080 stage at two-actor scale, and
+   fitting would need k ≤ 0.7991, which the staging ladder does not offer.
+4. **Sub-pixel invariant boundaries keep refusing the mount**: zero-slack rest legs
+   (`leg-annulus` 0.002 px), stance anchors during a root glide
+   (`support-anchor` 0.029 px), and a constant `grip-contact` 1.119 px offset that
+   does not respond to bar height. Each is sub-pixel and invisible; together they
+   are why this shot needs a focused pass rather than more attempts in passing.
+
 ## Risks
 
 - **Swing is the only capability that may not be expressible.** The spike decides
