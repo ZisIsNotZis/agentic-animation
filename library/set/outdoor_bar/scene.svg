@@ -1,0 +1,358 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <!-- outdoor_bar - original vector artwork for asset programme slice B (Wave 1b).
+       One outdoor training ground in the accepted M1 B-direction language: thin
+       #424e46 contours, muted teal / cream / terracotta / warm-wood flat fills with
+       opacity overlays, no filters and no raster. Single-point perspective rule:
+       the ground plane's horizontals are parallel to the horizon (y=440) and every
+       receding edge is a ray from the vanishing point (960,440), so the posts, the
+       mat, the bench, the standing datum and every cast shadow share one plane.
+       Light source: the low sun at the far left, so shadows fall right and toward
+       the viewer. Depth is painted (converging lines, value, overlap, size) and
+       never projected by the engine. -->
+  <title>Outdoor training ground - high bar on two posts, guy wires, landing mat, bench</title>
+
+  <!-- ==================== backdrop: sky, low sun, treeline, field fence ==================== -->
+  <g id="backdrop">
+    <rect x="0" y="0" width="1920" height="440" fill="#eadcbb"/>
+    <rect x="0" y="0" width="1920" height="152" fill="#f2e7cd"/>
+    <rect x="0" y="292" width="1920" height="148" fill="#e2d5b4" opacity="0.55"/>
+    <!-- the sun at the far left: the one light source the M4 passes name -->
+    <circle cx="170" cy="252" r="148" fill="#fdf3d9" opacity="0.10"/>
+    <circle cx="170" cy="252" r="86" fill="#fdf3d9" opacity="0.20"/>
+    <circle cx="170" cy="252" r="42" fill="#fdf3d9" opacity="0.55"/>
+    <!-- distant low hills behind the treeline -->
+    <path d="M0 404 L120 392 L280 400 L430 388 L620 402 L790 394 L980 404 L1180 392 L1380 402 L1560 390 L1740 402 L1920 394 L1920 440 L0 440 Z" fill="#b8b08e" opacity="0.45"/>
+    <!-- far treeline: low-contrast crowns, thinned so it stays behind everything -->
+    <g fill="#7f9a7e" opacity="0.70">
+      <ellipse cx="60" cy="404" rx="66" ry="42"/>
+      <ellipse cx="190" cy="398" rx="58" ry="38"/>
+      <ellipse cx="320" cy="406" rx="70" ry="44"/>
+      <ellipse cx="460" cy="400" rx="62" ry="40"/>
+      <ellipse cx="600" cy="408" rx="74" ry="46"/>
+      <ellipse cx="750" cy="400" rx="60" ry="38"/>
+      <ellipse cx="890" cy="406" rx="68" ry="42"/>
+      <ellipse cx="1030" cy="398" rx="62" ry="38"/>
+      <ellipse cx="1170" cy="408" rx="72" ry="44"/>
+      <ellipse cx="1310" cy="400" rx="60" ry="38"/>
+      <ellipse cx="1450" cy="406" rx="70" ry="42"/>
+      <ellipse cx="1590" cy="398" rx="62" ry="38"/>
+      <ellipse cx="1730" cy="406" rx="70" ry="44"/>
+      <ellipse cx="1870" cy="400" rx="64" ry="40"/>
+    </g>
+    <rect x="0" y="418" width="1920" height="22" fill="#6f8a72" opacity="0.75"/>
+    <!-- near treeline: darker crowns standing on the horizon line -->
+    <g fill="#4f7a6b" opacity="0.92">
+      <ellipse cx="120" cy="424" rx="58" ry="30"/>
+      <ellipse cx="255" cy="420" rx="50" ry="26"/>
+      <ellipse cx="392" cy="426" rx="62" ry="30"/>
+      <ellipse cx="536" cy="422" rx="52" ry="26"/>
+      <ellipse cx="690" cy="428" rx="66" ry="32"/>
+      <ellipse cx="836" cy="422" rx="54" ry="26"/>
+      <ellipse cx="986" cy="428" rx="64" ry="30"/>
+      <ellipse cx="1136" cy="422" rx="54" ry="26"/>
+      <ellipse cx="1290" cy="428" rx="66" ry="32"/>
+      <ellipse cx="1440" cy="422" rx="54" ry="26"/>
+      <ellipse cx="1596" cy="428" rx="64" ry="30"/>
+      <ellipse cx="1750" cy="422" rx="56" ry="26"/>
+      <ellipse cx="1896" cy="428" rx="62" ry="30"/>
+    </g>
+    <rect x="0" y="430" width="1920" height="10" fill="#3f6a5c"/>
+    <!-- the training field's boundary fence, one rail on short posts at the horizon -->
+    <rect x="0" y="432" width="1920" height="5" fill="#9a7852" stroke="#424e46" stroke-width="1.5"/>
+    <g fill="#8a6a48">
+      <rect x="96" y="428" width="7" height="14"/>
+      <rect x="356" y="428" width="7" height="14"/>
+      <rect x="616" y="428" width="7" height="14"/>
+      <rect x="876" y="428" width="7" height="14"/>
+      <rect x="1136" y="428" width="7" height="14"/>
+      <rect x="1396" y="428" width="7" height="14"/>
+      <rect x="1656" y="428" width="7" height="14"/>
+      <rect x="1856" y="428" width="7" height="14"/>
+    </g>
+  </g>
+
+  <!-- ==================== ground: field, mown bands, worn dirt, standing datum ==================== -->
+  <g id="ground">
+    <rect x="0" y="440" width="1920" height="640" fill="#97a377"/>
+    <!-- aerial perspective: the far field is lighter, the near field deeper -->
+    <rect x="0" y="440" width="1920" height="96" fill="#aab389" opacity="0.55"/>
+    <rect x="0" y="900" width="1920" height="180" fill="#7f8c62" opacity="0.45"/>
+    <!-- mown bands: horizontal seams (parallel to the horizon) with perspective spacing -->
+    <g fill="#b3bb8e">
+      <rect x="0" y="468" width="1920" height="28" opacity="0.28"/>
+      <rect x="0" y="534" width="1920" height="58" opacity="0.24"/>
+      <rect x="0" y="700" width="1920" height="106" opacity="0.20"/>
+      <rect x="0" y="980" width="1920" height="100" opacity="0.14"/>
+    </g>
+    <!-- mown stripes receding to the vanishing point (960,440) -->
+    <g stroke="#7f8c62" stroke-width="3" opacity="0.30" fill="none">
+      <path d="M960 440 L-320 1080"/>
+      <path d="M960 440 L120 1080"/>
+      <path d="M960 440 L440 1080"/>
+      <path d="M960 440 L700 1080"/>
+      <path d="M960 440 L1220 1080"/>
+      <path d="M960 440 L1480 1080"/>
+      <path d="M960 440 L1800 1080"/>
+      <path d="M960 440 L2240 1080"/>
+    </g>
+    <!-- worn dirt around the apparatus, a ray-bounded patch on the same plane -->
+    <path d="M604 596 L1316 596 L1524 1080 L396 1080 Z" fill="#c2a173" opacity="0.42"/>
+    <path d="M660 620 L1260 620 L1400 1000 L520 1000 Z" fill="#cbb083" opacity="0.22"/>
+    <!-- wear: scuffs and traffic, kept low and soft -->
+    <g fill="#8d7a54" opacity="0.14">
+      <ellipse cx="960" cy="760" rx="320" ry="52"/>
+      <ellipse cx="700" cy="860" rx="150" ry="26"/>
+      <ellipse cx="1230" cy="700" rx="120" ry="20"/>
+    </g>
+    <!-- the standing datum: the near resting band whose top edge is y=691, the line a
+         body or prop stands on; declared as support "ground" at the same y -->
+    <path id="ground_standing_surface" data-support-top="691" d="M140 691 L1780 691 L1920 1080 L0 1080 Z" fill="#b6bd94" opacity="0.12"/>
+    <path d="M140 691 L1780 691" stroke="#8f9a6c" stroke-width="2.5" opacity="0.45" fill="none"/>
+  </g>
+
+  <!-- ==================== mat: the landing mat, lying behind the standing datum ==================== -->
+  <g id="mat">
+    <path d="M700 600 L1220 600 L1300 688 L620 688 Z" fill="#477c7b" stroke="#424e46" stroke-width="3"/>
+    <path d="M716 612 L1204 612 L1272 676 L648 676 Z" fill="#3f6f6d" opacity="0.75"/>
+    <path d="M732 624 L1188 624 L1244 664 L676 664 Z" fill="#5b9190" opacity="0.35"/>
+    <path d="M620 688 L1300 688 L1300 702 L620 702 Z" fill="#2f5756" stroke="#424e46" stroke-width="2.5"/>
+    <path d="M700 600 L1220 600" stroke="#5b9190" stroke-width="3" opacity="0.6" fill="none"/>
+  </g>
+
+  <!-- ==================== shadows: one light, so every shadow runs the same way ====================
+       The sun is low at the far left, so a point h art px above the ground throws its
+       shadow (0.50h, 0.18h) to the right and toward the viewer. Post height is 441, the
+       bar sits at 250, the bench legs are 60 tall: every quad below uses that one rule. -->
+  <g id="shadows">
+    <!-- the treeline's own contact shade where the field starts -->
+    <path d="M0 440 L1920 440 L1920 452 L0 452 Z" fill="#2f2a24" opacity="0.18"/>
+    <!-- left post: base (689..711, 691) thrown to (909..931, 770) -->
+    <path d="M689 691 L711 691 L931 770 L909 770 Z" fill="#2f2a24" opacity="0.26"/>
+    <!-- right post: base (1209..1231, 691) thrown to (1429..1451, 770) -->
+    <path d="M1209 691 L1231 691 L1451 770 L1429 770 Z" fill="#2f2a24" opacity="0.26"/>
+    <!-- the bar's shadow, a long line on the near field at the bar's own throw -->
+    <path d="M920 764 L1440 764 L1440 776 L920 776 Z" fill="#2f2a24" opacity="0.22"/>
+    <ellipse cx="920" cy="770" rx="12" ry="7" fill="#2f2a24" opacity="0.20"/>
+    <ellipse cx="1440" cy="770" rx="12" ry="7" fill="#2f2a24" opacity="0.20"/>
+    <!-- bench: legs 60 tall, thrown (30,11) to the right of each leg -->
+    <path d="M86 758 L102 758 L132 769 L116 769 Z" fill="#2f2a24" opacity="0.24"/>
+    <path d="M314 758 L330 758 L360 769 L344 769 Z" fill="#2f2a24" opacity="0.24"/>
+    <path d="M64 736 L376 736 L406 758 L94 758 Z" fill="#2f2a24" opacity="0.13"/>
+    <!-- contact shade: the mat's near lip and the two post base plates -->
+    <path d="M620 700 L1300 700 L1296 712 L624 712 Z" fill="#2f2a24" opacity="0.14"/>
+    <ellipse cx="700" cy="700" rx="46" ry="12" fill="#2f2a24" opacity="0.24"/>
+    <ellipse cx="1220" cy="700" rx="46" ry="12" fill="#2f2a24" opacity="0.24"/>
+    <!-- the near field falls away into a soft vignette at the bottom edge -->
+    <path d="M0 1000 L1920 1000 L1920 1080 L0 1080 Z" fill="#2f2a24" opacity="0.14"/>
+  </g>
+
+  <!-- ==================== apparatus: two posts, the high bar, guy wires and stakes ====================
+       The bar is drawn as one horizontal rail with its geometric centre line at y=250 and
+       its extent x=700..1220; the declared hanging support's grip line is exactly that
+       segment (grip.x [700,1220], grip.y 250) and the rail element carries
+       data-support-top="250", so declaration and painting are the same geometry. -->
+  <g id="apparatus">
+    <!-- left post: lit face left, shaded face right -->
+    <path d="M689 250 L711 250 L711 691 L689 691 Z" fill="#ad8062" stroke="#424e46" stroke-width="3"/>
+    <path d="M689 250 L696 250 L696 691 L689 691 Z" fill="#c9a274" opacity="0.85"/>
+    <path d="M705 250 L711 250 L711 691 L705 691 Z" fill="#8a6a48" opacity="0.75"/>
+    <!-- right post -->
+    <path d="M1209 250 L1231 250 L1231 691 L1209 691 Z" fill="#ad8062" stroke="#424e46" stroke-width="3"/>
+    <path d="M1209 250 L1216 250 L1216 691 L1209 691 Z" fill="#c9a274" opacity="0.85"/>
+    <path d="M1225 250 L1231 250 L1231 691 L1225 691 Z" fill="#8a6a48" opacity="0.75"/>
+    <!-- base plates: quads on the ground plane, near edge wider than the far edge -->
+    <path d="M672 691 L730 691 L740 708 L662 708 Z" fill="#8a745a" stroke="#424e46" stroke-width="2.5"/>
+    <path d="M1192 691 L1250 691 L1260 708 L1182 708 Z" fill="#8a745a" stroke="#424e46" stroke-width="2.5"/>
+    <!-- the bar: one rail, centre line y=250, x 700..1220 -->
+    <path id="bar_grip_rail" data-support-top="250" d="M700 250 H1220" stroke="#8a6a48" stroke-width="22" fill="none" stroke-linecap="butt"/>
+    <path d="M700 243 H1220" stroke="#c9a274" stroke-width="4" opacity="0.8" fill="none"/>
+    <path d="M700 258 H1220" stroke="#5c4a3a" stroke-width="4" opacity="0.5" fill="none"/>
+    <!-- collars clamp the bar to each post -->
+    <rect x="684" y="236" width="32" height="26" rx="4" fill="#8a6a48" stroke="#424e46" stroke-width="3"/>
+    <rect x="1204" y="236" width="32" height="26" rx="4" fill="#8a6a48" stroke="#424e46" stroke-width="3"/>
+    <rect x="684" y="240" width="32" height="5" fill="#b99368" opacity="0.8"/>
+    <rect x="1204" y="240" width="32" height="5" fill="#b99368" opacity="0.8"/>
+    <!-- guy wires from the post tops to ground stakes: the stabilisers of a real high bar -->
+    <path d="M686 244 L520 700" stroke="#5f6a63" stroke-width="3.2" fill="none"/>
+    <path d="M1228 244 L1400 700" stroke="#5f6a63" stroke-width="3.2" fill="none"/>
+    <path d="M596 486 L618 496" stroke="#8a745a" stroke-width="9" stroke-linecap="round" fill="none"/>
+    <path d="M1306 486 L1284 496" stroke="#8a745a" stroke-width="9" stroke-linecap="round" fill="none"/>
+    <path d="M506 692 L534 692 L530 708 L510 708 Z" fill="#b96a55" stroke="#424e46" stroke-width="2.5"/>
+    <path d="M1386 692 L1414 692 L1410 708 L1390 708 Z" fill="#b96a55" stroke="#424e46" stroke-width="2.5"/>
+    <!-- chalk dust on the rail where the hands go -->
+    <ellipse cx="902" cy="246" rx="34" ry="5" fill="#f2ead4" opacity="0.40"/>
+    <ellipse cx="1018" cy="246" rx="34" ry="5" fill="#f2ead4" opacity="0.40"/>
+  </g>
+
+  <!-- ==================== furniture: the bench beside the apparatus ==================== -->
+  <g id="furniture">
+    <path d="M70 700 L76 700 L76 760 L70 760 Z" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
+    <path d="M320 700 L326 700 L326 760 L320 760 Z" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
+    <!-- front board, parallel to the picture plane -->
+    <path d="M64 700 L332 700 L332 736 L64 736 Z" fill="#8a6a48" stroke="#424e46" stroke-width="3.5"/>
+    <path d="M64 700 L332 700 L332 710 L64 710 Z" fill="#9a7852" opacity="0.8"/>
+    <path d="M84 720 L312 720" stroke="#75694e" stroke-width="2.5" opacity="0.7" fill="none"/>
+    <!-- seat top and back edge, both on rays from (960,440) -->
+    <path d="M64 700 L332 700 L368 682 L100 682 Z" fill="#b99368" stroke="#424e46" stroke-width="3.5"/>
+    <path d="M100 682 L368 682 L368 626 L100 626 Z" fill="#a5825a" stroke="#424e46" stroke-width="3"/>
+    <path d="M100 646 L368 646" stroke="#75694e" stroke-width="2.5" opacity="0.7" fill="none"/>
+    <!-- right side face: left of the vanishing point, so the right face is the one seen -->
+    <path d="M332 700 L368 682 L368 722 L332 736 Z" fill="#7c5f40" stroke="#424e46" stroke-width="3.5"/>
+    <!-- towel laid on the seat inside the front edge -->
+    <path d="M140 694 L226 694 L256 681 L174 681 Z" fill="#eadcbb" stroke="#424e46" stroke-width="2.5"/>
+    <path d="M166 690 L240 690 L258 683 L188 683 Z" fill="#b96a55" opacity="0.75"/>
+  </g>
+
+  <!-- ==================== M4 material passes (docs/ART_MATERIALS_M4.md) ====================
+       Declared through the M3 set-layer seam, each pass composited in the mode that does
+       its job without moving the drawn values:
+         material_pigment - region palettes: a warm cream sky and sunlit grass on the left,
+                            a cool ambient family on the right, sage for the field, ochre
+                            for the worn dirt, warm varnish for the apparatus and bench,
+                            teal for the mat; blend `color`, so hue and saturation come from
+                            the glaze and the luminance stays the art's ink;
+         material_detail  - scale-keyed contours: near/large silhouettes weighted (bar, posts,
+                            mat and bench edges, the ground's near band), far art thinned,
+                            speculars where the sun lands; normal blend, it draws marks and
+                            does not wash;
+         lighting_shade   - one light map: falloff from the low sun plus a cool fill from the
+                            right; `soft-light`;
+         lighting_key     - the same source as warm key, with the sun's plane and the lit
+                            rims; `soft-light`.
+       Every wash covers the whole frame as one gradient: no cut-outs, no matte and no
+       per-region clip, so no pass presents a boundary the art does not draw. All marks are
+       static vector art: no filters, no raster, no temporal term, and no per-actor
+       projected shadow (the set art is static; staging varies). -->
+  <g id="material_pigment">
+    <defs>
+      <linearGradient id="ob_pig_sky" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#f7e8c3" stop-opacity="0.26"/>
+        <stop offset="0.52" stop-color="#e7d8b8" stop-opacity="0.12"/>
+        <stop offset="1" stop-color="#8f9a93" stop-opacity="0.22"/>
+      </linearGradient>
+      <linearGradient id="ob_pig_field_depth" gradientUnits="userSpaceOnUse" x1="0" y1="440" x2="0" y2="1080">
+        <stop offset="0" stop-color="#b6c08e" stop-opacity="0.22"/>
+        <stop offset="0.42" stop-color="#97a377" stop-opacity="0.16"/>
+        <stop offset="1" stop-color="#5f6f45" stop-opacity="0.30"/>
+      </linearGradient>
+      <radialGradient id="ob_pig_field_cool" gradientUnits="userSpaceOnUse" cx="1560" cy="860" r="760">
+        <stop offset="0" stop-color="#6f7f8c" stop-opacity="0.24"/>
+        <stop offset="0.6" stop-color="#6f7f8c" stop-opacity="0.13"/>
+        <stop offset="1" stop-color="#6f7f8c" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="ob_pig_dirt" gradientUnits="userSpaceOnUse" x1="0" y1="596" x2="0" y2="1080">
+        <stop offset="0" stop-color="#d8b98c" stop-opacity="0.24"/>
+        <stop offset="1" stop-color="#9a7a4e" stop-opacity="0.18"/>
+      </linearGradient>
+    </defs>
+    <g>
+      <rect x="-40" y="-40" width="2000" height="480" fill="url(#ob_pig_sky)"/>
+      <rect x="-40" y="440" width="2000" height="640" fill="url(#ob_pig_field_depth)"/>
+      <path d="M604 596 L1316 596 L1524 1080 L396 1080 Z" fill="url(#ob_pig_dirt)"/>
+      <path d="M604 596 L1316 596 L1524 1080 L396 1080 Z" fill="url(#ob_pig_field_cool)"/>
+      <path d="M700 600 L1220 600 L1300 688 L620 688 Z" fill="#4f8f8c" opacity="0.26"/>
+      <path d="M689 250 L711 250 L711 691 L689 691 Z" fill="#c9a274" opacity="0.22"/>
+      <path d="M1209 250 L1231 250 L1231 691 L1209 691 Z" fill="#c9a274" opacity="0.22"/>
+      <path d="M700 239 H1220 L1220 261 L700 261 Z" fill="#e2c08c" opacity="0.22"/>
+      <path d="M64 700 L332 700 L368 682 L100 682 Z" fill="#dcb086" opacity="0.28"/>
+      <path d="M64 700 L332 700 L332 736 L64 736 Z" fill="#8a5a40" opacity="0.18"/>
+    </g>
+  </g>
+
+  <g id="material_detail">
+    <!-- near/large silhouettes carry a light and a dark contour (weight, not outline) -->
+    <g fill="none" stroke-linecap="round">
+      <path d="M700 239 H1220" stroke="#e6c39b" stroke-width="3.6" opacity="0.55"/>
+      <path d="M700 261 H1220" stroke="#4b3a2c" stroke-width="3.4" opacity="0.40"/>
+      <path d="M689 250 L689 691 M1209 250 L1209 691" stroke="#e6c39b" stroke-width="3.2" opacity="0.42"/>
+      <path d="M711 250 L711 691 M1231 250 L1231 691" stroke="#4b3a2c" stroke-width="3.2" opacity="0.38"/>
+      <path d="M620 688 L1300 688" stroke="#2f5756" stroke-width="4.2" opacity="0.45"/>
+      <path d="M700 600 L1220 600" stroke="#8fc0bb" stroke-width="3.2" opacity="0.42"/>
+      <path d="M100 682 L368 682" stroke="#e6c39b" stroke-width="3.4" opacity="0.50"/>
+      <path d="M64 736 L332 736" stroke="#5c4a3a" stroke-width="4.0" opacity="0.42"/>
+      <path d="M140 691 L1780 691" stroke="#c8cf9f" stroke-width="3.0" opacity="0.30"/>
+    </g>
+    <!-- far art: thin, low-contrast secondary lines, sized by depth -->
+    <g stroke="#6b7a72" fill="none" stroke-width="2.4" opacity="0.30" stroke-linecap="round">
+      <path d="M0 432 L1920 432"/>
+      <path d="M0 440 L1920 440"/>
+    </g>
+    <!-- speculars: the rail and the mat's near lip catch the low sun -->
+    <g fill="#f3ecd2">
+      <ellipse cx="902" cy="244" rx="30" ry="4" opacity="0.34"/>
+      <ellipse cx="1018" cy="244" rx="30" ry="4" opacity="0.34"/>
+      <ellipse cx="660" cy="686" rx="30" ry="4" opacity="0.16"/>
+      <ellipse cx="1264" cy="686" rx="30" ry="4" opacity="0.16"/>
+    </g>
+    <!-- the mat's mesh texture, weighted on the near half so it scales with size -->
+    <g stroke="#7fb3b0" stroke-width="1.6" opacity="0.22" fill="none">
+      <path d="M724 616 L660 680"/>
+      <path d="M796 616 L748 680"/>
+      <path d="M868 616 L836 680"/>
+      <path d="M940 616 L924 680"/>
+      <path d="M1012 616 L1012 680"/>
+      <path d="M1084 616 L1100 680"/>
+      <path d="M1156 616 L1188 680"/>
+    </g>
+  </g>
+
+  <g id="lighting_shade">
+    <defs>
+      <radialGradient id="ob_light_falloff" gradientUnits="userSpaceOnUse" cx="170" cy="252" r="1720">
+        <stop offset="0" stop-color="#6d6a60" stop-opacity="0"/>
+        <stop offset="0.40" stop-color="#665f57" stop-opacity="0.075"/>
+        <stop offset="0.74" stop-color="#625c52" stop-opacity="0.20"/>
+        <stop offset="1" stop-color="#565047" stop-opacity="0.42"/>
+      </radialGradient>
+      <linearGradient id="ob_cool_fill" gradientUnits="userSpaceOnUse" x1="980" y1="0" x2="1920" y2="0">
+        <stop offset="0" stop-color="#68737a" stop-opacity="0"/>
+        <stop offset="1" stop-color="#68737a" stop-opacity="0.26"/>
+      </linearGradient>
+    </defs>
+    <g>
+      <rect x="-240" y="-240" width="2400" height="1560" fill="url(#ob_light_falloff)"/>
+      <rect x="900" y="-240" width="1260" height="1560" fill="url(#ob_cool_fill)"/>
+    </g>
+  </g>
+
+  <g id="lighting_key">
+    <defs>
+      <linearGradient id="ob_sun_key" gradientUnits="userSpaceOnUse" x1="170" y1="252" x2="1760" y2="1010">
+        <stop offset="0" stop-color="#fdf3d9" stop-opacity="0.20"/>
+        <stop offset="0.30" stop-color="#fdf3d9" stop-opacity="0.11"/>
+        <stop offset="0.70" stop-color="#fdf3d9" stop-opacity="0.04"/>
+        <stop offset="1" stop-color="#fdf3d9" stop-opacity="0"/>
+      </linearGradient>
+      <radialGradient id="ob_sun_plane" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(430 470) scale(520 400)">
+        <stop offset="0" stop-color="#fdf3d9" stop-opacity="0.16"/>
+        <stop offset="0.5" stop-color="#fdf3d9" stop-opacity="0.09"/>
+        <stop offset="1" stop-color="#fdf3d9" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="ob_sun_ground" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(620 720) scale(620 320)">
+        <stop offset="0" stop-color="#fdf3d9" stop-opacity="0.11"/>
+        <stop offset="0.55" stop-color="#fdf3d9" stop-opacity="0.06"/>
+        <stop offset="1" stop-color="#fdf3d9" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="ob_sun_rim" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(172 252) scale(150 150)">
+        <stop offset="0" stop-color="#fffaf0" stop-opacity="0.34"/>
+        <stop offset="0.5" stop-color="#fffaf0" stop-opacity="0.14"/>
+        <stop offset="1" stop-color="#fffaf0" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <!-- the key travelling from the low sun across the whole picture -->
+    <rect x="-240" y="-240" width="2400" height="1560" fill="url(#ob_sun_key)"/>
+    <rect x="0" y="130" width="1000" height="740" fill="url(#ob_sun_plane)"/>
+    <rect x="120" y="520" width="1100" height="420" fill="url(#ob_sun_ground)"/>
+    <rect x="20" y="100" width="300" height="300" fill="url(#ob_sun_rim)"/>
+    <!-- lit edges: the sun catching the rail, the posts' left faces and the near field -->
+    <g stroke="#fff3da" fill="none" stroke-linecap="round">
+      <path d="M704 240 H1216" stroke-width="3.0" opacity="0.34"/>
+      <path d="M690 258 L690 686" stroke-width="2.4" opacity="0.28"/>
+      <path d="M1210 258 L1210 686" stroke-width="2.0" opacity="0.20"/>
+      <path d="M702 604 L1218 604" stroke-width="2.2" opacity="0.22"/>
+      <path d="M624 690 L1296 690" stroke-width="2.0" opacity="0.20"/>
+      <path d="M64 701 L332 701" stroke-width="2.4" opacity="0.26"/>
+      <path d="M140 693 L520 693" stroke-width="2.2" opacity="0.20"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,76 @@
+{
+  "source": "scene.svg",
+  "preview": "preview.png",
+  "coordinateSpace": "1920x1080",
+  "layers": [
+    "backdrop",
+    "ground",
+    "mat",
+    "shadows",
+    "apparatus",
+    "furniture",
+    {
+      "id": "material_pigment",
+      "blend": "color"
+    },
+    {
+      "id": "material_detail"
+    },
+    {
+      "id": "lighting_shade",
+      "foreground": true,
+      "blend": "soft-light"
+    },
+    {
+      "id": "lighting_key",
+      "foreground": true,
+      "blend": "soft-light"
+    }
+  ],
+  "safeActorArea": {
+    "x": 380,
+    "y": 20,
+    "width": 1240,
+    "height": 940
+  },
+  "supports": [
+    {
+      "name": "ground",
+      "x": [
+        140,
+        1780
+      ],
+      "y": 691,
+      "paint": "ground_standing_surface"
+    },
+    {
+      "name": "bar",
+      "x": [
+        700,
+        1220
+      ],
+      "y": 250,
+      "kind": "hanging",
+      "grip": {
+        "x": [
+          700,
+          1220
+        ],
+        "y": 250
+      },
+      "rotationLimit": {
+        "forward": 360,
+        "back": 360
+      },
+      "paint": "bar_grip_rail"
+    }
+  ],
+  "provenance": {
+    "artwork": "Original hand-authored vector artwork (this scene.svg), drawn for asset-programme slice B (Wave 1b) as set/outdoor_bar: one outdoor training ground with a gymnastics high bar, no AI-generated, raster or third-party sources.",
+    "license": "Repository license (see LICENSE at the repository root); the artwork is original to this project.",
+    "styleAnchor": "Accepted M1 B-direction (docs/ART_DIRECTION_M1.md) and figure/lin_b_draft palette: outline #424e46, muted teal #477c7b, cream #eadcbb, terracotta #b96a55, warm woods, flat fills with opacity overlays, no filters, no raster.",
+    "supportAgreement": "Two supports on one painted ground plane. ground y=691 equals the painted data-support-top=691 on ground_standing_surface: the near resting band whose top edge is the datum line a body or prop stands on, laid across x 140..1780 (691 is also the staging default standing anchor, so an unstaged figure lands on the painted line). bar is the new hanging support: kind \"hanging\", y=250, grip.x [700,1220] at y=250, rotationLimit forward 360 / back 360. The bar is painted as one horizontal rail whose geometric centre line is exactly y=250 with extent x=700..1220 specified by the element bar_grip_rail itself (a stroked path d=\"M700 250 H1220\", stroke-width 22, butt caps), and that element carries the painted data-support-top=250; the declared grip line and the drawn bar are therefore the same segment, not two numbers kept in step. Half of 360 forward is one full circle with the same reach backward: the apparatus is symmetric and a backward giant is the same revolution, and nothing in the set blocks either direction. Every ground horizontal (mown band seams 468/496/534/592/700/806/980, the fence rail 432, the treeline base 440, the standing datum 691, the mat's near lip 688) is parallel to the horizon y=440, and every receding edge (mown stripes, the worn dirt patch, the mat's and the bench's side quads) is a ray from the single vanishing point (960,440), so both supports, the posts' base plates, the mat, the bench and every cast shadow share one ground plane.",
+    "materials": "M4 layer passes (docs/ART_MATERIALS_M4.md), declared through the M3 set-layer seam. material_pigment = region palettes (each region its own pigment family: warm cream sky and sunlit field on the left, cool ambient fill on the right, sage field with a far-to-near value ramp, ochre worn dirt, warm varnish for posts/bar/bench, teal for the mat) composited `color`, so hue and saturation come from the glaze while the luminosity stays the art's ink. material_detail = scale-keyed contours (near/large silhouettes weighted - the rail's lit top and dark underside, the posts' lit and shaded edges, the mat's near lip, the bench's seat and front edges, the standing datum - far art thinned to the fence and treeline base, speculars on the rail and the mat's lip, the mat's near-half mesh) on the normal blend; it draws marks and does not wash, and it does not restate an edge the base art already draws. lighting_shade + lighting_key = one declared light model (source: the low sun at the far left, x170 y252; key #fdf3d9, cool ambient fill #68737a, 1720-unit radial falloff from the sun with a falloff to the shade side) composited `soft-light`, which darkens under a dark source and lightens under a warm one while its change scales with the surface, so the ink keeps its contrast and the picture keeps one light direction. Both light passes are declared foreground, above the actor plane, so set and actors share the source. Cast shadows follow one rule: a point h art px above the ground throws its shadow (0.50h, 0.18h) right and toward the viewer, which is the post quads, the bar's long ground line at y 764..776 and the bench's leg shadows. Every wash covers the whole frame as one gradient with no matte, no clip and no prop exclusion; nothing tiles, so nothing repeats at a pitch. Blend/opacity is the M4 declared-layer extension.",
+    "date": "2026-10-18"
+  }
+}
