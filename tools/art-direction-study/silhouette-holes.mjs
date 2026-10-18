@@ -187,6 +187,14 @@ function findHoles(cover, width, height) {
  * rather than a junction cutout, and a box that keeps it away from a shoulder.
  */
 const LEGITIMATE_AIR = {
+  gymnast_b: [
+    {
+      views: ["quarter_back"], box: [225, 389, 233, 403], maxArea: 12,
+      why: "a 3 unit2 pocket where the rest knee bend meets the far shin behind the " +
+        "near leg; sub-pixel at stage scale and sealed on both sides, so it reads as " +
+        "cloth shadow rather than a hole. Declared so the gauge stays strict elsewhere.",
+    },
+  ],
   athlete_a: [
     {
       views: ["quarter", "quarter_back"], box: [130, 288, 150, 368], maxArea: 600,
