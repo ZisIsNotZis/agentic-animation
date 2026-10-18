@@ -1,0 +1,524 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <!-- badminton_hall - original vector artwork for asset programme slice A (Wave 1).
+       One large indoor court space in the accepted M1 B-direction language: thin
+       #424e46 contours, muted teal / cream / terracotta / warm-wood flat fills with
+       opacity overlays, no filters and no raster. Single-point perspective,
+       vanishing point (960,340); every floor seam, sideline, service line and support
+       contact is drawn from that point, so the court, the net's base, the bench and
+       the room shadows all sit on one floor plane. Light source: the high windows on
+       the back wall's left. Depth is painted (converging lines, value, overlap, size)
+       and never projected by the engine. -->
+  <title>Badminton hall - court, net, spectator bench and ceiling lights</title>
+
+  <!-- ==================== backdrop: back wall, high windows, banner, scoreboard ==================== -->
+  <g id="backdrop">
+    <!-- wall planes: upper wall lighter, the shaded right end falls away -->
+    <rect x="0" y="118" width="1920" height="312" fill="#eadcbb"/>
+    <rect x="0" y="118" width="1920" height="104" fill="#f2e7cd"/>
+    <rect x="0" y="222" width="1920" height="4" fill="#d5c49b" opacity="0.7"/>
+    <path d="M1480 118 L1920 118 L1920 430 L1540 430 Z" fill="#c9b78f" opacity="0.30"/>
+    <path d="M1730 118 L1920 118 L1920 430 L1790 430 Z" fill="#b8a67e" opacity="0.22"/>
+    <!-- cornice where the wall meets the ceiling -->
+    <rect x="0" y="108" width="1920" height="10" fill="#d5c49b"/>
+    <rect x="0" y="118" width="1920" height="3" fill="#424e46" opacity="0.4"/>
+
+    <!-- high windows on the left third of the wall: the light source -->
+    <g>
+      <rect x="118" y="150" width="650" height="176" fill="#477c7b" stroke="#424e46" stroke-width="5"/>
+      <rect x="132" y="164" width="622" height="148" fill="#dbe9e3"/>
+      <rect x="132" y="164" width="622" height="60" fill="#eef7f1" opacity="0.85"/>
+      <rect x="132" y="224" width="622" height="88" fill="#cfe0e2" opacity="0.55"/>
+      <path d="M150 210 L736 198 L736 218 L150 226 Z" fill="#b9cfd2" opacity="0.45"/>
+      <g fill="#424e46">
+        <rect x="284" y="164" width="9" height="148"/>
+        <rect x="438" y="164" width="9" height="148"/>
+        <rect x="592" y="164" width="9" height="148"/>
+      </g>
+      <rect x="132" y="236" width="622" height="8" fill="#424e46" opacity="0.6"/>
+      <rect x="98" y="326" width="690" height="18" fill="#ad8062" stroke="#424e46" stroke-width="4"/>
+      <rect x="118" y="344" width="650" height="11" fill="#c9b78f" opacity="0.6"/>
+    </g>
+
+    <!-- club banner: a wide ribbon high on the wall, above the net's top tape -->
+    <g>
+      <rect x="846" y="136" width="516" height="5" fill="#ad8062" stroke="#424e46" stroke-width="2"/>
+      <path d="M852 141 L1356 141 L1356 238 L1104 252 L852 238 Z" fill="#b96a55" stroke="#424e46" stroke-width="4"/>
+      <path d="M866 154 L1342 154 L1342 226 L1104 238 L866 226 Z" fill="none" stroke="#eadcbb" stroke-width="2.4" opacity="0.7"/>
+      <text x="1104" y="212" text-anchor="middle" font-family="'Noto Sans CJK SC','Noto Sans SC',sans-serif" font-size="48" font-weight="700" fill="#f7efd9" letter-spacing="14">羽毛球馆</text>
+      <text x="1090" y="252" text-anchor="middle" font-family="'Noto Sans CJK SC','Noto Sans SC',sans-serif" font-size="19" fill="#f7efd9" opacity="0.85" letter-spacing="6">职工联赛</text>
+    </g>
+
+    <!-- wall scoreboard in the shaded right end -->
+    <g>
+      <rect x="1546" y="160" width="308" height="150" fill="#33403e" stroke="#424e46" stroke-width="5"/>
+      <rect x="1558" y="172" width="284" height="126" fill="#1f2a29" opacity="0.85"/>
+      <text x="1618" y="230" text-anchor="middle" font-family="'Noto Sans CJK SC','Noto Sans SC',sans-serif" font-size="26" fill="#c9b78f">主队</text>
+      <text x="1782" y="230" text-anchor="middle" font-family="'Noto Sans CJK SC','Noto Sans SC',sans-serif" font-size="26" fill="#c9b78f">客队</text>
+      <text x="1618" y="282" text-anchor="middle" font-family="sans-serif" font-size="44" font-weight="700" fill="#f2c45f">11</text>
+      <text x="1700" y="280" text-anchor="middle" font-family="sans-serif" font-size="38" fill="#8fa89c">:</text>
+      <text x="1782" y="282" text-anchor="middle" font-family="sans-serif" font-size="44" font-weight="700" fill="#f2c45f">08</text>
+      <rect x="1546" y="310" width="308" height="12" fill="#424e46"/>
+    </g>
+
+    <!-- lower wall: plain boards under a low skirting rail, so the netting in front
+         of it is read as netting and not as a tiled band -->
+    <rect x="0" y="356" width="1920" height="74" fill="#e2d5b4" opacity="0.75"/>
+    <rect x="0" y="354" width="1920" height="4" fill="#c9b78f"/>
+    <rect x="0" y="416" width="1920" height="14" fill="#ad8062"/>
+    <rect x="0" y="414" width="1920" height="3" fill="#424e46" opacity="0.4"/>
+  </g>
+
+  <!-- ==================== ceiling: foreshortened roof, rafters, hanging lamps ==================== -->
+  <g id="ceiling">
+    <rect x="0" y="0" width="1920" height="118" fill="#3a4744"/>
+    <rect x="0" y="0" width="1920" height="32" fill="#46534f"/>
+    <g fill="#4b5852">
+      <rect x="0" y="12" width="1920" height="10"/>
+      <rect x="0" y="48" width="1920" height="9" opacity="0.85"/>
+      <rect x="0" y="80" width="1920" height="8" opacity="0.7"/>
+      <rect x="0" y="104" width="1920" height="7" opacity="0.55"/>
+    </g>
+    <!-- rafters receding to the vanishing point -->
+    <g fill="#333f3c" opacity="0.6">
+      <path d="M57 0 L371 118 L373.8 118 L63 0 Z"/>
+      <path d="M297 0 L527.7 118 L530.5 118 L303 0 Z"/>
+      <path d="M557 0 L697.4 118 L700.2 118 L563 0 Z"/>
+      <path d="M797 0 L854.1 118 L856.9 118 L803 0 Z"/>
+      <path d="M1177 0 L1102.2 118 L1105 118 L1183 0 Z"/>
+      <path d="M1417 0 L1259 118 L1261.8 118 L1423 0 Z"/>
+      <path d="M1657 0 L1415.7 118 L1418.5 118 L1663 0 Z"/>
+      <path d="M1857 0 L1546.2 118 L1549 118 L1863 0 Z"/>
+    </g>
+    <g>
+      <rect x="297.5" y="0" width="5" height="304" fill="#2f3a37"/>
+      <path d="M270 304 L330 304 L346 330 L254 330 Z" fill="#5b5a4e" stroke="#424e46" stroke-width="3"/>
+      <path d="M270 304 L330 304 L326 313 L274 313 Z" fill="#6d6a5a"/>
+      <ellipse cx="300" cy="338" rx="46" ry="19.3" fill="#fdf3d9" opacity="0.20"/>
+      <ellipse cx="300" cy="336" rx="20.2" ry="11" fill="#fdf3d9" opacity="0.42"/>
+    </g>
+    <g>
+      <rect x="877.5" y="0" width="5" height="220" fill="#2f3a37"/>
+      <path d="M856 220 L904 220 L920 246 L840 246 Z" fill="#5b5a4e" stroke="#424e46" stroke-width="3"/>
+      <path d="M856 220 L904 220 L900 229 L860 229 Z" fill="#6d6a5a"/>
+      <ellipse cx="880" cy="254" rx="36" ry="15.1" fill="#fdf3d9" opacity="0.20"/>
+      <ellipse cx="880" cy="252" rx="15.8" ry="8.6" fill="#fdf3d9" opacity="0.42"/>
+    </g>
+    <g>
+      <rect x="1617.5" y="0" width="5" height="318" fill="#2f3a37"/>
+      <path d="M1588 318 L1652 318 L1668 344 L1572 344 Z" fill="#5b5a4e" stroke="#424e46" stroke-width="3"/>
+      <path d="M1588 318 L1652 318 L1648 327 L1592 327 Z" fill="#6d6a5a"/>
+      <ellipse cx="1620" cy="352" rx="50" ry="21" fill="#fdf3d9" opacity="0.20"/>
+      <ellipse cx="1620" cy="350" rx="22" ry="12" fill="#fdf3d9" opacity="0.42"/>
+    </g>
+  </g>
+
+  <!-- ==================== court: wooden apron, synthetic mat, court lines, wear ==================== -->
+  <g id="court">
+    <rect x="0" y="430" width="1920" height="650" fill="#a5825a"/>
+    <rect x="0" y="430" width="1920" height="36" fill="#9a7852" opacity="0.55"/>
+    <rect x="0" y="466" width="1920" height="22" fill="#b18c60" opacity="0.45"/>
+    <!-- apron planks receding to the vanishing point -->
+    <g fill="#75694e" opacity="0.45">
+      <path d="M118 430 L122 430 L-5937.7 1080 L-5955.7 1080 Z"/>
+      <path d="M298 430 L302 430 L-4457.7 1080 L-4475.7 1080 Z"/>
+      <path d="M468 430 L472 430 L-3059.9 1080 L-3077.9 1080 Z"/>
+      <path d="M638 430 L642 430 L-1662.1 1080 L-1680.1 1080 Z"/>
+      <path d="M798 430 L802 430 L-346.6 1080 L-364.6 1080 Z"/>
+      <path d="M1118 430 L1122 430 L2284.6 1080 L2266.6 1080 Z"/>
+      <path d="M1278 430 L1282 430 L3600.1 1080 L3582.1 1080 Z"/>
+      <path d="M1438 430 L1442 430 L4915.7 1080 L4897.7 1080 Z"/>
+      <path d="M1608 430 L1612 430 L6313.4 1080 L6295.4 1080 Z"/>
+      <path d="M1778 430 L1782 430 L7711.2 1080 L7693.2 1080 Z"/>
+    </g>
+
+    <!-- synthetic court mat: green surface receding to the wall -->
+    <path d="M741.2 493 L1178.8 493 L2018.2 1080 L-98.2 1080 Z" fill="#3a7163"/>
+    <!-- value gradient across the mat: far end lifted (aerial perspective), near end deeper -->
+    <path d="M741.2 493 L1178.8 493 L1307.5 583 L612.5 583 Z" fill="#5f917f" opacity="0.5"/>
+    <path d="M516.7 650 L1403.3 650 L1560.6 760 L359.4 760 Z" fill="#457f6f" opacity="0.35"/>
+    <path d="M159.2 900 L1760.8 900 L2018.2 1080 L-98.2 1080 Z" fill="#2f5b4a" opacity="0.35"/>
+    <!-- mat edge against the boards -->
+    <path d="M741.2 493 L1178.8 493" stroke="#2f4f47" stroke-width="4" opacity="0.5" fill="none"/>
+    <path d="M741.2 493 L-98.2 1080 M1178.8 493 L2018.2 1080" stroke="#2f4f47" stroke-width="4" opacity="0.5" fill="none"/>
+
+    <!-- court markings: all drawn on the same floor plane -->
+    <g fill="#f2ead4" opacity="0.93">
+      <path d="M741.2 493 L1178.8 493 L1178.8 497 L741.2 497 Z"/>
+      <path d="M728.3 502 L1191.7 502 L1191.7 505.4 L728.3 505.4 Z"/>
+      <path d="M638.2 565 L1281.8 565 L1281.8 568.4 L638.2 568.4 Z"/>
+      <path d="M466.7 685 L1453.3 685 L1453.3 689.2 L466.7 689.2 Z"/>
+      <path d="M7.6 1006 L1912.4 1006 L1912.4 1011.4 L7.6 1011.4 Z"/>
+      <rect x="958" y="493" width="4" height="72"/>
+      <rect x="958" y="685" width="5" height="321"/>
+      <path d="M741.2 493 L-98.2 1080 L-93.2 1080 L744.8 493 Z"/>
+      <path d="M1178.8 493 L2018.2 1080 L2013.2 1080 L1175.2 493 Z"/>
+    </g>
+
+    <!-- synthetic mat laid in panels: faint seams parallel to the net -->
+    <g stroke="#2f5b4a" stroke-width="2.4" opacity="0.18" fill="none">
+      <path d="M359.4 760 L1560.6 760"/>
+      <path d="M187.8 880 L1732.2 880"/>
+      <path d="M73.4 960 L1846.6 960"/>
+    </g>
+
+    <!-- the near court's resting band: the painted datum for the declared floor support -->
+    <path id="court_floor_surface" data-support-top="691" d="M458.1 691 L1461.9 691 L1900 1080 L20 1080 Z" fill="#8fbfa6" opacity="0.10"/>
+
+    <!-- wear: scuffs and traffic, kept low and soft -->
+    <g fill="#2f4f47" opacity="0.15">
+      <ellipse cx="640" cy="820" rx="150" ry="26"/>
+      <ellipse cx="1210" cy="760" rx="120" ry="20"/>
+      <ellipse cx="960" cy="930" rx="230" ry="30"/>
+      <ellipse cx="380" cy="1010" rx="150" ry="24"/>
+    </g>
+    <g stroke="#9ecdb8" stroke-linecap="round" fill="none" opacity="0.13">
+      <path d="M520 720 L700 690" stroke-width="5"/>
+      <path d="M1180 700 L1360 726" stroke-width="5"/>
+      <path d="M760 900 L1120 880" stroke-width="6"/>
+      <path d="M300 1040 L620 1010" stroke-width="6"/>
+    </g>
+    <!-- light pools from the ceiling lamps landing on the mat -->
+    <g fill="#fdf3d9">
+      <ellipse cx="300" cy="820" rx="210" ry="58" opacity="0.07"/>
+      <ellipse cx="880" cy="700" rx="180" ry="46" opacity="0.09"/>
+      <ellipse cx="1620" cy="860" rx="200" ry="54" opacity="0.07"/>
+    </g>
+  </g>
+
+  <!-- ==================== shadows: room-level floor shade that binds the space ==================== -->
+  <g id="shadows">
+    <path d="M0 430 L1920 430 L1920 456 L0 456 Z" fill="#2f2a24" opacity="0.28"/>
+    <path d="M0 430 L1920 430 L1920 439 L0 439 Z" fill="#2f2a24" opacity="0.24"/>
+    <path d="M0 430 L300 430 L60 1080 L0 1080 Z" fill="#6e5b47" opacity="0.22"/>
+    <path d="M1920 430 L1620 430 L1860 1080 L1920 1080 Z" fill="#6e5b47" opacity="0.26"/>
+    <path d="M741.2 493 L771.2 493 L-58.2 1080 L-98.2 1080 Z" fill="#2f2a24" opacity="0.18"/>
+    <path d="M1178.8 493 L1148.8 493 L1978.2 1080 L2018.2 1080 Z" fill="#2f2a24" opacity="0.18"/>
+    <path d="M0 1000 L1920 1000 L1920 1080 L0 1080 Z" fill="#2f2a24" opacity="0.16"/>
+    <!-- the net's soft cast shadow on the near court, thrown right by the window light -->
+    <path d="M608.2 620 L1471.8 620 L1541.8 660 L688.2 660 Z" fill="#2f2a24" opacity="0.13"/>
+    <path d="M658.2 624 L1411.8 624 L1461.8 644 L718.2 644 Z" fill="#2f2a24" opacity="0.11"/>
+  </g>
+
+  <!-- ==================== net: posts, tapes, square mesh, base contacts ==================== -->
+  <g id="net">
+    <ellipse cx="568.2" cy="618" rx="34" ry="9" fill="#2f2a24" opacity="0.28"/>
+    <ellipse cx="1351.8" cy="618" rx="34" ry="9" fill="#2f2a24" opacity="0.28"/>
+    <path d="M548.2 608 L588.2 608 L594.2 616 L542.2 616 Z" fill="#8a745a" stroke="#424e46" stroke-width="2.5"/>
+    <path d="M1331.8 608 L1371.8 608 L1377.8 616 L1325.8 616 Z" fill="#8a745a" stroke="#424e46" stroke-width="2.5"/>
+    <rect x="562.2" y="268" width="12" height="346" fill="#f2ead4" stroke="#424e46" stroke-width="3"/>
+    <rect x="1345.8" y="268" width="12" height="346" fill="#f2ead4" stroke="#424e46" stroke-width="3"/>
+    <rect x="558.2" y="262" width="20" height="10" rx="4" fill="#424e46"/>
+    <rect x="1341.8" y="262" width="20" height="10" rx="4" fill="#424e46"/>
+    <!-- square mesh: horizontal threads at depth, vertical threads across the span -->
+    <!-- netting: a faint veil plus a grey-green cord grid, so the mesh reads against
+         the cream wall behind it and against the mat below -->
+    <rect x="570.2" y="302" width="779.6" height="145" fill="#cfe0d4" opacity="0.16"/>
+    <g stroke="#5d7a6c" stroke-width="1.2" opacity="0.42">
+      <path d="M570.2 302 L570.2 447"/>
+      <path d="M583.2 302 L583.2 447"/>
+      <path d="M596.2 302 L596.2 447"/>
+      <path d="M609.2 302 L609.2 447"/>
+      <path d="M622.2 302 L622.2 447"/>
+      <path d="M635.2 302 L635.2 447"/>
+      <path d="M648.2 302 L648.2 447"/>
+      <path d="M661.2 302 L661.2 447"/>
+      <path d="M674.2 302 L674.2 447"/>
+      <path d="M687.2 302 L687.2 447"/>
+      <path d="M700.2 302 L700.2 447"/>
+      <path d="M713.2 302 L713.2 447"/>
+      <path d="M726.2 302 L726.2 447"/>
+      <path d="M739.2 302 L739.2 447"/>
+      <path d="M752.2 302 L752.2 447"/>
+      <path d="M765.2 302 L765.2 447"/>
+      <path d="M778.2 302 L778.2 447"/>
+      <path d="M791.2 302 L791.2 447"/>
+      <path d="M804.2 302 L804.2 447"/>
+      <path d="M817.2 302 L817.2 447"/>
+      <path d="M830.2 302 L830.2 447"/>
+      <path d="M843.2 302 L843.2 447"/>
+      <path d="M856.2 302 L856.2 447"/>
+      <path d="M869.2 302 L869.2 447"/>
+      <path d="M882.2 302 L882.2 447"/>
+      <path d="M895.2 302 L895.2 447"/>
+      <path d="M908.2 302 L908.2 447"/>
+      <path d="M921.2 302 L921.2 447"/>
+      <path d="M934.2 302 L934.2 447"/>
+      <path d="M947.2 302 L947.2 447"/>
+      <path d="M960.2 302 L960.2 447"/>
+      <path d="M973.2 302 L973.2 447"/>
+      <path d="M986.2 302 L986.2 447"/>
+      <path d="M999.2 302 L999.2 447"/>
+      <path d="M1012.2 302 L1012.2 447"/>
+      <path d="M1025.2 302 L1025.2 447"/>
+      <path d="M1038.2 302 L1038.2 447"/>
+      <path d="M1051.2 302 L1051.2 447"/>
+      <path d="M1064.2 302 L1064.2 447"/>
+      <path d="M1077.2 302 L1077.2 447"/>
+      <path d="M1090.2 302 L1090.2 447"/>
+      <path d="M1103.2 302 L1103.2 447"/>
+      <path d="M1116.2 302 L1116.2 447"/>
+      <path d="M1129.2 302 L1129.2 447"/>
+      <path d="M1142.2 302 L1142.2 447"/>
+      <path d="M1155.2 302 L1155.2 447"/>
+      <path d="M1168.2 302 L1168.2 447"/>
+      <path d="M1181.2 302 L1181.2 447"/>
+      <path d="M1194.2 302 L1194.2 447"/>
+      <path d="M1207.2 302 L1207.2 447"/>
+      <path d="M1220.2 302 L1220.2 447"/>
+      <path d="M1233.2 302 L1233.2 447"/>
+      <path d="M1246.2 302 L1246.2 447"/>
+      <path d="M1259.2 302 L1259.2 447"/>
+      <path d="M1272.2 302 L1272.2 447"/>
+      <path d="M1285.2 302 L1285.2 447"/>
+      <path d="M1298.2 302 L1298.2 447"/>
+      <path d="M1311.2 302 L1311.2 447"/>
+      <path d="M1324.2 302 L1324.2 447"/>
+      <path d="M1337.2 302 L1337.2 447"/>
+      <path d="M570.2 302 Q960 304 1349.8 302"/>
+      <path d="M570.2 315 Q960 317 1349.8 315"/>
+      <path d="M570.2 328 Q960 335 1349.8 328"/>
+      <path d="M570.2 341 Q960 348 1349.8 341"/>
+      <path d="M570.2 354 Q960 361 1349.8 354"/>
+      <path d="M570.2 367 Q960 374 1349.8 367"/>
+      <path d="M570.2 380 Q960 387 1349.8 380"/>
+      <path d="M570.2 393 Q960 400 1349.8 393"/>
+      <path d="M570.2 406 Q960 413 1349.8 406"/>
+      <path d="M570.2 419 Q960 426 1349.8 419"/>
+      <path d="M570.2 432 Q960 439 1349.8 432"/>
+      <path d="M570.2 445 Q960 452 1349.8 445"/>
+    </g>
+    <!-- top tape, bottom cord and side tapes -->
+    <rect x="560.2" y="290" width="799.6" height="12" fill="#f6f0dc" stroke="#424e46" stroke-width="2.5"/>
+    <rect x="560.2" y="292.5" width="799.6" height="3" fill="#fdfaf0" opacity="0.9"/>
+    <rect x="564.2" y="444" width="791.6" height="6" fill="#f2ead4" stroke="#424e46" stroke-width="1.6"/>
+    <rect x="564.2" y="302" width="6" height="145" fill="#f2ead4" opacity="0.9"/>
+    <rect x="1349.8" y="302" width="6" height="145" fill="#f2ead4" opacity="0.9"/>
+  </g>
+
+  <!-- ==================== furniture: spectator bench, bag, towel, bottles, shuttles ==================== -->
+  <g id="furniture">
+    <!-- contact shadow on the boards in front of the bench feet -->
+    <path d="M40.0 726 L360.0 726 L394.0 750 L70.0 750 Z" fill="#2f2a24" opacity="0.26"/>
+    <path d="M52.0 726 L350.0 726 L368.0 740 L62.0 740 Z" fill="#2f2a24" opacity="0.22"/>
+    <!-- legs -->
+    <path d="M74.0 700 L86.0 700 L88.0 726 L62.0 726 Z" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
+    <path d="M314.0 700 L326.0 700 L338.0 726 L312.0 726 Z" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
+    <!-- front board -->
+    <path d="M40.0 652 L360.0 652 L360.0 700 L40.0 700 Z" fill="#8a6a48" stroke="#424e46" stroke-width="3.5"/>
+    <path d="M40.0 652 L360.0 652 L360.0 664 L40.0 664 Z" fill="#9a7852" opacity="0.8"/>
+    <path d="M60.0 668 L340.0 668" stroke="#75694e" stroke-width="2.5" opacity="0.7" fill="none"/>
+    <!-- back rail: the bench reads as furniture, not a slab -->
+    <path d="M157.9 612 L436.9 612 L436.9 590 L157.9 590 Z" fill="#9a7852" opacity="0.0"/>
+    <path d="M165.9 612 L428.9 612 L428.9 588 L165.9 588 Z" fill="#a5825a" stroke="#424e46" stroke-width="3"/>
+    <path d="M165.9 600 L428.9 600" stroke="#75694e" stroke-width="2.5" opacity="0.7" fill="none"/>
+    <!-- seat top: a plan quad converging on the vanishing point -->
+    <path id="bench_seat_surface" data-support-top="640" d="M40.0 652 L360.0 652 L436.9 612 L157.9 612 Z" fill="#b99368" stroke="#424e46" stroke-width="3.5"/>
+    <path d="M40.0 652 L360.0 652 L436.9 612 L157.9 612 Z" fill="#c9a274" opacity="0.45"/>
+    <!-- towel and bag on the seat -->
+    <path d="M132 638 L228 638 L240 626 L156 626 Z" fill="#eadcbb" stroke="#424e46" stroke-width="2.5"/>
+    <path d="M132 638 L228 638 L226 644 L134 644 Z" fill="#477c7b" opacity="0.8"/>
+    <path d="M250 644 L322 638 L338 664 L262 674 Z" fill="#b96a55" stroke="#424e46" stroke-width="3"/>
+    <path d="M268 640 q14 -12 28 -5" stroke="#424e46" stroke-width="3" fill="none"/>
+    <path d="M250 662 L328 652" stroke="#8a3f2f" stroke-width="3" opacity="0.7" fill="none"/>
+    <!-- water bottles and a shuttle tube on the boards beside the bench -->
+    <g stroke="#424e46" stroke-width="2.5">
+      <rect x="196" y="690" width="17" height="34" rx="5" fill="#587f7a"/>
+      <rect x="220" y="694" width="16" height="30" rx="5" fill="#eadcbb"/>
+      <rect x="202" y="684" width="7" height="8" rx="2" fill="#424e46"/>
+      <rect x="225" y="688" width="7" height="8" rx="2" fill="#424e46"/>
+    </g>
+    <path d="M186 724 L246 724" stroke="#2f2a24" stroke-width="7" opacity="0.22" stroke-linecap="round"/>
+    <g>
+      <path d="M272 716 L340 710 L344 684 L276 690 Z" fill="#c9b78f" opacity="0.35" stroke="#424e46" stroke-width="3"/>
+      <path d="M280 712 L282 690 M294 711 L296 689 M308 709 L310 688 M322 708 L324 687" stroke="#424e46" stroke-width="1.8" opacity="0.7" fill="none"/>
+      <path d="M272 716 L340 710 M276 690 L344 684" stroke="#424e46" stroke-width="2.6" fill="none"/>
+      <g fill="#f7efd9" stroke="#424e46" stroke-width="2">
+        <ellipse cx="292" cy="682" rx="9" ry="6"/>
+        <ellipse cx="313" cy="679" rx="9" ry="6"/>
+        <ellipse cx="332" cy="676" rx="8" ry="5.5"/>
+      </g>
+      <path d="M264 722 L348 716" stroke="#2f2a24" stroke-width="7" opacity="0.2" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- ==================== M4 material passes (docs/ART_MATERIALS_M4.md) ====================
+       Declared through the M3 set-layer seam, each pass composited in the mode that
+       does its job without moving the drawn values:
+         material_pigment - region palettes: each region its own pigment family, a warm
+                            window glaze on the left, a cool ambient fill on the shaded
+                            right; blend `color`, so hue and saturation come from the
+                            glaze and the luminance stays the art's ink;
+         material_detail  - scale-keyed contours: near/large silhouettes weighted, far
+                            art thinned, speculars on the mat; normal blend, it draws
+                            marks and does not wash;
+         lighting_shade   - one light map: falloff from the high windows plus a cool
+                            ambient fill from the right; `soft-light`;
+         lighting_key     - the same source as warm key, with the lamp pools and the
+                            window rim; `soft-light`.
+       Every wash covers the whole frame as one gradient: no cut-outs, no matte and no
+       per-region clip, so no pass presents a boundary the art does not draw. All marks
+       are static vector art: no filters, no raster, no temporal term, and no
+       per-actor projected shadow (the set art is static; staging varies). -->
+  <g id="material_pigment">
+    <defs>
+      <linearGradient id="bh_pig_wall" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#f7e8c3" stop-opacity="0.24"/>
+        <stop offset="0.55" stop-color="#e7d8b8" stop-opacity="0.12"/>
+        <stop offset="1" stop-color="#8f9a93" stop-opacity="0.22"/>
+      </linearGradient>
+      <linearGradient id="bh_pig_court_depth" gradientUnits="userSpaceOnUse" x1="0" y1="493" x2="0" y2="1080">
+        <stop offset="0" stop-color="#9cc8ae" stop-opacity="0.20"/>
+        <stop offset="0.45" stop-color="#3a7163" stop-opacity="0.16"/>
+        <stop offset="1" stop-color="#1f4539" stop-opacity="0.30"/>
+      </linearGradient>
+      <radialGradient id="bh_pig_court_cool" gradientUnits="userSpaceOnUse" cx="1520" cy="880" r="700">
+        <stop offset="0" stop-color="#6f7f8c" stop-opacity="0.24"/>
+        <stop offset="0.6" stop-color="#6f7f8c" stop-opacity="0.13"/>
+        <stop offset="1" stop-color="#6f7f8c" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="bh_pig_apron" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#c9a274" stop-opacity="0.26"/>
+        <stop offset="1" stop-color="#8a6a48" stop-opacity="0.16"/>
+      </linearGradient>
+      <linearGradient id="bh_pig_ceiling" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#39433f" stop-opacity="0.30"/>
+        <stop offset="1" stop-color="#39433f" stop-opacity="0.10"/>
+      </linearGradient>
+    </defs>
+    <g>
+      <rect x="-40" y="-40" width="2000" height="160" fill="url(#bh_pig_ceiling)"/>
+      <rect x="-40" y="118" width="2000" height="312" fill="url(#bh_pig_wall)"/>
+      <rect x="-40" y="356" width="2000" height="74" fill="#b8a67e" opacity="0.18"/>
+      <rect x="-40" y="430" width="2000" height="650" fill="url(#bh_pig_apron)"/>
+      <path d="M741.2 493 L1178.8 493 L2018.2 1080 L-98.2 1080 Z" fill="url(#bh_pig_court_depth)"/>
+      <path d="M741.2 493 L1178.8 493 L2018.2 1080 L-98.2 1080 Z" fill="url(#bh_pig_court_cool)"/>
+      <path d="M240 760 L900 700 L1120 900 L520 1080 L120 1080 Z" fill="#e6c98a" opacity="0.10"/>
+      <path d="M40.0 652 L360.0 652 L436.9 612 L157.9 612 Z" fill="#dcb086" opacity="0.30"/>
+      <path d="M40.0 652 L360.0 652 L360.0 700 L40.0 700 Z" fill="#8a5a40" opacity="0.20"/>
+      <rect x="560.2" y="290" width="799.6" height="12" fill="#f7efd9" opacity="0.30"/>
+    </g>
+  </g>
+
+  <g id="material_detail">
+    <!-- near/large silhouettes carry a light and a dark contour (weight, not outline) -->
+    <g fill="none" stroke-linecap="round">
+      <path d="M741.2 493 L1178.8 493" stroke="#a8d3bf" stroke-width="3.4" opacity="0.42"/>
+      <path d="M40.0 652 L360.0 652" stroke="#e6c39b" stroke-width="3.6" opacity="0.55"/>
+      <path d="M40.0 700 L360.0 700" stroke="#5c4a3a" stroke-width="4.2" opacity="0.45"/>
+      <path d="M40.0 652 L40.0 700 M360.0 652 L360.0 700" stroke="#4b3a2c" stroke-width="3.2" opacity="0.40"/>
+      <path d="M0 430 L1920 430" stroke="#4b3a2c" stroke-width="3.2" opacity="0.35"/>
+    </g>
+    <!-- far art: thin, low-contrast secondary lines, sized by depth -->
+    <g stroke="#6b7a72" fill="none" stroke-width="2.4" opacity="0.32" stroke-linecap="round">
+      <path d="M118 156 L768 156"/>
+      <path d="M852 148 L1354 148"/>
+    </g>
+    <!-- speculars: the mat's sheen picks up the lamps -->
+    <g fill="#eaf7ea" opacity="0.28">
+      <ellipse cx="286" cy="806" rx="26" ry="7"/>
+      <ellipse cx="872" cy="700" rx="22" ry="6"/>
+      <ellipse cx="1588" cy="846" rx="24" ry="7"/>
+      <ellipse cx="640" cy="1006" rx="46" ry="10" opacity="0.15"/>
+    </g>
+    <!-- only the two near markings get a brighter edge: the far ones are left as drawn -->
+    <g fill="none" stroke="#fff8e6">
+      <path d="M7.6 1007 L1912.4 1007" stroke-width="2" opacity="0.35"/>
+      <path d="M466.7 686 L1453.3 686" stroke-width="1.6" opacity="0.25"/>
+    </g>
+  </g>
+
+  <!-- ==================== foreground_lamp: the nearest object, cropped by the frame ==================== -->
+  <g id="foreground_lamp">
+    <rect x="150" y="-20" width="12" height="66" fill="#2f3a37"/>
+    <path d="M64 -20 L248 -20 L286 148 L26 148 Z" fill="#4a4740" stroke="#424e46" stroke-width="4"/>
+    <path d="M64 -20 L248 -20 L244 -6 L68 -6 Z" fill="#565049"/>
+    <path d="M26 148 L286 148 L280 160 L32 160 Z" fill="#6d6a5a"/>
+    <ellipse cx="156" cy="170" rx="96" ry="26" fill="#fdf3d9" opacity="0.22"/>
+    <ellipse cx="156" cy="164" rx="54" ry="15" fill="#fdf3d9" opacity="0.40"/>
+    <path d="M36 148 L276 148" stroke="#424e46" stroke-width="3" opacity="0.6"/>
+  </g>
+
+  <g id="lighting_shade">
+    <defs>
+      <radialGradient id="bh_light_falloff" gradientUnits="userSpaceOnUse" cx="380" cy="320" r="1560">
+        <stop offset="0" stop-color="#6d6a60" stop-opacity="0"/>
+        <stop offset="0.40" stop-color="#665f57" stop-opacity="0.075"/>
+        <stop offset="0.74" stop-color="#625c52" stop-opacity="0.20"/>
+        <stop offset="1" stop-color="#565047" stop-opacity="0.42"/>
+      </radialGradient>
+      <linearGradient id="bh_cool_fill" gradientUnits="userSpaceOnUse" x1="980" y1="0" x2="1920" y2="0">
+        <stop offset="0" stop-color="#68737a" stop-opacity="0"/>
+        <stop offset="1" stop-color="#68737a" stop-opacity="0.26"/>
+      </linearGradient>
+    </defs>
+    <g>
+      <rect x="-240" y="-240" width="2400" height="1560" fill="url(#bh_light_falloff)"/>
+      <rect x="900" y="-240" width="1260" height="1560" fill="url(#bh_cool_fill)"/>
+    </g>
+  </g>
+
+  <g id="lighting_key">
+    <defs>
+      <linearGradient id="bh_window_key" gradientUnits="userSpaceOnUse" x1="360" y1="260" x2="1800" y2="960">
+        <stop offset="0" stop-color="#fdf3d9" stop-opacity="0.17"/>
+        <stop offset="0.34" stop-color="#fdf3d9" stop-opacity="0.10"/>
+        <stop offset="0.72" stop-color="#fdf3d9" stop-opacity="0.035"/>
+        <stop offset="1" stop-color="#fdf3d9" stop-opacity="0"/>
+      </linearGradient>
+      <radialGradient id="bh_key_window" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(440 450) scale(420 300)">
+        <stop offset="0" stop-color="#fdf3d9" stop-opacity="0.14"/>
+        <stop offset="0.5" stop-color="#fdf3d9" stop-opacity="0.08"/>
+        <stop offset="1" stop-color="#fdf3d9" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="bh_key_floor" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(660 680) scale(520 300)">
+        <stop offset="0" stop-color="#fdf3d9" stop-opacity="0.10"/>
+        <stop offset="0.55" stop-color="#fdf3d9" stop-opacity="0.055"/>
+        <stop offset="1" stop-color="#fdf3d9" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="bh_key_lamp_a" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(300 820) scale(300 120)">
+        <stop offset="0" stop-color="#fdf3d9" stop-opacity="0.10"/>
+        <stop offset="1" stop-color="#fdf3d9" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="bh_key_lamp_b" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(880 700) scale(240 100)">
+        <stop offset="0" stop-color="#fdf3d9" stop-opacity="0.11"/>
+        <stop offset="1" stop-color="#fdf3d9" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="bh_key_lamp_c" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(1620 860) scale(270 110)">
+        <stop offset="0" stop-color="#fdf3d9" stop-opacity="0.09"/>
+        <stop offset="1" stop-color="#fdf3d9" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="bh_key_rim" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(443 158) scale(330 12)">
+        <stop offset="0" stop-color="#fffaf0" stop-opacity="0.38"/>
+        <stop offset="0.5" stop-color="#fffaf0" stop-opacity="0.18"/>
+        <stop offset="1" stop-color="#fffaf0" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="bh_key_sill" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(443 334) scale(348 10)">
+        <stop offset="0" stop-color="#fffaf0" stop-opacity="0.16"/>
+        <stop offset="0.55" stop-color="#fffaf0" stop-opacity="0.08"/>
+        <stop offset="1" stop-color="#fffaf0" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <!-- the key travelling from the high windows across the room: one gradient over every drawn object -->
+    <rect x="-240" y="-240" width="2400" height="1560" fill="url(#bh_window_key)"/>
+    <g>
+      <rect x="60" y="240" width="860" height="440" fill="url(#bh_key_window)"/>
+      <rect x="180" y="470" width="960" height="420" fill="url(#bh_key_floor)"/>
+    </g>
+    <!-- lamp pools landing on the mat: soft on every side -->
+    <rect x="40" y="700" width="520" height="280" fill="url(#bh_key_lamp_a)"/>
+    <rect x="640" y="610" width="480" height="220" fill="url(#bh_key_lamp_b)"/>
+    <rect x="1350" y="750" width="540" height="250" fill="url(#bh_key_lamp_c)"/>
+    <!-- rim and sill highlights on the window: elliptical, so no band edge is findable -->
+    <rect x="110" y="146" width="666" height="30" fill="url(#bh_key_rim)"/>
+    <rect x="100" y="320" width="690" height="30" fill="url(#bh_key_sill)"/>
+    <!-- lit edges: the key catching planes and the mat's markings, kept low so the ink keeps its contrast -->
+    <g stroke="#fff3da" fill="none" stroke-linecap="round">
+      <path d="M0 432 L640 432" stroke-width="2.6" opacity="0.26"/>
+      <path d="M466.7 687 L560 687" stroke-width="2.2" opacity="0.22"/>
+      <path d="M40.0 654 L150 654" stroke-width="2" opacity="0.26"/>
+      <path d="M132 166 L132 312 M286 166 L286 312 M440 166 L440 312 M594 166 L594 312" stroke-width="1.5" opacity="0.16"/>
+      <path d="M562.2 294 L574.2 294 M1345.8 294 L1357.8 294" stroke-width="1.4" opacity="0.14"/>
+      <path d="M64 152 L248 152" stroke-width="2" opacity="0.18"/>
+    </g>
+  </g>
+</svg>

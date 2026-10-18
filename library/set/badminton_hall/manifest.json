@@ -1,0 +1,68 @@
+{
+  "source": "scene.svg",
+  "preview": "preview.png",
+  "coordinateSpace": "1920x1080",
+  "layers": [
+    "backdrop",
+    "ceiling",
+    "court",
+    "shadows",
+    "net",
+    "furniture",
+    {
+      "id": "material_pigment",
+      "blend": "color"
+    },
+    {
+      "id": "material_detail"
+    },
+    {
+      "id": "foreground_lamp",
+      "foreground": true
+    },
+    {
+      "id": "lighting_shade",
+      "foreground": true,
+      "blend": "soft-light"
+    },
+    {
+      "id": "lighting_key",
+      "foreground": true,
+      "blend": "soft-light"
+    }
+  ],
+  "safeActorArea": {
+    "x": 300,
+    "y": 200,
+    "width": 1320,
+    "height": 560
+  },
+  "supports": [
+    {
+      "name": "floor",
+      "x": [
+        60,
+        1860
+      ],
+      "y": 691,
+      "paint": "court_floor_surface"
+    },
+    {
+      "name": "bench",
+      "x": [
+        40,
+        440
+      ],
+      "y": 640,
+      "paint": "bench_seat_surface"
+    }
+  ],
+  "provenance": {
+    "artwork": "Original hand-authored vector artwork (this scene.svg), drawn for asset-programme slice A (Wave 1) as set/badminton_hall: one large indoor badminton court, no AI-generated, raster or third-party sources.",
+    "license": "Repository license (see LICENSE at the repository root); the artwork is original to this project.",
+    "styleAnchor": "Accepted M1 B-direction (docs/ART_DIRECTION_M1.md) and figure/lin_b_draft palette: outline #424e46, muted teal #477c7b, cream #eadcbb, terracotta #b96a55, warm woods, flat fills with opacity overlays, no filters, no raster.",
+    "supportAgreement": "Two flat supports, both on the one painted floor plane. floor y=691 equals the painted data-support-top=691 on court_floor_surface: the near court's resting band, whose top edge is the datum line a body or prop stands on, laid across x 60..1860 over the near court (the near short service line is painted at 685, one step in front of it). bench y=640 equals the painted data-support-top=640 on bench_seat_surface, the spectator bench's seat plane (back edge 612, front edge 652, resting line 640). Every horizontal floor line in the art - far baseline 493, far long service 502, far short service 565, the net's base 614, near short service 685, near long service 1006, the mat's back edge 493 and the apron planks - is drawn from the single vanishing point (960,340), so the supports, the net's base contact, the bench's contact and the room shadows share the court's floor plane. The schema's flat-support shape is kept: a hanging support is Wave 0's declaration, not this set's.",
+    "materials": "M4 layer passes (docs/ART_MATERIALS_M4.md), declared through the M3 set-layer seam. material_pigment = region palettes (each region its own pigment family: warm window glaze left, cool ambient fill right, green court family with a far-to-near value ramp, warm board varnish) composited `color`, so hue and saturation come from the glaze while the luminosity stays the art's ink. material_detail = scale-keyed contours (near/large silhouettes weighted - the mat's back line, the bench's seat and front edges, the wall base - far art thinned, speculars on the mat where the lamps land) on the normal blend; it draws marks and does not wash, and it does not restate an edge the base art already draws. lighting_shade + lighting_key = one declared light model (source: the high windows on the back wall's left, key #fdf3d9, ambient fill #68737a, radial falloff around x380 y320 art units; shadows fall right) composited `soft-light`, which darkens under a dark source and lightens under a warm one while its change scales with the surface, so the ink keeps its contrast and the picture keeps one light direction. Both light passes are declared foreground, above the actor plane, so set and actors share the source. Every wash covers the whole frame as one gradient with no matte, no clip and no prop exclusion; nothing tiles, so nothing repeats at a pitch. Blend/opacity is the M4 declared-layer extension.",
+    "date": "2026-10-18"
+  }
+}
