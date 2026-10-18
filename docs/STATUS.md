@@ -69,11 +69,12 @@ tell what that shot was looking at: the beat now authors its own zoom and the
 camera frames a prop on its declared silhouette
 ([ART_FILM_LANGUAGE_M6](ART_FILM_LANGUAGE_M6.md) owns the contract, defect 5;
 evidence bundle `art-baselines/m6-20261018T0840+0800/`). It awaits the user's
-judgment. M7 is delivered as a vertical slice and its transfer table is the milestone result:
-the pipeline, camera, cues, expressions and single-actor contact transfer unchanged,
-while declared world supports, the two-actor handover and a readable cast do not
-([ART_TRANSFER_M7](ART_TRANSFER_M7.md)). Its four visible defects are being fixed.
-M8 is planned, not delivered.
+judgment. M7 is delivered and independently reviewed PASS at revision `8f8f1e8`
+([ART_TRANSFER_M7](ART_TRANSFER_M7.md) owns the transfer table and the three M8
+prerequisites; bundle `art-baselines/m7-20261018T110236+0800/`). Three defects it
+found were general and are fixed: prop art follows the declared asset, debug name
+plates are gone from the frame, and the head rule no longer applies to person
+shots. M8 is planned, not delivered.
 
 ## Rescue of lost M2 work (in progress 2026-10-17)
 

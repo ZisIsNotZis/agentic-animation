@@ -86,6 +86,48 @@ size, and the M6 two-shot stayed readable because no one walked into the other
 body — the case `prop.handover` finally exercised, which is why the transfer
 clearance is now a rule instead of a lucky composition.
 
+## Delivered and independently reviewed PASS (revision `8f8f1e8`)
+
+Evidence bundle `~/.local/share/agentic-animation/art-baselines/m7-20261018T110236+0800/`.
+A vision reviewer judged seven frames at normal viewing size: every spoken beat plays
+on a two-shot with both heads visible, the scroll and desk render as their authored
+art, the dim reads as an intentional beat, and no limb passes through another body
+"except the red figure's crossed legs", which it recorded as a polish note.
+`main` is 290/290 at that revision.
+
+Three defects found here were **general and are fixed**:
+
+- **A prop drew the art of its instance name, not its asset.** `propKind` keyed on
+  the instance id, so `register: use: prop/scroll` and `table: use: prop/desk`
+  both fell through to the generic placeholder card, and the same card appeared
+  twice. Art now follows `assets.objects[<instance>].identity`; the survey shows
+  `table → prop/desk`, `register → prop/scroll`.
+- **Debug scaffolding was drawn into the frame.** Two renderer paths still painted
+  an actor name plate under the feet in every view, and a held prop carried a
+  placeholder label card. All removed — identifiers are debug output, not frame
+  content.
+- **The head rule was applied to person shots.** "Never slice a drawn head" exists
+  for object inserts; applied to a person shot it pushed the frame below the
+  collar and produced headless dialogue. It now applies only when the subject is
+  an object, and a spoken beat is never placed over an object insert.
+- One authoring rule fell out of the last point: **a prop-target push framed the
+  speaker's midsection instead of the prop** when the prop and actor bands are
+  adjacent, so that insert was removed rather than kept. M6 owns the object-insert
+  grammar with the thermos, where the framing is verified.
+
+## Prerequisites for M8 (not fixed here)
+
+1. **A hand-held transfer still lets the drawn bodies touch.** The clearance is
+   measured on declared torso boxes (19.2 stage px), but robes draw outside those
+   boxes, so the silhouettes meet. The measure must become the drawn outline.
+2. **Legs can cross and clip** — the red figure's legs scissor through each other
+   at a stand. This is the drawn-leg orientation problem, the same family as the
+   deferred leg envelope.
+3. **A prop-target push is unreliable when prop and actor bands are adjacent**
+   (see above): either the prop band must be derived from the drawn silhouette
+   with a guaranteed minimum viewport fill, or an object insert must require a
+   declared framing that the compiler validates.
+
 ## Verdict
 
 M7's claim is **partially supported**: the pipeline, camera, cues, expressions and
