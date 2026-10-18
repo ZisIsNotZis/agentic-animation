@@ -84,11 +84,16 @@ JOINTS = {
 # behind the torso through REAR_ARMS. `near` is the side facing the camera.
 # Near = "l" throughout because a figure whose left side comes toward the camera
 # turns its face to screen-right, which is the direction the profile and quarter
-# heads are drawn in.
+# heads are drawn in. Limbs - arms and legs alike - are projected through this
+# table, so a change here moves the legs of its view too.
 SIDE_PROJECTION = {
     "front": {"l": (1.00, -2.0, 1.00), "r": (1.00, 2.0, 1.00)},
     "quarter": {"l": (1.00, -4.0, 1.00), "r": (0.70, -14.0, 0.82)},
-    "side": {"l": (0.26, 4.0, 1.00), "r": (0.26, -17.0, 0.86)},
+    # A profile puts the near arm and the near leg at the same depth - the flank -
+    # so one dx serves both, and both far limbs sit just behind their near twin
+    # instead of spread apart. Placed at the body's outline, as before, the near arm
+    # read as a second slab beside the torso and the far arm's outline crossed it.
+    "side": {"l": (0.26, 12.0, 1.00), "r": (0.26, -5.0, 0.86)},
     "back": {"l": (1.00, -2.0, 1.00), "r": (1.00, 2.0, 1.00)},
     "quarter_back": {"l": (1.00, -4.0, 1.00), "r": (0.70, -14.0, 0.82)},
 }
@@ -100,6 +105,12 @@ LEG_PROJECTION = {
     "quarter_back": {"l": (1.00, -2.0, 1.00), "r": (0.74, -6.0, 0.84)},
 }
 NEAR_SIDE = {"front": None, "quarter": "l", "side": "l", "back": None, "quarter_back": "l"}
+# Lateral scale of a hand, per view. The profile sees a hand edge-on, so it collapses
+# there; the frontal and three-quarter views keep a hand the width of a palm because
+# that is the view they show. The far hand of the profile is not drawn at all, so
+# only the drawn hand needs a scale.
+HAND_SQUEEZE = {"front": 1.00, "quarter": 1.00, "side": 0.62, "back": 1.00,
+                "quarter_back": 1.00}
 # How much of a shoe's width survives the view's turn. A frontal construction keeps
 # the whole sole; a quarter view foreshortens it, so the shoes turn with the body.
 TURN_WIDTH = {"front": 1.0, "quarter": 0.78, "back": 1.0, "quarter_back": 0.78}
@@ -207,10 +218,18 @@ TORSO_OUTLINE = {
               "right": ((212, 188), (240, 194), (254, 216), (256, 258), (250, 304), (242, 352), (236, 398))},
     "quarter": {"left": ((184, 186), (156, 192), (142, 214), (140, 256), (146, 302), (154, 350), (160, 396)),
                 "right": ((220, 192), (238, 200), (244, 228), (244, 268), (240, 314), (234, 354), (238, 396))},
-    # Profile: chest and back are separate edges, not a mirrored pair, and the belly
-    # carries the front edge forward below the ribs.
-    "side": {"left": ((200, 182), (182, 196), (174, 224), (176, 262), (182, 300), (188, 336), (182, 394)),
-             "right": ((216, 182), (232, 202), (236, 236), (234, 272), (232, 306), (238, 342), (230, 398))},
+    # Profile: chest and back are separate edges, not a mirrored pair. Slice B stages
+    # this view, so it has to be the same heavy body seen from the side rather than
+    # the front view squeezed: the back runs thoracic curve to lumbar hollow to a
+    # glute that projects behind the hip joint (167 at the seat against hips at 180),
+    # and the front edge carries the pectoral, then the belly out past the chest and
+    # back to the hem. Depth 72 at the chest, 68 at the belly and 73 across the seat
+    # against an 84-wide frontal hip: a shade shallower than it is wide, which is what
+    # stops the profile reading as a cut-out plank.
+    "side": {"left": ((200, 182), (176, 196), (168, 222), (171, 252), (180, 286), (184, 312),
+                       (176, 342), (167, 368), (170, 388), (182, 398)),
+             "right": ((220, 182), (233, 196), (240, 222), (242, 250), (245, 278), (249, 308),
+                       (241, 338), (240, 366), (234, 398))},
     "back": {"left": ((190, 192), (162, 198), (148, 220), (146, 262), (152, 308), (160, 354), (166, 398)),
              "right": ((210, 192), (238, 198), (252, 220), (254, 262), (248, 308), (240, 354), (234, 398))},
     "quarter_back": {"left": ((182, 192), (154, 198), (140, 220), (138, 262), (144, 308), (152, 352), (158, 398)),
@@ -233,10 +252,13 @@ TORSO_SEAMS = {
                 (((200, 210), (200, 386)), LEOTARD_SHADE, 1.2),
                 (((160, 348), (184, 379), (200, 387)), GOLD, 2.2),
                 (((234, 350), (218, 379), (200, 387)), GOLD, 1.8)],
-    "side": [(((188, 198), (182, 236), (190, 270)), GOLD, 2.0),
+    "side": [(((188, 198), (183, 236), (190, 268)), GOLD, 2.0),
              (((200, 208), (200, 384)), LEOTARD_SHADE, 1.2),
              (((230, 348), (216, 378), (200, 386)), GOLD, 2.2),
-             (((184, 330), (178, 310), (186, 288)), LEOTARD_SHADE, 1.2)],
+             # Lumbar hollow and the fold under the seat, both kept inboard of the
+             # new back edge so the shading still reads as shading.
+             (((197, 330), (191, 306), (198, 284)), LEOTARD_SHADE, 1.2),
+             (((182, 336), (172, 362), (179, 388)), LEOTARD_SHADE, 1.2)],
     "back": [(((162, 204), (153, 240), (160, 276)), GOLD, 2.0),
              (((238, 204), (247, 240), (240, 276)), GOLD, 2.0),
              (((200, 216), (200, 388)), LEOTARD_SHADE, 1.2),
@@ -258,7 +280,7 @@ TORSO_SEAMS = {
 # what keeps the gap between arm and torso open to the canvas instead of sealing
 # it into an enclosed hole.
 BAG_TURN = {"front": (-9.0, 44.0, 1.00), "quarter": (-9.0, 44.0, 0.88),
-            "side": (-22.0, 46.0, 0.70), "back": (-11.0, 44.0, 1.00),
+            "side": (-24.0, 46.0, 0.60), "back": (-11.0, 44.0, 1.00),
             "quarter_back": (-9.0, 44.0, 0.88)}
 
 
@@ -591,11 +613,17 @@ def hands(fr, side):
     x, y = fr.j(f"hand_{side}")
     mirror = side == "l"
     back = fr.view in ("back", "quarter_back")
+    # In profile the far hand hangs directly behind the body: the torso covers all of
+    # it but the fingertips, and the near arm does not reach that far back, so it was
+    # drawn as a second mitten on the leotard. It is not drawn at all.
+    hidden = fr.view == "side" and side != NEAR_SIDE[fr.view]
+    if hidden:
+        return {shape: empty_svg() for shape in HANDS}
     parts = {}
     for shape in HANDS:
         nodes = hand_shape(shape, mirror, back)
         inner = "".join(nodes)
-        sx = -1.25 if mirror else 1.25
+        sx = (-1.25 if mirror else 1.25) * HAND_SQUEEZE[fr.view]
         parts[shape] = svg(f'<g transform="translate({r(x)} {r(y)}) scale({sx} 1.25)" '
                            f'data-kind="hand">{inner}</g>')
     return parts
@@ -853,13 +881,15 @@ def stills(directory, view=None):
         doc = (f'<svg xmlns="http://www.w3.org/2000/svg" width="400" height="720" '
                f'viewBox="0 0 400 720">{shadow}{composed}{face}</svg>')
         (directory / f"view-{name}.svg").write_text(doc)
-        fr = Frame(name, "r")
-        hx, hy = fr.j("hand_r")
+        # The hand sheet shows the hand the camera sees first.
+        hside = NEAR_SIDE[name] or "r"
+        fr = Frame(name, hside)
+        hx, hy = fr.j(f"hand_{hside}")
         hand_cells = []
         for i, shape in enumerate(HANDS):
             hand_cells.append(f'<g transform="translate({62 + i * 80} 62)">'
                               f'<rect x="-30" y="-42" width="76" height="96" fill="#ffffff" stroke="#c8d0d8"/>'
-                              f'<g transform="translate({r(-hx)} {r(-hy)})">{_inner(data["hands"]["r"][shape])}</g>'
+                              f'<g transform="translate({r(-hx)} {r(-hy)})">{_inner(data["hands"][hside][shape])}</g>'
                               f'<text x="-26" y="48" font-size="11" fill="#44505c">{shape}</text></g>')
         hands_doc = (f'<svg xmlns="http://www.w3.org/2000/svg" width="410" height="130" '
                      f'viewBox="0 0 410 130"><rect x="0" y="0" width="410" height="130" fill="#eef1f4"/>'
