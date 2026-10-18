@@ -282,6 +282,11 @@ function framedCentreY(
   video: {width: number; height: number},
 ): number {
   if (!subject?.band) return centreY;
+  // An ACTOR is the subject of a person shot, so its own head belongs in frame
+  // and the pair keeps its room: the head rule is for object inserts, where a
+  // partly visible head reads as a mistake. Applying it to a person shot pushed
+  // the frame down past the collar and produced headless dialogue shots.
+  if (subject.horizontal === "pair") return centreY;
   const viewportHeight = video.height / zoom;
   return clearOfHeads(centreY - viewportHeight / 2, actors.map(actorHeadBand), viewportHeight, 24) + viewportHeight / 2;
 }
