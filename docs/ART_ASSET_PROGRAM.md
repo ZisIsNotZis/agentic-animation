@@ -87,6 +87,37 @@ that carry their bake identity, and an independent viewer review passes at norma
 viewing size. A capability that only works in one slice is recorded as such rather
 than generalised by assumption.
 
+## State (2026-10-18)
+
+Wave 0 landed as `4eef0de`: `support.kind: "hanging"`, `prop.kind: "projectile"`,
+intents `swing` and `pour`, and a fail-loud gate naming the owning wave. Proof:
+`action.swing(...)` and `prop.pour(...)` both abort `check` with the capability and
+its owner, and an existing episode's manifest is unchanged apart from its
+`generatedBy.at`/`inputHash` stamps.
+
+Slice A's assets are complete and independently reviewed:
+
+| asset | verdict |
+|---|---|
+| `set/badminton_hall` | PASS — eleven declared layers each painted as its own group, floor and bench supports at 691/640, bench perspective re-derived after review |
+| `prop/racket`, `prop/shuttle`, `prop/high_bar`, `prop/teapot`, `prop/teacup` | PASS — racket redrawn after reading as a rattle; each resolves to its own art by declared asset identity |
+| `figure/athlete_a` | SHIP — five genuine view constructions, symmetric legs (thigh 157 / shin 159, ratio 0.99), `leg.flexionMax 112`, hair covering the occiput |
+
+Five review rounds on that figure found one class worth remembering: what an eye
+sees and no declaration can — a bald back of the head, front-facing sneakers in a
+back view, near-white construction marks hanging outside the silhouette. A
+mechanical silhouette check (`tools/art-direction-study/silhouette-holes.mjs`) now
+measures enclosed background holes and limb-axis coverage colour-independently; it
+found three crown pinholes and disproved one reviewer claim (a "background gap at
+the shoulders" that did not exist).
+
+The swing spike returned **EXPRESSIBLE WITH CAVEATS**: the renderer already honours
+actor rotation, but the motor has no vertical actor channel, the pivot is hardcoded
+at the feet, a hanging support is ignored by actors and `swing` is silently ignored
+there; the orbit is 1217 design px and does not fit the default viewport, so
+framing must follow rotated extents. Slice B needs ≈330–420 engine lines across
+eight seams and must be staged in a side orientation.
+
 ## Risks
 
 - **Swing is the only capability that may not be expressible.** The spike decides
