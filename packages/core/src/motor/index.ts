@@ -172,7 +172,14 @@ const PLACE_OUT_FRACTION = 0.5;
 const WALK_EASE_SEC = 0.3;
 /** Extra world-px corridor between two drawn bodies. 0: the torso/head boxes
  *  are already the outer bound of the art, and any padding resolves a
- *  non-overlap by sliding a standing actor instead of the pose that intruded. */
+ *  non-overlap by sliding a standing actor instead of the pose that intruded.
+ *  A corridor wider than 0 separates the pair at the bind (m7 transfer: the
+ *  drawn bodies met ink-to-ink and read as one mass), but it also shortens
+ *  every handover approach: the receiver halts further from the offered prop,
+ *  and at 24 px the canteen handover reports `contact cue missed` and the
+ *  thermos is placed 2.56 px above its declared support. Corridor width is
+ *  therefore coupled to the approach/offer reach budget and is a design
+ *  decision, not a free constant (docs/ART_TRANSFER_M7.md). */
 const BODY_GAP = 0;
 /** A shaped reach gesture's hand travels at 55% of the 480 px/s cap away from
  *  the key pose, so its authored interval must cover the slow leg plus a held

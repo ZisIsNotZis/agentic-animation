@@ -114,6 +114,13 @@ function sideOf(e: SemanticEvent, side: Side): boolean {
 }
 function eachSide(e: SemanticEvent): Side[] {
   if (e.trackKind === 'bone' && isFacialPredicate(e.text)) return [];
+  // A gaze beat aims the eyes; it is not an arm claim, so it may not splay the
+  // arms. The handover's `offer` phase is an eyeline lead (`lead: head`) of a
+  // physical transfer whose arm preparation the motor owns; read as a present
+  // it splayed both actors' arms across the bind (docs/WORLD_PUPPET_MOTOR.md,
+  // m7 transfer). A gaze event that names an arm part explicitly still acts.
+  if (e.trackKind === 'gaze' &&
+      ![...e.parts].some((part) => /^(?:arm_[ul]|hand)_[lr]$/.test(part))) return [];
   const sides = (["left", "right"] as Side[]).filter((side) => sideOf(e, side));
   return sides.length ? sides : e.parts.size ? [] : ["left", "right"];
 }
@@ -322,6 +329,9 @@ export function deriveActorPose(actor: PoseActor, continuity = true): ActorPose 
     const before = {armLeft:{...armLeft},armRight:{...armRight}};
     const sides = eachSide(semantic);
     const hand = handFor(text, amount);
+    // A channel that names no body part poses no body: a gaze/eyeline beat aims
+    // the eyes and leaves the torso and arms to the motor (docs/WORLD_PUPPET_MOTOR.md).
+    const posesBody = sides.length > 0 || semantic.parts.size > 0;
     if (
       semantic.trackKind === "gaze" ||
       semantic.event.kind === "gaze" ||
@@ -374,7 +384,9 @@ export function deriveActorPose(actor: PoseActor, continuity = true): ActorPose 
         mouthOpen = speechOpen ? Math.max(mouthOpen, 10 + 12 * amount) : 0;
       }
     }
-    if (action === "walk") {
+    if (!posesBody) {
+      // Eyes only: the gaze branch above already aimed them.
+    } else if (action === "walk") {
       const stride = alternating(p, 2) * Math.max(amount, 0.75);
       legLeft.upper += 25 * stride;
       legRight.upper -= 25 * stride;
