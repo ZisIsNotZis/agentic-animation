@@ -252,10 +252,15 @@ def head(fr):
         elif v == "quarter":
             nodes += [ring(cx - 25, 112, 5.0, SKIN_SHADE, INK, 1.2)]
         if v == "quarter_back":
-            nodes += [filled(f"M {pt(cx - 28, 96)} Q {pt(cx - 33, 118)} {pt(cx - 27, 136)} "
-                             f"L {pt(cx - 20, 130)} Q {pt(cx - 23, 112)} {pt(cx - 22, 98)} Z",
-                             SKIN, INK, 1.0),
-                      ring(cx - 24, 114, 5.0, SKIN_SHADE, INK, 1.2)]
+            # The near cheek and ear edge come after the hair: on a back view the hair
+            # fills the skull, so the sliver of face turned toward the camera has to
+            # sit in front of it instead of on bare skin.
+            near = [filled(f"M {pt(cx - 28, 96)} Q {pt(cx - 33, 118)} {pt(cx - 27, 136)} "
+                           f"L {pt(cx - 20, 130)} Q {pt(cx - 23, 112)} {pt(cx - 22, 98)} Z",
+                           SKIN, INK, 1.0),
+                    ring(cx - 24, 114, 5.0, SKIN_SHADE, INK, 1.2)]
+        else:
+            near = []
         if v in ("front", "quarter"):
             near_only = v == "quarter"
             nodes += [filled(f"M {pt(cx - 30, 100)} Q {pt(cx - 30, 52)} {pt(cx - 6, 42)} "
@@ -271,17 +276,22 @@ def head(fr):
                 nodes += [filled(f"M {pt(cx + 24, 86)} L {pt(cx + 18, 82)} L {pt(cx + 19, 118)} "
                                  f"L {pt(cx + 24, 114)} Z", HAIR, INK, 1.0)]
         else:
-            # The hairline crescent has to stay inside the skull: drawn wider, it
-            # left a background sliver between the hair's inner edge and the face
-            # outline at the temple (a hole in the head silhouette).
+            # Back of the head: the hair fills the whole skull down to the nape. As a
+            # crown-only crescent it left the occiput as a bare skin oval under a band
+            # of hair, so the character read as bald from behind. The crown contour is
+            # unchanged; below the temple the edge follows the skull outline a little
+            # outside it (the hair is the outer shape here, so no background sliver can
+            # open between the two) and turns into a short nape curve that the neck
+            # rises into, which leaves no skin on the back of the head.
             nodes += [filled(f"M {pt(cx - 30, 100)} Q {pt(cx - 32, 48)} {pt(cx - 2, 40)} "
                              f"Q {pt(cx + 28, 40)} {pt(cx + 30, 74)} Q {pt(cx + 31, 96)} "
-                             f"{pt(cx + 24, 110)} L {pt(cx + 16, 96)} Q {pt(cx + 10, 74)} "
-                             f"{pt(cx - 4, 70)} Q {pt(cx - 12, 74)} {pt(cx - 22, 100)} Z",
+                             f"{pt(cx + 29, 114)} Q {pt(cx + 24, 136)} {pt(cx + 13, 154)} "
+                             f"Q {pt(cx + 7, 164)} {pt(cx, 165)} Q {pt(cx - 7, 164)} "
+                             f"{pt(cx - 13, 154)} Q {pt(cx - 24, 136)} {pt(cx - 29, 114)} Z",
                              HAIR, INK, 1.8),
                       path(f"M {pt(cx - 6, 54)} Q {pt(cx + 10, 58)} {pt(cx + 16, 80)}", "none",
                            HAIR_LIGHT, 1.6)]
-        return nodes
+        return nodes + near
     # Profile: faces screen-right, drawn around the same neck pivot.
     neck = [filled(f"M {pt(192, 152)} L {pt(214, 152)} L {pt(216, 206)} L {pt(190, 206)} Z",
                    SKIN_SHADE, INK, 1.4),
