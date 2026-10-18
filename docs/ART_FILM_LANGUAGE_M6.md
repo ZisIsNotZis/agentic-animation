@@ -26,9 +26,11 @@ nothing is happening, and every named cue must appear in the compiled
 against the base medium two-shot at z 1.0: establish 0.00–2.95; push onto the
 actor at 2.95–3.60 completing before `prop.pickup` at 4.15 so the close frame is
 held while the lift runs; hold through the sip beat; wide at 8.57–9.37 so the
-pair is the unit while the other actor speaks; a 1.9× scale jump out of that wide
-onto the prop at 11.27–12.47 landing on `action.present` and the reveal chime at
-12.77; wide again at 14.72–15.52 so the closing line shrinks the speaker. Cues:
+pair is the unit while the other actor speaks; a 4.6× scale jump out of that wide
+onto the prop at 11.27–12.47 (0.72 → 3.3, the insert's zoom authored at the beat,
+not inherited from the recipe's person-push default) landing on `action.present`
+and the reveal chime at 12.77; wide again at 14.72–15.52 so the closing line
+shrinks the speaker. Cues:
 `sip`, `reveal-chime`, `laugh`, `ending-cadence`, one per beating shot, other
 shots deliberately silent.
 
@@ -87,9 +89,10 @@ head, the unshifted placement is kept rather than moving the frame off the stage
    below the wide.
 
 3. **The prop does not gain emphasis — resolved by the same framing change.** A
-   prop target now resolves to its live position and its silhouette instead of
-   falling back to the previous camera centre, so the reveal jump is a genuine
-   object shot: the thermos is centred and 1.9× larger at z 1.35.
+   prop target now resolves to its live position and its declared silhouette
+   instead of falling back to the previous camera centre, so the reveal jump is a
+   genuine object shot. The emphasis itself is the authored zoom (defect 5): an
+   object shot at the person default reads as a detail, not a subject.
 
 4. **A framed shot sliced the heads — fixed by the framing rule.** The object
    push that centres the thermos put the frame's top edge through both faces: at
@@ -97,13 +100,43 @@ head, the unshifted placement is kept rather than moving the frame off the stage
    world while the frame covered y 231.6–764.9, so the edge cut the nose and
    mouth and kept the full legs, shoes and floor. Both heads now sit wholly
    above the frame: the nearer side was downward, because clearing them upward
-   needs y −440, outside the painted stage. The insert holds at y 315.2–848.5 —
-   24 world px of clearance below the chin at 291.2 — with the zoom (1.35), the
-   horizontal centre and the thermos at y 418.2 unchanged, so it is a
-   counter-and-hands shot with the heads out of frame. Held frames that slice a
+   needs y −440, outside the painted stage. The insert's top edge is the
+   placement 24 world px below the chin at 291.2, and the horizontal centre and
+   the thermos position are untouched by the rule, so it is a counter-and-hands
+   shot with the heads out of frame. Held frames that slice a
    head fall from 132 (frames 288–353) to none; the residual slices are the moving
    frames of this push and of the pull back, where the travelling edge must cross
    the head.
+
+5. **The insert had no subject — fixed by authoring the beat's zoom.** Cleared
+   heads are not a composition: at z 1.35 the held insert (frame 314, 13.10 s) was
+   two headless torsos over a counter with an 85 px thermos in it (15.7% of frame
+   height), and the viewer could not say what the camera was looking at. Three
+   things were wrong together. The push drew its zoom from `camera.punch_in`'s
+   person default, so it is now an authored argument of the beat
+   (`camera.punch_in(thermos, 3.3)`, `library/camera/punch_in` taking an optional
+   zoom defaulting to 1.35 so every other call site is numerically untouched).
+   `propFrameBand` framed a prop from `prop.y` as if it were the art origin, but
+   `prop.y` is the BASE anchor the renderer places the art from, and the declared
+   `body` silhouette was dropped in `projectedProp` projection, so the band sat
+   below the drawn object and the object push aimed under it; the band now reads
+   the declared body box at the base offset. The insert is therefore a prop shot:
+   the flask spans y 324.2–418.2 world, the frame top is the head-rule placement
+   at 315.2 with both drawn heads (116.9–291.2) wholly above it, and the flask
+   covers 39.1% of frame height by its body and 50.2% including cap, knob and
+   handle — centred horizontally at 53% of frame width, with the counter line,
+   the gripping hand and her torso giving context. The heads cannot be sliced and
+   the flask cannot also be vertically centred: the hold puts the cap at chin
+   height, and the head rule pins the frame top just below the chin, so the
+   object sits in the frame's upper half. The head rule was kept.
+
+## Prop inserts are framed on the object, not on the room
+
+An object push frames the prop's declared silhouette and the authored zoom decides
+how much of the frame it owns: 35–50% of frame height is what makes a small prop
+read as the subject at normal viewing size, while the person-push default (1.35)
+leaves it a 16% detail. An insert is allowed to run off the top or bottom edge
+(the cap does here) but never through a drawn head.
 
 ## Evidence and the stale-still lesson, again
 
@@ -118,7 +151,9 @@ evidence, whatever its contents look like. The reviewed set is
 `/tmp/m6v3/t{2.00,5.90,10.40,13.10,17.90}.png` at revision `fb5baa6`, and the
 render itself is moved out of the repository because generated video is not
 committed here, even though `.gitignore` deliberately un-ignores
-`episodes/*/dist/*.mp4`.
+`episodes/*/dist/*.mp4`. The prop-insert round's set is
+`/tmp/m6v4/t{2.00,5.90,10.40,13.10,17.90}.png` with `/tmp/m6v4/bake-identity.json`,
+cut the same way from the current revision's render.
 
 ## Delivered, independent review PASS (revision `fb5baa6`)
 
@@ -141,5 +176,6 @@ four authored cues. Reviewer frames re-rendered after the counter staging (24 fp
 frames 48, 142, 250, 314, 430): the establish at 2.00 s shows the thermos resting
 upright on the counter between the two bodies, the 5.90 s push holds the actor
 upright with both feet planted and the thermos in her hand, the wide shots at
-10.40 s and 17.90 s are unchanged, and the 13.10 s push centres and enlarges the
-thermos with both drawn heads wholly above the frame (see defect 4).
+10.40 s and 17.90 s are unchanged, and the 13.10 s push is the prop insert
+(see defect 5): the flask fills the frame's upper half with both drawn heads
+wholly above the top edge.

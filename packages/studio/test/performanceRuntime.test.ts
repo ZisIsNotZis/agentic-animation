@@ -521,7 +521,31 @@ test("a framed object push never slices a drawn head", () => {
   const thermos = held.props.find((prop) => prop.id === "thermos")!;
   assert.ok(thermos.y > held.camera.y && thermos.y < held.camera.y + 720 / held.camera.z);
   // A placement that already holds the heads whole is left where it framed them.
-  assert.equal(evaluatePerformance(build(0.9), 10).camera.y, 430 - 720 / 0.9 / 2);
+  // `at` is the art's BASE anchor, so this prop's 60 px art hangs above y 400 and
+  // the placement that centres it sits past the painted stage's top edge, which
+  // the stage clamps to 0 rather than leaving the stage.
+  assert.equal(evaluatePerformance(build(0.9), 10).camera.y, 0);
+});
+
+test("an object push frames a prop on its declared silhouette from its base anchor", () => {
+  const manifest = {
+    version: 1,
+    video: {width: 1280, height: 720, fps: 24},
+    timebase: "frames",
+    durationInFrames: 30,
+    props: [{id: "flask", at: [960, 630], size: [200, 160], base: 132, body: [68, 38, 132, 132]}],
+    tracks: [{kind: "camera", subject: "camera", events: [
+      {frame: 0, durationFrames: 10, value: {operation: "push", zoom: 3, target: "flask"}},
+    ]}],
+  } as unknown as PerformanceManifest;
+  const held = evaluatePerformance(manifest, 10);
+  // Art units are 1:1 with world px at the element's 200x160 size, and the art
+  // hangs above its base anchor: the declared body box covers world y 536..630,
+  // not the 630..790 that reading `at` as the art origin produced.
+  const top = 630 + (38 - 132);
+  const bottom = 630 + (132 - 132);
+  assert.equal(held.camera.z, 3);
+  assert.equal(held.camera.y, (top + bottom) / 2 - 720 / 3 / 2);
 });
 
 test("detectTeleports flags implausible actor jumps", async () => {

@@ -19,8 +19,8 @@ episode:
 #   4 pull wide   camera.wide() because she now holds the flask and he does
 #                 not: the move back to the room restores the pair as the unit
 #                 of interest while he asks for a share.
-#   5 push thermos camera.punch_in(thermos) is the reveal join: a 0.72 -> 1.35
-#                 scale jump out of the wide onto the object, because the
+#   5 push thermos camera.punch_in(thermos, 3.3) is the reveal join: a 0.72 ->
+#                 3.3 scale jump out of the wide onto the object, because the
 #                 object is now the point of the scene. reveal-chime lands on
 #                 the same frame.
 #   6 pull wide   camera.wide() on the punchline: awei shrinks in frame, which
@@ -71,8 +71,11 @@ scenes:
       # read as two bodies again, while he asks for a share.
       - awei: "{camera.wide(), emotion.skeptical(awei)}那……分我一口？"
       # 5 push thermos — the reveal join: the shot leaves the pair and lands on
-      # the object, before she opens the flask toward him.
-      - lin: "{...camera.punch_in(thermos)}…"
+      # the object, before she opens the flask toward him. The insert's zoom is
+      # authored here and not inherited from the recipe's person-push default:
+      # at z 1.35 the thermos is a 16% speck inside a headless pair of torsos, so
+      # the shot had no subject. z 3.3 makes the flask the subject.
+      - lin: "{...camera.punch_in(thermos, 3.3)}…"
       - lin: "{...action.present(lin, thermos), accent: 0.6}…没了。"
       # 6 pull wide — his standing shrinks with the frame; the cadence closes.
       - awei: "{camera.wide(), action.laugh(awei), emotion.desperate(awei)}就剩个桶底……"

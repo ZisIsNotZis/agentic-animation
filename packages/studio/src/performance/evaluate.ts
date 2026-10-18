@@ -184,13 +184,16 @@ function actorHeadBand(actor: EvaluatedActor): [number, number] {
 }
 
 function propFrameBand(prop: EvaluatedProp): [number, number] {
-  // The prop's origin is its art origin; the declared drawn-body box measures
-  // the silhouette in art units (y down) around it.
+  // `prop.y` is the art's BASE anchor, not its top: the renderer places the
+  // element at `y - height * base/height` and stretches the 200x160 art to the
+  // element size, so art unit u sits `(u - base) * size[1]/160 * scale` from y.
+  // The declared drawn-body box measures the silhouette in those art units.
   const body = prop.body;
-  const scale = prop.scale || 1;
+  const unit = (prop.size[1] / 160) * (prop.scale || 1);
+  const base = prop.base ?? 160;
   const top = body ? body[1] : 0;
-  const bottom = body ? body[3] : prop.size[1];
-  return [prop.y + top * scale, prop.y + bottom * scale];
+  const bottom = body ? body[3] : 160;
+  return [prop.y + (top - base) * unit, prop.y + (bottom - base) * unit];
 }
 
 function pushSubject(
@@ -971,18 +974,7 @@ function propState(
     applyHeldMotion(pos, stagedPropPosition(prop, t0), stagedNow, {t0, t1}, handNow, handAtRelease, frame);
     return projectedProp(prop, pos, tracks);
   }
-  return {
-    id: prop.id,
-    ...(prop.label === undefined ? {} : {label: prop.label}),
-    x: stagedNow.x,
-    y: stagedNow.y,
-    rotation: stagedNow.rotation,
-    scale: stagedNow.scale,
-    z: numberOr(prop.z, 0),
-    size: prop.size ? [prop.size[0], prop.size[1]] : [prop.width ?? 64, prop.height ?? 64],
-    ...(prop.src === undefined ? {} : {src: prop.src}),
-    tracks,
-  };
+  return projectedProp(prop, stagedNow, tracks);
 }
 
 function projectedProp(prop: PerformanceProp, pos: {x: number; y: number; rotation: number; scale: number}, tracks: EvaluatedTrack[]): EvaluatedProp {
@@ -996,6 +988,9 @@ function projectedProp(prop: PerformanceProp, pos: {x: number; y: number; rotati
     z: numberOr(prop.z, 0),
     size: prop.size ? [prop.size[0], prop.size[1]] : [prop.width ?? 64, prop.height ?? 64],
     ...(prop.base === undefined ? {} : {base: prop.base}),
+    // The declared drawn-body box survives projection: a push frames the
+    // object on its silhouette, not on the element's nominal size box.
+    ...(prop.body === undefined ? {} : {body: prop.body}),
     ...(prop.src === undefined ? {} : {src: prop.src}),
     tracks,
   };
