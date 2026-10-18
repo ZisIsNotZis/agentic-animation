@@ -12,6 +12,9 @@ document owning a contract before changing implementation or an episode.
   historical provenance and documentation readiness audit.
 - [REPOSITORY_MAINTENANCE.md](REPOSITORY_MAINTENANCE.md) — upkeep and contribution rules.
 - [NARROW_EPISODE_DSL.md](NARROW_EPISODE_DSL.md) — canonical `episode.yml` language.
+- [ART_ASSET_PROGRAM.md](ART_ASSET_PROGRAM.md) — the three new situations (rally,
+  bar swing, pouring tea), four new native figures, capability contract, ownership
+  and waves.
 
 ## Design contracts
 

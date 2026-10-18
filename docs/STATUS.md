@@ -74,7 +74,11 @@ judgment. M7 is delivered and independently reviewed PASS at revision `8f8f1e8`
 prerequisites; bundle `art-baselines/m7-20261018T110236+0800/`). Three defects it
 found were general and are fixed: prop art follows the declared asset, debug name
 plates are gone from the frame, and the head rule no longer applies to person
-shots. M8 is planned, not delivered. The M7 review also established the decisive blocker:
+shots. The asset programme is the current work: three independent slices (badminton rally,
+bar swing, pouring tea), each with genuinely new native assets — four new figures,
+three new sets, new props — under [ART_ASSET_PROGRAM](ART_ASSET_PROGRAM.md), which
+owns the capability contract, the file ownership and the wave order. M8 is planned,
+not delivered. The M7 review also established the decisive blocker:
 the legacy puppet figures (`aqiang`, `elder`, `awei`, `liu`, `lin`) have no
 articulated posture, so any contact beat with them lifts the prop while the figure
 never bends; a compile warning now reports it. Acting requires native artwork, and
