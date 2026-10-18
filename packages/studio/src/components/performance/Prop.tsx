@@ -39,10 +39,17 @@ export const PerformanceProp: React.FC<{ prop: EvaluatedProp }> = ({ prop }) => 
   );
 };
 
-type PropKind = "desk" | "thermos" | "scroll" | "skillBottle" | "skillCards" | "phone" | "notebook" | "mirror" | "flashlight" | "askMattSign" | "screen" | "generic";
+type PropKind = "desk" | "thermos" | "scroll" | "skillBottle" | "skillCards" | "phone" | "notebook" | "mirror" | "flashlight" | "askMattSign" | "screen" | "racket" | "shuttle" | "highBar" | "teapot" | "teacup" | "generic";
 
 function propKind(key: string): PropKind {
   if (key.includes("desk")) return "desk";
+  // Vessels are decided before the thermos/cup family below, which claims any
+  // key containing "cup" (a teacup is not a thermos).
+  if (key.includes("teapot")) return "teapot";
+  if (key.includes("teacup")) return "teacup";
+  if (key.includes("racket")) return "racket";
+  if (key.includes("shuttle")) return "shuttle";
+  if (key.includes("high_bar") || key.includes("high bar")) return "highBar";
   if (isThermosArt(key)) return "thermos";
   if (key.includes("scroll")) return "scroll";
   if (key.includes("skill_bottle") || key.includes("skill bottle") || key.includes("bottle")) return "skillBottle";
@@ -86,6 +93,64 @@ const Scroll: React.FC<PropArtProps> = () => (
     <path d="M56 49h75M56 65h61M56 81h75M56 97h45" stroke="#ae7657" strokeWidth="5" strokeLinecap="round" />
     <path d="M43 39q-18 2-18 17t18 17M148 31q18 2 18 17t-18 17" fill="#e7be83" stroke={INK} strokeWidth="8" />
     <path d="M34 48q-7 8 0 17m131-17q7 8 0 17" fill="none" stroke={GOLD} strokeWidth="5" /><path d="M102 87l12 12-12 12-12-12z" fill={RED} stroke={INK} strokeWidth="4" />
+  </g>
+);
+
+const Racket: React.FC<PropArtProps> = () => (
+  <g aria-label="racket">
+    <ellipse cx="100" cy="154" rx="26" ry="5" fill="#151526" opacity=".3" />
+    <ellipse cx="100" cy="54" rx="36" ry="44" fill="#eef7f6" stroke={INK} strokeWidth="9" />
+    <path d="M84 26V84M92 22V88M100 18V92M108 22V88M116 26V84M82 34H118M78 44H122M74 56H126M78 68H122M82 78H118" stroke="#8fb3ae" strokeWidth="3" />
+    <path d="M90 90L100 110L110 90Z" fill={GOLD} stroke={INK} strokeWidth="6" />
+    <path d="M100 104V126" stroke={INK} strokeWidth="8" strokeLinecap="round" />
+    <rect x="88" y="120" width="24" height="32" rx="6" fill={RED} stroke={INK} strokeWidth="6" />
+    <path d="M90 132H110M90 142H110" stroke="#b23f33" strokeWidth="4" /><path d="M88 149H112" stroke={INK} strokeWidth="6" />
+  </g>
+);
+
+const Shuttle: React.FC<PropArtProps> = () => (
+  <g aria-label="shuttle">
+    <ellipse cx="100" cy="152" rx="20" ry="5" fill="#151526" opacity=".3" />
+    <path d="M56 30Q56 22 64 22H136Q144 22 144 30L112 118H88Z" fill="#f4fbfa" stroke={INK} strokeWidth="8" />
+    <path d="M70 36L89 110M85 34L96 110M100 34V110M115 34L104 110M130 36L111 110" stroke="#a7c3bf" strokeWidth="3.5" />
+    <ellipse cx="100" cy="26" rx="44" ry="10" fill="#dff2ef" stroke={INK} strokeWidth="8" />
+    <path d="M88 112H112Q116 138 100 142Q84 138 88 112Z" fill="#f0dcb8" stroke={INK} strokeWidth="7" /><path d="M88 118H112" stroke="#fdf7e8" strokeWidth="5" />
+  </g>
+);
+
+const HighBar: React.FC<PropArtProps> = () => (
+  <g aria-label="high bar">
+    <ellipse cx="100" cy="154" rx="88" ry="6" fill="#151526" opacity=".3" />
+    <path d="M32 56L10 146M168 56L190 146" stroke={INK} strokeWidth="8" strokeLinecap="round" />
+    <path d="M32 30V144M168 30V144" stroke={INK} strokeWidth="12" strokeLinecap="round" />
+    <path d="M32 34V140M168 34V140" stroke="#9fb0bf" strokeWidth="5" strokeLinecap="round" />
+    <path d="M18 146H46M154 146H182" stroke={INK} strokeWidth="10" strokeLinecap="round" />
+    <path d="M24 48H176" stroke={INK} strokeWidth="13" strokeLinecap="round" /><path d="M28 48H172" stroke="#c9d3da" strokeWidth="6" strokeLinecap="round" />
+  </g>
+);
+
+const Teapot: React.FC<PropArtProps> = () => (
+  <g aria-label="teapot">
+    <ellipse cx="100" cy="148" rx="46" ry="6" fill="#151526" opacity=".3" />
+    <path d="M64 92C34 96 32 128 66 130" fill="none" stroke={INK} strokeWidth="14" strokeLinecap="round" />
+    <path d="M64 94C40 98 38 124 66 126" fill="none" stroke="#1f6f74" strokeWidth="6" strokeLinecap="round" />
+    <path d="M132 90L172 62L182 76L142 110Z" fill={TEAL} stroke={INK} strokeWidth="7" />
+    <ellipse cx="177" cy="69" rx="8" ry="5" transform="rotate(-38 177 69)" fill={PAPER} stroke={INK} strokeWidth="5" />
+    <path d="M58 86C58 128 74 142 100 142C126 142 142 128 142 86Z" fill={TEAL} stroke={INK} strokeWidth="9" />
+    <path d="M66 112Q100 126 134 112" fill="none" stroke="#a6e7d9" strokeWidth="6" />
+    <path d="M74 86Q100 62 126 86Z" fill={GOLD} stroke={INK} strokeWidth="7" /><circle cx="100" cy="70" r="6" fill={RED} stroke={INK} strokeWidth="5" />
+  </g>
+);
+
+const Teacup: React.FC<PropArtProps> = () => (
+  <g aria-label="teacup">
+    <ellipse cx="100" cy="148" rx="34" ry="5" fill="#151526" opacity=".3" />
+    <path d="M130 100C154 104 154 126 130 128" fill="none" stroke={INK} strokeWidth="12" strokeLinecap="round" />
+    <path d="M131 103C149 107 149 123 131 125" fill="none" stroke={PAPER} strokeWidth="5" strokeLinecap="round" />
+    <path d="M68 92C70 122 82 140 100 140C118 140 130 122 132 92" fill={PAPER} stroke={INK} strokeWidth="8" />
+    <path d="M74 108H126" stroke="#e7be83" strokeWidth="6" />
+    <ellipse cx="100" cy="92" rx="32" ry="10" fill="#e2d3b4" stroke={INK} strokeWidth="8" />
+    <path d="M84 89Q100 95 116 89" fill="none" stroke="#f7ecd3" strokeWidth="4" />
   </g>
 );
 
@@ -159,7 +224,8 @@ const Generic: React.FC<PropArtProps> = () => (
 const PROP_ART: Record<PropKind, React.FC<PropArtProps>> = {
   desk: Desk, thermos: Thermos, scroll: Scroll, skillBottle: SkillBottle, skillCards: SkillCards,
   phone: Phone, notebook: Notebook, mirror: Mirror, flashlight: Flashlight, askMattSign: AskMattSign,
-  screen: Screen, generic: Generic,
+  screen: Screen, racket: Racket, shuttle: Shuttle, highBar: HighBar, teapot: Teapot, teacup: Teacup,
+  generic: Generic,
 };
 
 const BindingCue: React.FC = () => (

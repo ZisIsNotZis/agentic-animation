@@ -1,0 +1,41 @@
+{
+  "source": "art.svg",
+  "preview": "preview.png",
+  "interaction": {
+    "pickup": [
+      120,
+      108
+    ],
+    "hold": [
+      120,
+      84
+    ],
+    "ground": [
+      120,
+      174
+    ]
+  },
+  "placement": {
+    "base": 142,
+    "size": [
+      200,
+      160
+    ],
+    "supports": [],
+    "stageWidth": 240,
+    "body": [
+      26,
+      59,
+      186,
+      147
+    ],
+    "grip": {
+      "at": [
+        40,
+        111
+      ],
+      "radius": 2,
+      "depth": "front"
+    }
+  }
+}

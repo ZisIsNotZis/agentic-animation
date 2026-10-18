@@ -1,0 +1,42 @@
+{
+  "source": "art.svg",
+  "preview": "preview.png",
+  "interaction": {
+    "pickup": [
+      120,
+      108
+    ],
+    "hold": [
+      120,
+      84
+    ],
+    "ground": [
+      120,
+      174
+    ]
+  },
+  "placement": {
+    "base": 146,
+    "size": [
+      200,
+      160
+    ],
+    "supports": [
+      {
+        "name": "bar",
+        "x": [
+          30,
+          170
+        ],
+        "y": 42
+      }
+    ],
+    "stageWidth": 680,
+    "body": [
+      6,
+      24,
+      194,
+      151
+    ]
+  }
+}
