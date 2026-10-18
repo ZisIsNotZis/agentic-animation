@@ -85,6 +85,9 @@ scenes:
       - aqiang: "{prop.handover(elder, register, aqiang), sound.paper_snap()}弟子明白。"
       - aqiang: "{camera.wide(), action.unroll(aqiang, register)}……"
       - aqiang: "{...camera.punch_in(register, 3.3)}我的编号。"
-      - aqiang: "{effect.lights_down(), emotion.desperate(aqiang)}划掉了。"
+      # Back to the pair for the spoken line: a line played over the object
+      # insert leaves the speaker headless, which reads as a mistake at normal
+      # size, and it also gives the dim a face to fall on.
+      - aqiang: "{camera.wide(), effect.lights_down(), emotion.desperate(aqiang)}划掉了。"
       - elder: "{camera.wide(), action.dismiss(elder, aqiang)}山门不养闲人。"
       - elder: "{...music.ending(), mode: \"nonblock\"}……"
