@@ -114,6 +114,10 @@ HAND_SQUEEZE = {"front": 1.00, "quarter": 1.00, "side": 0.62, "back": 1.00,
 # How much of a shoe's width survives the view's turn. A frontal construction keeps
 # the whole sole; a quarter view foreshortens it, so the shoes turn with the body.
 TURN_WIDTH = {"front": 1.0, "quarter": 0.78, "back": 1.0, "quarter_back": 0.78}
+# How far the toe swings toward the direction the chest faces in a turned view. The
+# front and back views look straight down the foot, so their toe points at the camera;
+# a three-quarter shoe that keeps that straight-on toe box is a front shoe pasted on.
+TOE_LEAN = {"front": 0.0, "quarter": 7.0, "back": 0.0, "quarter_back": -7.0}
 # Arms drawn behind the torso: the torso then covers the bare shoulder cap, so the
 # arm grows out of the leotard's armhole instead of butting against its edge.
 REAR_ARMS = {"front": ("l", "r"), "quarter": ("r",), "side": ("r",),
@@ -550,33 +554,56 @@ def foot_part(fr, side):
         # Seen from behind the toes have turned away: the shoe is a heel. No toe box
         # and no strap across the instep - a counter seam wrapping a centre stitch
         # over the sole is what distinguishes it from the same shoe from the front.
+        # In the three-quarter heel the counters lean the way the hips did.
+        lean = TOE_LEAN[fr.view] * (1.0 if side == "l" else 0.55)
         return [socket(x, y - 8, fr.r(16.0) * turn, body),
                 filled(f"M {pt(ox(-16), y - 4)} Q {pt(x, y - 14)} {pt(ox(16), y - 4)} "
-                       f"Q {pt(ox(19), y + 12)} {pt(ox(18), y + 29)} "
-                       f"Q {pt(x, y + 35)} {pt(ox(-18), y + 29)} "
+                       f"Q {pt(ox(19), y + 12)} {pt(ox(18) + lean, y + 29)} "
+                       f"Q {pt(x + lean * 0.7, y + 35)} {pt(ox(-18) + lean, y + 29)} "
                        f"Q {pt(ox(-19), y + 12)} {pt(ox(-16), y - 4)} Z", body, edge, 1.8),
-                path(f"M {pt(x, y + 2)} L {pt(x, y + 28)}", "none", SHOE_SHADE, 1.1),
+                path(f"M {pt(x, y + 2)} L {pt(x + lean * 0.6, y + 28)}", "none", SHOE_SHADE, 1.1),
                 path(f"M {pt(ox(-14), y + 19)} Q {pt(ox(-15), y + 5)} {pt(ox(-5), y + 1)}",
                      "none", SHOE_SHADE, 1.3),
                 path(f"M {pt(ox(14), y + 19)} Q {pt(ox(15), y + 5)} {pt(ox(5), y + 1)}",
                      "none", SHOE_SHADE, 1.3),
-                filled(f"M {pt(ox(-19), y + 28)} Q {pt(x, y + 34)} {pt(ox(19), y + 28)} "
-                       f"L {pt(ox(18), y + 34)} Q {pt(x, y + 43)} {pt(ox(-18), y + 34)} Z",
-                       sole, sole, 0.0)]
+                filled(f"M {pt(ox(-19), y + 28)} Q {pt(x + lean * 0.7, y + 34)} "
+                       f"{pt(ox(19) + lean, y + 28)} "
+                       f"L {pt(ox(18) + lean, y + 34)} Q {pt(x + lean * 0.7, y + 43)} "
+                       f"{pt(ox(-18) + lean, y + 34)} Z", sole, sole, 0.0)]
+    lean = TOE_LEAN[fr.view] * (1.0 if side == "l" else 0.55)
     nodes = [socket(x, y - 8, fr.r(16.0) * turn, body),
              filled(f"M {pt(ox(-17), y - 10)} Q {pt(x, y - 18)} {pt(ox(17), y - 10)} "
-                    f"Q {pt(ox(20), y + 10)} {pt(ox(18 + toe * 0.5), y + 31)} "
-                    f"Q {pt(ox(toe), y + 40)} {pt(ox(-18 + toe * 0.5), y + 31)} "
+                    f"Q {pt(ox(20), y + 10)} {pt(ox(18 + toe * 0.5) + lean, y + 31)} "
+                    f"Q {pt(ox(toe) + lean, y + 40)} {pt(ox(-18 + toe * 0.5) + lean, y + 31)} "
                     f"Q {pt(ox(-20), y + 10)} {pt(ox(-17), y - 10)} Z", body, edge, 1.8)]
+    if fr.view == "quarter" and far:
+        # The far shoe of a three-quarter view has turned away: its outer wall and the
+        # welt where it meets the sole, not a second instep, is what the camera sees.
+        # Unstroked like every far part, so the wall is drawn in the sole's ink.
+        nodes += [path(f"M {pt(ox(12), y - 4)} Q {pt(ox(19) + lean * 0.4, y + 14)} "
+                       f"{pt(ox(15) + lean, y + 28)}", "none", SHOE_SOLE, 1.6),
+                  path(f"M {pt(ox(-4) + lean * 0.4, y + 2)} Q {pt(ox(6) + lean * 0.6, y + 10)} "
+                       f"{pt(ox(4) + lean * 0.8, y + 24)}", "none", SHOE_SOLE, 1.1),
+                  filled(f"M {pt(ox(-19) + lean, y + 27)} "
+                         f"Q {pt(ox(toe * 0.5) + lean, y + 34)} "
+                         f"{pt(ox(19 + toe * 0.5) + lean, y + 27)} "
+                         f"L {pt(ox(18 + toe * 0.5) + lean, y + 33)} "
+                         f"Q {pt(ox(toe * 0.5) + lean, y + 42)} "
+                         f"{pt(ox(-18 + toe * 0.5) + lean, y + 33)} Z", sole, sole, 0.0)]
+        return nodes
     # Front construction: an instep strap in the leotard colour and its gold edge,
-    # which is the mark a heel view does not carry.
-    nodes += [filled(f"M {pt(ox(-13), y + 4)} L {pt(ox(13), y + 4)} L {pt(ox(11), y + 12)} "
-                     f"L {pt(ox(-11), y + 12)} Z", LEOTARD, LEOTARD_SHADE, 1.0),
-              path(f"M {pt(ox(-12), y + 9)} L {pt(ox(12), y + 9)}", "none", GOLD, 1.4),
-              filled(f"M {pt(ox(-19), y + 27)} Q {pt(ox(toe * 0.5), y + 34)} "
-                     f"{pt(ox(19 + toe * 0.5), y + 27)} "
-                     f"L {pt(ox(18 + toe * 0.5), y + 33)} Q {pt(ox(toe * 0.5), y + 42)} "
-                     f"{pt(ox(-18 + toe * 0.5), y + 33)} Z", sole, sole, 0.0)]
+    # which is the mark a heel view does not carry, swung with the toe in a turned view.
+    nodes += [filled(f"M {pt(ox(-13) + lean * 0.3, y + 4)} L {pt(ox(13) + lean * 0.3, y + 4)} "
+                     f"L {pt(ox(11) + lean * 0.7, y + 12)} L {pt(ox(-11) + lean * 0.7, y + 12)} Z",
+                     LEOTARD, LEOTARD_SHADE, 1.0),
+              path(f"M {pt(ox(-12) + lean * 0.45, y + 9)} L {pt(ox(12) + lean * 0.45, y + 9)}",
+                   "none", GOLD, 1.4),
+              filled(f"M {pt(ox(-19) + lean, y + 27)} "
+                     f"Q {pt(ox(toe * 0.5) + lean, y + 34)} "
+                     f"{pt(ox(19 + toe * 0.5) + lean, y + 27)} "
+                     f"L {pt(ox(18 + toe * 0.5) + lean, y + 33)} "
+                     f"Q {pt(ox(toe * 0.5) + lean, y + 42)} "
+                     f"{pt(ox(-18 + toe * 0.5) + lean, y + 33)} Z", sole, sole, 0.0)]
     return nodes
 
 
@@ -587,20 +614,36 @@ def _palm():
 
 
 def hand_shape(shape, mirror, back=False):
-    """One chalked hand, palm or back. Which side the thumb sits on is the whole
-    difference between the two, so a back-facing view flips the thumb and the fist
-    crease across the hand's own axis and leaves the fingers where they are.
+    """One chalked hand, palm or back.
+
+    The back of a hand is not a palm without the heel: the dorsal side shows the
+    metacarpal mass, a row of knuckles the fingers hinge from, and a foreshortened
+    finger length, so the thumb flips across the hand's axis and the knuckle ridge
+    and joint creases replace the palmar heel. Otherwise the back view's hands are
+    the front view's hands with the thumb moved, which is the mitten the review saw.
 
     The fill is chalk white, so the hand has to be given its form by the ink outline
     and by CHALK_LINE finger seams rather than by value: an unoutlined white shape at
     this size reads as a block, and fingers that share a near-white edge disappear.
     """
     flip = -1.0 if back else 1.0
-    nodes = [filled(_palm(), CHALK, INK, 1.2),
-             filled("M -10 8 Q 0 14 10 8 L 12 18 L -12 18 Z", CHALK_SHADE, CHALK_SHADE, 0.0)]
+    nodes = [filled(_palm(), CHALK, INK, 1.2)]
+    if back:
+        nodes.append(filled("M -11 2 Q 0 -2 11 2 L 11 13 Q 0 17 -11 13 Z",
+                            CHALK_SHADE, CHALK_LINE, 0.9))
+    else:
+        nodes.append(filled("M -10 8 Q 0 14 10 8 L 12 18 L -12 18 Z",
+                            CHALK_SHADE, CHALK_SHADE, 0.0))
     curl, length = {"rest": (0.55, 16), "open": (0.0, 28), "point": (0.0, 27), "fist": (1.0, 8),
                     "splayed": (-0.18, 27)}[shape]
     xs = (-8.0, -2.8, 2.8, 8.0)
+    if back:
+        # Knuckle row: four bumps at the finger joints, half covered by the fingers
+        # drawn over them, so the ridge reads instead of a seam.
+        length *= 0.84
+        nodes += [filled(f"M {pt(fx - 3.1, 12.6)} Q {pt(fx, 9.4)} {pt(fx + 3.1, 12.6)} "
+                         f"L {pt(fx + 3.1, 16)} Q {pt(fx, 18)} {pt(fx - 3.1, 16)} Z",
+                         CHALK, CHALK_LINE, 0.9) for fx in xs]
     for i, fx in enumerate(xs):
         h = length - (abs(i - 1) * 1.8 if shape == "splayed" else 0.0)
         if shape == "point" and i != 1:
