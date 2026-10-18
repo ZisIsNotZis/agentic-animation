@@ -227,3 +227,17 @@ fact, not a missing mechanism:
 - **Projectile contact is instantaneous**, unlike every contact the motor has done
   so far, which are all sustained; the struck-contact rule is new work, not a
   parameter.
+
+## Resume here
+
+1. Slice A's engine: `projectile` motion with a struck contact, then a following
+   camera (`docs/STATUS.md` "Restart point" names the files and the event names).
+2. Slice B's shot: two-phase mount (step under, then reach), a walk that stops short
+   of the grip so the hand travels a chord, the `grip-contact` 1.119 px constant
+   traced to its source, and `episodes/b-bar-swing/README.md` lifted into this doc.
+   Do not promise a fully framed circle: the orbit is 1351.5 design px against a
+   1080 stage and the staged standing line belongs to `setupY()`, not to the set.
+3. Slice C: the tea room, two cast members, and the pour intent.
+
+Every claim above has a measurement behind it; the numbers are in this file so the
+next session starts from evidence rather than from recollection.
