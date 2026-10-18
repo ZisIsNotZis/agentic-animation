@@ -1610,7 +1610,11 @@ function projectCompiledProps(compiled: PerformanceManifest, assets: UnknownReco
       ...(propPlacementOf(asset) === undefined ? {} : {base: propPlacementOf(asset)!.base, supports: propPlacementOf(asset)!.supports, body: propPlacementOf(asset)!.body}),
       ...(placementRecord ?? {}),
       ...(staged ? {scale: staged.scale, z: staged.z ?? 30, label: staged.relation ? `${id} (${staged.relation})` : id} : {}),
-      ...(visual.src ? {src: visual.src} : {}),
+      // The declared ASSET identity decides which art a prop draws. The
+      // instance id cannot: an episode may name a scroll "register" and a desk
+      // "table", and keying art off the instance silently drew the generic
+      // placeholder card instead of the authored artwork.
+      src: visual.src ?? (typeof asset?.identity === "string" ? asset.identity : undefined) ?? (typeof asset?.ref === "string" ? asset.ref : undefined),
     } satisfies PerformanceProp;
   });
 }
