@@ -925,7 +925,8 @@ def build():
             "Gymnast 乙: compact heavy-set adult, sleeveless plum leotard, chalk-white hands and a chalk bag at the waist; five native views, original vector artwork, no raster or generated source.",
             "Style anchor figure/lin_b_draft (svg-bone-parts format). Measured against figure/athlete_a: front silhouette 199.5x662.5 (ratio 0.30) versus 178.5x669 (0.27), head 72 wide versus 52 at the same 125 height, shoulder joints 108 versus 96, thigh radius 26 versus 18, visible neck about 12 units versus 26.",
             "Legs are mirror-symmetric with thigh 158.03 / shin 160.01 (ratio 0.99); skeleton declares leg.flexionMax 104 and waist.pitchMax 32.",
-            "Back and quarter-back views carry the hair over the whole occiput, a heel construction for the shoes and a back panel for the bags and hands; no stroke is near-white.",
+            "Back and quarter-back views carry the hair over the whole occiput, a heel construction for the shoes and a dorsal construction for the hands; no stroke is near-white.",
+            "The profile is a construction of its own, not the front view squeezed: thoracic curve, lumbar hollow, a seat that projects behind the hip joint, a belly forward of the chest and a head whose brow, nose, lips and chin are one contour; slice B stages this view.",
             "Regenerate with python3 tools/art-direction-study/gymnast_parts.py; not a supported CLI.",
         ],
     }, indent=2) + "\n")
