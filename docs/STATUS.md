@@ -63,9 +63,9 @@ ACTING PASS on corrected evidence ([ART_ACTING_M5](ART_ACTING_M5.md), bundle
 byte-identically — and three invariants now guard the class: no actor-body
 overlap, a placed prop's base on its declared support, and joint angles inside
 their documented envelopes.
-M6 is delivered as a vertical slice ([ART_FILM_LANGUAGE_M6](ART_FILM_LANGUAGE_M6.md)
-owns it) and awaits the user's judgment; the three viewer-visible defects found
-in it are fixed there after the counter staging removed the last one. M7–M8 are
+M6 is delivered and independently reviewed PASS at revision `fb5baa6`
+([ART_FILM_LANGUAGE_M6](ART_FILM_LANGUAGE_M6.md) owns the contract; evidence bundle
+`art-baselines/m6-20261018T0840+0800/`) and awaits the user's judgment. M7–M8 are
 planned, not delivered.
 
 ## Rescue of lost M2 work (in progress 2026-10-17)
