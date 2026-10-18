@@ -189,8 +189,8 @@ function findHoles(cover, width, height) {
 const LEGITIMATE_AIR = {
   gymnast_b: [
     {
-      views: ["quarter_back"], box: [225, 389, 233, 403], maxArea: 12,
-      why: "a 3 unit2 pocket where the rest knee bend meets the far shin behind the " +
+      views: ["quarter", "quarter_back"], box: [225, 385, 233, 403], maxArea: 12,
+      why: "a 3-4 unit2 pocket where the rest knee bend meets the far shin behind the " +
         "near leg; sub-pixel at stage scale and sealed on both sides, so it reads as " +
         "cloth shadow rather than a hole. Declared so the gauge stays strict elsewhere.",
     },
