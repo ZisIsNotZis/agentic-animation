@@ -1,0 +1,14 @@
+{
+  "model": {
+    "name": "athlete_parts.py (hand-authored native vector artwork)",
+    "license": "AGPL-3.0-only"
+  },
+  "date": "2026-10-18",
+  "approver": "pending art review",
+  "notes": [
+    "Badminton athlete \u7532: tall lean young man, sportswear, five native views; original vector artwork, no raster or generated source.",
+    "Style anchor figure/lin_b_draft (svg-bone-parts format); differs in silhouette, 5.6-head proportions, cropped hair, short sleeves and palette.",
+    "Legs are mirror-symmetric with thigh 157.0 / shin 159.0 (ratio 1.01); skeleton declares leg.flexionMax 112.",
+    "Regenerate with python3 tools/art-direction-study/athlete_parts.py; not a supported CLI."
+  ]
+}
