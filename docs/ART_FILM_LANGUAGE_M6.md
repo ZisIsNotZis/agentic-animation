@@ -52,7 +52,20 @@ Clearance is 24 world px beyond the drawn head's edge, and a placement the
 painted stage cannot reach is rejected: when no legal placement clears every
 head, the unshifted placement is kept rather than moving the frame off the stage.
 
-## Defects found in this slice (viewer review 2026-10-17; all four now fixed)
+### Open: the camera's viewport is not the rendered frame
+
+The framing maths treats the viewport as video/z (720 px tall at z 3.3), but the
+rendered frame is ~12% larger: measuring declared art against pixels gives
+~807/z tall, and the frame's top edge lands ~20 world px above the `camera.y` the
+rule computes (13.10 s insert: computed top 315.2, rendered top ≈295.6). The rule
+still holds — both heads are wholly out and nothing is sliced — but the clearance
+it promises in world px is larger than the clearance the viewer gets, and an
+object or head sitting within ~20 px of a computed edge is nearer the edge than
+the numbers say. Reconcile the two conventions in one place before any framing
+work that depends on a tight clearance; this round did not, because changing the
+viewport convention moves every shot of every episode.
+
+## Defects found in this slice (viewer review 2026-10-17; all five now fixed)
 
 1. **The floor pickup distorted — fixed by staging, not by the rig.** At the
    push-in the actor reaching for a thermos placed on the FLOOR read as a dive:
@@ -121,14 +134,18 @@ head, the unshifted placement is kept rather than moving the frame off the stage
    `body` silhouette was dropped in `projectedProp` projection, so the band sat
    below the drawn object and the object push aimed under it; the band now reads
    the declared body box at the base offset. The insert is therefore a prop shot:
-   the flask spans y 324.2–418.2 world, the frame top is the head-rule placement
-   at 315.2 with both drawn heads (116.9–291.2) wholly above it, and the flask
-   covers 39.1% of frame height by its body and 50.2% including cap, knob and
-   handle — centred horizontally at 53% of frame width, with the counter line,
-   the gripping hand and her torso giving context. The heads cannot be sliced and
-   the flask cannot also be vertically centred: the hold puts the cap at chin
-   height, and the head rule pins the frame top just below the chin, so the
-   object sits in the frame's upper half. The head rule was kept.
+   the flask's declared silhouette spans y 324.2–418.2 world and its full drawn
+   extent y 296.7–422.2, the camera lands at z 3.3, and on the rendered still the
+   flask plus the gripping hand span x 412–611, y 10–280 of a 960x540 frame —
+   50.2% of frame height, its centre at 53% of frame width, with the counter line,
+   the hand and her torso giving context. Both drawn heads (y 116.9–291.2) stay
+   wholly out above the top edge.
+
+   The heads and a centred flask cannot both have it: the hold puts the flask's
+   top at world y 296.7 and the chin at 291.2, so a frame that keeps the heads out
+   has its top edge inside a 5.5 px window, and the flask necessarily hangs from
+   that edge instead of sitting centred. The head rule was kept and the flask
+   reads as a tight insert; vertical centring was given up, not the rule.
 
 ## Prop inserts are framed on the object, not on the room
 
