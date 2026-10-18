@@ -118,6 +118,28 @@ there; the orbit is 1217 design px and does not fit the default viewport, so
 framing must follow rotated extents. Slice B needs ≈330–420 engine lines across
 eight seams and must be staged in a side orientation.
 
+### gymnast_b: accepted-coarse, with recorded limits
+
+Six review rounds on this figure produced diminishing returns, so it is accepted at
+the agreed bar (a defect counts only at normal viewing size) with three known
+limits, each to be revisited **only if the shot shows it**:
+
+1. the shoulder caps read as ball joints rather than a shoulder blending into the
+   sleeve;
+2. back-view thumbs may still point outward instead of toward the thigh — the art
+   and the reviewer disagree, and the disagreement is unresolved rather than
+   settled by measurement;
+3. profile legs still read slimmer than the front view suggests, though the depth
+   gauge now passes (chest 0.74, hip 0.82, thigh 0.92, shin 0.85 of the front
+   width) and the dead `LEG_PROJECTION` table that made both legs one slab is now
+   wired, with the far leg drawn behind the near one.
+
+Two gauges gate this figure mechanically: `silhouette-holes.mjs` (0 enclosed
+background holes, every limb axis bridged) and `limb-depth.mjs` (trunk-anchored
+side/front ratios, with the arms-included table printed ungated because a hanging
+arm is lateral in front and superimposed in profile). `limb-depth.mjs` fails on
+`athlete_a`, which is the control that the gauge is not a rubber stamp.
+
 ## Risks
 
 - **Swing is the only capability that may not be expressible.** The spike decides
