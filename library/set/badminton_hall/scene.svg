@@ -295,50 +295,31 @@
     <rect x="1349.8" y="302" width="6" height="145" fill="#f2ead4" opacity="0.9"/>
   </g>
 
-  <!-- ==================== furniture: spectator bench, bag, towel, bottles, shuttles ==================== -->
+  <!-- ==================== furniture: spectator bench, towel, gear bag ==================== -->
   <g id="furniture">
-    <!-- contact shadow on the boards in front of the bench feet -->
-    <path d="M40.0 726 L360.0 726 L394.0 750 L70.0 750 Z" fill="#2f2a24" opacity="0.26"/>
-    <path d="M52.0 726 L350.0 726 L368.0 740 L62.0 740 Z" fill="#2f2a24" opacity="0.22"/>
-    <!-- legs -->
-    <path d="M74.0 700 L86.0 700 L88.0 726 L62.0 726 Z" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
-    <path d="M314.0 700 L326.0 700 L338.0 726 L312.0 726 Z" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
-    <!-- front board -->
+    <!-- contact shadow on the boards under the feet: the near edge is further from (960,340), so it is wider and shifted left -->
+    <path d="M66.0 726.0 L340.0 726.0 L314.3 742.0 L28.9 742.0 Z" fill="#2f2a24" opacity="0.26"/>
+    <!-- legs: front-plane rectangles, verticals stay vertical on the bench's front plane -->
+    <path d="M66.0 700 L86.0 700 L86.0 726.0 L66.0 726.0 Z" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
+    <path d="M320.0 700 L340.0 700 L340.0 726.0 L320.0 726.0 Z" fill="#75694e" stroke="#424e46" stroke-width="2.5"/>
+    <!-- front board: the box face parallel to the picture plane, so it is not foreshortened in x -->
     <path d="M40.0 652 L360.0 652 L360.0 700 L40.0 700 Z" fill="#8a6a48" stroke="#424e46" stroke-width="3.5"/>
     <path d="M40.0 652 L360.0 652 L360.0 664 L40.0 664 Z" fill="#9a7852" opacity="0.8"/>
     <path d="M60.0 668 L340.0 668" stroke="#75694e" stroke-width="2.5" opacity="0.7" fill="none"/>
-    <!-- back rail: the bench reads as furniture, not a slab -->
-    <path d="M157.9 612 L436.9 612 L436.9 590 L157.9 590 Z" fill="#9a7852" opacity="0.0"/>
-    <path d="M165.9 612 L428.9 612 L428.9 588 L165.9 588 Z" fill="#a5825a" stroke="#424e46" stroke-width="3"/>
-    <path d="M165.9 600 L428.9 600" stroke="#75694e" stroke-width="2.5" opacity="0.7" fill="none"/>
-    <!-- seat top: a plan quad converging on the vanishing point -->
+    <!-- back rest: one vertical panel standing on the seat's back edge, a constant-depth plane, so it is a rectangle -->
+    <path d="M157.9 612 L436.9 612 L436.9 576 L157.9 576 Z" fill="#a5825a" stroke="#424e46" stroke-width="3"/>
+    <path d="M157.9 592 L436.9 592" stroke="#75694e" stroke-width="2.5" opacity="0.7" fill="none"/>
+    <!-- right side face: the bench is left of the vanishing point, so its right face recedes toward (960,340) and is the one seen -->
+    <path d="M360.0 652 L436.9 612 L436.9 653.8 L360.0 700 Z" fill="#7c5f40" stroke="#424e46" stroke-width="3.5"/>
+    <!-- seat top: a plan quad whose two receding edges are rays from (960,340) -->
     <path id="bench_seat_surface" data-support-top="640" d="M40.0 652 L360.0 652 L436.9 612 L157.9 612 Z" fill="#b99368" stroke="#424e46" stroke-width="3.5"/>
     <path d="M40.0 652 L360.0 652 L436.9 612 L157.9 612 Z" fill="#c9a274" opacity="0.45"/>
-    <!-- towel and bag on the seat -->
-    <path d="M132 638 L228 638 L240 626 L156 626 Z" fill="#eadcbb" stroke="#424e46" stroke-width="2.5"/>
-    <path d="M132 638 L228 638 L226 644 L134 644 Z" fill="#477c7b" opacity="0.8"/>
-    <path d="M250 644 L322 638 L338 664 L262 674 Z" fill="#b96a55" stroke="#424e46" stroke-width="3"/>
-    <path d="M268 640 q14 -12 28 -5" stroke="#424e46" stroke-width="3" fill="none"/>
-    <path d="M250 662 L328 652" stroke="#8a3f2f" stroke-width="3" opacity="0.7" fill="none"/>
-    <!-- water bottles and a shuttle tube on the boards beside the bench -->
-    <g stroke="#424e46" stroke-width="2.5">
-      <rect x="196" y="690" width="17" height="34" rx="5" fill="#587f7a"/>
-      <rect x="220" y="694" width="16" height="30" rx="5" fill="#eadcbb"/>
-      <rect x="202" y="684" width="7" height="8" rx="2" fill="#424e46"/>
-      <rect x="225" y="688" width="7" height="8" rx="2" fill="#424e46"/>
-    </g>
-    <path d="M186 724 L246 724" stroke="#2f2a24" stroke-width="7" opacity="0.22" stroke-linecap="round"/>
-    <g>
-      <path d="M272 716 L340 710 L344 684 L276 690 Z" fill="#c9b78f" opacity="0.35" stroke="#424e46" stroke-width="3"/>
-      <path d="M280 712 L282 690 M294 711 L296 689 M308 709 L310 688 M322 708 L324 687" stroke="#424e46" stroke-width="1.8" opacity="0.7" fill="none"/>
-      <path d="M272 716 L340 710 M276 690 L344 684" stroke="#424e46" stroke-width="2.6" fill="none"/>
-      <g fill="#f7efd9" stroke="#424e46" stroke-width="2">
-        <ellipse cx="292" cy="682" rx="9" ry="6"/>
-        <ellipse cx="313" cy="679" rx="9" ry="6"/>
-        <ellipse cx="332" cy="676" rx="8" ry="5.5"/>
-      </g>
-      <path d="M264 722 L348 716" stroke="#2f2a24" stroke-width="7" opacity="0.2" stroke-linecap="round"/>
-    </g>
+    <!-- towel and gear bag, both resting on the seat inside its front edge, both laid out on rays from (960,340) -->
+    <path d="M120.0 646 L200.0 646 L239.7 630 L163.9 630 Z" fill="#eadcbb" stroke="#424e46" stroke-width="2.5"/>
+    <path d="M150.0 642.6 L230.0 642.6 L250.7 634 L173.0 634 Z" fill="#477c7b" opacity="0.8"/>
+    <path d="M252 650 L252 628 Q252 618 264 618 L320 618 Q332 618 332 628 L332 650 Z" fill="#b96a55" stroke="#424e46" stroke-width="3"/>
+    <path d="M276 618 q12 -13 26 -4" stroke="#424e46" stroke-width="3" fill="none"/>
+    <path d="M258 636 L328 636" stroke="#8a3f2f" stroke-width="3" opacity="0.7" fill="none"/>
   </g>
 
   <!-- ==================== M4 material passes (docs/ART_MATERIALS_M4.md) ====================
@@ -395,6 +376,7 @@
       <path d="M240 760 L900 700 L1120 900 L520 1080 L120 1080 Z" fill="#e6c98a" opacity="0.10"/>
       <path d="M40.0 652 L360.0 652 L436.9 612 L157.9 612 Z" fill="#dcb086" opacity="0.30"/>
       <path d="M40.0 652 L360.0 652 L360.0 700 L40.0 700 Z" fill="#8a5a40" opacity="0.20"/>
+      <path d="M360.0 652 L436.9 612 L436.9 653.8 L360.0 700 Z" fill="#7a4a32" opacity="0.22"/>
       <rect x="560.2" y="290" width="799.6" height="12" fill="#f7efd9" opacity="0.30"/>
     </g>
   </g>
