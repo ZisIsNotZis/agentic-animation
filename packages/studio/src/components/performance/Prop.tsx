@@ -11,9 +11,12 @@ const RED = "#d95d4f";
 type PropArtProps = { bound: boolean };
 
 /** Deterministic, opaque prop art. Source assets are intentionally ignored so
- * performance renders never depend on unresolved filesystem URLs. */
+ * performance renders never depend on unresolved filesystem URLs — but the
+ * declared ASSET PATH still decides which art a prop draws: an instance may be
+ * named anything ("register"), so keying only on the instance id silently fell
+ * back to the generic card and a scroll rendered as a yellow placeholder. */
 export const PerformanceProp: React.FC<{ prop: EvaluatedProp }> = ({ prop }) => {
-  const key = `${prop.id} ${prop.label ?? ""}`.toLowerCase();
+  const key = `${prop.src ?? ""} ${prop.id} ${prop.label ?? ""}`.toLowerCase();
   const [width, height] = prop.size;
   const kind = propKind(key);
   const bound = prop.tracks.some((track) => track.kind === "binding" && track.events.some((event) => event.active));
