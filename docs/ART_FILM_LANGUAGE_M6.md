@@ -105,6 +105,21 @@ head, the unshifted placement is kept rather than moving the frame off the stage
    frames of this push and of the pull back, where the travelling edge must cross
    the head.
 
+## Evidence and the stale-still lesson, again
+
+The first attempt to judge this slice sent frames cut from an earlier render to a
+vision reviewer, who then reported a defect the current revision had already
+fixed. That is the second time this class has cost a round, so the rule is now
+stated as part of this milestone: **an evidence frame is cut from the rendered
+video of the current revision and carries its bake identity** — episode and
+manifest sha256, video sha256, frame count, duration and revision — as in
+`/tmp/m6v3/bake-identity.json`. A directory reused from a previous round is not
+evidence, whatever its contents look like. The reviewed set is
+`/tmp/m6v3/t{2.00,5.90,10.40,13.10,17.90}.png` at revision `fb5baa6`, and the
+render itself is moved out of the repository because generated video is not
+committed here, even though `.gitignore` deliberately un-ignores
+`episodes/*/dist/*.mp4`.
+
 ## Verified working in this slice
 
 The carried thermos stays upright (rotation 0 through the carry and the rest, the
