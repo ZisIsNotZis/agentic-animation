@@ -344,6 +344,14 @@ def torso(fr):
 FRONT_FACE = ((204, 58), (228, 86), (236, 116), (230, 148), (212, 172),
               (188, 172), (170, 148), (164, 116), (172, 86), (196, 58))
 
+# The profile contour: crown, forehead, brow ridge, nasal root, nose bridge, tip,
+# under-nose, philtrum, upper lip, mouth corner, lower lip, chin, jaw, and back round
+# the occiput. One closed shape, so brow to chin reads as one edge.
+PROFILE_FACE = ((198, 50), (214, 58), (224, 74), (230, 88), (226, 96), (232, 112),
+                (239, 125), (232, 131), (229, 137), (233, 142), (229, 147), (232, 152),
+                (224, 159), (226, 166), (214, 175), (197, 179), (181, 172), (172, 150),
+                (166, 120), (171, 90), (182, 62))
+
 
 def collar(cx):
     """Leotard yoke over the neck's foot, with its own gold edge, so the short neck
@@ -419,25 +427,32 @@ def head(fr):
             filled(f"M {pt(184, 188)} Q {pt(204, 200)} {pt(224, 190)} L {pt(225, 212)} "
                    f"Q {pt(204, 220)} {pt(183, 212)} Z", LEOTARD, INK, 1.4),
             path(smooth(((188, 198), (204, 208), (221, 199)), close=False), "none", GOLD, 1.6)]
-    profile = [filled(smooth([(208, 54), (228, 64), (235, 88), (233, 110), (241, 124),
-                              (233, 132), (235, 140), (231, 148), (232, 158), (219, 170),
-                              (202, 176), (188, 166), (180, 138), (182, 104), (188, 74)]),
-                      SKIN, INK, 2.0),
+    # Brow, nose, lips and chin are points of ONE contour: a profile nose drawn as a
+    # mark on a smooth oval, with the eyes stacked on the outline, is the malformation
+    # this replaces. Every feature the face art adds - eye, brow, nostril, mouth - has
+    # its anchor inside this contour (see FACE_ANCHOR["side"]).
+    profile = [filled(smooth(PROFILE_FACE), SKIN, INK, 2.0),
                # Heavy jaw: one short curve under the chin, so the profile reads as a
                # thick-set adult rather than a taper.
-               path("M 214 166 Q 206 176 196 172", "none", SKIN_LINE, 1.0)]
-    # The ear is part of the profile, not a mark on the cheek: its rear edge runs
-    # inside the skull contour and its top meets the hair, so no closed ear outline
-    # shows against bare skin.
-    ear = [filled("M 183 114 Q 192 108 197 115 Q 201 123 197 131 Q 192 137 183 135 Z",
-                  SKIN_SHADE, INK, 1.0),
-           path("M 190 118 Q 195 123 191 130", "none", SKIN_LINE, 0.9)]
-    hair = [filled(smooth([(192, 60), (206, 44), (228, 48), (236, 76), (234, 96), (222, 86),
-                           (208, 88), (198, 112), (190, 116), (181, 100), (178, 76)]),
+               path(f"M {pt(215, 168)} Q {pt(205, 177)} {pt(194, 174)}", "none", SKIN_LINE, 1.0)]
+    # Short athletic crop: the outer edge passes outside the skull from the hairline
+    # round the occiput to the nape, and the hairline itself crosses the face, so hair
+    # and face always overlap and the skull is never left bare from this side.
+    hair = [filled(smooth(((219, 72), (224, 52), (206, 40), (180, 44), (167, 74),
+                           (166, 112), (177, 148), (190, 164), (194, 150),
+                           (196, 128), (200, 106), (208, 88))),
                    HAIR, INK, 1.8),
-            filled("M 200 46 Q 218 36 232 48 L 218 49 Q 208 44 202 54 Z", HAIR_LIGHT, HAIR_LIGHT, 0.6),
-            filled("M 186 110 Q 179 84 187 66 L 197 74 L 191 116 Z", HAIR, INK, 1.0)]
-    return neck + profile + ear + hair
+            # Sheen inside the mass, never across its edge: a light strand laid over
+            # the hairline reads as a lock hanging on the forehead.
+            path(f"M {pt(180, 66)} Q {pt(196, 50)} {pt(214, 60)}", "none", HAIR_LIGHT, 1.6),
+            path(f"M {pt(172, 104)} Q {pt(186, 96)} {pt(196, 104)}", "none", HAIR_LIGHT, 1.4)]
+    # The ear is part of the profile, not a mark on the cheek: it is drawn over the
+    # hair's edge with its own curve, sitting on the skull between jaw and occiput.
+    ear = [filled(f"M {pt(181, 148)} Q {pt(178, 124)} {pt(188, 114)} Q {pt(198, 110)} "
+                  f"{pt(203, 122)} Q {pt(206, 136)} {pt(197, 147)} Q {pt(188, 153)} "
+                  f"{pt(181, 148)} Z", SKIN_SHADE, INK, 1.0),
+           path(f"M {pt(188, 122)} Q {pt(195, 131)} {pt(189, 142)}", "none", SKIN_LINE, 0.9)]
+    return neck + profile + hair + ear
 
 
 # ---------------------------------------------------------------------------- arms
@@ -634,8 +649,14 @@ def hands(fr, side):
 FACE_ANCHOR = {
     "front": dict(cx=200.0, ex=15.6, ew=1.08, eye=116.0, brow=102.0, mouth=150.0, mw=1.08, skew=0.0),
     "quarter": dict(cx=204.0, ex=14.0, ew=0.94, eye=116.0, brow=102.0, mouth=150.0, mw=0.94, skew=3.0),
-    "side": dict(cx=232.0, ex=4.6, ew=0.44, eye=118.0, brow=104.0, mouth=152.0, mw=0.44, skew=8.0),
+    # The profile shows one eye, one brow and a nostril on the contour it already
+    # draws: two eyes stacked at the edge of a face is what made the side view's head
+    # unreadable. Skew shifts the mouth to the lip edge rather than the face centre.
+    "side": dict(cx=217.0, ex=0.0, ew=0.56, eye=112.0, brow=96.0, mouth=145.0, mw=0.58,
+                 skew=11.6, sides=("r",), nostril=(234.0, 129.0)),
 }
+# Every view but the profile shows both eyes and both brows.
+FACE_SIDES = ("l", "r")
 
 
 def eye_open(a, side):
@@ -677,6 +698,12 @@ def brow(a, side, lift=0.0, angle=0.0):
 
 
 def nose(a):
+    """The nose itself belongs to the profile's contour; a frontal face needs the mark,
+    a profile needs only the nostril under the tip."""
+    if "nostril" in a:
+        nx, ny = a["nostril"]
+        return path(f"M {pt(nx - 3.0, ny)} Q {pt(nx + 0.6, ny + 2.6)} {pt(nx + 3.0, ny - 0.6)}",
+                    "none", SKIN_LINE, 1.3)
     x = a["cx"] + a["skew"]
     return path(f"M {pt(x - 2.4, a['eye'] + 8)} Q {pt(x + 1.6, a['eye'] + 13)} {pt(x - 2.0, a['eye'] + 15)}",
                 "none", SKIN_LINE, 1.4)
@@ -716,8 +743,9 @@ def expression(a, family):
         "proud": (1.0, -1.0, 0.0), "somber": (-1.4, 1.6, 0.0),
     }[family]
     lift, angle, _ = profile
-    nodes = [eye_open(a, "l"), eye_open(a, "r"), nose(a),
-             brow(a, "l", max(lift, 0.0), angle), brow(a, "r", max(lift, 0.0), angle)]
+    sides = a.get("sides", FACE_SIDES)
+    nodes = [eye_open(a, side) for side in sides] + [nose(a)]
+    nodes += [brow(a, side, max(lift, 0.0), angle) for side in sides]
     if family == "shock":
         nodes.append(f'<ellipse cx="{r(a["cx"])}" cy="{r(a["mouth"])}" rx="4.2" ry="5.0" '
                      f'fill="none" stroke="{INK}" stroke-width="1.2"/>')
@@ -753,7 +781,7 @@ def viseme_mouth(a, key):
 
 def tears(a):
     nodes = []
-    for side in ("l", "r"):
+    for side in a.get("sides", FACE_SIDES):
         cx = a["cx"] + (a["ex"] if side == "r" else -a["ex"])
         cy = a["eye"] + 8
         nodes.append(path(f"M {pt(cx - 2.4, cy)} Q {pt(cx, cy + 7)} {pt(cx + 2.4, cy)} "
@@ -793,9 +821,10 @@ def build_view(view):
         mouths = {k: empty_svg() for k in MOUTHS}
         tear = empty_svg()
     else:
-        eyes = {"open": svg(eye_open(a, "l") + eye_open(a, "r") + nose(a)),
-                "half": svg(eye_half(a, "l") + eye_half(a, "r") + nose(a)),
-                "closed": svg(eye_closed(a, "l") + eye_closed(a, "r") + nose(a))}
+        sides = a.get("sides", FACE_SIDES)
+        eyes = {"open": svg("".join(eye_open(a, side) for side in sides) + nose(a)),
+                "half": svg("".join(eye_half(a, side) for side in sides) + nose(a)),
+                "closed": svg("".join(eye_closed(a, side) for side in sides) + nose(a))}
         expressions = {k: expression(a, k) for k in FACES}
         emotion = {k: emotion_mouth(a, k) for k in FACES}
         mouths = {k: viseme_mouth(a, k) for k in MOUTHS}
