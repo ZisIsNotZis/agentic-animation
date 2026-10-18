@@ -28,6 +28,11 @@ HANDS = ("rest", "open", "point", "fist", "splayed")
 # Palette: sportswear blue and slate, warm tan skin, near-black cropped hair.
 # Chosen to separate from figure/lin_b_draft (teal, cream, tied bun) by hue and
 # value, but the silhouette, head size and leg proportion carry the difference.
+# TRIM is the white kit colour - the socks and the wristband - and is only ever a
+# fill on a closed limb or garment shape. A near-white *stroke* reads as a
+# construction guide: it is brighter than the jersey, and its round caps poke
+# past the outline it was meant to sit inside. Garment seams are drawn in a
+# garment shade instead.
 INK = "#2b2f33"
 SKIN = "#dda87a"
 SKIN_SHADE = "#c48f61"
@@ -201,26 +206,15 @@ def torso(fr):
     v = fr.view
     left, right = TORSO_OUTLINE[v]["left"], TORSO_OUTLINE[v]["right"]
     nodes = [filled(silhouette(left, right), JERSEY, INK, 2.0)]
-    if v in ("front", "quarter"):
-        shift = 0.0 if v == "front" else 4.0
-        nodes.append(path(f"M {pt(178 + shift, 198)} Q {pt(200 + shift, 224)} {pt(222 + shift, 196)}",
-                          "none", TRIM, 3.0))
-        nodes.append(path(f"M {pt(146, 250)} Q {pt(200, 260)} {pt(252, 248)}", "none", TRIM, 2.2))
-        nodes.append(path(f"M {pt(150, 392)} L {pt(250, 392)}", "none", TRIM, 2.6))
     if v in ("back", "quarter_back"):
         shift = -3.0 if v == "quarter_back" else 0.0
-        nodes.append(path(f"M {pt(176 + shift, 208)} Q {pt(200 + shift, 222)} {pt(224 + shift, 208)}",
-                          "none", TRIM, 2.8))
         nodes.append(path(f"M {pt(200 + shift, 224)} L {pt(200 + shift, 392)}", "none", JERSEY_SHADE, 1.2))
         nodes.append(path(f"M {pt(172, 248)} Q {pt(186, 276)} {pt(182, 316)}", "none", JERSEY_SHADE, 1.2))
-        nodes.append(path(f"M {pt(152, 390)} L {pt(248, 390)}", "none", TRIM, 2.4))
     if v == "quarter":
         nodes.append(path(f"M {pt(232, 214)} Q {pt(240, 262)} {pt(234, 310)}", "none", JERSEY_SHADE, 1.4))
     if v == "side":
-        nodes.append(path(f"M {pt(206, 192)} Q {pt(226, 200)} {pt(231, 220)}", "none", TRIM, 2.4))
         nodes.append(path(f"M {pt(228, 246)} Q {pt(220, 282)} {pt(226, 322)}", "none", JERSEY_SHADE, 1.3))
         nodes.append(path(f"M {pt(196, 200)} Q {pt(184, 258)} {pt(190, 340)}", "none", JERSEY_SHADE, 1.3))
-        nodes.append(path(f"M {pt(180, 396)} L {pt(226, 396)}", "none", TRIM, 2.4))
     return nodes
 
 
@@ -312,8 +306,6 @@ def arm_parts(fr, side):
     band_end = (elbow[0] + (hand[0] - elbow[0]) * 0.96, elbow[1] + (hand[1] - elbow[1]) * 0.96)
     upper = [socket(shoulder[0] + inward * 8.0, shoulder[1] + 4.0, fr.r(18.0), JERSEY),
              limb(shoulder, sleeve_end, r_shoulder, r_sleeve, JERSEY, INK, 1.6),
-             path(f"M {pt(sleeve_end[0] - r_sleeve, sleeve_end[1] - 3)} "
-                  f"L {pt(sleeve_end[0] + r_sleeve, sleeve_end[1] - 4)}", "none", TRIM, 2.2),
              limb(sleeve_end, elbow, r_arm, r_arm * 0.92, SKIN, INK, 1.4),
              ]
     forearm = [socket(elbow[0], elbow[1], r_arm * 0.92 + 1.4, SKIN),
