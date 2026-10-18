@@ -62,7 +62,7 @@ scenes:
       # 1 mount — the body turns side-on before the feet move.
       - gymnast: "{pose.orient(gymnast, \"right\")}……上杠。"
       # 2 walk — he steps under the bar. Silent: the feet are the only sound.
-      - gymnast: "{movement.to(gymnast, shuttle)}"
+      - gymnast: "……"
       # 3 swing — non-blocking, so the apex cue can be timed onto the turn.
       - gymnast: "{...action.swing(gymnast), mode: \"nonblock\"}"
       # 4 call — her line ends just before the top of the turn.

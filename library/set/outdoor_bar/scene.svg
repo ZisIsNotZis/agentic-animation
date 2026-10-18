@@ -150,22 +150,22 @@
        The bar is drawn as one horizontal rail with its geometric centre line at y=250 and
        its extent x=700..1220; the declared hanging support's grip line is exactly that
        segment (grip.x [700,1220], grip.y 250) and the rail element carries
-       data-support-top="250", so declaration and painting are the same geometry. -->
+       data-support-top="130", so declaration and painting are the same geometry. -->
   <g id="apparatus">
     <!-- left post: lit face left, shaded face right -->
-    <path d="M689 250 L711 250 L711 691 L689 691 Z" fill="#ad8062" stroke="#424e46" stroke-width="3"/>
-    <path d="M689 250 L696 250 L696 691 L689 691 Z" fill="#c9a274" opacity="0.85"/>
-    <path d="M705 250 L711 250 L711 691 L705 691 Z" fill="#8a6a48" opacity="0.75"/>
+    <path d="M689 130 L711 130 L711 691 L689 691 Z" fill="#ad8062" stroke="#424e46" stroke-width="3"/>
+    <path d="M689 130 L696 130 L696 691 L689 691 Z" fill="#c9a274" opacity="0.85"/>
+    <path d="M705 130 L711 130 L711 691 L705 691 Z" fill="#8a6a48" opacity="0.75"/>
     <!-- right post -->
-    <path d="M1209 250 L1231 250 L1231 691 L1209 691 Z" fill="#ad8062" stroke="#424e46" stroke-width="3"/>
-    <path d="M1209 250 L1216 250 L1216 691 L1209 691 Z" fill="#c9a274" opacity="0.85"/>
-    <path d="M1225 250 L1231 250 L1231 691 L1225 691 Z" fill="#8a6a48" opacity="0.75"/>
+    <path d="M1209 130 L1231 130 L1231 691 L1209 691 Z" fill="#ad8062" stroke="#424e46" stroke-width="3"/>
+    <path d="M1209 130 L1216 130 L1216 691 L1209 691 Z" fill="#c9a274" opacity="0.85"/>
+    <path d="M1225 130 L1231 130 L1231 691 L1225 691 Z" fill="#8a6a48" opacity="0.75"/>
     <!-- base plates: quads on the ground plane, near edge wider than the far edge -->
     <path d="M672 691 L730 691 L740 708 L662 708 Z" fill="#8a745a" stroke="#424e46" stroke-width="2.5"/>
-    <path d="M1192 691 L1250 691 L1260 708 L1182 708 Z" fill="#8a745a" stroke="#424e46" stroke-width="2.5"/>
-    <!-- the bar: one rail, centre line y=250, x 700..1220 -->
-    <path id="bar_grip_rail" data-support-top="250" d="M700 250 H1220" stroke="#8a6a48" stroke-width="22" fill="none" stroke-linecap="butt"/>
-    <path d="M700 243 H1220" stroke="#c9a274" stroke-width="4" opacity="0.8" fill="none"/>
+    <path d="M1192 691 L1130 691 L1260 708 L1182 708 Z" fill="#8a745a" stroke="#424e46" stroke-width="2.5"/>
+    <!-- the bar: one rail, centre line y=130, x 700..1220 -->
+    <path id="bar_grip_rail" data-support-top="130" d="M700 130 H1220" stroke="#8a6a48" stroke-width="22" fill="none" stroke-linecap="butt"/>
+    <path d="M700 123 H1220" stroke="#c9a274" stroke-width="4" opacity="0.8" fill="none"/>
     <path d="M700 258 H1220" stroke="#5c4a3a" stroke-width="4" opacity="0.5" fill="none"/>
     <!-- collars clamp the bar to each post -->
     <rect x="684" y="236" width="32" height="26" rx="4" fill="#8a6a48" stroke="#424e46" stroke-width="3"/>
