@@ -84,7 +84,12 @@ scenes:
       - elder: "{...prop.pickup(elder, register)}考核不看情面。"
       - aqiang: "{prop.handover(elder, register, aqiang), sound.paper_snap()}弟子明白。"
       - aqiang: "{camera.wide(), action.unroll(aqiang, register)}……"
-      - aqiang: "{...camera.punch_in(register, 3.3)}我的编号。"
+      # No object insert here. The prop-target push framed the speaker's
+      # midsection instead of the register and left the line headless, so the
+      # beat stays on the pair: a shouted-out number is a face beat, not a prop
+      # beat. M6 owns the object-insert grammar and demonstrates it on the
+      # thermos, where the framing is verified.
+      - aqiang: "我的编号。"
       # Back to the pair for the spoken line: a line played over the object
       # insert leaves the speaker headless, which reads as a mistake at normal
       # size, and it also gives the dim a face to fall on.
