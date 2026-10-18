@@ -234,20 +234,6 @@ export const PerformanceActor: React.FC<{
             </g>
           </g>
           {pose.slamPeak ? <SlamImpact /> : null}
-          <text
-            x="200"
-            y="690"
-            textAnchor="middle"
-            fill="#fff0c4"
-            stroke={INK}
-            strokeWidth="5"
-            paintOrder="stroke"
-            fontSize="18"
-            fontWeight="900"
-            fontFamily="Arial, 'Noto Sans CJK SC, sans-serif"
-          >
-            {label}
-          </text>
         </svg>
       )}
     </div>
