@@ -28,7 +28,19 @@
           30,
           170
         ],
-        "y": 42
+        "y": 42,
+        "kind": "hanging",
+        "grip": {
+          "x": [
+            36,
+            164
+          ],
+          "y": 48
+        },
+        "rotationLimit": {
+          "forward": 360,
+          "back": 30
+        }
       }
     ],
     "stageWidth": 680,

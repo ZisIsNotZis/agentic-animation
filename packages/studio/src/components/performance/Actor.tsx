@@ -3,6 +3,7 @@ import type {
   EvaluatedActor,
   EvaluatedProp,
 } from "../../performance";
+import { actorTurn } from "../../performance/actorTurn";
 import {ArtFigure} from "./ArtFigure";
 
 import {
@@ -54,12 +55,13 @@ export const PerformanceActor: React.FC<{
     ? props.find((prop) => prop.id === actor.holds)
     : undefined;
   const label = actor.id.length > 8 ? actor.id.slice(0, 8) : actor.id;
-  const baseX = actor.x - (space.width / 2) * actor.scale; // The transform scales about the div's bottom edge (origin 200px 720px),
-  // which keeps the design ground line at top + 720 — so the div top must be
-  // actor.y - 720 (UNSCALED) for the drawn feet to stand exactly on the
-  // actor's physics ground. Scaling the offset here would sink every figure
-  // 720*(1-scale) px below its ground, and hands would never meet bodies.
-  const baseY = actor.y - space.height;
+  // Placement follows the pivot the body turns about: the ground point for a
+  // standing body (the div's bottom-centre), the grip for a hanging one. The
+  // offsets stay UNSCALED — the transform scales about the origin, which keeps
+  // the pivot exactly on its physics point at any scale.
+  const turn = actorTurn(actor, [space.width, space.height]);
+  const baseX = turn.left;
+  const baseY = turn.top;
   // 45-degree facing: diagonal orientations render the quarter-front or back
   // view (left/right = mirror); absent orientation keeps the full-front figure.
   // Eight directions, five drawings: front (1), back (1), side (+mirror),
@@ -115,7 +117,7 @@ export const PerformanceActor: React.FC<{
         width: 400,
         height: 720,
         background: debugDiv ? "rgba(255,0,0,0.07)" : undefined,
-        transformOrigin: "200px 720px",
+        transformOrigin: `${turn.origin[0]}px ${turn.origin[1]}px`,
         transform: `scale(${actor.scale * (flipped ? -1 : 1)}, ${actor.scale}) rotate(${actor.rotation}deg)`,
         zIndex: actor.z,
         overflow: "visible",

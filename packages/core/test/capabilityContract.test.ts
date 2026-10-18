@@ -9,7 +9,7 @@ import {
   SupportSurfaceSchema,
 } from "../src/schemas/libraryMeta";
 import {normalizeSetWorld} from "../src/assets/setWorld";
-import {DECLARED_CAPABILITIES} from "../src/compiler/capabilities";
+import {DECLARED_CAPABILITIES, assertCapabilityImplemented} from "../src/compiler/capabilities";
 import {compileEpisode} from "../src/compiler/index";
 
 // Wave 0 capability contract (docs/ART_ASSET_PROGRAM.md). These tests pin the
@@ -161,11 +161,11 @@ test("an implemented beat still compiles through the capability gate", async () 
   assert.ok(compiled !== undefined);
 });
 
-test("swing fails loud naming the missing capability, not a missing export", async () => {
-  await assert.rejects(
-    compileCall("action.swing(lin)"),
-    /action\.swing\(lin\) needs the "swing" capability, which is declared but not implemented — Wave 2 \(slice B, giant swing on a high bar\) implements it; the contract is docs\/ART_ASSET_PROGRAM\.md/,
-  );
+test("swing is admitted by the gate once slice B implements it", () => {
+  assert.doesNotThrow(() => assertCapabilityImplemented("swing", "action.swing(lin)"));
+  // Negative control: the declaration still exists, so the admission is the
+  // slice implementing it, not the name silently disappearing.
+  assert.equal(DECLARED_CAPABILITIES.swing.implemented, true);
 });
 
 test("pour fails loud naming the missing capability, not a missing export", async () => {

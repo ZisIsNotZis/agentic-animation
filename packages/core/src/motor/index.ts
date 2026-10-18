@@ -23,7 +23,7 @@ export interface MotorIntent {
   at: number;
   duration: number;
   intent: "move" | "push" | "grab" | "release"
-    | "bow" | "nod" | "shiver" | "point" | "wave" | "raise" | "think" | "fall";
+    | "bow" | "nod" | "shiver" | "point" | "wave" | "raise" | "think" | "fall" | "swing";
   target?: string;
   /** Stylized force 0..1 for push. */
   force?: number;
@@ -94,6 +94,15 @@ export interface MotorActorFrame {
   footSupport?: {l:boolean;r:boolean};
   orientation?:string;
   x: number;
+  /** Ground line of the placement, when it is not the staged one (a hanging
+   *  body's feet hang below a bar instead of standing on the stage floor). */
+  y?: number;
+  /** Whole-body rotation in degrees about the design grip point (slice B).
+   *  Absent means the body is drawn upright. */
+  rotation?: number;
+  /** Design-space point the body turns about, present with `rotation`; the
+   *  renderer keeps it fixed by putting the CSS transform origin there. */
+  grip?: [number, number];
   /** Torso lean in degrees (reaction + gait), positive = facing-forward. */
   lean: number;
   facing: 1 | -1;
@@ -207,6 +216,19 @@ const SHIVER_HZ = 9;
 /** Slice 4 fall (balance-cut collapse, shared FK — not a ragdoll). */
 const FALL_PITCH = 80; // deg waist hinge at full collapse
 const FALL_DUR = 0.75; // s collapse span
+/** Slice B two-hand grip: the rate the left arm mirrors the solved right arm
+ *  (deg/s), inside the 840 deg/s segment-angle-rate gate the proposal enforces. */
+const HANG_ARM_RATE = 240;
+/** Slice B giant swing: the body is pulled onto its grip line at these rates
+ *  so the whole-body proposal accepts every substep (root 720 px/s in the
+ *  proposal's own units, hand 480 px/s = the shared hand-travel cap). */
+const MOUNT_ROOT_RATE = 240;
+const MOUNT_HAND_RATE = 480;
+/** Shortest turn the swing allows: 360deg over 0.6 s is 25deg per 24fps frame,
+ *  inside the 35deg angle-continuity gate (teleports.ts). */
+const SWING_MIN_TURN_SEC = 0.6;
+/** Share of the turn spent easing into and out of the rotation. */
+const SWING_RAMP_SHARE = 0.18;
 
 /** Per-actor body geometry, all derived from the declared skeleton. */
 interface ActorBody {
@@ -335,6 +357,21 @@ function nodEnvelope(t: number, dur: number): number {
   return 0.5 - 0.5 * Math.cos((t / dur) * 4 * Math.PI);
 }
 
+/** Swing angle envelope: a trapezoid velocity profile (ease in, constant,
+ *  ease out), returned as the fraction of the turn already travelled. A linear
+ *  turn starts and stops at full speed, which the joint-rate checks reject. */
+function swingEnvelope(t: number, dur: number): number {
+  if (!(dur > 0)) return 1;
+  const ramp = Math.min(dur / 3, Math.max(dur * SWING_RAMP_SHARE, 1e-6));
+  const total = dur - ramp;
+  const eased = (u: number) => u * u * u - (u * u * u * u) / 2;
+  if (t <= 0) return 0;
+  if (t >= dur) return 1;
+  if (t < ramp) return (ramp * eased(t / ramp)) / total;
+  if (t > dur - ramp) return (total - ramp * eased((dur - t) / ramp)) / total;
+  return (ramp / 2 + (t - ramp)) / total;
+}
+
 function nativeCadence(state:ActorState):number {
   if(!state.skeletonViews||!state.skeleton)return 2.2;
   const sk=state.skeleton;
@@ -347,6 +384,9 @@ function nativeCadence(state:ActorState):number {
 /** Persistent world anchors: no target is rewritten while its foot is stance. */
 function advanceSupport(state:ActorState,previousX:number,dt:number):void {
   if(!state.skeletonViews||!state.skeleton)return;
+  // A hanging body's feet are not planted: they dangle from the hips and the
+  // grip carries the body (slice B), so no support target is rewritten.
+  if(state.hang)return;
   const sk=state.skeleton,k=state.scale,dir=geometryFacing(state);
   const rest=(side:'l'|'r',x:number):[number,number]=>{
     const f=sk.joints[`foot_${side}`]!;
@@ -536,6 +576,31 @@ interface ActorState {
     /** Beat time the hand first reached the key pose (settle starts here). */
     keyAt: number | null;
   } | null;
+  /** Slice B giant swing: the body is attached to a hanging support's grip
+   *  line — the feet are not planted (I1 becomes "the grip attaches"), the
+   *  arms are pinned to the grip, and the whole body turns about the pivot.
+   *  `x`/`groundY` stay the UNROTATED hang placement: the renderer turns the
+   *  drawn body about the grip design point, so the baked channels keep
+   *  meaning what they always meant. */
+  hang: {
+    support: MotorSupport;
+    /** World pivot: the grip line point the hands hold. */
+    pivot: [number, number];
+    /** Design-space grip point in the unmirrored design frame. */
+    grip: [number, number];
+    /** Unrotated hang placement (waist anchor and ground line). */
+    x: number;
+    groundY: number;
+    limit: {forward: number; back: number};
+    /** Beat time, the mount it expected to spend arriving, and the turn. */
+    t: number;
+    mountDur: number;
+    turnDur: number;
+    /** The hands are on the grip: the grip carries the body (feet unplanted). */
+    engaged: boolean;
+    /** The placement has settled onto the hang; the turn may run. */
+    mounted: boolean;
+  } | null;
 }
 
 interface PropState {
@@ -553,13 +618,31 @@ interface PropState {
   touchBox?: {a: [number, number]; b: [number, number]};
 }
 
+/** A declared support surface in stage space. A released prop falls to the
+ * highest flat surface under its x. A `hanging` surface adds the grip line a
+ * body attaches to and the rotation it may turn through (slice B). */
+export interface MotorSupport {
+  x0: number;
+  x1: number;
+  y: number;
+  /** Declared name; a swing intent may target it. */
+  name?: string;
+  /** Id of the staged object that declares this surface, when one does. */
+  owner?: string;
+  kind?: "hanging";
+  /** Grip line the hands attach along (stage space). */
+  grip?: {x0: number; x1: number; y: number};
+  /** Degrees the body may turn about the grip from its hanging rest pose. */
+  rotationLimit?: {forward: number; back: number};
+}
+
 export interface MotorScene {
   durationSec: number;
   actors: MotorActorInput[];
   props: MotorPropInput[];
   /** Declared support surfaces (stage space): a released prop falls to the
    * highest surface under its x, else to the ground line. */
-  supports?: Array<{x0: number; x1: number; y: number}>;
+  supports?: MotorSupport[];
   /** Ground line fallback for released props. */
   groundY?: number;
   /** Target resolution: id -> stage x (actors and props share the space). */
@@ -620,6 +703,166 @@ function startFall(state: ActorState, dir: 1 | -1, dur = FALL_DUR): void {
   state.retract = state.retract || state.reach !== null;
 }
 
+/**
+ * Slice B giant swing, attach (docs/WORLD_PUPPET_MOTOR.md): a `swing` intent
+ * binds the body to a hanging support's grip line. The hang placement is solved
+ * from the declared skeleton — the shoulder sits one bone-length below the grip
+ * so the drawn arm reaches it without the IK clamping — and the beat is split
+ * into a mount the body spends arriving and a turn of whatever is left.
+ * Returns false when the scene declares no hanging support (a diagnostic is
+ * pushed instead of a silently ignored beat).
+ */
+function startSwing(state: ActorState, intent: MotorIntent, supports: MotorSupport[], diagnostics: string[]): boolean {
+  if (state.hang || state.fallen || state.fall) return false;
+  const hanging = supports.filter((support) => support.kind === "hanging" && support.grip && support.rotationLimit);
+  const support = intent.target === undefined
+    ? hanging[0]
+    : hanging.find((candidate) => candidate.name === intent.target || candidate.owner === intent.target);
+  if (!support) {
+    diagnostics.push(`swing: ${state.id} at ${intent.at.toFixed(3)}s has no hanging support${intent.target ? ` "${intent.target}"` : ""} to attach to; declare placement.kind "hanging" with a grip line and a rotationLimit`);
+        return false;
+  }
+  if (!state.skeleton) return false;
+  const k = state.scale;
+  const facing = geometryFacing(state);
+  const space = state.skeleton.space;
+  const grip = support.grip!;
+  const pivot: [number, number] = [(grip.x0 + grip.x1) / 2, grip.y];
+  // The shoulder hangs one bone-length below the grip, so the drawn hand lands
+  // on it at full extension (the hand radius is not part of the bone reach).
+  const bone = (state.skeleton.arm.upper + state.skeleton.arm.fore) * k;
+  const shoulder: [number, number] = [pivot[0], pivot[1] + bone];
+  // Invert the waist FK (shoulderAt with pitch 0, crouch 0).
+  const x = shoulder[0] - facing * state.body.shoulderFromWaist[0] * k;
+  const groundY = shoulder[1] - state.body.shoulderFromWaist[1] * k + state.body.groundToWaist * k;
+  const hand = state.reach ? [state.reach.tx, state.reach.ty] as [number, number] : restHandAt(state);
+  const mountDur = Math.max(
+    Math.abs(x - state.x) / MOUNT_ROOT_RATE,
+    Math.abs(groundY - state.groundY) / MOUNT_ROOT_RATE,
+    Math.hypot(pivot[0] - hand[0], pivot[1] - hand[1]) / MOUNT_HAND_RATE,
+  );
+  state.hang = {
+    support, pivot,
+    grip: [space.width / 2 + (pivot[0] - x) / k, space.height - (groundY - pivot[1]) / k],
+    x, groundY,
+    limit: support.rotationLimit!,
+    t: 0, mountDur, turnDur: Math.max(SWING_MIN_TURN_SEC, Math.max(0.3, intent.duration) - mountDur),
+    engaged: false, mounted: false,
+  };
+  state.moveTarget = null;
+  state.pursue = null;
+  state.grab = null;
+  state.grabTarget = null;
+  state.handGesture = null;
+  state.gesture = null;
+  state.fall = null;
+  state.stagger = 0;
+  state.retract = false;
+  // The dangling legs need their rest targets before the grip carries the body.
+  if (!state.feet) advanceSupport(state, state.x, DT);
+  return true;
+}
+
+/** The turn angle in degrees, forward-positive: `forward` turns the way the
+ *  body faces, `back` the other way, both bounded by the declared limit. It
+ *  starts when the body has actually settled onto the grip, so a slow mount
+ *  never eats the turn it was given. */
+function swingAngle(hang: NonNullable<ActorState["hang"]>): number {
+  const t = hang.t - hang.mountDur;
+  const span = hang.limit.forward;
+  const angle = span * swingEnvelope(t, hang.turnDur);
+  return Math.max(-hang.limit.back, Math.min(hang.limit.forward, angle));
+}
+
+/** The dangling legs: the feet hang straight down from the hips, so their
+ *  targets are the declared rest soles placed from the current rig placement. */
+function hangFeet(state: ActorState): void {
+  const sk = state.skeleton;
+  if (!sk || !state.feet) return;
+  const k = state.scale, dir = geometryFacing(state);
+  for (const side of ['l', 'r'] as const) {
+    const f = sk.joints[`foot_${side}`]!;
+    const target: [number, number] = [state.x + dir * (f[0] - sk.space.width / 2) * k,
+      state.groundY + (f[1] - sk.space.height) * k];
+    const foot = state.feet[side];
+    foot.target = target;
+    foot.from = [...target];
+    foot.landing = [...target];
+    foot.swing = false;
+  }
+}
+
+/**
+ * Slice B giant swing, per substep. Two phases, in the order a body actually
+ * mounts a bar: the hands travel to the grip line while the body is still
+ * standing on its feet, then the grip carries it and the placement settles onto
+ * the hang at bounded rates (the whole-body proposal accepts every substep).
+ * Through the turn the pose never changes: the renderer turns the whole drawn
+ * body about the grip, so the joint/travel continuity checks see a rigid body.
+ */
+function advanceHang(state: ActorState, dt: number, diagnostics: string[]): void {
+  const hang = state.hang;
+  if (!hang) return;
+  hang.t += dt;
+  // Once the grip carries the body, nothing answers to the ground: no
+  // stepping, no waist bend, no crouch, no stagger, no walk phase.
+  state.moveTarget = null;
+  state.pursue = null;
+  state.retract = false;
+  state.stagger = 0;
+  const hand: [number, number] = state.reach ? [state.reach.tx, state.reach.ty] : restHandAt(state);
+  // The arm has an inner limit as well as an outer one: a target nearer the
+  // shoulder than |upper - fore| cannot be solved, and the palm then misses its
+  // own target. A swing needs the grip inside one bone-length of the shoulder,
+  // which is a staging fact, so an unreachable bar is said out loud.
+  const shoulder = geometryShoulder(state);
+  const bone = state.body.armReach * state.scale;
+  const inner = Math.abs(state.skeleton!.arm.upper - state.skeleton!.arm.fore) * state.scale;
+  // Judged on the STANDING pose only: once the grip carries the body the
+  // shoulder sits exactly one bone below the pivot by construction.
+  const gripSpan = Math.hypot(hang.pivot[0] - shoulder[0], hang.pivot[1] - shoulder[1]);
+  if (!hang.engaged && (gripSpan > bone || gripSpan < inner)) {
+    diagnostics.push(`swing: ${state.id} cannot hold its grip at ${hang.support.name ?? "the hanging support"} (${hang.pivot[0].toFixed(0)},${hang.pivot[1].toFixed(0)}); the grip sits ${gripSpan.toFixed(1)}px from the shoulder and this figure holds between ${inner.toFixed(1)}px and ${bone.toFixed(1)}px — stage the bar so its grip line is one extended arm above the staged shoulder`);
+    state.hang = null;
+    state.retract = false;
+    return;
+  }
+  if (!hang.engaged) {
+    // Still standing on its feet: settle the posture the grip will hold, at the
+    // rates the body already obeys, so taking the weight never snaps the hips.
+    state.waist = approach(state.waist, 0, WAIST_RATE * dt);
+    state.crouch = approach(state.crouch, 0, CROUCH_RATE * dt);
+    state.lean *= 0.9;
+    let next = travelHand(hand, hang.pivot, 0, MOUNT_HAND_RATE, dt);
+    // The rising hand arcs past the shoulder instead of through it: inside the
+    // inner arm limit the two-bone solve has no solution and the palm misses.
+    const dx = next[0] - shoulder[0], dy = next[1] - shoulder[1], span = Math.hypot(dx, dy);
+    if (span > 1e-6 && span < inner) next = [shoulder[0] + (dx / span) * inner, shoulder[1] + (dy / span) * inner];
+    state.reach = {tx: next[0], ty: next[1], target: hang.support.name ?? "swing", contact: true};
+    if (Math.hypot(next[0] - hang.pivot[0], next[1] - hang.pivot[1]) <= 0.5) {
+      hang.engaged = true;
+      // The mount ended earlier than planned: give the turn the rest of the
+      // beat instead of the shorter window the estimate allowed.
+      hang.mountDur = Math.min(hang.mountDur, hang.t);
+    }
+    return;
+  }
+  state.walkPhase = 0;
+  state.waist = 0;
+  state.crouch = 0;
+  state.lean = 0;
+  if (!hang.mounted) {
+    state.x = approach(state.x, hang.x, MOUNT_ROOT_RATE * dt);
+    state.groundY = approach(state.groundY, hang.groundY, MOUNT_ROOT_RATE * dt);
+    if (Math.abs(state.x - hang.x) <= 0.02 && Math.abs(state.groundY - hang.groundY) <= 0.02) hang.mounted = true;
+  } else {
+    state.x = hang.x;
+    state.groundY = hang.groundY;
+  }
+  hangFeet(state);
+  state.reach = {tx: hang.pivot[0], ty: hang.pivot[1], target: hang.support.name ?? "swing", contact: true};
+}
+
 /** Walk arrival hooks: a pending grab starts, and a push drive takes over
  *  from the walk. Shared by the normal arrival and the clamp-pinned arrival. */
 function geometryFacing(state: ActorState): 1|-1 {
@@ -673,7 +916,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     scene.actors.map((actor) => [actor.id, {
       id: actor.id, x: actor.x, vx: 0, facing: actor.facing, groundY: actor.groundY, scale: actor.scale,
       walkPhase: 0, lean: 0, moveTarget: null, walkBackward: false, walkEase: 0, grab: null, holding: null, holdRel: null, holdShape: 0, holdT: 0, holdBreath: [0, 0], handDrive: null, reach: null, retract: false, retractInfluence: 1, retractElapsed: 0, retractDuration: .65, propAngleAtBind: 0, grip: null, gripGoal: null, pursue: null, place: null, placeOut: 0,
-      stagger: 0, stepsTaken: 0, staggerSlide: 0, gesture: null, handGesture: null, prep: null, fall: null, fallen: false, body: bodyOf((actor.skeletonViews?.front??actor.skeleton) as Skeleton,actor.skeletonViews!==undefined),
+      stagger: 0, stepsTaken: 0, staggerSlide: 0, gesture: null, handGesture: null, prep: null, fall: null, fallen: false, hang: null, body: bodyOf((actor.skeletonViews?.front??actor.skeleton) as Skeleton,actor.skeletonViews!==undefined),
       skeleton: actor.skeletonViews?.front??actor.skeleton, skeletonViews:actor.skeletonViews, orientation:actor.skeletonViews?'front':undefined, waist: 0, crouch: 0,
     }]),
   );
@@ -867,9 +1110,22 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         })})),
       };
       const figure=solveActorFigure(actor);state.skeletonPose=figure.skeletonPose;state.reachShoulder=geometryShoulder(state);
+      // A hang is a two-hand grip, and the reach model is single-hand: the left
+      // arm mirrors the right one's angles onto the same grip point (the side
+      // view's two arm chains share one set of joints). It is a bounded blend,
+      // not a copy — an instant mirror is a 173deg limb swing the joint-rate
+      // gate rightly rejects.
+      if (state.hang && figure.skeletonPose.armR) {
+        const goal=figure.skeletonPose.armR;
+        const from=state.skeletonPose.armL??goal;
+        state.skeletonPose={...state.skeletonPose,armL:{
+          upper:approach(from.upper,goal.upper,HANG_ARM_RATE*DT),
+          lower:approach(from.lower,goal.lower,HANG_ARM_RATE*DT)}} as SkeletonPose;
+      }
       nativeActors[state.id]={skeleton:sk,x:state.x,y:state.groundY,scale:state.scale,
-        flipped:figure.flipped,pose:figure.skeletonPose,footTargets:actor.worldFootTargets!,
+        flipped:figure.flipped,pose:state.skeletonPose!,footTargets:actor.worldFootTargets!,
         support:{l:state.feet!.l.swing?null:state.feet!.l.target,r:state.feet!.r.swing?null:state.feet!.r.target},
+        ...(state.hang?.engaged?{grip:[state.hang.pivot[0],state.hang.pivot[1]] as [number,number],support:{l:null,r:null}}:{}),
         soleOffset:{l:(sk.space.height-sk.joints.foot_l![1])*state.scale,r:(sk.space.height-sk.joints.foot_r![1])*state.scale},
         ...(state.reach&&!state.retract?{palmTarget:[state.reach.tx,state.reach.ty] as [number,number]}:{}),
       };
@@ -1061,6 +1317,8 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           // drawn (the palm stays off its own reach point).
           state.retract = false;
           state.retractInfluence = 1;
+        } else if (intent.intent === "swing") {
+          startSwing(state, intent, scene.supports ?? [], diagnostics);
         } else if (intent.intent === "fall") {
           // Fall-classified event (slice 4): balance cuts directly; the
           // authored duration scales the collapse span (face the target first,
@@ -1709,7 +1967,8 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           state.reach = {tx: hand[0], ty: hand[1], target: state.reach?.target ?? "", contact: false};
         }
       }
-      if (!presentationSampling) integrateRoot(state);
+      if (!presentationSampling && !state.hang) integrateRoot(state);
+      if (state.hang) advanceHang(state, delta, diagnostics);
     }
 
     // Prop integration (I4): a prop moves only by carrying (handled in the
@@ -1785,10 +2044,15 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         const round=(value:number)=>Math.round(value*precision)/precision;
         frames.push({
           ...(state.feet?{worldFootTargets:{l:state.feet.l.target,r:state.feet.r.target},
-            footSupport:{l:!state.feet.l.swing,r:!state.feet.r.swing},
+            // A hanging body's feet are not on a surface: the grip carries it.
+            footSupport:state.hang?.engaged?{l:false,r:false}:{l:!state.feet.l.swing,r:!state.feet.r.swing},
             ...(scene.actors.find(a=>a.id===id)!.poseTracks?{skeletonPose:state.skeletonPose}:{}),
             orientation:state.orientation}:{}),
           x: round(state.x),
+          // The hang placement's ground line differs from the staged one, and the
+          // whole body turns about the grip: both are data the renderer needs.
+          ...(state.hang?.engaged?{y:round(state.hang.groundY),rotation:round(-swingAngle(state.hang)),
+            grip:[round(state.hang.grip[0]),round(state.hang.grip[1])] as [number,number]}:{}),
           lean: round(state.lean),
           facing: state.facing,
           walk: Math.round(state.walkPhase * 1000) / 1000,
@@ -1824,8 +2088,9 @@ export interface MotorSceneSource {
   /** Global scene start, used by native figures' absolute IR event times. */
   startSec?: number;
   objects: Record<string, {at: readonly [number, number]; size?: [number, number]; scale?: number; solid?: PropSolid; grip?: MotorGrip; rotation?: number; touchBox?: {a: [number, number]; b: [number, number]}}>;
-  /** Declared support surfaces in stage space (released props land here). */
-  supports?: Array<{x0: number; x1: number; y: number}>;
+  /** Declared support surfaces in stage space (released props land here; a
+   *  hanging one carries a body, slice B). */
+  supports?: MotorSupport[];
   /** Scene performance tracks (motor intents live here, subject-keyed). */
   tracks: Array<{subject?: string; events?: Array<{start?: number; end?: number; tracks?: Array<{kind?: string; events?: Array<Record<string, unknown>>}>}>}>;
 }
@@ -1889,7 +2154,7 @@ export function bakeSceneMotor(
         if (recipe.kind !== "motor") continue;
         for (const item of recipe.events ?? []) {
           const intent = (item.value ?? item) as Record<string, unknown>;
-          const GESTURE_INTENTS = ["bow", "nod", "shiver", "point", "wave", "raise", "think", "fall"] as const;
+          const GESTURE_INTENTS = ["bow", "nod", "shiver", "point", "wave", "raise", "think", "fall", "swing"] as const;
           const kind = String(intent.intent);
           if (kind !== "move" && kind !== "push" && kind !== "release" && kind !== "grab" && !(GESTURE_INTENTS as readonly string[]).includes(kind)) continue;
           // An intent may drive an actor other than the invoking subject

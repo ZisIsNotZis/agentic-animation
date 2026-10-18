@@ -19,6 +19,9 @@ export interface CapabilityDeclaration {
   readonly events: readonly string[];
   /** Wave that implements the capability; named in the fail-loud error. */
   readonly owner: string;
+  /** True once the slice that owns the capability has implemented it: the
+   *  declaration then describes shipped behaviour and the gate admits it. */
+  readonly implemented?: boolean;
 }
 
 /** Event names: `<capability>.<beat>` in the lifecycle track's vocabulary, so
@@ -30,6 +33,7 @@ export const DECLARED_CAPABILITIES = {
     support: "hanging",
     events: [],
     owner: "Wave 2 (slice B, giant swing on a high bar)",
+    implemented: true,
   },
   projectile: {
     prop: "projectile",
@@ -41,6 +45,7 @@ export const DECLARED_CAPABILITIES = {
     support: "hanging",
     events: ["swing.grip", "swing.release"],
     owner: "Wave 2 (slice B, giant swing on a high bar)",
+    implemented: true,
   },
   pour: {
     intent: "pour",
@@ -59,7 +64,7 @@ export type DeclaredCapability = keyof typeof DECLARED_CAPABILITIES;
 export function assertCapabilityImplemented(terminal: string, raw: string): void {
   const declarations: readonly CapabilityDeclaration[] = Object.values(DECLARED_CAPABILITIES);
   const declared = declarations.find((capability) => capability.intent === terminal && capability.intent !== undefined);
-  if (declared?.intent === undefined) return;
+  if (declared?.intent === undefined || declared.implemented) return;
   throw new Error(
     `compileEpisode: ${raw} needs the "${declared.intent}" capability, which is declared but not implemented — ` +
     `${declared.owner} implements it; the contract is docs/ART_ASSET_PROGRAM.md`,

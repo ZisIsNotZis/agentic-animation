@@ -328,7 +328,13 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
       motor: bakeSceneMotor({
         durationSec: duration,
         startSec: sceneStart,
-        supports: locationSupports.map((surface) => ({x0: surface.x[0], x1: surface.x[1], y: surface.y})),
+        supports: [...locationSupports, ...propHangingSupports(staging, context)].map((surface) => ({
+          x0: surface.x[0], x1: surface.x[1], y: surface.y, name: surface.name,
+          ...("owner" in surface ? {owner: String(surface.owner)} : {}),
+          ...(surface.kind ? {kind: surface.kind} : {}),
+          ...(surface.grip ? {grip: {x0: surface.grip.x[0], x1: surface.grip.x[1], y: surface.grip.y}} : {}),
+          ...(surface.rotationLimit ? {rotationLimit: surface.rotationLimit} : {}),
+        })),
         actors: Object.fromEntries(Object.entries(staging.actors).map(([id, staged]) => {
           const resolved = context.assets.actors[id]?.use.resolved as {skeleton?: Skeleton;artwork?:FigureArtwork} | undefined;
           const skeletonViews = resolved?.artwork ? Object.fromEntries(FIGURE_VIEWS.map(view=>[view,resolved.artwork!.views[view].skeleton])) as Record<FigureView,Skeleton> : undefined;
@@ -864,13 +870,57 @@ function setWorldFor(context: CompileContext, sceneLocation: string): Normalized
   return (context.assets.locations[sceneLocation]?.resolved as {world?: NormalizedSetWorld} | undefined)?.world;
 }
 
+/** A declared support surface in stage px, with the hanging declaration a body
+ * can attach to carried through rather than dropped (slice B). */
+interface StageSupport {
+  name: string;
+  x: [number, number];
+  y: number;
+  kind?: "hanging";
+  grip?: {x: [number, number]; y: number};
+  rotationLimit?: {forward: number; back: number};
+}
+
 /** Declared set supports for a scene location, in 1920x1080 stage px. */
-function setSupportSurfacesStagePx(locationWorld: NormalizedSetWorld | undefined, context: CompileContext, sceneLocation: string): Array<{name: string; x: [number, number]; y: number}> {
+function setSupportSurfacesStagePx(locationWorld: NormalizedSetWorld | undefined, context: CompileContext, sceneLocation: string): StageSupport[] {
   if (locationWorld) {
-    return locationWorld.supports.map((surface) => ({name: surface.name, x: [surface.x[0] * 1920, surface.x[1] * 1920], y: surface.y * 1080}));
+    return locationWorld.supports.map((surface) => ({
+      name: surface.name, x: [surface.x[0] * 1920, surface.x[1] * 1920], y: surface.y * 1080,
+      ...(surface.kind ? {kind: surface.kind} : {}),
+      ...(surface.grip ? {grip: {x: [surface.grip.x[0] * 1920, surface.grip.x[1] * 1920], y: surface.grip.y * 1080}} : {}),
+      ...(surface.rotationLimit ? {rotationLimit: surface.rotationLimit} : {}),
+    }));
   }
-  const legacy = (context.assets.locations[sceneLocation]?.resolved ?? {}) as {supports?: Array<{name: string; x: [number, number]; y: number}>};
-  return (legacy.supports ?? []).map((surface) => ({name: surface.name, x: surface.x, y: surface.y}));
+  const legacy = (context.assets.locations[sceneLocation]?.resolved ?? {}) as {supports?: StageSupport[]};
+  return (legacy.supports ?? []).map((surface) => surface);
+}
+
+/**
+ * Hanging supports a PLACED object declares (slice B): a high bar is a prop, so
+ * the grip line a body attaches to reaches the motor in the prop's staged
+ * world position, resolved exactly like an `on(X)` placement resolves a prop's
+ * own surface. Named after the surface; `owner` is the object id.
+ */
+function propHangingSupports(staging: {objects?: Readonly<Record<string, {at: readonly [number, number]; scale: number}>>}, context: CompileContext): Array<StageSupport & {owner: string}> {
+  const supports: Array<StageSupport & {owner: string}> = [];
+  for (const [id, staged] of Object.entries(staging.objects ?? {})) {
+    const placement = (context.assets.objects[id]?.resolved as {placement?: {base: number; size: [number, number]; supports?: StageSupport[]}} | undefined)?.placement;
+    if (!placement) continue;
+    const baseY = staged.at[1] * 1080;
+    const left = staged.at[0] * 1920 - (placement.size[0] / 2) * staged.scale;
+    const worldY = (artY: number) => baseY - (placement.base - artY) * staged.scale;
+    const worldX = (artX: number) => left + artX * staged.scale;
+    for (const surface of placement.supports ?? []) {
+      if (surface.kind !== "hanging" || !surface.grip || !surface.rotationLimit) continue;
+      supports.push({
+        name: surface.name, owner: id, kind: "hanging",
+        x: [worldX(surface.x[0]), worldX(surface.x[1])], y: worldY(surface.y),
+        grip: {x: [worldX(surface.grip.x[0]), worldX(surface.grip.x[1])], y: worldY(surface.grip.y)},
+        rotationLimit: surface.rotationLimit,
+      });
+    }
+  }
+  return supports;
 }
 
 function resolveSupportSurfaces(

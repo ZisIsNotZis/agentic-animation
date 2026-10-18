@@ -363,6 +363,12 @@ export interface EvaluatedActor {
   y: number;
   scale: number;
   rotation: number;
+  /**
+   * Design-space point the body turns about (docs/WORLD_PUPPET_MOTOR.md,
+   * slice B). Present while a body hangs from a support's grip line; absent,
+   * the body turns about its ground point (the div's bottom-centre).
+   */
+  grip?: [number, number];
   flip: boolean;
   z: number;
   present: boolean;

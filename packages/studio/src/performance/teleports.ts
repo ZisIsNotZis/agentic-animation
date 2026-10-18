@@ -3,6 +3,7 @@ import { normalizePerformanceManifest, } from "./evaluate";
 import type { PerformanceManifest } from "./types";
 import {solveActorFigure} from "../components/performance/actorPose";
 import {designHandToWorld} from "../components/performance/reach";
+import {actorTurn, rotateAboutPivot, rotatePoint} from "./actorTurn";
 
 export interface TeleportWarning {
   actor: string;
@@ -156,31 +157,41 @@ export function detectPropDiscontinuities(
   const fps = normalized.video?.fps ?? 24;
   const frames = normalized.durationInFrames ?? Math.round((normalized.totalDuration ?? 0) * fps);
   const warnings: PropDiscontinuityWarning[] = [];
-  type Sample = {point: [number, number]; metric?: "angle"};
+  type Sample = {point: [number, number]; metric?: "angle"; turn?: string};
   let previous = new Map<string, Sample>();
+  // The body frame each joint was drawn in last frame: turning about its pivot
+  // is rigid, so a joint's own travel is measured after the current rotation is
+  // removed, and only posture change counts as a jump (slice B).
+  let previousTurn = new Map<string, {pivot: [number, number]; rotation: number}>();
   for (let frame = 0; frame < frames; frame++) {
     const state = evaluatePerformance(normalized, frame);
     const current = new Map<string, Sample>();
+    const turns = new Map<string, {pivot: [number, number]; rotation: number}>();
     for (const actor of state.actors) {
       if (!actor.present) continue;
       current.set(actor.id, {point: [actor.x, actor.y]});
       current.set(`${actor.id}.rotation`, {point: [actor.rotation, 0], metric: "angle"});
       const figure = solveActorFigure(actor);
       if (!figure.solved) continue;
+      const turn = actorTurn(actor);
+      // The drawn rotation, signed by the mirror: a flipped body turns the
+      // other way on screen, so its spin is measured the way it is drawn.
+      const rot = actor.rotation * (figure.flipped ? -1 : 1);
+      turns.set(actor.id, {pivot: turn.pivot, rotation: rot});
       const joints = new Map<string, [number, number]>();
       for (const [name, joint] of Object.entries(figure.solved.joints)) {
         const world = designHandToWorld(actor, joint, figure.space, actor.artwork ? figure.flipped : false);
-        const r = actor.rotation * (figure.flipped ? -1 : 1) * Math.PI / 180;
-        const dx = world[0] - actor.x, dy = world[1] - actor.y;
-        const point: [number, number] = [actor.x + dx * Math.cos(r) - dy * Math.sin(r), actor.y + dx * Math.sin(r) + dy * Math.cos(r)];
+        const r = rot * Math.PI / 180;
+        const dx = world[0] - turn.pivot[0], dy = world[1] - turn.pivot[1];
+        const point: [number, number] = [turn.pivot[0] + dx * Math.cos(r) - dy * Math.sin(r), turn.pivot[1] + dx * Math.sin(r) + dy * Math.cos(r)];
         joints.set(name, point);
-        current.set(`${actor.id}.${name}`, {point});
+        current.set(`${actor.id}.${name}`, {point, turn: actor.id});
       }
       // Segment directions expose abrupt IK branch/angle changes even when a
       // short limb's positional displacement is below the pixel threshold.
       for (const side of ["l", "r"]) for (const [a, b] of [[`shoulder_${side}`, `elbow_${side}`], [`elbow_${side}`, `hand_${side}`], [`hip_${side}`, `knee_${side}`], [`knee_${side}`, `foot_${side}`]]) {
         const from = joints.get(a!), to = joints.get(b!);
-        if (from && to) current.set(`${actor.id}.${a}-${b}.angle`, {point: [Math.atan2(to[1]-from[1], to[0]-from[0])*180/Math.PI, 0], metric: "angle"});
+        if (from && to) current.set(`${actor.id}.${a}-${b}.angle`, {point: [Math.atan2(to[1]-from[1], to[0]-from[0])*180/Math.PI, 0], metric: "angle", turn: actor.id});
       }
     }
     for (const prop of state.props) {
@@ -190,12 +201,27 @@ export function detectPropDiscontinuities(
     for (const [id, at] of current) {
       const before = previous.get(id);
       if (!before) continue;
+      // Rotation-aware continuity: a body turning rigidly about its pivot is
+      // not a joint discontinuity. Both samples are measured in the body frame
+      // (each un-rotated about its own pivot by its own rotation), so what is
+      // left is the body's own posture change — the same measure a standing
+      // body gets. The rotation keeps its own gate (35deg), not an exemption.
+      const turn = at.turn ? turns.get(at.turn) : undefined;
+      const oldTurn = at.turn ? previousTurn.get(at.turn) : undefined;
+      const spin = turn && oldTurn ? turn.rotation - oldTurn.rotation : 0;
+      const bodyFrame = (point: [number, number], frameTurn: typeof turn): [number, number] =>
+        frameTurn && frameTurn.rotation !== 0 ? rotatePoint(frameTurn.pivot, point, -frameTurn.rotation) : point;
       const delta = at.metric === "angle"
-        ? Math.abs(((at.point[0] - before.point[0] + 540) % 360 + 360) % 360 - 180)
-        : Math.hypot(at.point[0] - before.point[0], at.point[1] - before.point[1]);
+        ? Math.abs(((at.point[0] - before.point[0] - spin + 540) % 360 + 360) % 360 - 180)
+        : (() => {
+          const fromBody = bodyFrame(before.point, oldTurn);
+          const toBody = bodyFrame(at.point, turn);
+          return Math.hypot(toBody[0] - fromBody[0], toBody[1] - fromBody[1]);
+        })();
       if (delta > (at.metric === "angle" ? angleThreshold : threshold)) warnings.push({frame, id, from: before.point, to: at.point, delta, ...(at.metric ? {metric: at.metric} : {})});
     }
     previous = current;
+    previousTurn = turns;
   }
   return warnings;
 }

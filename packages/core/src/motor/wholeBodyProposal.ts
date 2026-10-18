@@ -20,6 +20,9 @@ export interface WholeBodyActor {
   /** World ankle-to-sole distance; supplied from the selected artwork. */
   soleOffset: Record<Side,number>;
   palmTarget?: Point;
+  /** World grip point the hands hold while the body hangs from a support
+   *  (slice B). Present, it carries the body instead of the feet (I1). */
+  grip?: Point;
 }
 export interface WholeBodyProp {
   x: number;
@@ -114,7 +117,16 @@ function validateState(before:WholeBodyState,after:WholeBodyState,elapsed:number
       const angle=(u:Point,v:Point)=>Math.atan2(v[1]-u[1],v[0]-u[0])*180/Math.PI;
       check('segment-angle-rate',angleDelta(angle(p,q),angle(r,s)),840*elapsed,{actor:id,joint:to});
     }
-    check('ground-support',a.support.l||a.support.r?0:1,0,{actor:id});
+    check('ground-support',a.support.l||a.support.r||a.grip?0:1,0,{actor:id});
+    // The drawn hand of a hanging body stays ON its grip, and the grip is the
+    // bar: a world anchor like a stance foot, so it never slides.
+    if(a.grip){
+      const gripSurface={x:a.x,y:a.y+(a.pose.waistY??0)*a.scale,scale:a.scale,
+        flip:a.flipped,motor:true,waist:a.pose.waistPitch??0,lean:0,skeleton:a.skeleton};
+      const hand=renderedHandWorld(gripSurface,a.pose.armR??{upper:0,lower:0},a.flipped);
+      check('grip-contact',distance(hand,a.grip),.5,{actor:id,joint:'hand_r'});
+      if(old.grip)check('grip-drift',distance(a.grip,old.grip),.02,{actor:id,joint:'hand_r'});
+    }
     for(const side of ['l','r'] as const){
       const foot=joints[`foot_${side}`]!,target=a.footTargets[side],anchor=a.support[side];
       const design:Point=[a.skeleton.space.width/2+(target[0]-a.x)/a.scale*(a.flipped?-1:1),

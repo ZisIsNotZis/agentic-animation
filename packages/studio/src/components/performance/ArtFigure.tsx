@@ -1,6 +1,7 @@
 import React from "react";
 import {figureViewForOrientation, FIGURE_MOUTHS, type FigureArtwork} from "@anim/core/figure-artwork";
 import type {EvaluatedActor} from "../../performance/types";
+import {actorTurn} from "../../performance/actorTurn";
 import type {ActorPose, FaceFamily} from "./Actor";
 
 const markupCache = new Map<string,string>();
@@ -90,13 +91,17 @@ export const ArtFigure: React.FC<{
     `.${prefix}-expression [data-brow-index="0"]{transform:translateY(${browY}px) rotate(${browAngle}deg)}` +
     `.${prefix}-expression [data-brow-index="1"]{transform:translateY(${browY}px) rotate(${-browAngle}deg)}` +
     (eyeState === 'open' ? '' : `.${prefix}-expression [data-face-role="eye"]{display:none}.${prefix}-blink [data-face-role="brow"]{display:none}`);
+  // A hanging body turns about its grip; a standing one about its ground point
+  // (the div's bottom-centre). The pivot placement is one helper shared with the
+  // camera, so what is drawn and what is framed agree.
+  const turn = actorTurn(actor, [width, height]);
   return <div
     data-actor-id={handsOnly?undefined:actor.id} data-contact-actor-id={handsOnly?actor.id:undefined} data-expression={actor.expression.name} data-face-family={family}
     data-figure-artwork={handsOnly?undefined:'svg-bone-parts'} data-native-figure-view={name}
     data-speech-active={pose.speechActive} data-speech-open={viseme !== undefined && !['A','B','G','X'].includes(viseme)}
     data-native-viseme={viseme} data-track-count={actor.tracks.length} data-slam-peak={pose.slamPeak}
-    style={{position:'absolute',left:actor.x-width/2,top:actor.y-height,width,height,
-      transformOrigin:`${width/2}px ${height}px`,transform:`scale(${actor.scale*(flipped?-1:1)}, ${actor.scale}) rotate(${actor.rotation}deg)`,
+    style={{position:'absolute',left:turn.left,top:turn.top,width,height,
+      transformOrigin:`${turn.origin[0]}px ${turn.origin[1]}px`,transform:`scale(${actor.scale*(flipped?-1:1)}, ${actor.scale}) rotate(${actor.rotation}deg)`,
       zIndex:actor.z,overflow:'visible',background:debugDiv?'rgba(255,0,0,.07)':undefined}}
   >
     <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{overflow:'visible'}} aria-label={`actor ${actor.id}`}>

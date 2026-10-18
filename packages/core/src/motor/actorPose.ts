@@ -10,6 +10,9 @@ export interface PoseActor {
   pose?:string;motor?:boolean;lean?:number;walk?:number;facing?:1|-1;
   orientation?:string;reach?:[number,number];reachInfluence?:number;
   waist?:number;crouch?:number;contact?:boolean;skeleton?:Skeleton;artwork?:unknown;
+  /** Hanging from a support's grip: both hands hold the one grip point
+   *  (the reach model is single-hand, so the left arm mirrors the right). */
+
   worldFootTargets?:{l:[number,number];r:[number,number]};
   skeletonPose?:SkeletonPose;
   expression:{name?:string;brow?:unknown;eyes?:unknown;mouth?:unknown;eyeOpen?:number;

@@ -1,4 +1,5 @@
 import { ease } from "../lib/interpolate";
+import {actorTurn, rotateAboutPivot} from "./actorTurn";
 import { circleOverlapsBox, solveSkeleton } from "@anim/core/skeleton";
 import type {FigureArtwork, Skeleton} from "@anim/core";
 import {figureViewForOrientation} from "@anim/core/figure-artwork";
@@ -169,9 +170,39 @@ function actorBand(actor: EvaluatedActor, names: readonly string[], bottomShare:
   // torso are nowhere near the standing band, and framing the standing band is
   // what pushed a crouched subject out of her own shot.
   const drawn = actorPartBand(actor, names);
-  if (drawn) return drawn;
   const height = (actor.skeleton?.space?.height ?? FIGURE_DESIGN_HEIGHT) * actor.scale;
-  return [actor.y - height, actor.y - height * bottomShare];
+  const band: [number, number] = drawn ?? [actor.y - height, actor.y - height * bottomShare];
+  if (!actor.rotation) return band;
+  // A turning body's parts are not where the upright band says: a hanging
+  // figure's head is under the bar at half a turn and beside it at a quarter,
+  // so the band is measured on the drawn (rotated) body.
+  const turn = actorTurn(actor);
+  const top = rotateAboutPivot(turn, [actor.x, band[0]], turn.rotation);
+  const bottom = rotateAboutPivot(turn, [actor.x, band[1]], turn.rotation);
+  return [Math.min(top[1], bottom[1]), Math.max(top[1], bottom[1])];
+}
+
+/** World extents of the drawn body box, after its rotation about the pivot.
+ *  Standing, this is the upright box every fit measured before; turning, it is
+ *  the axis-aligned bounds of the rotated box, which is what a full circle of
+ *  a hanging body actually needs in frame. */
+function actorExtent(actor: EvaluatedActor): {left: number; right: number; top: number; bottom: number; centreX: number} {
+  const scale = actor.scale;
+  const left = actor.x - 200 * scale;
+  const right = actor.x + 200 * scale;
+  const top = actor.y - FIGURE_DESIGN_HEIGHT * scale;
+  const bottom = actor.y;
+  if (!actor.rotation) return {left, right, top, bottom, centreX: actor.x};
+  const turn = actorTurn(actor);
+  const corners = [[left, top], [right, top], [right, bottom], [left, bottom]]
+    .map((point) => rotateAboutPivot(turn, point as [number, number], actor.rotation));
+  return {
+    left: Math.min(...corners.map((point) => point[0])),
+    right: Math.max(...corners.map((point) => point[0])),
+    top: Math.min(...corners.map((point) => point[1])),
+    bottom: Math.max(...corners.map((point) => point[1])),
+    centreX: actor.x,
+  };
 }
 
 function actorFrameBand(actor: EvaluatedActor): [number, number] {
@@ -229,14 +260,18 @@ function repelActors(actors: readonly EvaluatedActor[]): EvaluatedActor[] {
     // Motor-driven positions are physical (docs/WORLD_PUPPET_MOTOR.md):
     // the solver already enforces separation, so never nudge them.
     if ((left as {motor?: unknown}).motor || (right as {motor?: unknown}).motor) continue;
-    if (right.x - left.x >= required || (left.x === right.x && left.id !== right.id)) {
-      if (left.x === right.x && left.id !== right.id) {
+    // Separate the DRAWN bodies: a turned body's horizontal centre is not its
+    // ground point (a hanging figure's mass sits beside the bar).
+    const leftX = actorExtent(left).centreX;
+    const rightX = actorExtent(right).centreX;
+    if (rightX - leftX >= required || (leftX === rightX && left.id !== right.id)) {
+      if (leftX === rightX && left.id !== right.id) {
         left.x -= required / 2;
         right.x += required / 2;
       }
       continue;
     }
-    const center = (left.x + right.x) / 2;
+    const center = (leftX + rightX) / 2;
     left.x = center - required / 2;
     right.x = center + required / 2;
   }
@@ -252,10 +287,11 @@ function fitCameraToActors(
   const visible = actors.filter((actor) => actor.present);
   if (!visible.length) return {center: target, zoom: requestedZoom};
   const margin = 36;
-  const left = Math.min(...visible.map((actor) => actor.x - 200 * actor.scale)) - margin;
-  const right = Math.max(...visible.map((actor) => actor.x + 200 * actor.scale)) + margin;
-  const top = Math.min(...visible.map((actor) => actor.y - 720 * actor.scale)) - margin;
-  const bottom = Math.max(...visible.map((actor) => actor.y)) + margin;
+  const boxes = visible.map(actorExtent);
+  const left = Math.min(...boxes.map((box) => box.left)) - margin;
+  const right = Math.max(...boxes.map((box) => box.right)) + margin;
+  const top = Math.min(...boxes.map((box) => box.top)) - margin;
+  const bottom = Math.max(...boxes.map((box) => box.bottom)) + margin;
   const zoom = Math.min(requestedZoom, video.width / (right - left), video.height / (bottom - top));
   const desiredX = video.width * 0.62 / zoom;
   const desiredY = video.height * 0.42 / zoom;
@@ -371,10 +407,11 @@ function containCamera(
   const visible = actors.filter((actor) => actor.present);
   if (!visible.length) return camera;
   const margin = 24;
-  const left = Math.min(...visible.map((actor) => actor.x - 200 * actor.scale)) - margin;
-  const right = Math.max(...visible.map((actor) => actor.x + 200 * actor.scale)) + margin;
-  const top = Math.min(...visible.map((actor) => actor.y - 720 * actor.scale)) - margin;
-  const bottom = Math.max(...visible.map((actor) => actor.y)) + margin;
+  const boxes = visible.map(actorExtent);
+  const left = Math.min(...boxes.map((box) => box.left)) - margin;
+  const right = Math.max(...boxes.map((box) => box.right)) + margin;
+  const top = Math.min(...boxes.map((box) => box.top)) - margin;
+  const bottom = Math.max(...boxes.map((box) => box.bottom)) + margin;
   // Never zoom out past the painted stage: below the stage-fit zoom the
   // 1920x1080 canvas shrinks inside the video frame and the episode
   // background leaks in as black bands.
@@ -1307,6 +1344,17 @@ function activeTrackVfx(
     });
 }
 
+/** The hang placement and whole-body rotation, verbatim from the bake: the
+ *  motor's `y` is the placement's ground line (a hanging body's feet are not on
+ *  the staged floor) and `grip` the design point it turns about. */
+function hangChannels(motor: {y?: number; rotation?: number; grip?: [number, number]}): {y?: number; rotation?: number; grip?: [number, number]} {
+  return {
+    ...(motor.y === undefined ? {} : {y: motor.y}),
+    ...(motor.rotation === undefined ? {} : {rotation: motor.rotation}),
+    ...(motor.grip === undefined ? {} : {grip: motor.grip}),
+  };
+}
+
 /** Pure runtime projection: the returned state depends only on manifest and frame. */
 export function evaluatePerformance(manifest: PerformanceManifest, frame: number): PerformanceFrameState {
   const normalized = normalizePerformanceManifest({ ...manifest, timebase: manifest.timebase ?? "seconds" });
@@ -1322,6 +1370,9 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
     const end = Math.round(((scene.start ?? 0) + 1) * motorFps);
     return safeFrame >= start && safeFrame < Math.max(end, (scene.motor?.actors ? Object.values(scene.motor.actors)[0]?.length ?? 0 : 0) + start);
   });
+  /** The baked motor channels an evaluated actor reads (slice B adds the hang
+   *  placement and the whole-body rotation). */
+  type MotorActorChannel = {x?: number; y?: number; rotation?: number; grip?: [number, number]; facing?: number; lean?: number; walk?: number; reach?: [number, number]; reachInfluence?: number; gripDepth?: "front"|"behind"; contact?: boolean; waist?: number;crouch?:number; skeletonPose?:import("@anim/core/skeleton").SkeletonPose; worldFootTargets?:{l:[number,number];r:[number,number]}; footSupport?:{l:boolean;r:boolean}; orientation?:EvaluatedActor["orientation"]; holds?: string};
   const motorFrameAt = (id: string, at: number): Record<string, unknown> | undefined => {
     const scene = motorScenes.find((candidate) => {
       const start = Math.round((candidate.start ?? 0) * motorFps);
@@ -1352,7 +1403,7 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
     const def = (normalized.actors ?? []).find((candidate) => candidate.id === actorId);
     if (!def) return undefined;
     const base = actorState(def, normalized, at, tracksForSubject(tracks, actorId));
-    const motor = motorFrameAt(actorId, at) as {x?: number; facing?: number; lean?: number; walk?: number; reach?: [number, number]; reachInfluence?: number; gripDepth?: "front"|"behind"; contact?: boolean; waist?: number;crouch?:number; skeletonPose?:import("@anim/core/skeleton").SkeletonPose; worldFootTargets?:{l:[number,number];r:[number,number]}; footSupport?:{l:boolean;r:boolean}; orientation?:EvaluatedActor["orientation"]; holds?: string} | undefined;
+    const motor = motorFrameAt(actorId, at) as MotorActorChannel | undefined;
     if (!motor || typeof motor.x !== "number") return base;
     return {
       ...base,
@@ -1367,13 +1418,14 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
       crouch: motor.crouch ?? 0, worldFootTargets:motor.worldFootTargets, footSupport:motor.footSupport, skeletonPose:motor.skeletonPose, ...(motor.orientation?{orientation:motor.orientation, skeleton:base.artwork?.views[figureViewForOrientation(motor.orientation)].skeleton??base.skeleton}:{}),
       ...(base.artwork ? {motor:true as const,facing:(motor.facing??(base.flip?-1:1)) as 1|-1} : {}),
       ...(motor.holds === undefined ? {} : {holds: motor.holds}),
+      ...hangChannels(motor),
     };
   };
   const actors = repelActors(
     rawActors.map((actor) => {
-      const motor = motorFrameFor(actor.id) as {x?: number; lean?: number; walk?: number; facing?: number; reach?: [number, number]; reachInfluence?: number; gripDepth?: "front"|"behind"; contact?: boolean; waist?: number;crouch?:number; skeletonPose?:import("@anim/core/skeleton").SkeletonPose; worldFootTargets?:{l:[number,number];r:[number,number]}; footSupport?:{l:boolean;r:boolean}; orientation?:EvaluatedActor["orientation"]; holds?: string} | undefined;
+      const motor = motorFrameFor(actor.id) as MotorActorChannel | undefined;
       if (!motor || typeof motor.x !== "number") return actor;
-      return {...actor, x: motor.x, lean: motor.lean ?? 0, walk: motor.walk ?? 0, facing: (motor.facing ?? (actor.flip ? -1 : 1)) as 1 | -1, flip: (motor.facing ?? (actor.flip ? -1 : 1)) === -1, reach: motor.reach as [number, number] | undefined, reachInfluence: motor.reachInfluence, gripDepth: motor.gripDepth, contact: motor.contact === true, waist: motor.waist ?? 0, motor: true as const, crouch: motor.crouch ?? 0, worldFootTargets:motor.worldFootTargets, footSupport:motor.footSupport, skeletonPose:motor.skeletonPose, ...(motor.orientation?{orientation:motor.orientation, skeleton:actor.artwork?.views[figureViewForOrientation(motor.orientation)].skeleton??actor.skeleton}:{}), ...(motor.holds === undefined ? {} : {holds: motor.holds})};
+      return {...actor, x: motor.x, lean: motor.lean ?? 0, walk: motor.walk ?? 0, facing: (motor.facing ?? (actor.flip ? -1 : 1)) as 1 | -1, flip: (motor.facing ?? (actor.flip ? -1 : 1)) === -1, reach: motor.reach as [number, number] | undefined, reachInfluence: motor.reachInfluence, gripDepth: motor.gripDepth, contact: motor.contact === true, waist: motor.waist ?? 0, motor: true as const, crouch: motor.crouch ?? 0, worldFootTargets:motor.worldFootTargets, footSupport:motor.footSupport, skeletonPose:motor.skeletonPose, ...(motor.orientation?{orientation:motor.orientation, skeleton:actor.artwork?.views[figureViewForOrientation(motor.orientation)].skeleton??actor.skeleton}:{}), ...(motor.holds === undefined ? {} : {holds: motor.holds}), ...hangChannels(motor)};
     }),
   );
   const actorById = new Map(actors.map((actor) => [actor.id, actor]));
