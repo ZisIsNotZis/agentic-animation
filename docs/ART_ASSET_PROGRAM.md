@@ -135,7 +135,7 @@ Packages, in this order:
 **S-A1 is not reached, and the reason is the shot, not the pipeline.** The arc and the
 court read; the bounce, the rest, the follow and the shuttle's scale do not. Four of the
 five findings are reading failures of the render and are measured in
-`episodes/a-badminton/README.md` §"S-A1 review (ER)" — two thirds of ER's own shortfall
+`episodes/a-badminton/REVIEWS.md` §"S-A1 review (ER)" — two thirds of ER's own shortfall
 is a defect (`avoidActorCollisions` writes the actor y-clamp into the projectile's ground,
 so the shuttle bounces and rests 41–56 px above the line it started on), and ER's "no
 bounce" is its 6 fps sample stepping over two hops of 62 px and 16 px.

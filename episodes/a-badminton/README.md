@@ -156,85 +156,11 @@ tracked; `verify.sh` recreates them):
 
 Inspected by eye at full resolution by the producer: the arc reads across the net and the
 court reads. The producer's reading of the rest and the bounce did **not** survive review —
-see §"S-A1 review (ER)" for what the stills actually show, and for the heads.
+[REVIEWS](REVIEWS.md) has what the stills actually show, and what the heads do.
 
-## S-A1 review (ER) — the shot does not pass yet
+## Reviews
 
-ER (fresh `reviewer`, run `b9628190`, blind contract, stills at file resolution plus a
-6 fps sample of the video) answered **NOT SATISFIED**; its text is filed verbatim at
-[tickets/S-A1-ER-REVIEW](../../docs/tickets/S-A1-ER-REVIEW.md). What it read: the arc and
-the court read; the bounce, the rest, the follow and the shuttle's scale do not.
+Two independent viewer reviews have been taken of this episode, and the record of both —
+each verdict, the corrections it forced, and the rendition each was bound to — is
+[REVIEWS](REVIEWS.md). The shot is not accepted until one of them passes.
 
-Two of its findings are mechanically checkable, and both need a correction:
-
-1. **The bounces exist — its 6 fps sample stepped over both.** `node tools/prop-track.mjs
-   episodes/a-badminton/performance.json shuttle` (landed with this note) prints the path:
-
-   | beat | frame | t | y |
-   | --- | --- | --- | --- |
-   | apex | 57 | 2.375 s | 329.48 |
-   | first contact | 70 | 2.917 s | 635.17 |
-   | first hop apex, 62 px | 75 | 3.125 s | 573.44 |
-   | second contact | 81 | 3.375 s | 648.32 |
-   | second hop apex, 16 px | 84 | 3.500 s | 632.06 |
-   | rest, held to the end | 87 | 3.625 s | 650.16 |
-
-   Each hop lasts 4–5 frames, ~0.2 s, so a 6 fps sample lands on one point of it. Its
-   perception still holds: a 62 px hop on a 720 px frame, with nothing drawn under it,
-   does not read as a bounce. The two rows labelled "contact" are the deepest *sampled*
-   frames: the snap onto the surface happens in a substep between two frames, so a
-   turning point is always one frame short of the contact it marks — which is why
-   `prop-track` now prints the landings and the rest separately from the turning points.
-2. **The projectile's floor is not the set's floor — the defect it actually saw.** The
-   shuttle is staged at y 691.2 and the hall paints its floor at 691; its contacts are at
-   635.17 and 648.32 and it rests at 650.16. It bounces and comes to rest **41–56 px above
-   the line it started on**, with no ground shadow at contact, so the still at 3.167 s —
-   labelled "the bounce, its apex" — shows a shuttle hanging in empty air. The defect was
-   found by the reviews, not recorded by the producer: EA's five limits are swing,
-   elevation, toss, head-cut and scale, and none of them is this. The mechanism was
-   `supportYAt`, which seeded a projectile's ground with the actor clamp (`groundY`
-   0.602 × 1080 = 650) and then accepted only a declared surface with a *smaller* y — so the
-   hall's painted floor at 691 could never win. **Fixed in R1** (`bfa837d`): a prop declared
-   `projectile` now lands on the set's lowest declared surface, and a raised surface under it
-   still wins.
-
-Confirmed by both at the reviewed rendition, and still true of the current one in degree:
-the shuttle is drawn ~3× a real shuttlecock at the reviewed `stageWidth` 130 and ~2.4× at
-the landed 116 (see "What the shot could not have" for the boundary and why it is there);
-it crosses the receiver's legs; the follow at `zoom 0.75` pans only ~120 px and reads as a
-wide; the players never move.
-
-**Corrected: the heads are not cut in this rendition.** The producer recorded a cut "above
-the eyebrows from the first floor contact onward"; the review found both heads whole with
-margin above them at 2.917 s, and the hair touching the top edge at most at 3.625 s. The
-frame arithmetic agrees: the 0.75 follow's frame spans world y 0 → 120 and the drawn hair
-tops sit at ≈ 80. The cut is real at `zoom: 1` — which is why 0.75 was chosen — and it is
-not present at 0.75, so R3 stays a question about the pan reading as a follow.
-
-**S-A1 is not reached by that rendition.** The shot bakes, renders and is bound to its
-revision — the independent viewer did not pass it.
-
-## The repaired rendition (R1 + R4, rendered at `c38c782`)
-
-R1 landed (`bfa837d`) and R4 landed in part (`c38c782`); the episode was re-baked and
-re-rendered into `artifacts/sa1-r1r4-2026-10-21/`, whose `bake-identity.json` is the one home
-for its numbers and whose `verify.sh` recomputes them. What changed in the bake:
-
-| what | reviewed rendition (`6a8d967`) | repaired (`c38c782`) |
-| --- | --- | --- |
-| `projectile.struck` | 2.207 s `[-533,-447]` | 2.207 s `[-533,-447]` |
-| arc apex | frame 57, y 329.48 | frame 57, y 321.82 |
-| first contact | y 635.17 (46 px above the floor) | y 691.20 (**on** the floor) |
-| first hop | 62 px | 88.5 px |
-| second hop | 16 px | 20.6 px |
-| `projectile.settled` | 3.633 s at `[509, 650.16]` | 3.717 s at `[476.56, **691**]` |
-| the rest, until the end | 41 px above the painted floor | on it |
-
-`node tools/prop-track.mjs episodes/a-badminton/performance.json shuttle` prints the floor
-from the set and each frame's gap to it, and ends with the rest stated as ON the floor line.
-What did **not** change: the shuttle is still ~2.4× a real shuttlecock (2.6× before) and
-still crosses the receiver's shoe on the way down; the follow is still a ~120 px pan; the
-players still do not move. Those are R2, R3 and R5 — root's decisions, and the asset cannot
-buy them.
-
-A fresh reviewer was dispatched blind against this rendition, as acceptance requires.

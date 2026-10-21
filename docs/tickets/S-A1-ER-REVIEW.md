@@ -5,7 +5,7 @@ to:      agentic-animation, milestone S-A1
 rev:     HEAD 70bf431; stills from episodes/a-badminton/episode.yml sha256 fcb4de68…, video 6d3cbca5…
 note:    the verdict below is the reviewer's and is unedited. Its "no bounce" finding is
          mechanically wrong and is corrected, with the command, in
-         episodes/a-badminton/README.md §"S-A1 review (ER)" — the rest stands.
+         episodes/a-badminton/REVIEWS.md §"S-A1 review (ER)" — the rest stands.
 ---
 
 # ER · the independent review — verdict
