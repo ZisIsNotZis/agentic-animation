@@ -29,5 +29,6 @@ bash episodes/a-badminton/artifacts/<rendition>/verify.sh
 
 | directory | revision | video sha256 | what it decided |
 | --- | --- | --- | --- |
+| `sa1-d1w-2026-10-21/` | `264a09a` | `2ad11717…` | D1's wrapper half landed (one plane per actor): the net stands behind the near player and in front of the far one. The blind depth review is bound to this rendition; struck 2.207 s, settled 3.717 s at `[476.56, 691]`. |
 | `sa1-r1r4-2026-10-21/` | `c38c782` | `29ca57f4…` | the rendition after R1 (the projectile's ground is the set's floor) and R4 (the shuttle at 116): struck 2.207 s, settled 3.717 s at `[476.56, 691]` — its rest is **on** the hall's painted floor line, and its contacts and hops are in `bake-identity.json`. This is what a fresh reviewer is asked about. |
 | `sa1-er-2026-10-21/` | `6a8d967` | `6d3cbca5…` | ER refused it `NOT SATISFIED`; a second, independent review agreed on substance and falsified ER's "no bounce" (two hops of 62 px and 16 px). The shot's rest sat 41 px above the painted floor — the R1 defect. |

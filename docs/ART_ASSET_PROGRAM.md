@@ -164,11 +164,15 @@ carry the reading, and buying them first is what "time is the scarce thing" asks
 
 **The depth field is half the change; the wrapper is the other half.** Every actor then rendered inside one `z-40` wrapper, so the net at 45 composited above *both* players and laced the near one's legs as well. Root's contract of 2026-10-21 authorises the cure (one wrapper per actor at `actor.z`) as the same decision, not a new one, and says so: the defect is closed at the wrapper and never worked around in the set's declaration. It also confirms that withholding the review was right — a verdict on a shot known to be wrong buys nothing — so the fresh blind review follows the wrapper, not ER again on the same frame.
 
+**Where it stands.** The wrapper landed at `264a09a`: each actor is one wrapper at its own `z`, and `packages/studio/test/performanceEpisode.test.ts` pins two actor planes with the net between them, so a shared wrapper cannot come back silently. The episode was re-baked and re-rendered at that commit into `artifacts/sa1-d1w-2026-10-21/` (struck 2.207 s `[-533,-447]`, settled 3.717 s at `[476.56, 691]` — R1's numbers, unmoved); the stills show the near player's leg over the mesh and the far player's legs under it. The fresh blind review of those four stills is the remaining pin on S-A1's precondition.
+
 **Why it is not root's taste call.** An `assumed` decision, decided by root, not quoted from the person: under a convention where no serve can cross the net, the thing to be tasted is not in the frame, so the question cannot be put as a taste question at all. Accepting the flat 2D convention would have answered a composition question by removing its subject.
 
 **What is not presumed.** R2 (does the bounce read), R3 (the follow locks) and R5 (the players are statues) still wait for the person.
 
 ## Current facts
+
+**D1's second half landed (2026-10-21, `264a09a`):** every actor paints on its own declared plane, so the hall's net stands behind the near player and in front of the far one; re-baked and re-rendered into `artifacts/sa1-d1w-2026-10-21/`. A fresh blind reviewer's verdict on those stills is owed — it is the last precondition of S-A1 that is not the person's.
 
 **Where slice A stands (2026-10-21):** engine landed, episode landed, first review returned
 `NOT SATISFIED`; the repair workset was then dispatched and **R1 landed** (`bfa837d`, a

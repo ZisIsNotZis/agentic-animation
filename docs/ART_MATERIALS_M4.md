@@ -30,9 +30,9 @@ contribution and render cost. Scope and budget belong to the
   and raster were rejected by choice).
 - Each declared set layer composites as **its own `<svg>` sibling** in
   `packages/studio/src/components/performance/Stage.tsx`, in declaration order:
-  background layers take `zIndex` 0..n below the prop and actor planes (20, 40),
-  foreground layers 70+ above them, and an entry may carry `blend` and `opacity`. So a
-  layer above the passes is above the counter and the actor plane too.
+  background layers take `zIndex` 0..n below the prop plane (20) and the actor planes
+  (each actor's own `z`, D1), foreground layers 70+ above them, and an entry may carry
+  `blend` and `opacity`. So a layer above the passes is above the counter and the actors too.
 - `mix-blend-mode` takes any CSS mode, and the **non-separable ones were probed, not
   assumed**: eight one-page renders through the renderer's own Chrome, an absolutely
   positioned `<svg>` sibling over a two-tone backdrop, keeping 1.004 (`color`), 0.996
