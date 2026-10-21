@@ -116,7 +116,10 @@ Packages, in this order:
    `3dfdf9e` (`idle-compute`, 20 min, run `25e80bfb`): the serve from the hand,
    `camera.follow(shuttle, {sec: 2.0, zoom: 0.75})`, `force 1.0` over `forceSec 0.16`, the
    40° arc, the bounce resting at world x 509, the hold from 3.633 s, five bake-identified
-   stills. `check`, `make`, `render-yaml`, `tsc --noEmit` exit 0; `motor.diagnostics: []`.
+   stills. `check`, `make`, `render-yaml`, `tsc --noEmit` exit 0; zero motor warnings in
+   both channels the bake has (no `motor warning:` line, and the key the compiler omits when
+   empty), and seven expected `sudden-move` lines on the descent — recorded, with why they
+   are the physics of the bounce, in the episode README.
    Its measured reach, force table and the five limits it could not land are in
    `episodes/a-badminton/README.md` — that file is the package's home, not this one. The
    return is optional, by EP's exact fixture, and S-A1 does not depend on it.
@@ -223,9 +226,10 @@ the tea room and two cast members do not.
 
 - **The artefact rests above its own floor.** R1 is a defect, not a preference, and until
   it lands every projectile shot in the tree inherits it.
-- **A follow cuts drawn heads.** The head rule is deliberately off for a following shot
-  (a follow that dodged every head lost its own subject). Reviewed now, and it cuts them:
-  R3 is the choice.
+- **A follow can cut drawn heads.** The head rule is deliberately off for a following shot
+  (a follow that dodged every head lost its own subject). At `zoom: 1` it cuts them; this
+  episode's `zoom: 0.75` does not — measured and corrected in the episode README, so R3 is
+  a question about the pan reading as a follow, not about heads.
 - **Camera cost is quadratic in window length**; a follow longer than ~3 s, or two in one
   episode, opens a memo package. A 1.9 s window on a ≤10 s shot does not.
 

@@ -31,13 +31,19 @@ to be paid for with silent beats (`…` = 0.55 s).
 
 ## The compiled events
 
-`make` (exit 0) writes a 5.5 s `performance.json` with an empty
-`motor.diagnostics` and:
+`make` (exit 0) writes a 5.5 s `performance.json` with **zero motor diagnostics** and:
 
 ```json
 [{"kind":"projectile.struck","prop":"shuttle","at":2.207,"velocity":[-533,-447]},
  {"kind":"projectile.settled","prop":"shuttle","at":3.633,"position":[509,650.16]}]
 ```
+
+Zero motor diagnostics is stated as its encoding, not as a key: `bakeSceneMotor` omits
+`motor.diagnostics` when it is empty (`if (diagnostics.length) movie.diagnostics =
+diagnostics`), and `make` prints one `motor warning: …` line per entry — it printed none.
+`grep -c diagnostics episodes/a-badminton/performance.json` returns 0, which is what an
+empty list looks like; "empty" and "not recorded" are the same thing here only because the
+CLI's warning channel is the second witness.
 
 `Δy/Δx = 447/533` → **40.00°**, launch speed 697 px/s. Staging at scale 0.88:
 server `[0.65, 0.602]`, receiver `[0.35, 0.602]`, shuttle `[0.538, 0.64]`,
@@ -49,6 +55,25 @@ follow share a brace group):
 ```json
 {"operation":"follow","target":"shuttle","duration":2,"z":0.75}
 ```
+
+**`make` also warns, and no earlier record of this episode says so.** Seven lines, on every
+bake of this episode (the log is kept at `artifacts/sa1-er-2026-10-21/make.log.txt`):
+
+```
+[make] sudden-move warning: shuttle jumps 33px at frame 63 (832,380 -> 810,404) — objects must move continuously
+…
+[make] sudden-move warning: shuttle jumps 55px at frame 69 (703,581 -> 681,631) — objects must move continuously
+```
+
+They come from `detectPropDiscontinuities` (`packages/studio/src/performance/teleports.ts`),
+whose threshold is **30 stage px between consecutive frames**, and they fire on the descent
+between the arc's apex and the first floor contact — the physics that produces the bounce,
+not a defect in it: at 697 px/s along 40° the vertical speed is 447 px/s at launch, and
+`GRAVITY` is 2600 px/s², so at the 2.917 s contact it is 447 + 2600 × 0.71 ≈ 1400 px/s —
+58 px in one frame, against a 30 px threshold. The warning is the price of a fast projectile
+at 24 fps and it is not being suppressed. A reader who sees these
+seven lines in `make` should read them as expected for this shot; a warning **outside**
+frames 63–69 is a new fact.
 
 `zoom: 0.75` rather than the recipe's default 1.0 is measured, not taste: at
 z 1 the follow's vertical travel (the evaluator pins the viewport inside the
@@ -155,14 +180,24 @@ Two of its findings are mechanically checkable, and both need a correction:
    shuttle is staged at y 691.2 and the hall paints its floor at 691; its contacts are at
    635.17 and 648.32 and it rests at 650.16. It bounces and comes to rest **41–56 px above
    the line it started on**, with no ground shadow at contact, so the still at 3.167 s —
-   labelled "the bounce, its apex" — shows a shuttle hanging in empty air. EA named this
-   as "could not land 1" (`avoidActorCollisions` writes the actor y-clamp, 0.602 × 1080 =
-   650, into the projectile's ground). It is a defect, not a staging choice.
+   labelled "the bounce, its apex" — shows a shuttle hanging in empty air. The defect was
+   found by the reviews, not recorded by the producer: EA's five limits are swing,
+   elevation, toss, head-cut and scale, and none of them is this. The mechanism is
+   `supportYAt`, which seeds a projectile's ground with the actor clamp (`groundY`
+   0.602 × 1080 = 650) and then accepts only a declared surface with a *smaller* y — so the
+   hall's painted floor at 691 can never win. It is a defect, not a staging choice.
 
 Confirmed by both, no correction needed: the shuttle is drawn ~3× a real shuttlecock
 (`stageWidth` 130 at scale 0.65 beside a 633 px figure) and passes in front of the
-receiver's legs; the follow at `zoom 0.75` pans only ~120 px and reads as a wide; both
-heads are cut from the first floor contact; the players never move.
+receiver's legs; the follow at `zoom 0.75` pans only ~120 px and reads as a wide; the
+players never move.
+
+**Corrected: the heads are not cut in this rendition.** The producer recorded a cut "above
+the eyebrows from the first floor contact onward"; the review found both heads whole with
+margin above them at 2.917 s, and the hair touching the top edge at most at 3.625 s. The
+frame arithmetic agrees: the 0.75 follow's frame spans world y 0 → 120 and the drawn hair
+tops sit at ≈ 80. The cut is real at `zoom: 1` — which is why 0.75 was chosen — and it is
+not present at 0.75, so R3 stays a question about the pan reading as a follow.
 
 **S-A1 is not reached.** The shot bakes, renders and is bound to its revision — the
 independent viewer does not pass it. The repair workset is
