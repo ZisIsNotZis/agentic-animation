@@ -130,7 +130,12 @@ Optional extensions, not prerequisites for the closed engine milestone:
   repointed cast and upgraded cultivation/arena sets.
 - Full-episode showcase `render-yaml`; not required for rendering demos.
 
-## Restart point (2026-10-18, end of session)
+## Restart point (2026-10-18 — historical; see ART_ASSET_PROGRAM §Current facts)
+
+This section is a dated snapshot, not the current state. Where it disagrees with
+[ART_ASSET_PROGRAM](ART_ASSET_PROGRAM.md) §"Current facts" (2026-10-21), the programme
+document wins: E4, EP and the two-native-figure seam are landed since this was written,
+and the combined check is 333/333 at `f92ed55`.
 
 The work is being resumed elsewhere. This is the exact state, so nothing has to be
 re-derived.
