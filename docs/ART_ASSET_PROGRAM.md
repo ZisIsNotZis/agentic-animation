@@ -88,12 +88,19 @@ and a fresh sight-capable reviewer passes the cut stills at normal viewing size.
 verdict is the observation that decides it; `check`, `make`, the named cues and the
 bake-identified stills are its preconditions.
 
-**The narrowing is a decision, not a lost goal.** The person answered the scope question
-on 2026-10-21 (`mail/2026-10-21-animation-rally-scope.md`): *ship the serve*. What S-A1 is
-accepted on — a capability family proven by a rendered artefact and an independent
-verdict — is untouched; only the shot's content narrowed. A later session reading "serve"
-here should read a decision: the rally returns as its own package when a contact
-mechanism widens the two-frame window, and nothing has been abandoned.
+**The narrowing is an assumed decision, not a lost goal — and not the person's answer.**
+Corrected by root on 2026-10-21, because this paragraph previously recorded the scope
+question as answered. It is not: root recommended *ship the serve* and raised the question
+to the person the same day (`mail/2026-10-21-animation-rally-scope.md`), and **no answer has
+come back**. The sentence is an agent fact of the assumed kind and must never be quoted as
+the person's word.
+
+What is true instead: S-A1 proceeds on root's recommendation because it is reversible and
+because a reviewer's verdict on one real moving shot is worth more than an argument about a
+second hit. If the person says "it has to be a rally", one contact-mechanism package enters
+ahead of the episode and the elevation question opens with it; nothing that has landed is
+lost. The rally returns as its own package when a contact mechanism widens the two-frame
+window, and nothing has been abandoned.
 
 Packages, in this order:
 
