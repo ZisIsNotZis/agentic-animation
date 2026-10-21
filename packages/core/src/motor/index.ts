@@ -700,9 +700,11 @@ export interface MotorScene {
   actors: MotorActorInput[];
   props: MotorPropInput[];
   /** Declared support surfaces (stage space): a released prop falls to the
-   * highest surface under its x, else to the ground line. */
+   * highest surface under its x, else to the ground line. A prop declared
+   * `projectile` lands on the set's lowest declared surface (its floor) instead — staging's
+   * actor clamp is a composition convention, not a surface. */
   supports?: MotorSupport[];
-  /** Ground line fallback for released props. */
+  /** Ground line fallback for released props that are not projectiles. */
   groundY?: number;
   /** Target resolution: id -> stage x (actors and props share the space). */
   resolveX(id: string): number | undefined;
@@ -1170,8 +1172,23 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     return [state.facing * Math.sin(w) * 7 * ramp * state.holdShape * state.scale,
       (Math.cos(w) - 1) * 4 * ramp * state.holdShape * state.scale];
   };
-  const supportYAt = (x: number, currentY: number): number => {
-    let best = scene.groundY ?? scene.actors[0]?.groundY ?? 720;
+  /** The ground line a prop falls back to when nothing declares a surface
+   *  under it: the scene's stage line, else the first actor's. */
+  const groundLineY = (): number => scene.groundY ?? scene.actors[0]?.groundY ?? 720;
+  /** A projectile's ground is the set's declared floor, never the actor
+   *  y-clamp. Staging clamps a body into the subject safe area, which is a
+   *  composition convention 41 px ABOVE the hall's painted floor; a projectile
+   *  that rests on that clamp bounces and settles in mid-air with nothing drawn
+   *  under it (the defect S-A1's reviews found). The floor is read from the set
+   *  geometrically — the lowest surface it declares is its floor — so no set
+   *  has to know a name. A set that declares no surface falls back to the stage
+   *  line. */
+  const floorY = (): number => {
+    const surfaces = scene.supports ?? [];
+    return surfaces.length ? surfaces.reduce((lowest, surface) => Math.max(lowest, surface.y), -Infinity) : groundLineY();
+  };
+  const supportYAt = (x: number, currentY: number, fallbackY: number): number => {
+    let best = fallbackY;
     for (const surface of scene.supports ?? []) {
       if (x >= surface.x0 && x <= surface.x1 && surface.y >= currentY - 2 && surface.y < best) best = surface.y;
     }
@@ -2150,7 +2167,8 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         prop.vy += GRAVITY * delta;
         prop.y += prop.vy * delta;
         const point = supportPoint(prop);
-        const surface = supportYAt(prop.x + point.x, prop.y - prop.vy * delta + point.y);
+        const surface = supportYAt(prop.x + point.x, prop.y - prop.vy * delta + point.y,
+          prop.projectile ? floorY() : groundLineY());
         if (prop.vy >= 0 && prop.y + point.y >= surface) {
           prop.y = surface - point.y;
           // A projectile keeps the bounce it declares: the surface returns the

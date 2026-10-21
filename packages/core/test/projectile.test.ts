@@ -183,6 +183,31 @@ test("a struck shuttle emits projectile.struck then projectile.settled under the
   assert.deepEqual(baked.diagnostics ?? [], []);
 });
 
+test("a projectile's ground is the set's declared floor, not the actor y-clamp", () => {
+  // The hall in `episodes/a-badminton/` paints its floor at 691 and stages its
+  // actors on the safe-area clamp 0.602 x 1080 = 650. A projectile that rested
+  // on the clamp hung 41 px in the air with nothing drawn under it — the defect
+  // S-A1's reviews found, and the one that makes "lands, bounces, comes to
+  // rest" undrawable however the shot is framed.
+  const ACTOR_LINE = 650;
+  const scene = serveScene();
+  scene.actors[0]!.groundY = ACTOR_LINE;
+  scene.groundY = ACTOR_LINE;
+  const baked = simulateScene(scene);
+  const settled = eventsOf(baked).find((event) => event.kind === "projectile.settled")!;
+  assert.deepEqual(settled.position, [settled.position![0], FLOOR], "the rest is on the set's floor line");
+  const frames = baked.props.shuttle!;
+  assert.equal(frames.at(-1)!.y, FLOOR);
+  // Every frame from the settle to the end is ON that line: a shuttle resting
+  // 41 px above the floor is exactly what the clamp produced.
+  const fromSettle = frames.slice(frameOf(settled.at));
+  for (const frame of fromSettle) assert.ok(Math.abs(frame.y - FLOOR) <= 1, `a resting frame at y ${frame.y} is not on the floor line ${FLOOR}`);
+  // The lowest point the prop ever reaches is the floor line and nothing below
+  // it: floating above it and sinking through it are both refused.
+  const lowest = Math.max(...frames.map((frame) => frame.y));
+  assert.ok(Math.abs(lowest - FLOOR) <= 1, `the prop's lowest point is y ${lowest}, not the floor line ${FLOOR}`);
+});
+
 test("a strike on the held shuttle is the serve: it leaves the hand on the 40° arc", () => {
   // Slice A's first hit is a serve, because a strike only lands inside the arm
   // envelope and two actors keep their drawn bodies apart: the shuttle has to

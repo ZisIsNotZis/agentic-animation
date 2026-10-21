@@ -140,14 +140,14 @@ is a defect (`avoidActorCollisions` writes the actor y-clamp into the projectile
 so the shuttle bounces and rests 41–56 px above the line it started on), and ER's "no
 bounce" is its 6 fps sample stepping over two hops of 62 px and 16 px.
 
-## The repair workset (ready for root to launch; not dispatched here)
+## The repair workset (dispatched 2026-10-21; R1 and R4 are in the tree)
 
 Each row is a package with its own acceptance. R1 is a defect; R2 and R3 are design and
 need root's word; R4 and R5 are asset and animation work.
 
 | pkg | what | accept |
 | --- | --- | --- |
-| **R1** | the projectile's ground is the set's floor, not the actor clamp | a prop struck or released from the floor line makes both contacts and rests **on that line** (±1 px); `node tools/prop-track.mjs` shows it; no other test's numbers move |
+| **R1** | the projectile's ground is the set's floor, not the actor clamp | a prop struck or released from the floor line makes both contacts and rests **on that line** (±1 px); `node tools/prop-track.mjs` prints the set's floor and each prop's gap to it; no other test's numbers move |
 | **R2** | the bounce must read: 62 px then 16 px over ~0.2 s is physical but not visible | root decides whether elevation/restitution becomes authorable, or the shot states a smaller bounce and says so |
 | **R3** | the follow must read as a follow: at `zoom 0.75` the pan is ~120 px | root picks: narrower framing with cut heads and a real pan, or a follow that holds a subject band and the floor |
 | **R4** | the shuttle is ~3× a real shuttlecock (stageWidth 130 at scale 0.65) and passes in front of the receiver's legs | drawn size within ~1.3× a real shuttle beside the figure, and no player-leg occlusion at the bounce |
