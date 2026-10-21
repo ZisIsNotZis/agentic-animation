@@ -93,22 +93,23 @@ named cues and the bake-identified stills are its preconditions.
 Packages, in this order:
 
 1. **E2 · the serve and the return** — **landed** `35b8ffd`, `a1f848a`, `d281f62`
-   (spend `idle-compute`, 12 min, run `2d29eb2e/task-1`). A held projectile leaves the
-   hand on the 40° arc at a strike; the push approach now resolves a prop target's live
-   x; `swing.events` is `[]` and a guard test requires every event of an implemented
-   capability to have an emitter. Measured: **the return's contact window is 0.09 s, two
-   frames at 24 fps** (`mail/2026-10-21-e2-report.md`).
-2. **E4 · the tracking camera** — **landed** `d40ceec` (spend `idle-compute`, 7 min, run
-   `2d29eb2e/task-2`): `camera.follow(target, {sec, zoom})`, dense per-frame keys,
-   stage-clamped, holding at the window's end. No stills were rendered and the renderer
-   is unverified (`mail/2026-10-21-e4-report.md`).
+   (`idle-compute`, 12 min, run `2d29eb2e/task-1`). A held projectile leaves the hand on
+   the 40° arc; the push approach resolves a prop target's live x; `swing.events` is `[]`
+   behind a guard that every declared event of an implemented capability has an emitter.
+   Measured: **the return's contact window is 0.09 s, two frames**
+   (`mail/2026-10-21-e2-report.md`).
+2. **E4 · the tracking camera** — **landed** `d40ceec` (`idle-compute`, 7 min, run
+   `2d29eb2e/task-2`): `camera.follow(target, {sec, zoom})`, per-frame keys, stage-clamped,
+   holding at the window's end. No stills: the renderer is unverified
+   (`mail/2026-10-21-e4-report.md`).
 3. **EP · two native figures cannot bake together** — next, and ahead of the episode.
    The blocker E2 measured: with a native actor as receiver or server the whole-body
    proposal refuses the substep (`palm-contact/hand_r NaN`, `foot-reach/foot_r
-   Infinity`) — the same clamping class as slice B's owed `foot-reach` fix. Spend
-   `idle-compute`, 25 min. Acceptance: a two-native-actor serve-then-return bake with
-   empty diagnostics, and the `foot-reach` comparison made at the clamp rather than on
-   the annulus boundary.
+   Infinity`) — the same clamping class as slice B's owed `foot-reach` fix. **Dispatched
+   unattended** (`idle-compute`, 25 min, run `5b22b313`, child `c0caf6a0`); it files
+   `mail/2026-10-21-ep-report.md` itself, since the node may be asleep when it ends.
+   Acceptance: a two-native-actor serve-then-return bake with empty diagnostics and the
+   `foot-reach` comparison at the clamp.
 4. **EA · the episode** (`episodes/a-badminton/`) — spend `idle-compute`, 25 min.
    Authored after EP and against E2's and E4's landed behaviour: serve from the hand,
    `camera.follow(shuttle)`, `force` 1.0–1.2 so the landing stays on the painted 1920.
@@ -144,9 +145,8 @@ library's default action, stage 1920×1080, ground 691:
 
 **Reach and elevation, the six facts that decide the episode:**
 
-1. A strike lands only inside the 137 px arm envelope (staged scale 0.88), and a floor
-   or support-staged shuttle sits 200+ px below the hand: unreachable, and the motor now
-   says so by name instead of dropping the beat.
+1. A strike lands only inside the 137 px arm envelope (staged scale 0.88); a floor or
+   support-staged shuttle sits 200+ px below the hand and the motor says so by name.
 2. Two actors keep their drawn bodies apart, so a striker cannot reach a shuttle in *the
    other* player's hand. The reachable first hit is a **serve from the server's hand**.
 3. No authored toss exists: `release` opens the hand with carry velocity and no upward
