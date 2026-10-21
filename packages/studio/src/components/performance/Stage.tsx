@@ -17,8 +17,9 @@ export interface PerformanceSceneContext {
   theme: PerformanceSceneTheme;
   sceneSvg?: string;
   /** Declared world layers with preloaded group text, back-to-front (M3); a
-   * layer may declare compositing (M4 `blend`/`opacity`). */
-  setLayers?: Array<{id: string; foreground: boolean; blend?: SetLayerBlend; opacity?: number; text: string}>;
+   * layer may declare compositing (M4 `blend`/`opacity`) or a paint plane
+   * (`depth`, D1) at which it composites between the actor planes. */
+  setLayers?: Array<{id: string; foreground: boolean; blend?: SetLayerBlend; opacity?: number; depth?: number; text: string}>;
   /** Intrinsic coordinateSpace extents of the set art (SVG viewBox). */
   setViewBox?: [number, number];
 }
@@ -49,6 +50,7 @@ export function sceneForFrame(manifest: PerformanceManifest, frame: number): Per
       foreground: layer.foreground === true,
       ...(layer.blend ? {blend: layer.blend} : {}),
       ...(layer.opacity === undefined ? {} : {opacity: layer.opacity}),
+      ...(layer.depth === undefined ? {} : {depth: layer.depth}),
       text,
     }] : [];
   });
@@ -76,7 +78,7 @@ function setViewBoxOf(scene: PerformanceSceneContext): {width: number; height: n
 }
 
 /** One declared set layer: intrinsic-space art scaled onto the 1920x1080 stage. */
-const SetLayerSvg: React.FC<{scene: PerformanceSceneContext; layer: {id: string; foreground: boolean; blend?: SetLayerBlend; opacity?: number; text: string}; zIndex: number}> = ({scene, layer, zIndex}) => {
+const SetLayerSvg: React.FC<{scene: PerformanceSceneContext; layer: {id: string; foreground: boolean; blend?: SetLayerBlend; opacity?: number; depth?: number; text: string}; zIndex: number}> = ({scene, layer, zIndex}) => {
   const viewBox = setViewBoxOf(scene);
   return (
     <svg
@@ -101,17 +103,24 @@ const SetLayerSvg: React.FC<{scene: PerformanceSceneContext; layer: {id: string;
   );
 };
 
-/** Declared set layers behind actors, replacing the single flat background. */
+/** Declared set layers above actors, replacing the single flat background. A
+ * layer that declares a `depth` composites at that plane instead. */
 export const PerformanceForegroundLayers: React.FC<StageProps> = ({scene}) => {
-  const layers = (scene?.setLayers ?? []).filter((layer) => layer.foreground);
+  const layers = (scene?.setLayers ?? []).filter((layer) => layer.foreground && layer.depth === undefined);
   return layers.length ? <>{layers.map((layer, index) => <SetLayerSvg key={layer.id} scene={scene!} layer={layer} zIndex={70 + index} />)}</> : null;
 };
 
-/** Flat, hard-edged scene dressing. It is rendered before props and actors. */
+/** The plane a declared layer paints at: its declared `depth`, else today's
+ * planes (background under the props at 20, foreground over the actors). */
+const depthPlane = (layer: {foreground: boolean; depth?: number}, index: number): number => layer.depth ?? (layer.foreground ? 70 + index : index);
+
+/** Flat, hard-edged scene dressing. It is rendered before props and actors,
+ * except a layer that declares a `depth`: it paints at the plane it names,
+ * which is how a set piece stands between two actors (D1, the net). */
 export const PerformanceStage: React.FC<StageProps> = ({ scene = { id: "opening", index: 0, location: "office", theme: "opening-office" } }) => {
   const backgroundLayers = (scene.setLayers ?? []).filter((layer) => !layer.foreground);
   if (backgroundLayers.length) {
-    return <>{backgroundLayers.map((layer, index) => <SetLayerSvg key={layer.id} scene={scene} layer={layer} zIndex={index} />)}</>;
+    return <>{backgroundLayers.map((layer, index) => <SetLayerSvg key={layer.id} scene={scene} layer={layer} zIndex={depthPlane(layer, index)} />)}</>;
   }
   return scene.sceneSvg ? (
   <svg

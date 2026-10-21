@@ -133,14 +133,20 @@ is under implementation; the static M2 parts alone do not establish support.
 A `library/set/<name>/manifest.json` may declare a world in
 `coordinateSpace` units (e.g. `"1920x1080"`): `layers` as an ordered
 back-to-front list of group ids in `scene.svg` (an entry may instead be
-`{id, foreground?, blend?, opacity?}` to composite in front of actors, with
+`{id, foreground?, blend?, opacity?, depth?}` to composite in front of actors, with
 `blend` one of `normal`/`multiply`/`screen`/`hue`/`saturation`/`color`/
 `luminosity`/`soft-light`, default `normal`, and `opacity`
 in 0..1, default 1 — the stage applies them as `mix-blend-mode` and element
 opacity, which is how an authored pigment or light pass reaches the actor
 plane as well as the set, M4 additive implementation per
 [ART_MATERIALS_M4.md](ART_MATERIALS_M4.md); the defaults leave every existing
-declaration and legacy set rendering unchanged), `safeActorArea` as
+declaration and legacy set rendering unchanged). `depth` is a paint plane in
+the actor z-space (props 20, actors 40 and up): a layer that names one
+composites at that plane instead of under every actor or over every actor,
+which is what lets a set piece stand between two actors — the badminton net
+at 45 between a far player at 40 and a near one at 50 (D1 in
+[ART_ASSET_PROGRAM.md](ART_ASSET_PROGRAM.md)); a layer that names none keeps
+the planes above. `safeActorArea` as
 a rect, and `supports` as `{name, x: [min, max], y, paint}`. The modes added
 after `screen` are the ones whose blend keeps a property of the backdrop:
 `hue`, `saturation` and `color` keep its luminosity, `luminosity` replaces
@@ -160,7 +166,7 @@ entry whose painted element (the SVG element with id `paint`, carrying
 `data-support-top="<y>"`) disagrees with the declared `y` by more than 8
 coordinateSpace units. Legacy sets keep raw art-unit `supports` passthrough.
 The compiled scene IR carries normalized `setLayers`
-(`{id, foreground, blend, opacity}`),
+(`{id, foreground, blend, opacity, depth}`),
 `safeArea`, `supportSurfaces`, and the intrinsic `setViewBox`; the
 renderer-remotion preloader injects per-layer group text into
 `locationScenes` keyed `"<instance>/<layerId>"` for world sets (legacy sets
@@ -168,7 +174,8 @@ keep the whole-document blob keyed by instance) and fails the render when a
 declared layer's group or the set's `scene.svg` cannot be read — never a
 placeholder fallback. The Remotion stage stacks
 declared layers back-to-front below the prop and actor planes; `foreground`
-entries composite above actors and props. `stageScene` clamps actor placement
+entries composite above actors and props, and an entry with a declared `depth`
+composites at that plane instead of either. `stageScene` clamps actor placement
 inside the declared `safeActorArea` (centers, including collision
 resolution); sets without one keep the 10%–90% width heuristic. The
 support-surface pass stays the authority for `on(X)` and resolves through the

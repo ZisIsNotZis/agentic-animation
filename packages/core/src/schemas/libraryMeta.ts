@@ -188,6 +188,10 @@ export const SetLayerEntrySchema = z.union([
     foreground: z.boolean().default(false),
     blend: z.enum(SET_LAYER_BLENDS).default("normal"),
     opacity: z.number().min(0).max(1).default(1),
+    /** Declared paint plane in the actor z-space (props 35, actors 40/50). A layer
+     * that names one composites there instead of under every actor or over every
+     * actor; an undeclared layer keeps the pre-declared rendering. */
+    depth: z.number().finite().optional(),
   }).strict(),
 ]);
 export type SetLayerEntry = z.infer<typeof SetLayerEntrySchema>;
@@ -214,6 +218,7 @@ export interface NormalizedSetLayer {
   readonly foreground: boolean;
   readonly blend?: SetLayerBlend;
   readonly opacity?: number;
+  readonly depth?: number;
 }
 
 /** Registry-normalized set world: every value is 0..1 of the canvas. */

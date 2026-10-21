@@ -95,6 +95,7 @@ export function normalizeSetWorld(input: SetWorldInput): NormalizedSetWorld {
       foreground: layer.foreground,
       ...(layer.blend === "normal" ? {} : {blend: layer.blend}),
       ...(layer.opacity === 1 ? {} : {opacity: layer.opacity}),
+      ...(layer.depth === undefined ? {} : {depth: layer.depth}),
     };
   });
   const supports = parsed.supports.map((surface) => {

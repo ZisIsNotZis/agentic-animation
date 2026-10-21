@@ -110,3 +110,34 @@ test("sets without declared layers keep the flat single-background path", () => 
   assert.doesNotMatch(markup, /data-set-layer/);
   assert.equal(renderToStaticMarkup(React.createElement(PerformanceForegroundLayers, {scene})), "");
 });
+
+test("a layer that declares a depth paints at that plane, between two actor planes", () => {
+  // D1: the badminton net must be able to stand between the far player (z 40)
+  // and the near one (z 50) — today the set is drawn under every actor, so no
+  // serve can cross it. The declared plane is emitted verbatim; everything
+  // undeclared keeps today's planes.
+  const manifest = layeredManifest();
+  manifest.sceneTrack![0]!.setLayers = [
+    {id: "backdrop", foreground: false},
+    {id: "counter", foreground: false, depth: 45},
+    {id: "counter-front", foreground: true},
+  ] as never;
+  const scene = sceneForFrame(manifest, 0);
+  assert.deepEqual(scene.setLayers?.map((layer) => [layer.id, layer.depth]), [
+    ["backdrop", undefined], ["counter", 45], ["counter-front", undefined],
+  ]);
+  const markup = renderToStaticMarkup(React.createElement(PerformanceStage, {scene}));
+  const depthZ = Number(markup.slice(markup.indexOf('data-set-layer="counter"')).match(/z-index:(\d+)/)![1]!);
+  assert.equal(depthZ, 45, "the declared depth is the paint plane");
+  assert.ok(depthZ > 40 && depthZ < 50, `depth ${depthZ} must sit between the staged actor planes (receiver 40, server 50)`);
+  const flatZ = Number(markup.slice(markup.indexOf('data-set-layer="backdrop"')).match(/z-index:(\d+)/)![1]!);
+  assert.ok(flatZ < 20, "an undeclared background layer still paints under the props and actors");
+  // A foreground layer stays above the actor plane unless it names a depth.
+  const foreground = renderToStaticMarkup(React.createElement(PerformanceForegroundLayers, {scene}));
+  assert.match(foreground, /data-set-layer="counter-front"/);
+  assert.ok(Number(foreground.match(/z-index:(\d+)/)![1]!) > 60);
+  // A foreground layer that DOES name a depth is not drawn twice.
+  manifest.sceneTrack![0]!.setLayers = [{id: "counter", foreground: true, depth: 30}] as never;
+  const named = sceneForFrame(manifest, 0);
+  assert.equal(renderToStaticMarkup(React.createElement(PerformanceForegroundLayers, {scene: named})), "");
+});
