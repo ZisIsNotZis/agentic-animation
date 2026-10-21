@@ -129,19 +129,25 @@ export const PerformanceFrame: React.FC<{
                         <PerformanceProp key={prop.id} prop={prop} />
                     ))}
                 </div>
-                <div
-                    data-layer="actors"
-                    style={{ position: "absolute", inset: 0, zIndex: 40 }}
-                >
-                    {actors.map((actor) => (
+                {/* One plane per actor (D1): each actor composites at its own
+                    declared `z`, so a set layer whose declared depth sits
+                    between two actor planes stands between them instead of
+                    over both. One shared wrapper would carry its own stacking
+                    context and flatten every actor onto a single plane. */}
+                {actors.map((actor) => (
+                    <div
+                        key={actor.id}
+                        data-layer="actors"
+                        data-actor-plane={actor.z}
+                        style={{ position: "absolute", inset: 0, zIndex: actor.z }}
+                    >
                         <PerformanceActor
-                            key={actor.id}
                             actor={actor}
                             props={props}
                             debugDiv={debugPhysics}
                         />
-                    ))}
-                </div>
+                    </div>
+                ))}
                 {foregroundProps.length ? <>
                     <div data-layer="native-interaction-props" style={{position:'absolute',inset:0,zIndex:50}}>
                         {foregroundProps.map((prop)=><PerformanceProp key={prop.id} prop={prop}/>)}
