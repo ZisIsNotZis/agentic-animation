@@ -164,9 +164,15 @@ carry the reading, and buying them first is what "time is the scarce thing" asks
 `NOT SATISFIED`; the repair workset was then dispatched and **R1 landed** (`bfa837d`, a
 projectile's ground is the set's floor) and **R4 landed in part** (`c38c782`, the shuttle at
 116), and the episode was re-baked and re-rendered into
-`episodes/a-badminton/artifacts/sa1-r1r4-2026-10-21/` for a second, blind review. The
-milestone is **not reached** until that review passes; what blocks it is how the shot reads,
-not whether it builds. R2, R3 and R5 wait for root and nothing landed presumes them. The integrating node re-ran the combined check
+`episodes/a-badminton/artifacts/sa1-r1r4-2026-10-21/` for a second, blind review. That review
+answered **FAIL** (`tickets/S-A1-REVIEW-2.md`), on a ground no earlier reading made: **every
+actor draws above the set, so both players stand on the camera side of the net** and no serve
+can cross it — a compositing fact that no staging value can move. It also measured the camera
+locked for the last 3.0 s (R3), the shuttle's rest off court beside the bench, and no hand
+contact at frame 0. **The milestone is not reachable by repairing the shot**: it needs a
+decision between accepting the 2D convention (both figures in front of a painted net) and
+buying per-actor depth against a declared set layer. R2, R3 and R5 wait for root and nothing
+landed presumes them. The integrating node re-ran the combined check
 at this HEAD after EA and again while writing this note: **333/333 pass, `fail 0`, two
 runs agreeing**, `npm run smoke` exit 0, `check` on the episode exit 0,
 `git diff --check` clean. The previously recorded 328/328 at `c943d88` predated EP and is

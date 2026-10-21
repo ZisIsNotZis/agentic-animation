@@ -81,3 +81,39 @@ for that rendition's numbers (events, apexes, hops, rest, the set floor it rests
   not have". R2, R3 and R5 remain root's, and nothing here presumes them.
 
 A fresh reviewer was dispatched blind against this rendition, as acceptance requires.
+
+## S-A1 review 2 — the repaired rendition, refused on the net
+
+A second blind reviewer (fresh context, run `f461a433`, given only the five stills and the
+video of `artifacts/sa1-r1r4-2026-10-21/`) answered **FAIL**; its text is filed verbatim at
+[tickets/S-A1-REVIEW-2](../../docs/tickets/S-A1-REVIEW-2.md). Its primary finding is one
+neither earlier reading made:
+
+> Both figures stand on the camera side of the net at all five still times … the players are
+> drawn over the mesh (torsos at x 505 and 755 are jersey-blue where the control column x 600
+> shows mesh; shoe soles bottom at y 382-387 while the net posts' bases stop at y 368).
+
+That is a **compositing fact, not a staging one**: every actor draws above the set, so no
+staging value can put a figure behind the net. The shot therefore has no net between its two
+players and no serve that crosses one, and the milestone's sentence cannot be delivered by
+the rendition — or by any rendition with this renderer.
+
+Four further failures, each sufficient on its own, and each one this record already owned:
+
+- **No hand contact.** At frame 0 the shuttle is already airborne, 109 px clear of the
+  player's leg; the release beat is not in the video, only in the intent.
+- **The camera locks.** Measured: both jersey centroids fixed to 0.1 px for frames 61–131
+  while the shuttle crosses 284 px. That is R3, and the reviewer's numbers are the sharpest
+  statement of it so far.
+- **The last 0.79 s are byte-identical frames.** That is not a rendering fault and not a
+  settle defect: the shuttle is correctly at rest, the camera is locked (R3) and the players
+  are statues (R5), so nothing moves. Three known facts reading as one.
+- **The rest is off court**, left of the net post beside the bench — the serve's 1440–1560 px
+  downrange land on the wood, which the first review also saw.
+
+**What that means for the next reader.** R1 and R4 were necessary and are landed, and they
+did not make the shot pass — the first verdict predicted exactly this ("R1 alone will not flip
+the verdict"). What is missing now is a decision, not a repair: either the 2D convention is
+accepted (both players in front of a painted net, as this record's own stills show) or the
+renderer grows per-actor depth against a declared set layer, which is a feature with a cost.
+R2, R3 and R5 ride along unchanged.
