@@ -224,8 +224,10 @@ the tea room and two cast members do not.
 
 ## Risks
 
-- **The artefact rests above its own floor.** R1 is a defect, not a preference, and until
-  it lands every projectile shot in the tree inherits it.
+- **The artefact rested above its own floor.** R1 was a defect, not a preference; it landed
+  at `bfa837d`, so no projectile shot inherits it any more — and a projectile now descends
+  through a raised surface it would tunnel in one frame, so only the floor catches a fast
+  one.
 - **A follow can cut drawn heads.** The head rule is deliberately off for a following shot
   (a follow that dodged every head lost its own subject). At `zoom: 1` it cuts them; this
   episode's `zoom: 0.75` does not — measured and corrected in the episode README, so R3 is

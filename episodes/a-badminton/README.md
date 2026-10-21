@@ -182,10 +182,12 @@ Two of its findings are mechanically checkable, and both need a correction:
    the line it started on**, with no ground shadow at contact, so the still at 3.167 s —
    labelled "the bounce, its apex" — shows a shuttle hanging in empty air. The defect was
    found by the reviews, not recorded by the producer: EA's five limits are swing,
-   elevation, toss, head-cut and scale, and none of them is this. The mechanism is
-   `supportYAt`, which seeds a projectile's ground with the actor clamp (`groundY`
-   0.602 × 1080 = 650) and then accepts only a declared surface with a *smaller* y — so the
-   hall's painted floor at 691 can never win. It is a defect, not a staging choice.
+   elevation, toss, head-cut and scale, and none of them is this. The mechanism was
+   `supportYAt`, which seeded a projectile's ground with the actor clamp (`groundY`
+   0.602 × 1080 = 650) and then accepted only a declared surface with a *smaller* y — so the
+   hall's painted floor at 691 could never win. **Fixed in R1** (`bfa837d`): a prop declared
+   `projectile` now lands on the set's lowest declared surface, and a raised surface under it
+   still wins.
 
 Confirmed by both, no correction needed: the shuttle is drawn ~3× a real shuttlecock
 (`stageWidth` 130 at scale 0.65 beside a 633 px figure) and passes in front of the
