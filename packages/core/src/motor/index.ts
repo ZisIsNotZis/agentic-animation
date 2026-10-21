@@ -1361,7 +1361,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             // already moved (or was walked by an earlier beat) would otherwise
             // leave the approach stop behind its own body and the walk would
             // press the adjacency clamp forever instead of arriving.
-            const aimX = target?.x ?? tx;
+            const aimX = target?.x ?? props.get(intent.target!)?.x ?? tx;
             const dir = (Math.sign(aimX - state.x) || state.facing) as 1 | -1;
             state.facing = dir;
             const rest = restHandAt(state);

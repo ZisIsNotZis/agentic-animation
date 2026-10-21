@@ -90,6 +90,35 @@ function serveScene(options: {grabAt?: number; pushAt?: number; force?: number} 
     resolveX: (id) => (id === "shuttle" ? HAND_X : id === "athlete" ? 640 : undefined),
   };
 }
+/** The return: the same serve, and a second striker staged where the
+ *  descending arc comes back down to hand height. Its push beat must be aimed
+ *  at the shuttle's LIVE x — the staged mark is where the serve started, and a
+ *  walker aimed at it would walk away from the rally. The receiver is the legacy
+ *  figure here: the engine-level aim is what this test measures, and the native
+ *  figure's IK returns a non-finite waist for the palm target a returning beat
+ *  asks for (`whole-body proposal exhausted … palm-contact/hand_r NaN`), which
+ *  is a figure defect outside this contract (reported, not worked around). */
+const RECEIVER_X = 1400;
+
+function returnScene(beatAt: number): MotorScene {
+  return {
+    durationSec: 5,
+    actors: [
+      {id: "athlete", x: 640, groundY: FLOOR, facing: 1, scale: 0.88,
+        skeletonViews: ATHLETE_VIEWS, orientations: [{at: 0, orientation: "right"}], poseTracks: [],
+        intents: [{at: 0, duration: 1, intent: "grab", target: "shuttle"},
+          {at: 1.4, duration: 1.6, intent: "push", target: "shuttle", force: 1.2, forceSec: 0.25}]},
+      {id: "receiver", x: RECEIVER_X, groundY: FLOOR, facing: -1, scale: 0.88, skeleton: LEGACY_SKELETON,
+        intents: [{at: beatAt, duration: 1.6, intent: "push", target: "shuttle", force: 1.2, forceSec: 0.25}]},
+    ],
+    props: [{id: "shuttle", x: HAND_X, y: HAND_Y, size: SHUTTLE.placement.size, touchBox: SHUTTLE.touchBox,
+      projectile: SHUTTLE.projectile, intents: []}],
+    supports: [{x0: 0, x1: 1920, y: FLOOR}],
+    groundY: FLOOR,
+    resolveX: (id) => (id === "shuttle" ? HAND_X : id === "athlete" ? 640 : id === "receiver" ? RECEIVER_X : undefined),
+  };
+}
+
 /** Frames on which the striker carries the shuttle (the bake's hold flag). */
 const heldFramesOf = (baked: ReturnType<typeof simulateScene>): number[] =>
   baked.actors.athlete!.map((frame, index) => (frame.holds === "shuttle" ? index : -1)).filter((index) => index >= 0);
@@ -228,6 +257,40 @@ test("the struck rule decides whether the hit is one substep or a shove", () => 
   // Sustained: the same push only shoves it along the line it was struck on.
   assert.equal(Math.min(...sustained.props.shuttle!.map((frame) => frame.y)), PROP_Y);
   assert.ok(Math.max(...sustained.props.shuttle!.map((frame) => frame.x)) > PROP_X + 100, "a sustained contact still moves it");
+});
+
+test("a second struck contact lands on the shuttle in flight, and its window is not hand-cueable", () => {
+  // The rally's return: the receiver cannot hold the shuttle (two actors keep
+  // their drawn bodies apart), so it strikes it in the air, where the
+  // descending arc comes back down to hand height.
+  const struckOf = (baked: ReturnType<typeof simulateScene>) =>
+    eventsOf(baked).filter((event) => event.kind === "projectile.struck");
+
+  // The measured window, at 0.01 s of beat granularity: the push may start
+  // anywhere in 2.00–2.08 s and land the return. Outside it the beat either
+  // finds the shuttle already past the reach or not yet in it.
+  const hit = simulateScene(returnScene(2.04));
+  const struck = struckOf(hit);
+  assert.equal(struck.length, 2, `expected the serve and the return, got ${JSON.stringify(eventsOf(hit).map((event) => event.kind))}`);
+  assert.equal(struck[1]!.prop, "shuttle", "the return is a second beat on the same prop");
+  assert.ok(struck[1]!.at > struck[0]!.at, "the return follows the serve");
+  const [rvx, rvy] = struck[1]!.velocity!;
+  assert.ok(rvx > 0 && rvy < 0, `the return leaves up and away from the receiver, got (${rvx}, ${rvy})`);
+  const elevation = Math.atan2(-rvy, rvx) * 180 / Math.PI;
+  assert.ok(Math.abs(elevation - 40) < 0.5, `the return is not on the 40° arc: ${elevation.toFixed(2)}°`);
+  // The receiver met the LIVE shuttle: a beat aimed at the staged mark (x 700,
+  // where the serve began) would have walked it backwards out of the rally.
+  assert.ok(hit.actors.receiver!.some((frame) => frame.x > RECEIVER_X + 20),
+    "the receiver never walked at the shuttle's live x");
+
+  // The window is real and it is TINY: one frame either side of the centre
+  // misses. A cue authored by hand has ±1 frame (0.04 s) of slack, so slice A's
+  // return cannot be cued by an author — it needs the shuttle carried or tossed
+  // into the receiving hand, or a mechanism that widens the contact.
+  const missBefore = struckOf(simulateScene(returnScene(1.98)));
+  const missAfter = struckOf(simulateScene(returnScene(2.1)));
+  assert.equal(missBefore.length, 1, `a beat 0.06 s early must miss the shuttle, got ${missBefore.length} strikes`);
+  assert.equal(missAfter.length, 1, `a beat 0.06 s late must miss the shuttle, got ${missAfter.length} strikes`);
 });
 
 test("a strike that never touches says so instead of emitting nothing", () => {
