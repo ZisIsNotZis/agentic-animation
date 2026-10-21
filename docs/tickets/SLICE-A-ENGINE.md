@@ -175,6 +175,11 @@ The gate now selects on the field the episode asked through (`intent`, `support`
 `prop` kind) and refuses a declaration nothing implements, by name and with the asset:
 `object mug (prop/x/mug) needs the "projectile" prop capability…`. `prop/shuttle`
 declares `kind: "projectile"`, `mass 0.05`, `restitution 0.5`, `struck: "instant"`.
+**One caveat added by R1** (`bfa837d`): E1's numbers were measured on a scene whose ground
+line and declared floor were the same value. In the campaign's own scenes they are 41 px
+apart, and a projectile used to rest on the ground line; it now rests on the set's lowest
+declared surface. E1's arc, launch speed and bounce ratio are untouched — where a prop comes
+down and where it stops are not the same fact.
 
 Launch speed = `force × 2900 × forceSec × (0.05/mass) × (1+restitution)`, capped at
 2600 px/s; restitution is also the bounce the surface returns; below 220 px/s of bounce
