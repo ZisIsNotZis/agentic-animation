@@ -2,9 +2,9 @@
 
 Working record for milestone S-A1 (`ART_ASSET_PROGRAM.md` §Roadmap). It holds the
 hooks, the falsifications, the measured numbers and the limits of E2, E4 and EP, so
-the episode and the next session do not re-derive them. The packages' own mail files
-were landed here and deleted from `mail/` on 2026-10-21; their verbatim text is in
-git history at `f92ed55` (and earlier).
+the episode and the next session do not re-derive them. The packages' own message files
+were landed here and deleted from the messages directory on 2026-10-21 (it is `inbox/`
+now; it was `mail/` then); their verbatim text is in git history at `f92ed55` (and earlier).
 
 ## E2 · the serve and the return (`idle-compute`, 704 s, run `2d29eb2e/task-1`)
 
