@@ -121,9 +121,9 @@ Packages, in this order:
 
 ## Current facts
 
-**Where the slice-A engine stands (2026-10-21):** E1, E2 and E4 are landed and green;
-missing are the two-native-figure bake (EP), the episode (EA) and the eye-level review
-(ER). The reach finding re-scopes the *episode*, not the milestone: the capability
+**Where the slice-A engine stands (2026-10-21):** E1, E2 and E4 are landed and green —
+the integrating node's combined `npm test` is 328/328 at `c943d88`; missing are the
+two-native-figure bake (EP), the episode (EA) and the eye-level review (ER). The reach finding re-scopes the *episode*, not the milestone: the capability
 families S-A1 is accepted on are unchanged and its observation is still a reviewer's
 verdict on bake-identified stills. What narrows is content — a serve and an arc rather
 than a rally, a reacting figure rather than a return, until a contact mechanism widens
