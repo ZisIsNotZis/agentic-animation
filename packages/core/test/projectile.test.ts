@@ -66,6 +66,34 @@ function strikeScene(options: StrikeOptions = {}): MotorScene {
   };
 }
 
+/** The serve: the shuttle is in the striker's own hand (a `grab` beat binds it
+ *  there) and the strike targets the prop it holds. Staged at the carry hand's
+ *  height — the only place slice A's first hit can be authored, since two
+ *  actors keep their drawn bodies apart and no authored toss exists. */
+const HAND_X = 700;
+const HAND_Y = 310;
+
+function serveScene(options: {grabAt?: number; pushAt?: number; force?: number} = {}): MotorScene {
+  const prop: MotorPropInput = {id: "shuttle", x: HAND_X, y: HAND_Y, size: SHUTTLE.placement.size,
+    touchBox: SHUTTLE.touchBox, projectile: SHUTTLE.projectile, intents: []};
+  return {
+    durationSec: 5,
+    actors: [{
+      id: "athlete", x: 640, groundY: FLOOR, facing: 1, scale: 0.88,
+      skeletonViews: ATHLETE_VIEWS, orientations: [{at: 0, orientation: "right"}], poseTracks: [],
+      intents: [{at: options.grabAt ?? 0, duration: 1, intent: "grab", target: "shuttle"},
+        {at: options.pushAt ?? 1.4, duration: 1.6, intent: "push", target: "shuttle", force: options.force ?? 1.2, forceSec: 0.25}],
+    }],
+    props: [prop],
+    supports: [{x0: 0, x1: 1920, y: FLOOR}],
+    groundY: FLOOR,
+    resolveX: (id) => (id === "shuttle" ? HAND_X : id === "athlete" ? 640 : undefined),
+  };
+}
+/** Frames on which the striker carries the shuttle (the bake's hold flag). */
+const heldFramesOf = (baked: ReturnType<typeof simulateScene>): number[] =>
+  baked.actors.athlete!.map((frame, index) => (frame.holds === "shuttle" ? index : -1)).filter((index) => index >= 0);
+
 const eventsOf = (baked: ReturnType<typeof simulateScene>) => baked.events ?? [];
 const height = (frame: {y: number}): number => FLOOR - frame.y;
 /** Frame index of the beat, so a test can slice the trajectory at an event. */
@@ -123,6 +151,48 @@ test("a struck shuttle emits projectile.struck then projectile.settled under the
   assert.deepEqual(settled.position, [settled.position![0], FLOOR]);
   assert.equal(frames.at(-1)!.y, FLOOR);
   assert.equal(frames.at(-1)!.falling, undefined);
+  assert.deepEqual(baked.diagnostics ?? [], []);
+});
+
+test("a strike on the held shuttle is the serve: it leaves the hand on the 40° arc", () => {
+  // Slice A's first hit is a serve, because a strike only lands inside the arm
+  // envelope and two actors keep their drawn bodies apart: the shuttle has to
+  // be in the server's own hand when the beat starts.
+  const baked = simulateScene(serveScene());
+  const events = eventsOf(baked);
+  assert.deepEqual(events.map((event) => event.kind), ["projectile.struck", "projectile.settled"]);
+  assert.equal(events.filter((event) => event.kind === "projectile.struck").length, 1,
+    "one strike is one beat, however many substeps the hand stayed in the box");
+  const struck = events[0]!;
+
+  // The striker really carries it first: the hold is a beat of its own, not a
+  // prop that happens to sit near a hand.
+  const held = heldFramesOf(baked);
+  assert.ok(held.length > 20, `the striker never carried the shuttle (${held.length} held frames)`);
+  const struckFrame = frameOf(struck.at);
+  assert.ok(held.at(-1)! < struckFrame, `the shuttle is still in the hand at the strike (held through frame ${held.at(-1)})`);
+
+  // The launch is the engine's one strike elevation: 40° above the horizontal,
+  // upward and away from the striker.
+  const [vx, vy] = struck.velocity!;
+  assert.ok(vx > 0 && vy < 0, `a serve leaves up and away, got (${vx}, ${vy})`);
+  const elevation = Math.atan2(-vy, vx) * 180 / Math.PI;
+  assert.ok(Math.abs(elevation - 40) < 0.5, `the serve is not on the 40° arc: ${elevation.toFixed(2)}°`);
+
+  // It leaves from the hand: the first airborne frame is one frame of its own
+  // launch travel from the last carried frame — the strike does not teleport
+  // the prop off the palm — and no later frame carries it again, so the hold
+  // block did not pull the launched prop back to the hand.
+  const last = baked.props.shuttle![held.at(-1)!]!;
+  const first = baked.props.shuttle![struckFrame]!;
+  const travelled = Math.hypot(first.x - last.x, first.y - last.y);
+  const perFrame = Math.hypot(vx, vy) / FPS + 2;
+  assert.ok(travelled <= perFrame, `the shuttle jumped ${travelled.toFixed(1)} px leaving the hand (a launched frame travels ${perFrame.toFixed(1)})`);
+  assert.equal(heldFramesOf(baked).some((index) => index >= struckFrame), false, "the launched shuttle was re-gripped");
+
+  // And it flies: the apex clears the release point by more than a body height.
+  const apexAboveRelease = Math.max(...baked.props.shuttle!.slice(struckFrame).map((frame) => last.y - frame.y));
+  assert.ok(apexAboveRelease > 100, `the serve rose only ${apexAboveRelease.toFixed(1)} px`);
   assert.deepEqual(baked.diagnostics ?? [], []);
 });
 

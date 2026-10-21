@@ -733,14 +733,11 @@ function strikeProjectile(prop: PropState, dir: 1 | -1, force: number, sec: numb
   prop.strike = {at: now, velocity: [prop.vx, prop.vy]};
 }
 
-/** Open the hand: the held prop detaches and falls under gravity. */
-function propOpenHand(state: ActorState, props: Map<string, PropState>, free = false): void {
-  const heldProp = state.holding ? props.get(state.holding) : undefined;
-  if (heldProp) {
-    heldProp.falling = true;
-    heldProp.vx = free ? heldProp.carryVelocity[0] : 0;
-    heldProp.vy = free ? heldProp.carryVelocity[1] : Math.max(0, -heldProp.vy);
-  }
+/** Let go of the held prop: every hold channel clears, the prop keeps whatever
+ *  motion it already has. Split out of `propOpenHand` because a STRIKE also
+ *  ends the hold but has already set the launch velocity itself — the release
+ *  path's velocity write would overwrite the launch with a zero carry. */
+function clearHandHold(state: ActorState): void {
   state.holding = null;
   state.holdRel = null;
   state.holdShape = 0;
@@ -751,6 +748,17 @@ function propOpenHand(state: ActorState, props: Map<string, PropState>, free = f
   state.place = null;
   state.placeOut = 0;
   state.retract = state.reach !== null;
+}
+
+/** Open the hand: the held prop detaches and falls under gravity. */
+function propOpenHand(state: ActorState, props: Map<string, PropState>, free = false): void {
+  const heldProp = state.holding ? props.get(state.holding) : undefined;
+  if (heldProp) {
+    heldProp.falling = true;
+    heldProp.vx = free ? heldProp.carryVelocity[0] : 0;
+    heldProp.vy = free ? heldProp.carryVelocity[1] : Math.max(0, -heldProp.vy);
+  }
+  clearHandHold(state);
 }
 
 /** Slice 4 fall (docs/WORLD_PUPPET_MOTOR.md): balance is cut — stepping,
@@ -1357,15 +1365,24 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             const dir = (Math.sign(aimX - state.x) || state.facing) as 1 | -1;
             state.facing = dir;
             const rest = restHandAt(state);
+            // A prop the striker is HOLDING is already at the hand (the serve):
+            // there is nothing to walk to, and the hand must start where the
+            // hold block leaves it. Walking to a staged stop would drag the
+            // carried prop after a mark it never leaves, and seeding the drive
+            // from the REST hand snapped the prop 54 px to the palm's rest
+            // point — a `prop-rate` the whole-body proposal rightly refuses, so
+            // the beat froze and the strike never landed.
+            const held = state.holding === intent.target ? carryHandAt(state) : undefined;
             // Walk into arm's range first: stop where the extended hand can
             // touch the target's near edge (real locomotion, no teleport).
             const stopGap = target
               ? (state.body.halfWidth + target.body.halfWidth) * state.scale + state.body.armReach * state.scale
               : 140 * state.scale;
-            state.moveTarget = aimX - dir * stopGap;
+            state.moveTarget = held ? null : aimX - dir * stopGap;
             state.handDrive = {
               target: intent.target!, force: clamp(intent.force ?? 0.7, 0.1, 2),
-              t: 0, sec: intent.forceSec ?? 0.25, speed: 0, hand: [rest[0], rest[1]], contact: false, phase: "approach", contactT: null,
+              t: 0, sec: intent.forceSec ?? 0.25, speed: 0, hand: held ?? [rest[0], rest[1]], contact: false,
+              phase: held ? "drive" : "approach", contactT: null,
             };
           }
         } else if (intent.intent === "grab") {
@@ -1517,7 +1534,15 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           // whether the whole hit lands in one substep or conducts for the
           // window, and the declared mass scales both.
           if (targetProp.projectile.struck === "instant") {
-            if (firstTouch) strikeProjectile(targetProp, dir, drive.force, drive.sec, now + delta);
+            if (firstTouch) {
+              strikeProjectile(targetProp, dir, drive.force, drive.sec, now + delta);
+              // The serve: a strike on the prop the striker HOLDS leaves the
+              // hand in the substep it lands. The Hold block below runs after
+              // this drive, and while `holding` is set it writes the prop back
+              // onto the palm and zeroes its velocity — the launch would be
+              // undone in the same substep it was made.
+              for (const holder of actors.values()) if (holder.holding === targetProp.id) clearHandHold(holder);
+            }
           } else {
             targetProp.vx += dir * impulse * 6 * strikeMassRatio(targetProp.projectile);
             if (firstTouch) targetProp.strike = {at: now + delta, velocity: [targetProp.vx, targetProp.vy]};
