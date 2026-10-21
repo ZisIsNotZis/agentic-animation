@@ -1,0 +1,35 @@
+{
+  "episode": "episodes/a-badminton/episode.yml",
+  "episodeSha256": "fcb4de68c49974327719b1a62693cdfc3df013957fbb9432927dfd3f5fcdb15d",
+  "video": "episodes/a-badminton/artifacts/sa1-r1r4-2026-10-21/episode.mp4",
+  "videoSha256": "29ca57f4ba2d75441afb7141d7ee71ea4b61fe5b2950a59bb092aa20e74cf64e",
+  "frameCount": 132,
+  "durationSec": 5.5,
+  "fps": 24,
+  "width": 1280,
+  "height": 720,
+  "gitHead": "c38c782",
+  "renderedFrom": "the working tree at c38c782 with R1 and R4 landed; a fresh bake of the same episode reproduces the events below",
+  "verify": "bash episodes/a-badminton/artifacts/sa1-r1r4-2026-10-21/verify.sh",
+  "stillsAreDerived": "the five stills are cut from episode.mp4 by verify.sh; the cut times are the reviewed rendition's, so the two verdicts judge the same beats",
+  "stillsCommand": "ffmpeg -ss <sec> -i episode.mp4 -frames:v 1 stills/t<sec>.png",
+  "stills": [
+    {"name": "t2.208.png", "sec": 2.208, "frame": 53, "beat": "the strike (projectile.struck at 2.207 s)"},
+    {"name": "t2.500.png", "sec": 2.500, "frame": 60, "beat": "mid-arc, the shuttle over the net"},
+    {"name": "t2.917.png", "sec": 2.917, "frame": 70, "beat": "the first floor contact"},
+    {"name": "t3.167.png", "sec": 3.167, "frame": 76, "beat": "the bounce (its apex)"},
+    {"name": "t4.583.png", "sec": 4.583, "frame": 110, "beat": "the hold (the shuttle at rest since 3.717 s)"}
+  ],
+  "bake": {
+    "events": [
+      {"kind": "projectile.struck", "at": 2.207, "velocity": [-533, -447]},
+      {"kind": "projectile.settled", "at": 3.717, "position": [476.56, 691]}
+    ],
+    "arcApex": {"frame": 57, "t": 2.375, "y": 321.82},
+    "hops": [{"apexFrame": 76, "apexY": 602.70, "heightPx": 88.5}, {"apexFrame": 86, "apexY": 670.58, "heightPx": 20.6}],
+    "rest": {"fromT": 3.717, "y": 691.0, "setFloorY": 691.0},
+    "floorSource": "set/badminton_hall declares supports.floor at y 691; the shuttle's rest is on it (-0.2 px at the staged line, 0.0 px at rest), which is R1",
+    "suddenMoveWarnings": "8 lines, frames 63-70, 33-59 px, on the descent; see make.log.txt and the episode README",
+    "motorWarnings": 0
+  }
+}
