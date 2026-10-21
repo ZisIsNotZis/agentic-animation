@@ -94,3 +94,41 @@ elevation and puts the bounce and the rest on the court.
 - **The shuttle is drawn large** (the asset's declared `stageWidth` 130 at scale
   0.65 = 130 x 104 world px against a 633 px figure) and passes in front of the
   receiving player's legs. Asset-side, not authorable here.
+
+## Evidence (2026-10-21, run `25e80bfb`)
+
+Exit codes, in order: `check` **0**, `make` **0**, `render-yaml` **0**
+(132 frames, 5.500 s), `npx tsc --noEmit` **0**, `git diff --check` clean.
+`npm test` was **not** run: the integrating node owns the combined check and two
+concurrent runs race on the fixtures `pretest` rewrites.
+
+The video is deliberately **not** committed: it was moved to
+`/tmp/aa-sa1/episode.mp4` and `episodes/a-badminton/dist/` does not exist, so it
+cannot appear in `git status` (`episodes/*/dist/*.mp4` is un-ignored for
+published deliveries, which is why the file had to leave the repo).
+
+`/tmp/aa-sa1/bake-identity.json` carries the identity of the artefact these
+stills were cut from, at `git rev-parse HEAD` **6a8d967**:
+
+| field | value |
+| --- | --- |
+| episode sha256 | `fcb4de68c49974327719b1a62693cdfc3df013957fbb9432927dfd3f5fcdb15d` |
+| performance.json sha256 | `7df6ee8780f5cabf008bd17a846a43d8d7b2a697e7a683c02a728c66c972dcff` |
+| video sha256 | `6d3cbca5f03e3b4c58ddda505295f28d229e84f658c3029d40b454ccc3d8f907` |
+| frames / duration | 132 / 5.500 s at 24 fps, 1280x720 |
+| git HEAD | `6a8d967fe0776675ce7c41e8d1f3ffdb1611d2f5` |
+
+Five stills, cut with `ffmpeg -ss <t> -frames:v 1` from that video:
+
+| still | t | frame | what it is |
+| --- | --- | --- | --- |
+| `/tmp/aa-sa1/t2.208.png` | 2.208 s | 53 | the strike — the shuttle leaves the palm |
+| `/tmp/aa-sa1/t2.500.png` | 2.500 s | 60 | mid-arc — the shuttle over the net |
+| `/tmp/aa-sa1/t2.917.png` | 2.917 s | 70 | the first floor contact |
+| `/tmp/aa-sa1/t3.167.png` | 3.167 s | 76 | the bounce — its apex |
+| `/tmp/aa-sa1/t4.583.png` | 4.583 s | 110 | the hold — the shuttle at rest |
+
+Inspected by eye at full resolution: the arc reads across the net, the bounce
+reads as a bounce, the shuttle rests where the camera left it; both players'
+heads are cut above the eyebrows from the first floor contact onward (see
+"What the shot could not have").
