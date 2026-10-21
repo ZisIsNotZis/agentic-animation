@@ -1,0 +1,79 @@
+episode:
+  id: a_badminton
+  title: 羽毛球：一次发球（切片 A）
+  language: zh-CN
+
+# Slice A / milestone S-A1: ONE shot. Two native figures on the accepted hall,
+# the server takes the shuttle off the floor, serves it from his own palm, and
+# the camera follows the shuttle through its arc, its bounce and its rest.
+#
+# The shuttle starts on the FLOOR and is picked up: a strike only lands inside
+# the 137 px arm envelope at the staged scale 0.88, so a shuttle pushed where it
+# stands is refused by name (`strike missed: server never touched shuttle…`).
+# The reachable hit is a serve from the server's own hand — `prop.pickup` binds
+# the prop to the palm, and `action.push` then strikes the prop the hand already
+# holds (docs/tickets/SLICE-A-ENGINE.md §E2, measured again here: pushing the
+# floor-staged prop refuses at `joint-rate/elbow_r 7.251 > 6`).
+#
+# `pose.orient` is not decoration: a native figure with no declared orientation
+# bakes as `front`, and a front-facing body's crouch-reach is refused at its
+# first substep (`segment-angle-rate/foot_r 12.046 > 7`). The side view is what
+# makes the pickup solvable at all; `left`/`right` also fix the side the arm
+# solves from and the side the strike travels toward (`dir = sign(prop.x - x)`).
+#
+# `prop.*` calls are STATE, not timed: they advance no cursor, so the pickup's
+# ~1.8 s of walk-and-bend is budgeted with silent ellipsis beats (0.55 s each).
+# Starting the push before the grab completes seeds the drive hand off the held
+# palm and the bake refuses it (`segment-angle-rate/hand_r 44.582 > 7`).
+#
+# The camera block sits in the SAME brace group as the push: the serve is struck
+# on the push's first contact substep, so the follow window opens on the strike
+# and runs the flight to its rest (E4). `sec: 2.0` is the 1.875 s library flight
+# plus a tail, so the settle is inside the window.
+#
+# Force 1.0 over 0.16 s: the library default (1.4 over 0.25 s) settles ~2380
+# world px, off the painted 1920 stage, and at this episode's staging - a strike
+# point at x ~1030, not EP's 700 - the full 1.0/0.25 s flight runs 870 px and
+# lands on the bench at the frame's left edge. The shorter impulse keeps the
+# pinned force band and puts the bounce and the rest on the open court.
+#
+# Silence is deliberate: no TTS is available offline, and S-A1's observation is
+# the shuttle, the arc, the bounce and the camera, not voice.
+
+actors:
+  server:
+    use: figure/athlete_a
+    voice: voice/zh/student_a
+  receiver:
+    use: figure/athlete_a
+    voice: voice/zh/aqiang
+
+locations:
+  hall:
+    use: set/badminton_hall
+
+objects:
+  shuttle:
+    use: prop/shuttle
+  racket:
+    use: prop/racket
+
+scenes:
+  - id: serve
+    location: hall
+    actors:
+      server: {facing: left}
+      receiver: {facing: right}
+    objects:
+      shuttle: center
+      racket: on(bench)
+    script:
+      # 0 orient — both bodies turn side-on before any contact.
+      - server: "{pose.orient(server, \"left\")}{pose.orient(receiver, \"right\")}"
+      # 1 pick up — he walks to the shuttle and the grab binds it to the palm.
+      - server: "{prop.pickup(server, shuttle)}…………"
+      # 2 serve — the strike leaves his hand while the camera opens its follow
+      #   window on the same beat.
+      - server: "{action.push(server, shuttle, 1.0, 0.16), camera.follow(shuttle, {sec: 2.0})}"
+      # 3 hold — silence while the shuttle settles where the camera left it.
+      - server: "……"
