@@ -211,6 +211,30 @@ frame arithmetic agrees: the 0.75 follow's frame spans world y 0 → 120 and the
 tops sit at ≈ 80. The cut is real at `zoom: 1` — which is why 0.75 was chosen — and it is
 not present at 0.75, so R3 stays a question about the pan reading as a follow.
 
-**S-A1 is not reached.** The shot bakes, renders and is bound to its revision — the
-independent viewer does not pass it. The repair workset is
-`docs/ART_ASSET_PROGRAM.md` §"The repair workset".
+**S-A1 is not reached by that rendition.** The shot bakes, renders and is bound to its
+revision — the independent viewer did not pass it.
+
+## The repaired rendition (R1 + R4, rendered at `c38c782`)
+
+R1 landed (`bfa837d`) and R4 landed in part (`c38c782`); the episode was re-baked and
+re-rendered into `artifacts/sa1-r1r4-2026-10-21/`, whose `bake-identity.json` is the one home
+for its numbers and whose `verify.sh` recomputes them. What changed in the bake:
+
+| what | reviewed rendition (`6a8d967`) | repaired (`c38c782`) |
+| --- | --- | --- |
+| `projectile.struck` | 2.207 s `[-533,-447]` | 2.207 s `[-533,-447]` |
+| arc apex | frame 57, y 329.48 | frame 57, y 321.82 |
+| first contact | y 635.17 (46 px above the floor) | y 691.20 (**on** the floor) |
+| first hop | 62 px | 88.5 px |
+| second hop | 16 px | 20.6 px |
+| `projectile.settled` | 3.633 s at `[509, 650.16]` | 3.717 s at `[476.56, **691**]` |
+| the rest, until the end | 41 px above the painted floor | on it |
+
+`node tools/prop-track.mjs episodes/a-badminton/performance.json shuttle` prints the floor
+from the set and each frame's gap to it, and ends with the rest stated as ON the floor line.
+What did **not** change: the shuttle is still ~2.4× a real shuttlecock (2.6× before) and
+still crosses the receiver's shoe on the way down; the follow is still a ~120 px pan; the
+players still do not move. Those are R2, R3 and R5 — root's decisions, and the asset cannot
+buy them.
+
+A fresh reviewer was dispatched blind against this rendition, as acceptance requires.
