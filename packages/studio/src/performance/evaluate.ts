@@ -121,6 +121,9 @@ function cameraKeyValue(event: PerformanceTrackEvent): UnknownRecord {
 
 /** Design-space figure height used when an actor exposes no skeleton. */
 const FIGURE_DESIGN_HEIGHT = 720;
+/** Air a following shot keeps around its target's own band (px, matches
+ *  containCamera's margin so a follow and the containment pass agree). */
+const FOLLOW_MARGIN = 24;
 /** Head-to-waist share of the figure (lin_b_draft's waist joint is 408/720),
  *  used only when the actor exposes no declared skeleton. */
 const FIGURE_WAIST_SHARE = 408.24 / 720;
@@ -141,6 +144,11 @@ interface PushSubject {
   /** A person is framed with the staged pair (their room is the shot); an
    *  object is framed on its own silhouette. */
   horizontal: "pair" | "self";
+  /** A TRACKING subject: the frame follows it because it is moving, so its band
+   *  owns the placement outright. The head rule is not applied — a follow cannot
+   *  both keep a flying subject in frame and step aside for every drawn head,
+   *  and losing the subject is the failure that reads as a broken shot. */
+  follow?: boolean;
 }
 
 /** World y band of the named drawn skeleton parts, or undefined when the actor
@@ -247,6 +255,13 @@ function pushSubject(
 function cameraTargetPoint(subject: PushSubject | undefined, fallback: [number, number]): [number, number] {
   return subject ? subject.centre : fallback;
 }
+
+/** Where a followed target IS on a frame the evaluator is not drawing.
+ *  A `follow` event writes keys across its whole window, so its target has to be
+ *  resolved at each of those frames — by the caller that owns prop and actor
+ *  evaluation, because the placement of a struck prop lives there (motor bake,
+ *  transform tracks, bindings). */
+type FollowProbe = (target: string, frame: number) => PushSubject | undefined;
 
 function repelActors(actors: readonly EvaluatedActor[]): EvaluatedActor[] {
   const result = actors.map((actor) => ({...actor}));
@@ -450,7 +465,7 @@ function containCamera(
   // slice a drawn head: the placement moves to the nearer side that clears every
   // head, chosen from the placements the painted stage allows.
   const stagedY = Math.min(Math.max(y, 0), Math.max(0, CANVAS.height - viewportHeight));
-  const framedY = band ? clearOfHeads(stagedY, visible.map(actorHeadBand), viewportHeight, margin) : y;
+  const framedY = band && !subject?.follow ? clearOfHeads(stagedY, visible.map(actorHeadBand), viewportHeight, margin) : y;
   // The viewport must stay inside the painted stage: with zoom at the stage
   // fit the whole canvas fills the frame, so any stage-boundary-crossing
   // offset would expose the episode background as black bands.
@@ -460,6 +475,56 @@ function containCamera(
     z: zoom,
     rotation: camera.rotation,
   };
+}
+
+/**
+ * One frame of a following shot. The target's centre is what the frame pans
+ * with; the target's own band caps how close the shot may get, and the stage
+ * fit is the floor, because below it the painted 1920x1080 stage shrinks inside
+ * the video frame and the episode background leaks in as black bands. The pan
+ * is clamped inside the stage here rather than only at the end of the frame, so
+ * consecutive keys stay in one convex legal region and the camera glides along
+ * the stage edge instead of jumping back onto the subject.
+ */
+function followCameraKey(
+  centre: [number, number],
+  band: [number, number],
+  requestedZoom: number,
+  video: {width: number; height: number},
+): {x: number; y: number; z: number} {
+  const fit = Math.min(video.width / CANVAS.width, video.height / CANVAS.height);
+  const zoom = Math.max(fit, Math.min(requestedZoom, video.height / Math.max(1, band[1] - band[0] + 2 * FOLLOW_MARGIN)));
+  const viewportWidth = video.width / zoom;
+  const viewportHeight = video.height / zoom;
+  return {
+    x: Math.min(Math.max(centre[0] - viewportWidth / 2, 0), Math.max(0, CANVAS.width - viewportWidth)),
+    y: Math.min(Math.max(centre[1] - viewportHeight / 2, 0), Math.max(0, CANVAS.height - viewportHeight)),
+    z: zoom,
+  };
+}
+
+/** A following window resolved to one key per frame: the only way a live target
+ *  can stay in frame without the recipe knowing frames it cannot see. A frame
+ *  whose target cannot be resolved keeps the previous key, so a target that
+ *  leaves and returns holds the shot instead of flying to the stage origin. */
+function followWindowKeys(
+  event: PerformanceTrackEvent,
+  follow: FollowProbe | undefined,
+  video: {width: number; height: number},
+): PerformanceCameraKey[] {
+  const value = cameraKeyValue(event);
+  const target = typeof value.target === "string" ? value.target : undefined;
+  if (!target || !follow) return [];
+  const zoom = typeof value.zoom === "number" ? value.zoom : typeof value.z === "number" ? value.z : 1;
+  const start = trackEventStart(event);
+  const end = trackEventEnd(event, start);
+  const keys: PerformanceCameraKey[] = [];
+  for (let frame = start; frame <= end; frame += 1) {
+    const subject = follow(target, frame);
+    if (!subject) continue;
+    keys.push({frame, ...followCameraKey(subject.centre, subject.band, zoom, video), rotation: 0, ease: "linear"});
+  }
+  return keys;
 }
 
 function cameraKeyFromEvent(
@@ -502,6 +567,7 @@ function shotSubjectAt(
   actors: readonly EvaluatedActor[],
   props: readonly EvaluatedProp[],
   frame: number,
+  follow?: FollowProbe,
 ): PushSubject | undefined {
   const events = tracks.filter((track) => track.kind === "camera")
     .flatMap((track) => track.events)
@@ -511,7 +577,9 @@ function shotSubjectAt(
     if (trackEventStart(event) > frame) break;
     const value = cameraKeyValue(event);
     if (value.operation === "pull") found = undefined;
-    else if (value.operation === "push" || value.operation === "hold") {
+    else if (value.operation === "follow") {
+      found = (typeof value.target === "string" ? follow?.(value.target, frame) : undefined) ?? found;
+    }    else if (value.operation === "push" || value.operation === "hold") {
       found = pushSubject(value.target, actors, props) ?? found;
     }
   }
@@ -524,11 +592,20 @@ function cameraKeysFromTracks(
   props: readonly EvaluatedProp[],
   composition: EvaluatedCamera,
   video: {width: number; height: number; fps: number},
+  follow?: FollowProbe,
 ): PerformanceCameraKey[] {
   const events = tracks.filter((track) => track.kind === "camera").flatMap((track) => track.events).sort((a, b) => trackEventStart(a) - trackEventStart(b));
   let previous = composition;
   return events.flatMap((event) => {
     const start = previous;
+    if (cameraKeyValue(event).operation === "follow") {
+      const window = followWindowKeys(event, follow, video);
+      const last = window.at(-1);
+      if (last) previous = {x: last.x ?? previous.x, y: last.y ?? previous.y, z: last.z ?? previous.z, rotation: last.rotation ?? previous.rotation};
+      // An unresolvable target holds the shot where it was: a follow that
+      // cannot see its subject must not drag the camera to the stage origin.
+      return window;
+    }
     const key = cameraKeyFromEvent(event, actors, props, previous, composition, video);
     const value = cameraKeyValue(event);
     const semantic = value.operation === "push" || value.operation === "pull" || typeof value.zoom === "number";
@@ -1433,6 +1510,12 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
     const projected = {...prop, tracks: [...(prop.tracks ?? []), ...tracksForSubject(tracks, prop.id)]};
     return propState(projected, actorById, safeFrame, {actorAtFrame, motorPropFrame: motorPropFrameAt(projected.id, safeFrame)});
   });
+  const propAtFrame = (id: string, at: number): EvaluatedProp | undefined => {
+    const def = (normalized.props ?? normalized.objects ?? []).find((candidate) => candidate.id === id);
+    if (!def) return undefined;
+    const projected = {...def, tracks: [...(def.tracks ?? []), ...tracksForSubject(evaluateTracks(normalized.tracks, at), id)]};
+    return propState(projected, actorById, at, {actorAtFrame, motorPropFrame: motorPropFrameAt(id, at)});
+  };
   const evaluatedProps = applyManifestConstraints(
     props,
     [...(normalized.constraints ?? []), ...(normalized.propConstraints ?? []), ...(normalized.bindingConstraints ?? [])],
@@ -1440,9 +1523,25 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
     safeFrame,
     {actorAtFrame, fps: normalized.video?.fps ?? 24},
   );
+  /** A follow resolves its target on the frame the key belongs to, not on the
+   *  frame being drawn: the keys span the window, and the prop's placement then
+   *  is what the shot must frame. Motor bakes are the position authority, the
+   *  binding constraints are what keep a carried prop's follow honest, and an
+   *  actor target is followed on its own drawn band. */
+  const followProbe: FollowProbe = (target, at) => {
+    const prop = propAtFrame(target, at);
+    if (prop) {
+      const band = propFrameBand(prop);
+      return {centre: [prop.x, (band[0] + band[1]) / 2], band, horizontal: "self", follow: true};
+    }
+    const actor = actorAtFrame(target, at);
+    if (!actor?.present) return undefined;
+    const band = actorFrameBand(actor);
+    return {centre: [actor.x, (band[0] + band[1]) / 2], band, horizontal: "pair", follow: true};
+  };
   const explicitCameraKeys = cameraKeys(normalized.camera ?? normalized.cameraTrack);
   const composition = interpolateCamera(explicitCameraKeys, 0);
-  const projectedCameraKeys = cameraKeysFromTracks(tracks, actors, evaluatedProps, composition, normalized.video ?? {width: 1920, height: 1080, fps: 24});
+  const projectedCameraKeys = cameraKeysFromTracks(tracks, actors, evaluatedProps, composition, normalized.video ?? {width: 1920, height: 1080, fps: 24}, followProbe);
   const interpolatedCamera = interpolateCamera([...explicitCameraKeys, ...projectedCameraKeys], safeFrame);
   return {
     frame: safeFrame,
@@ -1450,7 +1549,7 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
     // path produced the key (containCamera, explicit camera tracks, defaults).
     camera: clampCameraToStage(
       manifest.locationScenes
-        ? containCamera(interpolatedCamera, actors, normalized.video ?? {width: 1920, height: 1080}, shotSubjectAt(tracks, actors, evaluatedProps, safeFrame))
+        ? containCamera(interpolatedCamera, actors, normalized.video ?? {width: 1920, height: 1080}, shotSubjectAt(tracks, actors, evaluatedProps, safeFrame, followProbe))
         : interpolatedCamera,
       normalized.video ?? {width: 1280, height: 720},
     ),
