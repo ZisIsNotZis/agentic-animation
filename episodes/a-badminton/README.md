@@ -58,7 +58,7 @@ follow share a brace group):
 
 **`make` also warns, and no earlier record of this episode says so.** Eight lines on every
 bake of this episode, on the descent between the arc's apex and the first floor contact —
-frames 63–70 and 32–59 px since R1 put the floor back where the set paints it (frames 63–69,
+frames 63–70 and 33–59 px since R1 put the floor back where the set paints it (frames 63–69,
 33–55 px before). The log of the reviewed rendition, whose descent was 41 px shorter, is at
 `artifacts/sa1-er-2026-10-21/make.log.txt`; a fresh `make` prints the current eight.
 
@@ -113,9 +113,18 @@ elevation and puts the bounce and the rest on the court.
   `zoom: 1` the head is cut to the chin; at 0.75 to the eyebrows in the contact,
   bounce and hold frames; below z ≈ 0.72 the head fits but the pan shrinks to
   ~120 px and the shot stops reading as a follow. The shot keeps the pan.
-- **The shuttle is drawn large** (the asset's declared `stageWidth` 130 at scale
-  0.65 = 130 x 104 world px against a 633 px figure) and passes in front of the
-  receiving player's legs. Asset-side, not authorable here.
+- **The shuttle is drawn large, and R4 could only shrink it so far.** The asset's
+  `stageWidth` is 116 (scale 0.58), whose ink is 55.7 x 77.7 stage px against a 633 px
+  figure — 2.4x a real 65 mm shuttlecock across and 2.5x its 87 mm length, against 2.6x
+  and 2.8x at the 130 it was reviewed at. It cannot go to real size: below 116 the native
+  pair's receiver fails its palm solve (`whole-body proposal exhausted: receiver at
+  2.067s; segment-angle-rate/hand_r 8.419 > 7.000`, measured at 115), and below 72 even a
+  legacy-figure strike stops touching the shrunken contact body. The drawn size and the
+  physical body the palm must touch are the same declaration, which is what bounds it.
+- **It still crosses the receiver's shoe on the way down.** At 116 the shuttle's ink
+  intersects the receiver's shoe over 6 frames around the first contact (7 at 130), and no
+  z-order change fixes it: a held prop draws above the actor layer. The first contact lands
+  at the receiver's own x, so the cure is staging or framing — R5 or R3, not this asset.
 
 ## Evidence (2026-10-21, run `25e80bfb`)
 
@@ -189,10 +198,11 @@ Two of its findings are mechanically checkable, and both need a correction:
    `projectile` now lands on the set's lowest declared surface, and a raised surface under it
    still wins.
 
-Confirmed by both, no correction needed: the shuttle is drawn ~3× a real shuttlecock
-(`stageWidth` 130 at scale 0.65 beside a 633 px figure) and passes in front of the
-receiver's legs; the follow at `zoom 0.75` pans only ~120 px and reads as a wide; the
-players never move.
+Confirmed by both at the reviewed rendition, and still true of the current one in degree:
+the shuttle is drawn ~3× a real shuttlecock at the reviewed `stageWidth` 130 and ~2.4× at
+the landed 116 (see "What the shot could not have" for the boundary and why it is there);
+it crosses the receiver's legs; the follow at `zoom 0.75` pans only ~120 px and reads as a
+wide; the players never move.
 
 **Corrected: the heads are not cut in this rendition.** The producer recorded a cut "above
 the eyebrows from the first floor contact onward"; the review found both heads whole with
