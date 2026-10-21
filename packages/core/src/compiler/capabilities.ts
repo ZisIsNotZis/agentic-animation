@@ -26,8 +26,7 @@ export interface CapabilityDeclaration {
 
 /** Event names: `<capability>.<beat>` in the lifecycle track's vocabulary, so
  * a cue written by one slice names the same beat another slice listens to. A
- * hanging support is passive and emits nothing itself: the swing intent that
- * attaches to it emits `swing.grip` and `swing.release`. */
+ * hanging support is passive and emits nothing itself. */
 export const DECLARED_CAPABILITIES = {
   hanging: {
     support: "hanging",
@@ -44,7 +43,12 @@ export const DECLARED_CAPABILITIES = {
   swing: {
     intent: "swing",
     support: "hanging",
-    events: ["swing.grip", "swing.release"],
+    // No emitter exists: nothing in `packages/**` emits `swing.grip` or
+    // `swing.release` (the swing bakes a turn and publishes no lifecycle
+    // event), and a declared event with no emitter is the same lie the
+    // fail-loud gate closed for a declaration with no implementation. The names
+    // return, with their emission, in the package that bakes slice B's shot.
+    events: [],
     owner: "Wave 2 (slice B, giant swing on a high bar)",
     implemented: true,
   },

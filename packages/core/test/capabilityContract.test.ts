@@ -1,4 +1,4 @@
-import {mkdtempSync, mkdirSync, writeFileSync, rmSync} from "node:fs";
+import {existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, writeFileSync, rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {test} from "node:test";
@@ -18,6 +18,8 @@ import {compileEpisode} from "../src/compiler/index";
 // asking for an unimplemented intent fails loud instead of compiling.
 
 const FLAT_SUPPORT = {name: "counter", x: [120, 840], y: 390};
+/** The repository root, so the emitter search reads the real `packages/**`. */
+const packagesRoot = new URL("../../../", import.meta.url);
 const HANGING_SUPPORT = {
   name: "bar",
   x: [860, 1060],
@@ -113,10 +115,36 @@ test("the capability vocabulary names one intent and one event spelling per capa
   assert.equal(DECLARED_CAPABILITIES.pour.intent, "pour");
   assert.equal(DECLARED_CAPABILITIES.swing.support, "hanging");
   assert.equal(DECLARED_CAPABILITIES.projectile.prop, "projectile");
-  assert.deepEqual(DECLARED_CAPABILITIES.swing.events, ["swing.grip", "swing.release"]);
+  // Declared, emitted by nothing: narrowed until the package that bakes slice
+  // B's shot restores the names WITH their emission (see the emitter test).
+  assert.deepEqual(DECLARED_CAPABILITIES.swing.events, []);
   assert.deepEqual(DECLARED_CAPABILITIES.pour.events, ["pour.tilt", "pour.stream_start", "pour.stream_end"]);
   assert.deepEqual(DECLARED_CAPABILITIES.projectile.events, ["projectile.struck", "projectile.settled"]);
   assert.deepEqual(DECLARED_CAPABILITIES.hanging.events, []);
+});
+
+test("a declared event of an implemented capability has an emitter in packages/**", () => {
+  // A declaration is a promise, and `implemented: true` promises the beat is
+  // real. `swing.grip` and `swing.release` were declared and emitted by
+  // nothing — the same lie the fail-loud gate closed for a capability with no
+  // implementation, and one a per-slice test cannot see.
+  const packages = join(packagesRoot.pathname, "packages");
+  const dirs = readdirSync(packages, {withFileTypes: true})
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => join(packages, entry.name, "src"))
+    .filter((dir) => existsSync(dir));
+  const sources = dirs.flatMap((dir) => readdirSync(dir, {recursive: true, withFileTypes: true})
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".ts") && !entry.parentPath.endsWith("compiler"))
+    .map((entry) => readFileSync(join(entry.parentPath, entry.name), "utf8")));
+  assert.ok(sources.length > 20, `the emitter search read only ${sources.length} source files`);
+  for (const [name, capability] of Object.entries(DECLARED_CAPABILITIES)) {
+    const {implemented, events} = capability as {implemented?: boolean; events: readonly string[]};
+    if (!implemented) continue; // the gate refuses it by name instead
+    for (const event of events) {
+      assert.ok(sources.some((source) => source.includes(`"${event}"`)),
+        `${name} declares ${event}, which no file in packages/** emits`);
+    }
+  }
 });
 
 test("the gate selects a declaration by the field the episode asked through", () => {
