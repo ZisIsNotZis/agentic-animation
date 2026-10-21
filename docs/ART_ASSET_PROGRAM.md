@@ -5,12 +5,10 @@ The user's decision (2026-10-18) is that proving the method generalises requires
 span as large and complex a space as the engine can carry, exercised by motion families
 other than "pick up a thermos". Scope: three independent vertical slices, each with its
 own new assets and accepted on its own — no combined film, because a cross-slice montage
-would only demonstrate transitions, which M6 already owns.
-
-This document is the programme's roadmap: the milestone owed upward, the packages that
-reach it, the measured facts each package starts from, and where the artefacts are.
-Package-level detail — hooks, falsifications, limits, and the landed packages' mail files
-— is in [tickets/SLICE-A-ENGINE](tickets/SLICE-A-ENGINE.md).
+would only demonstrate transitions, which M6 already owns. This document is the
+programme's roadmap — milestone owed upward, packages that reach it, measured facts each
+starts from, where the artefacts are; package detail (hooks, falsifications, limits, and
+the landed packages' mail files) is in [tickets/SLICE-A-ENGINE](tickets/SLICE-A-ENGINE.md).
 
 ## The three slices
 
@@ -102,21 +100,23 @@ Packages, in this order:
 1. **E2 · the serve and the return** — **landed** `35b8ffd`, `a1f848a`, `d281f62`
    (`idle-compute`, 704 s, run `2d29eb2e/task-1`).
 2. **E4 · the tracking camera** — **landed** `d40ceec` (`idle-compute`, 410 s, run
-   `2d29eb2e/task-2`): `camera.follow(target, {sec, zoom})`, per-frame keys, stage-clamped,
-   holding at the window's end.
+   `2d29eb2e/task-2`): `camera.follow(target, {sec, zoom})`, per-frame keys, stage-clamped.
 3. **EP · two native figures could not bake together** — **landed** `ead4ac0`,
    `135ee7d`, `54cbe01` (`idle-compute`, run `5b22b313`). The native pair bakes now.
 4. **EA · the episode** (`episodes/a-badminton/`) — spend `idle-compute`, 20 min. The
    serve from the hand, `camera.follow(shuttle)`, `force` 1.0–1.2, the arc, the bounce,
-   bake-identified stills. The return is an optional second hit, only by reproducing
-   EP's fixture exactly, after the serve is green; S-A1 does not depend on it.
-5. **ER · the independent review** — spend `idle-compute`, 10 min. The reviewer is a
-   fresh **builtin `reviewer`** subagent with a deliberately blind contract: the still
-   paths and one question, and **nothing else** — not this document, not EA's report, not
-   the motor's numbers — because the producer's reasoning is exactly what an independent
-   verdict must not inherit. It looks at the images at normal viewing size (the file's own
-   resolution, no crop, no zoom), and if it cannot see image content it must answer
-   `NOT SATISFIED: no sight` rather than infer from filenames.
+   bake-identified stills. **Dispatched** 2026-10-21, run `25e80bfb`; it files
+   `mail/2026-10-21-ea-report.md` itself. The return is optional, by EP's exact fixture,
+   and S-A1 does not depend on it.
+5. **ER · the independent review** — spend `idle-compute`, 10 min, dispatched once EA's
+   stills exist and the integrating node has re-run the combined check at EA's commit
+   (`npm test`, `npm run smoke`, and `check`/`make` on the episode): the episode is
+   compilation the compiler has not seen yet, so a green HEAD is not a green bake. The reviewer is a fresh **builtin `reviewer`** subagent with a
+   deliberately blind contract: the still paths and one question, and **nothing else** —
+   not this document, not EA's report, not the motor's numbers — because the producer's
+   reasoning is exactly what an independent verdict must not inherit. It sees the images
+   at normal viewing size (file resolution, no crop, no zoom); if it cannot see image
+   content it must answer `NOT SATISFIED: no sight`.
 
 ## Current facts
 
