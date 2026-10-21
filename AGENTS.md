@@ -14,6 +14,11 @@ This is the standalone main repository. Agent procedures live in
 Start with `.agents/skills/agentic-animation/SKILL.md` when a task spans
 subsystems. Third-party skills linked there are immutable.
 
+The current milestone, the packages that reach it and the measured facts each
+one starts from are in `docs/ART_ASSET_PROGRAM.md` §"Roadmap"; repository-wide
+state is `docs/STATUS.md`. Both are maintained by the agent that owns this
+project's roadmap, not by a worker package.
+
 ## Working spirit
 
 Treat requests as outcomes to finish, with serious correctness and honest

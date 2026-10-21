@@ -4,15 +4,22 @@ The user's decision (2026-10-18) is that proving the method generalises requires
 **genuinely new assets, not recolours**, in two or three fully functional sets that
 span as large and complex a space as the engine can carry, exercised by motion
 families other than "pick up a thermos". Scope: three independent vertical slices,
-each with its own new assets, each accepted on its own — no combined film, because
-a cross-slice montage would only demonstrate transitions, which M6 already owns and
-which is not a goal here.
+each with its own new assets, each accepted on its own — no combined film, because a
+cross-slice montage would only demonstrate transitions, which M6 already owns.
+
+This document is the programme's roadmap: the milestone owed upward, the packages
+that reach it, the measured facts each package starts from, and where the artefacts
+are.
 
 ## The three slices
 
-- **A · badminton rally.** Two new native figures rally across a full court; the
-  shuttle is a real projectile with gravity and a bounce; the camera tracks it;
-  contact is instantaneous at the hit.
+- **A · badminton rally.** Two new native figures play a serve and a return across
+  the hall; the shuttle is a real projectile with gravity and a bounce; contact is
+  instantaneous at the hit; the camera tracks the shuttle. **Measured correction
+  (2026-10-21): "a full-court rally" is not authorable** — a strike leaves at one
+  fixed 40° elevation and settles 1440–1560 px downrange, and no authored toss
+  exists, so the readable first hit is a serve out of the server's own hand. See
+  "Reach and elevation" below.
 - **B · giant swing on a high bar.** A different body type rotates a full circle
   about a fixed bar while a second figure reacts; the support is the bar, not the
   ground.
@@ -21,10 +28,9 @@ which is not a goal here.
 
 ## Cast (four new native figures)
 
-`lin_b_draft` is the only native artwork figure today, and a legacy puppet cannot
-act at all (`ART_TRANSFER_M7`). So each slice needs native artwork — five views, a
-skeleton per view, hands, expressions, wardrobe — produced by the M2 character
-pipeline, not by recolouring.
+`lin_b_draft` was the only native artwork figure before this programme, and a legacy
+puppet cannot act at all (`ART_TRANSFER_M7`). Each slice needs native artwork — five
+views, a skeleton per view, hands, expressions, wardrobe — from the M2 pipeline.
 
 | figure | body | slices |
 |---|---|---|
@@ -46,38 +52,33 @@ to the slice that needs it; the declaration lands in Wave 0.
 - intent `pour` — tilt a held vessel about its grip and emit a derived stream.
 - the event names each capability emits, so a cue can be attached to it.
 
-A declaration that no implementation satisfies must fail loud rather than be
-ignored: an episode that uses `swing` before Wave 2 lands is a compile error.
+A declaration no implementation satisfies must fail loud rather than be ignored, and
+the gate selects on the field the episode asked through — `intent`, `support` kind,
+or `prop` kind. Since `2836478` it covers all three; before, a `prop.kind:
+"projectile"` compiled and the motor ignored it.
 
 ## Ownership and the conflict rule
 
-The engine's hot files are single-writer and take a token; assets are owned per
-directory and never conflict.
+The engine's hot files are single-writer and take a token; assets never conflict.
 
 | area | owner | rule |
 |---|---|---|
-| `packages/core/src/motor/index.ts`, `evaluate.ts`, `libraryMeta.ts`, `compiler/index.ts` | one token holder at a time | a capability adds a NEW file plus the smallest hook; no two worktrees hold the token |
-| `packages/studio/src/components/performance/Prop.tsx` | the prop-art batch, once | afterwards read-only |
-| `library/figure/<name>/`, `library/set/<name>/`, `library/prop/<name>/` | the package that creates it | never edit another package's asset directory |
+| `motor/index.ts`, `evaluate.ts`, `libraryMeta.ts`, `compiler/index.ts` | one token holder at a time | a capability adds a NEW file plus the smallest hook |
+| `Prop.tsx` | the prop-art batch, once | afterwards read-only |
+| `library/<category>/<name>/` | the package that creates it | never edit another package's asset directory |
 | `episodes/<slice>/` | that slice's author | — |
 | `docs/` | the main agent | no worker edits docs |
+
+A package runs its own scoped tests plus `npx tsc --noEmit`; the **combined** check
+(`npm test`, `npm run smoke`, `git diff --check`) belongs to the integrating node,
+because two concurrent runs race on the fixtures `pretest` rewrites.
 
 ## Waves
 
 ```
-Wave 0  capability contract + schema declarations + fail-loud stub        [1 package]
-Wave 1  athlete 甲, badminton hall, prop-art batch                        [parallel, disjoint]
-Wave 2  spike: swing feasibility (timeboxed, half a day)                  [1 package]
-        E1 projectile + struck contact   → E4 tracking camera
-        → E2 hanging swing → E3 pour + stream                             [serial, token]
-Wave 1b gymnast 乙, bar set, tea room, host 丙, spectator 丁              [parallel, disjoint]
-Wave 3  slice A, then B, then C — each authored once its capabilities land
-Wave 4  evidence bundles, M4 material passes per set, independent review, docs
+Wave 2  E1 [2836478] → E2 → E4 → EA → ER      Wave 1b  bar set, tea room, 丙, 丁 [partial]
+Wave 3  slice B, then C                       Wave 4   evidence bundles, M4 passes, docs
 ```
-
-The long pole is character art, so figures start first and run while engine
-capabilities land. The bar set waits for the Wave 0 schema, because it declares a
-hanging support.
 
 ## Acceptance per slice
 
@@ -85,159 +86,114 @@ Each slice is accepted on its own evidence: the episode passes `check` and `make
 the compiled `audio.cues` names the cues it authored, the render is cut into stills
 that carry their bake identity, and an independent viewer review passes at normal
 viewing size. A capability that only works in one slice is recorded as such rather
-than generalised by assumption.
+than generalised by assumption. **The reviewer may not be the package that built
+the shot**: a builder grading its own frames is the failure this rule exists for.
 
-## State (2026-10-18)
+## Roadmap
 
-Wave 0 landed as `4eef0de`: `support.kind: "hanging"`, `prop.kind: "projectile"`,
-intents `swing` and `pour`, and a fail-loud gate naming the owning wave. Proof:
-`action.swing(...)` and `prop.pour(...)` both abort `check` with the capability and
-its owner, and an existing episode's manifest is unchanged apart from its
-`generatedBy.at`/`inputHash` stamps.
+**Milestone S-A1 — slice A is accepted on its own evidence:** `episodes/a-badminton/`
+bakes and renders a serve and a return whose struck contact and following camera are
+both visible, and a fresh sight-capable reviewer passes the cut stills at normal
+viewing size. That verdict is the observation that decides it; `check`, `make`, the
+named cues and the bake-identified stills are its preconditions.
 
-Slice A's assets are complete and independently reviewed:
+Packages, in this order:
 
-| asset | verdict |
+1. **E2 · the serve and the return** (`packages/core`) — spend `idle-compute`, 25 min.
+   Prove, as tests, (a) a strike on a projectile the striker is *holding* releases it
+   from the hand and launches it on the 40° arc, and (b) a second struck contact is
+   authorable: `push`'s approach mark must resolve a prop target's **live** x
+   (`aimX = target?.x ?? props.get(intent.target!)?.x ?? tx`), and a test must report
+   the seconds-wide window in which the receiver's hand can meet the descending arc.
+   Last, and cheapest, narrow `DECLARED_CAPABILITIES.swing.events` to `[]` — nothing
+   in `packages/**` emits `swing.grip` / `swing.release`, and a declared event with
+   no emitter is the same lie the gate closed. The names return, with their emission,
+   in the package that bakes slice B's shot.
+2. **E4 · the tracking camera** (`packages/studio/src/performance/evaluate.ts` +
+   `library/camera/follow/`) — spend `idle-compute`, 25 min. A recipe that follows a
+   prop across a declared window, clamped inside the painted stage, with the narrow
+   episode able to name it. Stills into `/tmp`, paths in the report.
+3. **EA · the episode** (`episodes/a-badminton/`) — spend `idle-compute`, 25 min.
+   Authored only after E2 and E4 report, because an episode naming a recipe that does
+   not exist fails `check`. Serve from the hand, one return, `force` small enough to
+   keep the landing on the painted 1920 (`1.0–1.2`, not the `1.4` default), cues, and
+   a README carrying the framing arithmetic.
+4. **ER · the independent review** (`/tmp` stills, a sight-capable reviewer) — spend
+   `idle-compute`, 20 min. Reads the stills by eye at normal viewing size and answers
+   one question: does the rally read? That verdict is S-A1's observation.
+
+## Current facts
+
+**E1 landed** (`2836478`, `mail/2026-10-21-e1-report.md`): mass, restitution and the
+`instant`/`sustained` struck rule cross the compiler as manifest data; the bake carries
+`projectile.struck` (velocity) and `projectile.settled` (position). Measured on the
+library's default action, stage 1920×1080, ground 691:
+
+| quantity | measured |
 |---|---|
-| `set/badminton_hall` | PASS — eleven declared layers each painted as its own group, floor and bench supports at 691/640, bench perspective re-derived after review |
-| `prop/racket`, `prop/shuttle`, `prop/high_bar`, `prop/teapot`, `prop/teacup` | PASS — racket redrawn after reading as a rattle; each resolves to its own art by declared asset identity |
-| `figure/athlete_a` | SHIP — five genuine view constructions, symmetric legs (thigh 157 / shin 159, ratio 0.99), `leg.flexionMax 112`, hair covering the occiput |
+| strike velocity | `(1166, −979)` px/s, i.e. 1522 px/s at 40° |
+| apex above the strike line | 184 px |
+| first floor contact | ~1066 px downrange |
+| settle | ~1440–1560 px downrange, 1.6–1.9 s after the strike |
+| bounce apex / first apex | 0.239 at `restitution 0.5`, 0.035 at `0.2` |
+| mass 0.10 vs 0.05 | velocity exactly halved, apex quartered |
+| `sustained` rule | never leaves the strike line; slides ~727 px |
 
-Five review rounds on that figure found one class worth remembering: what an eye
-sees and no declaration can — a bald back of the head, front-facing sneakers in a
-back view, near-white construction marks hanging outside the silhouette. A
-mechanical silhouette check (`tools/art-direction-study/silhouette-holes.mjs`) now
-measures enclosed background holes and limb-axis coverage colour-independently; it
-found three crown pinholes and disproved one reviewer claim (a "background gap at
-the shoulders" that did not exist).
+**Reach and elevation, the five facts that decide the episode:**
 
-The swing spike returned **EXPRESSIBLE WITH CAVEATS**: the renderer already honours
-actor rotation, but the motor has no vertical actor channel, the pivot is hardcoded
-at the feet, a hanging support is ignored by actors and `swing` is silently ignored
-there; the orbit is 1217 design px and does not fit the default viewport, so
-framing must follow rotated extents. Slice B needs ≈330–420 engine lines across
-eight seams and must be staged in a side orientation.
+1. A strike lands only inside the 137 px arm envelope (staged scale 0.88), and a
+   shuttle staged `center` or `on(support)` sits 200+ px below the hand. A floor
+   shuttle is unreachable; the motor says so by name instead of dropping the beat.
+2. Two actors keep their drawn bodies apart, so a striker cannot reach a shuttle in
+   *the other* player's hand either. The reachable first hit is a **serve out of the
+   server's own hand**.
+3. No authored toss exists: `release` opens the hand with carry velocity and no upward
+   impulse, so a released shuttle falls from hand height in ~0.5 s. A toss would be a
+   new procedure, not a staging choice.
+4. The strike elevation is one engine constant, `STRIKE_ELEVATION = 40`. A smash or a
+   lob needs a `library/action` procedure that carries elevation — deferred until a
+   review says one arc does not read.
+5. The default `force 1.4` overshoots the painted stage from mid-stage.
 
-### gymnast_b: accepted-coarse, with recorded limits
+**Slice A assets** are complete and independently reviewed: `set/badminton_hall`
+(PASS — eleven declared layers, supports at 691/640), `prop/racket`, `prop/shuttle`
+(PASS; it now declares `kind: "projectile"`, `mass 0.05`, `restitution 0.5`,
+`struck: "instant"`), `figure/athlete_a` (SHIP — five genuine view constructions,
+thigh/shin ratio 0.99, `leg.flexionMax 112`). The `silhouette-holes.mjs` gauge measures
+enclosed background holes and limb-axis coverage, finding three crown pinholes.
 
-Six review rounds on this figure produced diminishing returns, so it is accepted at
-the agreed bar (a defect counts only at normal viewing size) with three known
-limits, each to be revisited **only if the shot shows it**:
+**Slice B — capability proven, shot blocked on a framing decision that is not
+ours.** The swing turns a full −360° with grip error 0.000000 px over 86 frames and
+zero diagnostics (`8c66520`). The shot does not bake: the bar sat 195 px below the
+shoulder (reach needs it ~153 px above, now at y 130–138); a straight-up mount is
+singular; `setupY()` fixes the standing line at 0.64×1080 so the 1351.5 px orbit can
+never fit a 1080 stage (that needs k ≤ 0.7991, outside the staging ladder); and four
+sub-pixel invariants (`leg-annulus` 0.002 px, `support-anchor` 0.029 px, a constant
+`grip-contact` 1.119 px, zero-slack rest legs on every figure) keep refusing the
+mount. The figure-level fix owed is the `foot-reach` comparison: the drawn foot must
+be compared with the target clamped into the leg's reachable annulus, never with a
+point on the boundary. `episodes/b-bar-swing/` holds the authored episode and its
+framing measurements; the direction question is with the person.
 
-1. the shoulder caps read as ball joints rather than a shoulder blending into the
-   sleeve;
-2. back-view thumbs may still point outward instead of toward the thigh — the art
-   and the reviewer disagree, and the disagreement is unresolved rather than
-   settled by measurement;
-3. profile legs still read slimmer than the front view suggests, though the depth
-   gauge now passes (chest 0.74, hip 0.82, thigh 0.92, shin 0.85 of the front
-   width) and the dead `LEG_PROJECTION` table that made both legs one slab is now
-   wired, with the far leg drawn behind the near one.
-
-Two gauges gate this figure mechanically: `silhouette-holes.mjs` (0 enclosed
-background holes, every limb axis bridged) and `limb-depth.mjs` (trunk-anchored
-side/front ratios, with the arms-included table printed ungated because a hanging
-arm is lateral in front and superimposed in profile). `limb-depth.mjs` fails on
-`athlete_a`, which is the control that the gauge is not a rubber stamp.
-
-### Blocked: a new figure cannot mount the swing, and the cause is a boundary, not a bug
-
-Slice B's episode is authored (`keep/slice-b`, `35bf415`) but the swing does not turn
-on `figure/gymnast_b`: the mount engages, the hands hold the pivot at 0.000000 px,
-and the rotation stays at 0° while `whole-body proposal exhausted …
-foot-reach/foot_r 0.494 > 0.020` repeats. The same staging with `lin_b_draft` bakes
-clean, so it is the figure's data, not the set or the capability.
-
-Measured cause: all three figures' rest legs are essentially straight, and the
-proposal's `foot-reach` check compares the DRAWN foot with a target that sits
-exactly on the leg chain's full extension, i.e. on the annulus boundary:
-
-| figure | chain (thigh+shin) | hip→foot | slack |
-|---|---|---|---|
-| `lin_b_draft` | 259.79 | 259.60 | 0.19 |
-| `athlete_a` | 316.04 | 316.04 | 0.00 |
-| `gymnast_b` | 318.04 | 318.04 | 0.00 |
-
-A zero-slack leg has no reachable point beyond the target, so any rounding at the
-boundary makes the solved foot land ~0.5 px short and the whole-body proposal
-rejects the substep. This is the same class as the held-hand freeze in R3, whose
-fix was to compare like with like AT THE CAP rather than to widen a tolerance: the
-foot check must compare the drawn foot with the target clamped into the leg's
-reachable annulus. That fix belongs in the motor and is queued behind the engine
-token, not worked around by bending the figures' knees, which would change art that
-has already been accepted.
-
-### Slice B: the bar is staged below the gymnast's shoulder
-
-Measured: the gymnast's shoulder stands 483 design px above the ground and his arm
-reaches 161 px, so a hanging grip needs the bar at `y ≈ 55` (95 % of arm reach
-above the shoulder). `set/outdoor_bar` declares its bar at `y = 250`, i.e. **195 px
-below the shoulder**, so the grip cannot be reached at all and the two-bone arm
-solve sits at a singular extension — which is what the last rejection
-(`segment-angle-rate/hand_r 172.4 > 35`) measured. The set passed its own visual
-review because a bar's height reads as plausible in a picture; nothing checked it
-against a figure's reach.
-
-Raising the bar to `y ≈ 55` fixes the grip, and then a second constraint bites: the
-orbit radius is ~608 design px, so the top of a full circle lands at `y ≈ −553`,
-outside the 1080 canvas. A realistic bar and a realistic figure simply cannot show a
-whole giant swing inside one frame — this is geometry, not tuning. So Slice B needs
-a framing decision, not more engine work: either the camera follows the body and the
-arc leaves and re-enters frame (normal film grammar for a giant swing), or the
-capability is demonstrated with a pull-up and landing instead, or the canvas and set
-grow to cover the orbit.
-
-### Slice B state: the capability works, the shot's staging does not yet
-
-The swing capability is implemented and proven (`8c66520` and its predecessors):
-a body attaches to a hanging grip, both hands hold one point, and it turns a full
-−360° with grip error 0.000000 px over 86 turning frames, 8.91°/frame, zero
-diagnostics — measured in a controlled proof with a PROP-declared hanging support
-(`prop/high_bar`) and a five-actor staging (`/tmp/swing-proof`).
-
-The shot does not yet bake, and every blocker found is a boundary or a staging
-fact, not a missing mechanism:
-
-1. **The set's own bar cannot be reached.** Shoulder 483 design px above the ground,
-   arm 161 px, so the grip must sit ~153 px above the shoulder; the set declared it
-   at y 250, i.e. 195 px BELOW the shoulder. Moving rail and support to y 130-138
-   (declaration and paint together, which the paint guard enforces) fixes the reach.
-2. **A straight-up mount is singular.** Walking the actor onto the grip sends the
-   hand through the shoulder; the arm solve has no inner-arc solution there and the
-   mount is refused. A two-phase mount (step under, then reach) removes it, and a
-   walk that stops short of the grip gives a diagonal chord instead.
-3. **Staged standing y is not owned by the set.** `setupY()` fixes it at
-   0.64×1080 = 691.2 and the narrow-episode actor accepts only `facing`, so the
-   ground line cannot be moved by authoring; the orbit (675.77 design px radius,
-   1351.5 across) can therefore never fit a 1080 stage at two-actor scale, and
-   fitting would need k ≤ 0.7991, which the staging ladder does not offer.
-4. **Sub-pixel invariant boundaries keep refusing the mount**: zero-slack rest legs
-   (`leg-annulus` 0.002 px), stance anchors during a root glide
-   (`support-anchor` 0.029 px), and a constant `grip-contact` 1.119 px offset that
-   does not respond to bar height. Each is sub-pixel and invisible; together they
-   are why this shot needs a focused pass rather than more attempts in passing.
+**Slice C — not started.** `intent pour` fails loud; `prop/teapot` and `prop/teacup`
+exist; the tea room and two cast members do not.
 
 ## Risks
 
-- **Swing is the only capability that may not be expressible.** The spike decides
-  it before wave 2 commits; the fallback is a pull-up-and-land beat, which needs
-  no new support kind.
-- **Four native figures is the schedule risk**; each needs five views, a skeleton,
-  hands and expressions, and every one of them passes art review.
-- **Projectile contact is instantaneous**, unlike every contact the motor has done
-  so far, which are all sustained; the struck-contact rule is new work, not a
-  parameter.
+- **One arc is one shot shape.** If a reviewer says a single 40° float does not read
+  as badminton, elevation becomes authorable work in `library/action` — a package.
+- **The second hit is authoring-timed**, not mechanism-guaranteed: E2 measures the
+  window, EA must author a cue inside it. A window too narrow to author makes slice
+  A's episode a serve and a bounce, and the milestone report says so.
+- **Four native figures is the schedule risk**; every one passes art review, and
+  projectile contact is instantaneous where every earlier motor contact was sustained.
 
-## Resume here
+## Evidence pointers
 
-1. Slice A's engine: `projectile` motion with a struck contact, then a following
-   camera (`docs/STATUS.md` "Restart point" names the files and the event names).
-2. Slice B's shot: two-phase mount (step under, then reach), a walk that stops short
-   of the grip so the hand travels a chord, the `grip-contact` 1.119 px constant
-   traced to its source, and `episodes/b-bar-swing/README.md` lifted into this doc.
-   Do not promise a fully framed circle: the orbit is 1351.5 design px against a
-   1080 stage and the staged standing line belongs to `setupY()`, not to the set.
-3. Slice C: the tea room, two cast members, and the pour intent.
-
-Every claim above has a measurement behind it; the numbers are in this file so the
-next session starts from evidence rather than from recollection.
+- `packages/core/src/compiler/capabilities.ts` — the declaration table and the gate.
+- `packages/core/src/motor/index.ts` — `STRIKE_ELEVATION`, `strikeProjectile`,
+  `publishProjectileEvents`, the push hand drive and its `strike missed` diagnostic.
+- `packages/core/test/projectile.test.ts`, `capabilityContract.test.ts`.
+- `mail/2026-10-21-e1-report.md` — E1's numbers and its five findings.
+- `episodes/b-bar-swing/` — slice B's authored episode and framing arithmetic.
+- `tools/art-direction-study/silhouette-holes.mjs`, `limb-depth.mjs`.

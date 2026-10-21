@@ -140,16 +140,16 @@ Milestones M0–M7 are delivered; M6 and M7 carry independent viewer PASS verdic
 ([ART_FILM_LANGUAGE_M6](ART_FILM_LANGUAGE_M6.md),
 [ART_TRANSFER_M7](ART_TRANSFER_M7.md)).
 
-**Slice A (badminton) — assets complete, engine missing.** Accepted and reviewed:
+**Slice A (badminton) — assets complete, engine half landed.** Accepted and reviewed:
 `set/badminton_hall`, `figure/athlete_a`, and the props `racket`, `shuttle`,
-`high_bar`, `teapot`, `teacup`. The engine work that slice needs was never landed:
-**E1 projectile with a struck contact** and **E4 a following camera**. Wave 0 already
-declares `prop.kind: "projectile"` with mass, restitution and a struck rule, and an
-episode using it fails loud as unimplemented. That is the first thing to build:
-`packages/core/src/motor/index.ts` (projectile state and the struck rule),
-`packages/studio/src/performance/evaluate.ts` (camera follow), and the event names
-`projectile.struck` / `projectile.settled` from
-`compiler/capabilities.ts`.
+`high_bar`, `teapot`, `teacup`. **E1 projectile with a struck contact landed at
+`2836478`**: the fail-loud gate now guards `prop.kind` and `support.kind` as well as
+intents, `prop/shuttle` declares its physics, and the bake carries
+`projectile.struck` / `projectile.settled` with the measured numbers in
+[ART_ASSET_PROGRAM](ART_ASSET_PROGRAM.md). Still missing: **E4 a following camera**
+(`packages/studio/src/performance/evaluate.ts`), the episode `episodes/a-badminton/`
+(which does not exist), and the review. The package order and each package's
+boundary are in [ART_ASSET_PROGRAM](ART_ASSET_PROGRAM.md) §"Roadmap".
 
 **Slice B (giant swing) — capability proven, shot blocked.** The swing works:
 hanging support, both hands on one grip, a full −360° turn with grip error
