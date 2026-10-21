@@ -71,28 +71,41 @@ const diagnosticsOf = (baked: ReturnType<typeof simulateScene>) => baked.diagnos
 const strikesOf = (baked: ReturnType<typeof simulateScene>) =>
   (baked.events ?? []).filter((event) => event.kind === "projectile.struck");
 
-test("reproduced: a native receiver freezes the return at palm-contact/hand_r NaN", () => {
-  // The measured refusal, verbatim from mail/2026-10-21-e2-report.md §"Could
-  // not land" 1: the native receiver's palm solve lands a non-finite hand, and
-  // the proposal reports it as a tolerance miss on a NaN ratio.
+/** The refusals the fix removes: a whole-body exhaustion, or a diagnostic that
+ *  names a non-finite input. A missing strike is a different, authored miss. */
+const frozenOf = (baked: ReturnType<typeof simulateScene>) =>
+  diagnosticsOf(baked).filter((line) => /whole-body proposal exhausted|-non-finite/.test(line));
+
+test("a native receiver no longer freezes the bake on a non-finite palm solve", () => {
+  // Measured before the fix (mail/2026-10-21-e2-report.md §"Could not land" 1):
+  // `whole-body proposal exhausted: receiver at 2.25s; palm-contact/hand_r NaN`.
+  // The native receiver's palm solve was fed a non-finite hip drop, because the
+  // taut push arm dragged the root BACKWARD 885 px through its own stance in
+  // one substep (a body behind the arm clamped the step), the stance feet
+  // stayed where they were, and the overstretched leg annulus wrote Infinity
+  // into the posture. Both the seam and the refusal class are fixed.
   const baked = simulateScene(pairScene({nativeReceiver: true, beatAt: 2.04, receiverX: 1400}));
-  const diagnostics = diagnosticsOf(baked);
-  assert.equal(diagnostics.length, 1, `expected one diagnostic, got ${JSON.stringify(diagnostics)}`);
-  assert.match(diagnostics[0]!, /^whole-body proposal exhausted: receiver at [\d.]+s; palm-contact\/hand_r NaN > 0\.020/);
-  assert.equal(strikesOf(baked).length, 1, "the serve lands and the frozen return never does");
+  assert.deepEqual(frozenOf(baked), [], JSON.stringify(diagnosticsOf(baked)));
+  assert.equal(strikesOf(baked).length, 1, "only the serve lands at this staged beat");
 });
 
-test("reproduced: two native actors freeze the bake and the diagnostic names a NaN/Infinity ratio", () => {
-  // The same refusal with a native body on both sides: the second native actor
-  // is the one the report measured (`foot-reach/foot_r Infinity`, §"Could not
-  // land" 2). The class is shared: a non-finite input surfaces as a ratio.
-  const baked = simulateScene(pairScene({nativeReceiver: true, beatAt: 2.04, receiverX: 1400}));
-  assert.ok(diagnosticsOf(baked).some((line) => /^whole-body proposal exhausted: receiver at [\d.]+s/.test(line)),
-    `two native actors must freeze the bake, got ${JSON.stringify(diagnosticsOf(baked))}`);
-  const frozen = simulateScene(pairScene({nativeReceiver: true, beatAt: 1.4, receiverX: 1200}));
-  assert.ok(diagnosticsOf(frozen).some((line) => /whole-body proposal exhausted/.test(line)),
-    "a second native body freezes the bake at any staged distance");
-  // One native actor alone is clean — the defect is the pair, not the figure.
+test("two native actors never drag a root backward and never freeze the bake", () => {
+  // The same refusal with a native body on both sides. A taut push arm may only
+  // pull its root in the direction the hand travels: the walk's rule, kept here
+  // too, so a body behind the arm bounds nothing.
+  for (const [beatAt, receiverX] of [[2.04, 1400], [1.4, 1200], [2.04, 1200]] as const) {
+    const baked = simulateScene(pairScene({nativeReceiver: true, beatAt, receiverX}));
+    assert.deepEqual(frozenOf(baked), [], `beat ${beatAt} @ ${receiverX}: ${JSON.stringify(frozenOf(baked))}`);
+    // Backward WALKING is the beat (the receiver walks at the shuttle); a body
+    // yanked through its own stance is not: no frame may travel further than a
+    // walk step plus the separation allowance.
+    const xs = baked.actors.receiver!.map((frame) => frame.x);
+    const steps = xs.slice(1).map((x, index) => Math.abs(x - xs[index]!));
+    assert.ok(Math.max(...steps) < 60,
+      `the receiver's root jumped ${Math.max(...steps).toFixed(1)} px in one frame (${beatAt} @ ${receiverX})`);
+  }
+  // One native actor alone was already clean — the defect was the pair, not the
+  // figure, and it stays clean.
   const single = simulateScene(pairScene({nativeReceiver: false, beatAt: 2.04, receiverX: 1400}));
   assert.deepEqual(diagnosticsOf(single), []);
   assert.equal(strikesOf(single).length, 2, "the legacy receiver lands the return");

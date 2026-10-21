@@ -1,7 +1,13 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {nativeDraftArtworkFixture} from './helpers/figureArtwork';
-import {solveSkeleton,plantedLegAngles} from '../src/motor/skeleton';
+import {solveSkeleton,plantedLegAngles,legDropInterval} from '../src/motor/skeleton';
+
+/** The design-space foot the motor's planted-leg solve lands for an aim. */
+function solvedLegFoot(sk: Parameters<typeof plantedLegAngles>[0],side: 'l'|'r',drop: number,design:[number,number]): [number,number] {
+  const angles=plantedLegAngles(sk,side,drop,design);
+  return solveSkeleton(sk,side==='r'?{waistY:drop,legR:angles}:{waistY:drop,legL:angles}).joints[`foot_${side}`]!;
+}
 import {resolveWholeBodyProposal,type WholeBodyState} from '../src/motor/wholeBodyProposal';
 
 async function standing(): Promise<WholeBodyState> {
@@ -157,7 +163,13 @@ test('wholeBodyProposal separately rejects sole height and clamped/annulus-infea
     return {state:snapshot,samples:[],events:[]};
   });
   assert.equal(reach.accepted,false);
-  assert.ok(reach.rejections.some(r=>r.constraint==='foot-reach'));
+  // Reachability is `leg-annulus`'s question: the aim is 500 px outside the
+  // leg's annulus, so no drop can plant it (the measured miss is Infinity, not
+  // a tolerance). `foot-reach` now compares like with like at the clamp — the
+  // drawn foot against the foot the leg solve LANDS for that aim — so it no
+  // longer reports an unreachable aim twice, as a sub-pixel shortfall.
+  assert.ok(reach.rejections.some(r=>r.constraint==='leg-annulus'&&r.joint==='foot_r'),
+    JSON.stringify(reach.rejections.filter(r=>r.joint==='foot_r')));
 });
 
 test('wholeBodyProposal transfer requires actual recipient socket contact and a unique gated event',async()=>{
@@ -212,19 +224,62 @@ test('wholeBodyProposal failure in a second actor rolls back first actor and def
   assert.ok(result.rejections.some(r=>r.actor==='receiver'&&r.joint==='elbow_l'));
 });
 
-test('reproduced: a non-finite foot target surfaces as a NaN foot-reach ratio, not as a named input',async()=>{
-  // EP (docs/ART_ASSET_PROGRAM.md, package 3). A non-finite target has NO
-  // solution; the refusal must name the joint and the input that was
-  // non-finite. Today it reaches the check as a distance, so it reads as a
-  // tolerance miss on a substep nobody could have solved.
+test('wholeBodyProposal judges foot-reach at the clamp, so a zero-slack rest leg is not refused by rounding',async()=>{
+  // Every accepted figure's rest legs are straight, so a straight-down stance
+  // target sits exactly ON the reachable annulus boundary and the solved foot
+  // lands a rounding width inside it. Comparing the drawn foot with the raw aim
+  // refused that substep; the aim the solver LANDS is the honest comparison.
   const state=await standing();
-  const result=resolveWholeBodyProposal({accepted:state,dt:1/24,time:1,maxAttempts:1,presentationTimes:[]},snapshot=>{
+  const input={accepted:state,dt:1/24,time:1,maxAttempts:1,presentationTimes:[]};
+  const still=resolveWholeBodyProposal(input,snapshot=>({state:snapshot,samples:[],events:[]}));
+  assert.equal(still.accepted,true,JSON.stringify(still.rejections));
+  // The residual at a boundary aim is the solver's own clamp, not a pose
+  // fault: on the standing fixture the rest leg's aim sits ON the annulus and
+  // the solved foot lands inside it by less than the rounding the comparison
+  // used to judge. The check now measures the foot the solve LANDS instead.
+  const a=state.actors.hero!,sk=a.skeleton;
+  const interval=legDropInterval(sk,'r',[sk.joints.foot_r![0],sk.joints.foot_r![1]]);
+  assert.ok(interval,'a straight rest leg has an annulus');
+  const landed=solvedLegFoot(sk,'r',0,[sk.joints.foot_r![0],sk.joints.foot_r![1]]);
+  assert.ok(Math.hypot(landed[0]-sk.joints.foot_r![0],landed[1]-sk.joints.foot_r![1])>0,
+    'the solve lands inside the aim, which is what the clamp comparison accepts');
+  // The check still catches a pose whose drawn leg is NOT the leg its aim
+  // solves: the renderer must draw the pose the motor planned.
+  const desynced=resolveWholeBodyProposal(input,snapshot=>{
+    snapshot.actors.hero!.pose.legR={upper:-150,lower:-5};
+    return {state:snapshot,samples:[],events:[]};
+  });
+  assert.equal(desynced.accepted,false);
+  assert.ok(desynced.rejections.some(r=>r.constraint==='foot-reach'&&r.joint==='foot_r'));
+});
+
+test('wholeBodyProposal names the joint and the input when a target is non-finite',async()=>{
+  // A non-finite target has NO solution. It must be refused by a diagnostic
+  // that says which joint and which input was non-finite, not by a NaN ratio
+  // that reads as a tolerance miss on a substep nobody could have solved.
+  const state=await standing();
+  const input={accepted:state,dt:1/24,time:1,maxAttempts:1,presentationTimes:[]};
+  const foot=resolveWholeBodyProposal(input,snapshot=>{
     snapshot.actors.hero!.footTargets.r=[Infinity,state.actors.hero!.footTargets.r[1]];
     return {state:snapshot,samples:[],events:[]};
   });
-  assert.equal(result.accepted,false);
-  const measured=result.rejections.filter(r=>r.joint==='foot_r');
-  assert.ok(measured.some(r=>r.constraint==='foot-reach'),'the class is present today');
-  assert.ok(measured.filter(r=>r.constraint==='foot-reach').every(r=>!Number.isFinite(r.measured)),
-    'and it reads as a NaN/Infinity ratio');
+  assert.equal(foot.accepted,false);
+  const named=foot.rejections.find(r=>r.joint==='foot_r'&&r.constraint==='foot-target-non-finite');
+  assert.ok(named,JSON.stringify(foot.rejections.filter(r=>r.joint==='foot_r')));
+  assert.equal(named.measured,Infinity,'the value that had no solution is carried, not a NaN ratio');
+  assert.equal(foot.rejections.some(r=>r.constraint==='foot-reach'),false,'no tolerance verdict on an unsolvable aim');
+  const palm=resolveWholeBodyProposal(input,snapshot=>{
+    snapshot.actors.hero!.palmTarget=[NaN,state.actors.hero!.palmTarget![1]];
+    return {state:snapshot,samples:[],events:[]};
+  });
+  assert.equal(palm.accepted,false);
+  assert.ok(palm.rejections.some(r=>r.constraint==='palm-target-non-finite'&&r.joint==='hand_r'),
+    JSON.stringify(palm.rejections.filter(r=>r.joint==='hand_r')));
+  const drop=resolveWholeBodyProposal(input,snapshot=>{
+    (snapshot.actors.hero!.pose as {waistY?:number}).waistY=Infinity;
+    return {state:snapshot,samples:[],events:[]};
+  });
+  assert.equal(drop.accepted,false);
+  assert.ok(drop.rejections.some(r=>r.constraint==='waist-drop-non-finite'&&r.joint==='foot_l'));
+  assert.ok(drop.rejections.some(r=>r.constraint==='waist-drop-non-finite'&&r.joint==='hand_r'));
 });

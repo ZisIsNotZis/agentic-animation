@@ -1,5 +1,5 @@
 import {isDeepStrictEqual} from 'node:util';
-import {solveSkeleton,legDropInterval,type SkeletonPose} from './skeleton';
+import {solveSkeleton,legDropInterval,plantedLegAngles,type SkeletonPose} from './skeleton';
 import {renderedHandWorld,renderedShoulderWorld} from './reach';
 import type {Skeleton} from '../schemas/libraryMeta';
 
@@ -88,12 +88,28 @@ export interface WholeBodyResult<S extends WholeBodyState> {
   rejections: ProposalViolation[];
 }
 
+/** Design-space joint -> world, through the actor transform the renderer uses. */
+function toWorld(actor: WholeBodyActor,p:Point):Point {
+  const space=actor.skeleton.space;
+  return [actor.x+(p[0]-space.width/2)*actor.scale*(actor.flipped?-1:1),
+    actor.y+(p[1]-space.height)*actor.scale];
+}
 function worldJoints(actor: WholeBodyActor): Record<string,Point> {
-  const solved=solveSkeleton(actor.skeleton,actor.pose),space=actor.skeleton.space;
-  return Object.fromEntries(Object.entries(solved.joints).map(([name,p])=>[name,[
-    actor.x+(p[0]-space.width/2)*actor.scale*(actor.flipped?-1:1),
-    actor.y+(p[1]-space.height)*actor.scale,
-  ]]));
+  const solved=solveSkeleton(actor.skeleton,actor.pose);
+  return Object.fromEntries(Object.entries(solved.joints).map(([name,p])=>[name,toWorld(actor,p)]));
+}
+/** The foot the leg solve LANDS for a design aim: the motor's own planted-leg
+ * solve at the current hip drop, then the same FK `solveSkeleton` draws with.
+ * That solver clamps the aim (stride first, then radial), so this comparison is
+ * like with like AT THE CLAMP. A rest leg has 0.00 px of slack: its target sits
+ * exactly ON the reachable annulus boundary, the solved foot lands a rounding
+ * width inside it, and comparing the two against the raw aim refused a substep
+ * that is visually perfect. Whether the aim is reachable at all is
+ * `leg-annulus`'s question, not this one's. */
+function solvedFoot(actor: WholeBodyActor,side:Side,design:Point,drop:number):Point {
+  const angles=plantedLegAngles(actor.skeleton,side,drop,design);
+  const pose:SkeletonPose=side==='r'?{waistY:drop,legR:angles}:{waistY:drop,legL:angles};
+  return toWorld(actor,solveSkeleton(actor.skeleton,pose).joints[`foot_${side}`]!);
 }
 const distance=(a:Point,b:Point)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const angleDelta=(a:number,b:number)=>Math.abs(((a-b+540)%360+360)%360-180);
@@ -106,6 +122,14 @@ function validateState(before:WholeBodyState,after:WholeBodyState,elapsed:number
   const errors:ProposalViolation[]=[];
   const check=(constraint:string,measured:number,limit:number,location:Partial<ProposalViolation>={})=>{
     if(!Number.isFinite(measured)||measured>limit+1e-8)errors.push({...location,constraint,measured,limit,attempt});
+  };
+  /** A non-finite input has NO solution. Refuse it by naming the joint and the
+   *  input that was non-finite, because a NaN ratio reads as a tolerance miss on
+   *  a substep nobody could have solved, and hides which number was bad. */
+  const nonFinite=(joint:string,input:string,value:number,location:Partial<ProposalViolation>)=>{
+    if(Number.isFinite(value))return false;
+    errors.push({...location,constraint:`${input}-non-finite`,joint,measured:value,limit:0,attempt});
+    return true;
   };
   for(const category of ['actors','props'] as const){
     if(Object.keys(before[category]).sort().join('\0')!==Object.keys(after[category]).sort().join('\0')){
@@ -137,17 +161,24 @@ function validateState(before:WholeBodyState,after:WholeBodyState,elapsed:number
     }
     for(const side of ['l','r'] as const){
       const foot=joints[`foot_${side}`]!,target=a.footTargets[side],anchor=a.support[side];
+      const drop=a.pose.waistY??0,joint=`foot_${side}`;
+      if(nonFinite(joint,'foot-target',target[0],{actor:id,joint})||
+        nonFinite(joint,'foot-target',target[1],{actor:id,joint})||
+        nonFinite(joint,'waist-drop',drop,{actor:id,joint}))continue;
       const design:Point=[a.skeleton.space.width/2+(target[0]-a.x)/a.scale*(a.flipped?-1:1),
         a.skeleton.space.height+(target[1]-a.y)/a.scale];
-      const interval=legDropInterval(a.skeleton,side,design),drop=a.pose.waistY??0;
-      check('leg-annulus',interval?Math.max(0,interval[0]-drop,drop-interval[1]):Infinity,0,{actor:id,joint:`foot_${side}`});
-      check('foot-reach',distance(foot,target),.02,{actor:id,joint:`foot_${side}`});
+      const interval=legDropInterval(a.skeleton,side,design);
+      check('leg-annulus',interval?Math.max(0,interval[0]-drop,drop-interval[1]):Infinity,0,{actor:id,joint});
+      check('foot-reach',distance(foot,solvedFoot(a,side,design,drop)),.02,{actor:id,joint});
       if(!anchor)continue;
       check('support-anchor',distance(foot,anchor),.02,{actor:id,joint:`foot_${side}`});
       if(old.support[side])check('stance-drift',distance(anchor,old.support[side]!),.02,{actor:id,joint:`foot_${side}`});
       check('sole-height',Math.abs(foot[1]+a.soleOffset[side]-a.y),.02,{actor:id,joint:`foot_${side}`});
     }
     if(a.palmTarget){
+      if(nonFinite('hand_r','palm-target',a.palmTarget[0],{actor:id,joint:'hand_r'})||
+        nonFinite('hand_r','palm-target',a.palmTarget[1],{actor:id,joint:'hand_r'})||
+        nonFinite('hand_r','waist-drop',a.pose.waistY??0,{actor:id,joint:'hand_r'}))continue;
       // The palm check compares the DRAWN hand with the motor's world reach
       // point, so it must use the renderer's arm composition (reach.ts).
       // solveSkeleton's arm chain mirrors the rest vectors by `facing` and is

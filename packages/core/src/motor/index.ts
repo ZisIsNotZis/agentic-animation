@@ -1597,6 +1597,12 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         let nextX = state.x + dir * excess;
         for (const other of actors.values()) {
           if (other.id === state.id) continue;
+          // A body behind the taut arm bounds nothing: clamping to it would
+          // pull the root BACKWARD through its own stance — an 885 px teleport
+          // in one substep that the root-rate gate refuses, which then leaves
+          // the stance feet behind and the whole-body proposal freezes the
+          // bake (the same direction-of-travel guard the walk already keeps).
+          if ((other.x - state.x) * dir <= 0) continue;
           const required = separationGap(state, other);
           if (dir > 0) nextX = Math.min(nextX, other.x - required);
           else nextX = Math.max(nextX, other.x + required);
