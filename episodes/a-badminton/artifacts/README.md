@@ -1,7 +1,8 @@
 # episodes/a-badminton/artifacts/ — the declared home for this episode's renditions
 
-One directory per rendition, named `<verdict-date>-<rendered-at-short-sha>`. A rendition is
-a bake plus its render, and it never leaves this directory: `/tmp` is not a home, and a
+One directory per rendition, named `<round>-<date>` (`sa1-er-` is the rendition ER refused;
+the bake identity inside each one names the revision it was rendered at). A rendition is a
+bake plus its render, and it never leaves this directory: `/tmp` is not a home, and a
 verdict may not rest on bytes a reboot deletes.
 
 Each rendition directory holds:
