@@ -1,0 +1,24 @@
+{
+  "episode": "episodes/a-badminton/episode.yml",
+  "episodeSha256": "78bfdefea7d2340305cdfc139725c1deb03f95580be30798db85041cc8519659",
+  "video": "episodes/a-badminton/artifacts/sa1-d1w-2026-10-21/episode.mp4",
+  "videoSha256": "2ad11717cf091ff58c07d22fcfcc4b3b3c551313d4f659e5210a3615e96828a6",
+  "frameCount": 132,
+  "durationSec": 5.5,
+  "fps": 24,
+  "renderedFrom": "the working tree at 264a09a: D1's wrapper half (one plane per actor at actor.z), the net at depth 45, the receiver at the background entrance",
+  "renderCommand": "npm run anim -- render-yaml episodes/a-badminton/episode.yml --scale 0.6666666666666666",
+  "bakeCommand": "npm run anim -- make episodes/a-badminton/episode.yml",
+  "rebuild": "bash episodes/a-badminton/artifacts/sa1-d1w-2026-10-21/verify.sh",
+  "stillsCommand": "ffmpeg -ss <sec> -i episode.mp4 -frames:v 1 stills/t<sec>.png",
+  "stills": [
+    {"name": "t2.208.png", "sec": 2.208, "beat": "the strike"},
+    {"name": "t2.375.png", "sec": 2.375, "beat": "the arc apex, inside the net's mesh band: the crossing"},
+    {"name": "t2.500.png", "sec": 2.5, "beat": "the descent past the net"},
+    {"name": "t2.917.png", "sec": 2.917, "beat": "the first floor contact"}
+  ],
+  "setLayers": "net declared depth 45; receiver staged at the background entrance (y 0.57) so one player stands beyond the net",
+  "defectClosed": "the shared z-40 actor wrapper is gone; each actor paints at its own declared plane, so the net at 45 stands behind the near player and in front of the far one",
+  "events": {"struck": {"at": 2.207, "velocity": [-533, -447]}, "settled": {"at": 3.717, "position": [476.56, 691]}},
+  "motorDiagnostics": "none; make printed 8 expected sudden-move lines on the descent (frames 63-70), which are the bounce's physics and are recorded in episodes/a-badminton/README.md"
+}

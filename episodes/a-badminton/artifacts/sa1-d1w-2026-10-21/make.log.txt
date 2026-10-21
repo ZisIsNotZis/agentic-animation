@@ -1,0 +1,13 @@
+npm notice run agentic-animation@0.0.0 anim
+npm notice run tsx packages/cli/src/index.ts make episodes/a-badminton/episode.yml
+INFO  [yaml-audio] prepared 2 spoken take(s): serve.1.0, serve.3.0; reused 0; unmatched 0 {"provider":"edge","profile":"storyteller","artifactPath":"/home/z/vibe/agentic-animation/episodes/a-badminton/audio/yaml-audio.json"}
+yaml-audio: wrote 2 take(s); reused 0; unmatched 0 → /home/z/vibe/agentic-animation/episodes/a-badminton/audio/yaml-audio.json
+make: wrote /home/z/vibe/agentic-animation/episodes/a-badminton/performance.json (5.500s)
+[make] sudden-move warning: shuttle jumps 33px at frame 63 (829,374 -> 806,399) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 34px at frame 64 (806,399 -> 785,426) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 37px at frame 65 (785,426 -> 765,456) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 40px at frame 66 (765,456 -> 744,490) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 47px at frame 67 (744,490 -> 722,531) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 51px at frame 68 (722,531 -> 700,577) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 55px at frame 69 (700,577 -> 678,627) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 59px at frame 70 (678,627 -> 655,682) — objects must move continuously
