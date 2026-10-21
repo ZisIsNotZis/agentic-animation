@@ -28,6 +28,17 @@ Sizes are indicative; the owning script prints exact figures before downloading.
 None run automatically — they are large and opt-in. `setup.sh` only warns that
 they exist (or don't yet) and points you at them.
 
+## `prop-track.mjs` — what a baked prop actually did
+
+Prints one prop's per-frame path from a `performance.json`, plus the turning points of its
+`y`, so a "it bounces" / "it comes to rest on the floor" claim is a measurement:
+
+```sh
+node tools/prop-track.mjs episodes/a-badminton/performance.json shuttle 2.8 3.7
+```
+
+Reads a manifest, writes nothing, touches no device.
+
 Smoke-testing the pipeline needs **none** of the models: use the macOS `say` TTS
 provider (`adapters.tts: "say"` in `anim.config.local.json`) and the checked-in
 `_placeholder` cast.

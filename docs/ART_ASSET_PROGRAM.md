@@ -14,9 +14,11 @@ the landed packages' mail files) is in [tickets/SLICE-A-ENGINE](tickets/SLICE-A-
 
 - **A · badminton.** Two native figures in the hall; the shuttle is a real projectile
   with gravity and a bounce; contact is instantaneous at the hit; the camera tracks the
-  shuttle. **Narrowed 2026-10-21, and the person accepted the narrowing:** a serve, its
-  40° arc, its bounce and a following camera — not a rally. One 40° elevation, a settle
-  1440–1560 px downrange, no authored toss and a 0.09 s contact window narrowed it.
+  shuttle. **Narrowed 2026-10-21 at `assumed`:** a serve, its 40° arc, its bounce and a
+  following camera — not a rally. Root recommended the narrowing and no answer has come
+  back; it is an agent fact and is never quoted as the person's (see §Roadmap). One 40°
+  elevation, a settle 1440–1560 px downrange, no authored toss and a 0.09 s contact
+  window narrowed it.
 - **B · giant swing on a high bar.** A different body type rotates a full circle about a
   fixed bar while a second figure reacts; the support is the bar, not the ground.
 - **C · pouring tea.** A host tilts a pot into a cup; the tilt is authored intent and the
@@ -91,8 +93,8 @@ bake-identified stills are its preconditions.
 **The narrowing is an assumed decision, not a lost goal — and not the person's answer.**
 Corrected by root on 2026-10-21, because this paragraph previously recorded the scope
 question as answered. It is not: root recommended *ship the serve* and raised the question
-to the person the same day (`mail/2026-10-21-animation-rally-scope.md`), and **no answer has
-come back**. The sentence is an agent fact of the assumed kind and must never be quoted as
+to the person the same day, and **no answer has come back**. The question is not filed in
+this tree and this document carries no pointer to it. The sentence is an agent fact of the assumed kind and must never be quoted as
 the person's word.
 
 What is true instead: S-A1 proceeds on root's recommendation because it is reversible and
@@ -110,28 +112,61 @@ Packages, in this order:
    `2d29eb2e/task-2`): `camera.follow(target, {sec, zoom})`, per-frame keys, stage-clamped.
 3. **EP · two native figures could not bake together** — **landed** `ead4ac0`,
    `135ee7d`, `54cbe01` (`idle-compute`, run `5b22b313`). The native pair bakes now.
-4. **EA · the episode** (`episodes/a-badminton/`) — spend `idle-compute`, 20 min. The
-   serve from the hand, `camera.follow(shuttle)`, `force` 1.0–1.2, the arc, the bounce,
-   bake-identified stills. **Dispatched** 2026-10-21, run `25e80bfb`; it files
-   `mail/2026-10-21-ea-report.md` itself. The return is optional, by EP's exact fixture,
-   and S-A1 does not depend on it.
-5. **ER · the independent review** — spend `idle-compute`, 10 min, dispatched once EA's
-   stills exist and the integrating node has re-run the combined check at EA's commit
-   (`npm test`, `npm run smoke`, and `check`/`make` on the episode): the episode is
-   compilation the compiler has not seen yet, so a green HEAD is not a green bake. The reviewer is a fresh **builtin `reviewer`** subagent with a
-   deliberately blind contract: the still paths and one question, and **nothing else** —
-   not this document, not EA's report, not the motor's numbers — because the producer's
-   reasoning is exactly what an independent verdict must not inherit. It sees the images
-   at normal viewing size (file resolution, no crop, no zoom); if it cannot see image
-   content it must answer `NOT SATISFIED: no sight`.
+4. **EA · the episode** (`episodes/a-badminton/`) — **landed** `154166c`, `6a8d967`,
+   `3dfdf9e` (`idle-compute`, 20 min, run `25e80bfb`): the serve from the hand,
+   `camera.follow(shuttle, {sec: 2.0, zoom: 0.75})`, `force 1.0` over `forceSec 0.16`, the
+   40° arc, the bounce resting at world x 509, the hold from 3.633 s, five bake-identified
+   stills. `check`, `make`, `render-yaml`, `tsc --noEmit` exit 0; `motor.diagnostics: []`.
+   Its measured reach, force table and the five limits it could not land are in
+   `episodes/a-badminton/README.md` — that file is the package's home, not this one. The
+   return is optional, by EP's exact fixture, and S-A1 does not depend on it.
+5. **ER · the independent review** — **returned `NOT SATISFIED`** 2026-10-21, run
+   `b9628190`, filed verbatim at `tickets/S-A1-ER-REVIEW.md`. It was a fresh **builtin
+   `reviewer`** with a deliberately blind contract — the still paths and one question, and
+   **nothing else** (not this document, not EA's report, not the motor's numbers), because
+   the producer's reasoning is what an independent verdict must not inherit — and it went
+   out only after the integrating node re-ran the combined check at EA's commit
+   (`npm test`, `npm run smoke`, `check`/`make` on the episode): the episode is compilation
+   the compiler had not seen, so a green HEAD is not a green bake.
+
+**S-A1 is not reached, and the reason is the shot, not the pipeline.** The arc and the
+court read; the bounce, the rest, the follow and the shuttle's scale do not. Four of the
+five findings are reading failures of the render and are measured in
+`episodes/a-badminton/README.md` §"S-A1 review (ER)" — two thirds of ER's own shortfall
+is a defect (`avoidActorCollisions` writes the actor y-clamp into the projectile's ground,
+so the shuttle bounces and rests 41–56 px above the line it started on), and ER's "no
+bounce" is its 6 fps sample stepping over two hops of 62 px and 16 px.
+
+## The repair workset (ready for root to launch; not dispatched here)
+
+Each row is a package with its own acceptance. R1 is a defect; R2 and R3 are design and
+need root's word; R4 and R5 are asset and animation work.
+
+| pkg | what | accept |
+| --- | --- | --- |
+| **R1** | the projectile's ground is the set's floor, not the actor clamp | a prop struck or released from the floor line makes both contacts and rests **on that line** (±1 px); `node tools/prop-track.mjs` shows it; no other test's numbers move |
+| **R2** | the bounce must read: 62 px then 16 px over ~0.2 s is physical but not visible | root decides whether elevation/restitution becomes authorable, or the shot states a smaller bounce and says so |
+| **R3** | the follow must read as a follow: at `zoom 0.75` the pan is ~120 px | root picks: narrower framing with cut heads and a real pan, or a follow that holds a subject band and the floor |
+| **R4** | the shuttle is ~3× a real shuttlecock (stageWidth 130 at scale 0.65) and passes in front of the receiver's legs | drawn size within ~1.3× a real shuttle beside the figure, and no player-leg occlusion at the bounce |
+| **R5** | the players are statues | the receiver reacts to the serve; the server's follow-through holds past 2.5 s |
+
+Order: R1 first (it changes where the bounce happens, so R2 and R3 are measured after it),
+then R3 and R4 together, then one re-render, one set of stills, and ER again with a fresh
+reviewer. R5 and R2 only if the second review still fails on them — the cheap three may
+carry the reading, and buying them first is what "time is the scarce thing" asks for.
 
 ## Current facts
 
-**Where the slice-A engine stands (2026-10-21, after E2, E4 and EP):** all four engine
-packages are landed; the episode is the only thing missing. The combined check was 328/328
-at `c943d88`, which **predates EP's source commits**, so the integrating node re-ran it at
-HEAD (`f92ed55`): **333/333 pass, `fail 0`, 121 s, `EXIT:0`**, plus `npm run smoke` `EXIT:0`
-and a clean `git diff --check`.
+**Where slice A stands (2026-10-21, HEAD `70bf431`):** engine landed, episode landed,
+review returned `NOT SATISFIED` — the milestone is **not reached**, and what blocks it is
+how the shot reads, not whether it builds. The integrating node re-ran the combined check
+at this HEAD after EA and again while writing this note: **333/333 pass, `fail 0`, two
+runs agreeing**, `npm run smoke` exit 0, `check` on the episode exit 0,
+`git diff --check` clean. The previously recorded 328/328 at `c943d88` predated EP and is
+dead. Re-running `make` at this HEAD reproduces EA's bake event for event (struck 2.207 s
+at `[-533,-447]`, settled 3.633 s at `[509, 650.16]`); the `performance.json` file hash
+cannot be used as an identity, because it embeds a generation timestamp — the episode and
+video hashes in `bake-identity.json` can.
 
 **What EP changed.** A native serve **and** a native return bake with `diagnostics: []` at
 receiver x 1500, beat 2.12 s (strikes at 1.407 s and 2.226 s, both 40.00°), where a native
@@ -185,15 +220,18 @@ the tea room and two cast members do not.
 
 ## Risks
 
-- **One arc is one shot shape.** If ER says a single 40° float does not read as
-  badminton, elevation becomes authorable work in `library/action` — a package.
+- **The artefact rests above its own floor.** R1 is a defect, not a preference, and until
+  it lands every projectile shot in the tree inherits it.
 - **A follow cuts drawn heads.** The head rule is deliberately off for a following shot
-  (a follow that dodged every head lost its own subject). Unreviewed by eye until ER.
+  (a follow that dodged every head lost its own subject). Reviewed now, and it cuts them:
+  R3 is the choice.
 - **Camera cost is quadratic in window length**; a follow longer than ~3 s, or two in one
   episode, opens a memo package. A 1.9 s window on a ≤10 s shot does not.
 
 ## Evidence pointers
 
+- `tickets/S-A1-ER-REVIEW.md` — slice A's independent verdict, verbatim;
+  `tools/prop-track.mjs` — the command that prints a prop's path and turning points.
 - `tickets/SLICE-A-ENGINE.md` — E1's measured arc and E2/E4/EP's hooks, numbers, limits.
 - `packages/core/src/compiler/capabilities.ts` — the declaration table and the gate;
   `motor/index.ts` — `STRIKE_ELEVATION`, `strikeProjectile`, the push hand drive and its

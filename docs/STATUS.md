@@ -134,8 +134,10 @@ Optional extensions, not prerequisites for the closed engine milestone:
 
 This section is a dated snapshot, not the current state. Where it disagrees with
 [ART_ASSET_PROGRAM](ART_ASSET_PROGRAM.md) §"Current facts" (2026-10-21), the programme
-document wins: E4, EP and the two-native-figure seam are landed since this was written,
-and the combined check is 333/333 at `f92ed55`.
+document wins: E2, E4, EP and EA are landed since this was written, the combined check is
+333/333 at `70bf431`, and slice A's independent review has answered `NOT SATISFIED`
+(`tickets/S-A1-ER-REVIEW.md`) — the milestone is not reached, and the repair workset is
+ART_ASSET_PROGRAM §"The repair workset".
 
 The work is being resumed elsewhere. This is the exact state, so nothing has to be
 re-derived.

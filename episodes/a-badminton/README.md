@@ -132,3 +132,44 @@ Inspected by eye at full resolution: the arc reads across the net, the bounce
 reads as a bounce, the shuttle rests where the camera left it; both players'
 heads are cut above the eyebrows from the first floor contact onward (see
 "What the shot could not have").
+
+## S-A1 review (ER) — the shot does not pass yet
+
+ER (fresh `reviewer`, run `b9628190`, blind contract, stills at file resolution plus a
+6 fps sample of the video) answered **NOT SATISFIED**; its text is filed verbatim at
+[tickets/S-A1-ER-REVIEW](../../docs/tickets/S-A1-ER-REVIEW.md). What it read: the arc and
+the court read; the bounce, the rest, the follow and the shuttle's scale do not.
+
+Two of its findings are mechanically checkable, and both need a correction:
+
+1. **The bounces exist — its 6 fps sample stepped over both.** `node tools/prop-track.mjs
+   episodes/a-badminton/performance.json shuttle` (landed with this note) prints the path:
+
+   | beat | frame | t | y |
+   | --- | --- | --- | --- |
+   | apex | 57 | 2.375 s | 329.48 |
+   | first contact | 70 | 2.917 s | 635.17 |
+   | first hop apex, 62 px | 75 | 3.125 s | 573.44 |
+   | second contact | 81 | 3.375 s | 648.32 |
+   | second hop apex, 16 px | 84 | 3.500 s | 632.06 |
+   | rest, held to the end | 87 | 3.625 s | 650.16 |
+
+   Each hop lasts 4–5 frames, ~0.2 s, so a 6 fps sample lands on one point of it. Its
+   perception still holds: a 62 px hop on a 720 px frame, with nothing drawn under it,
+   does not read as a bounce.
+2. **The projectile's floor is not the set's floor — the defect it actually saw.** The
+   shuttle is staged at y 691.2 and the hall paints its floor at 691; its contacts are at
+   635.17 and 648.32 and it rests at 650.16. It bounces and comes to rest **41–56 px above
+   the line it started on**, with no ground shadow at contact, so the still at 3.167 s —
+   labelled "the bounce, its apex" — shows a shuttle hanging in empty air. EA named this
+   as "could not land 1" (`avoidActorCollisions` writes the actor y-clamp, 0.602 × 1080 =
+   650, into the projectile's ground). It is a defect, not a staging choice.
+
+Confirmed by both, no correction needed: the shuttle is drawn ~3× a real shuttlecock
+(`stageWidth` 130 at scale 0.65 beside a 633 px figure) and passes in front of the
+receiver's legs; the follow at `zoom 0.75` pans only ~120 px and reads as a wide; both
+heads are cut from the first floor contact; the players never move.
+
+**S-A1 is not reached.** The shot bakes, renders and is bound to its revision — the
+independent viewer does not pass it. The repair workset is
+`docs/ART_ASSET_PROGRAM.md` §"The repair workset".
