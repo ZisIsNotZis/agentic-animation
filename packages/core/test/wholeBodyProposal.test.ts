@@ -211,3 +211,20 @@ test('wholeBodyProposal failure in a second actor rolls back first actor and def
   assert.deepEqual(result.events,[]);
   assert.ok(result.rejections.some(r=>r.actor==='receiver'&&r.joint==='elbow_l'));
 });
+
+test('reproduced: a non-finite foot target surfaces as a NaN foot-reach ratio, not as a named input',async()=>{
+  // EP (docs/ART_ASSET_PROGRAM.md, package 3). A non-finite target has NO
+  // solution; the refusal must name the joint and the input that was
+  // non-finite. Today it reaches the check as a distance, so it reads as a
+  // tolerance miss on a substep nobody could have solved.
+  const state=await standing();
+  const result=resolveWholeBodyProposal({accepted:state,dt:1/24,time:1,maxAttempts:1,presentationTimes:[]},snapshot=>{
+    snapshot.actors.hero!.footTargets.r=[Infinity,state.actors.hero!.footTargets.r[1]];
+    return {state:snapshot,samples:[],events:[]};
+  });
+  assert.equal(result.accepted,false);
+  const measured=result.rejections.filter(r=>r.joint==='foot_r');
+  assert.ok(measured.some(r=>r.constraint==='foot-reach'),'the class is present today');
+  assert.ok(measured.filter(r=>r.constraint==='foot-reach').every(r=>!Number.isFinite(r.measured)),
+    'and it reads as a NaN/Infinity ratio');
+});
