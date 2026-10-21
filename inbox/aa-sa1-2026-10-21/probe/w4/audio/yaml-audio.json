@@ -1,0 +1,109 @@
+{
+  "generatedBy": {
+    "stage": "yaml-audio",
+    "tool": "tts:edge",
+    "at": "2026-10-21T05:13:14.184Z",
+    "inputHash": "e5f248b6f54043061a24997ff3166cc7c74eed17441dc322ae8c96aa9b865ccd"
+  },
+  "episodeId": "probe_w4",
+  "profile": "storyteller",
+  "compilerVersion": "yaml-audio-v1",
+  "takes": [
+    {
+      "id": "pick.1.0",
+      "lineId": "pick.1",
+      "sceneId": "pick",
+      "statementIndex": 1,
+      "chunkIndex": 0,
+      "spokenIndex": 0,
+      "actor": "server",
+      "voiceAsset": "voice/zh/student_a",
+      "profile": "storyteller",
+      "compilerVersion": "yaml-audio-v1",
+      "cacheKey": "dfc93074df8bffba036917f44177e0b75c17f5fa50cfb4127928177650983470",
+      "sourceText": "……",
+      "text": "……",
+      "silence": true,
+      "speed": 1,
+      "relativeStartSec": 0,
+      "durationSec": 1.1,
+      "cleaned": {
+        "text": "……",
+        "removed": [],
+        "segments": [
+          {
+            "sourceStart": 0,
+            "sourceEnd": 2,
+            "cleanStart": 0,
+            "cleanEnd": 2
+          }
+        ]
+      },
+      "timing": {
+        "text": "……",
+        "startSec": 0,
+        "endSec": 1.1,
+        "durationSec": 1.1,
+        "boundaries": [],
+        "inlineEvents": []
+      },
+      "captions": [],
+      "lipSync": {
+        "text": "……",
+        "startSec": 0,
+        "endSec": 1.1,
+        "boundaries": []
+      },
+      "inlineEvents": []
+    },
+    {
+      "id": "pick.2.0",
+      "lineId": "pick.2",
+      "sceneId": "pick",
+      "statementIndex": 2,
+      "chunkIndex": 0,
+      "spokenIndex": 1,
+      "actor": "server",
+      "voiceAsset": "voice/zh/student_a",
+      "profile": "storyteller",
+      "compilerVersion": "yaml-audio-v1",
+      "cacheKey": "dfc93074df8bffba036917f44177e0b75c17f5fa50cfb4127928177650983470",
+      "sourceText": "……",
+      "text": "……",
+      "silence": true,
+      "speed": 1,
+      "relativeStartSec": 0,
+      "durationSec": 1.1,
+      "cleaned": {
+        "text": "……",
+        "removed": [],
+        "segments": [
+          {
+            "sourceStart": 0,
+            "sourceEnd": 2,
+            "cleanStart": 0,
+            "cleanEnd": 2
+          }
+        ]
+      },
+      "timing": {
+        "text": "……",
+        "startSec": 0,
+        "endSec": 1.1,
+        "durationSec": 1.1,
+        "boundaries": [],
+        "inlineEvents": []
+      },
+      "captions": [],
+      "lipSync": {
+        "text": "……",
+        "startSec": 0,
+        "endSec": 1.1,
+        "boundaries": []
+      },
+      "inlineEvents": []
+    }
+  ],
+  "reuseCount": 0,
+  "unmatchedCount": 0
+}

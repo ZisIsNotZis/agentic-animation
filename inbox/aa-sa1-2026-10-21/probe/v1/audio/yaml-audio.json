@@ -1,0 +1,62 @@
+{
+  "generatedBy": {
+    "stage": "yaml-audio",
+    "tool": "tts:edge",
+    "at": "2026-10-21T05:12:41.429Z",
+    "inputHash": "4c0f76a7c443781261bbf8572b8f9e9924b95b756f356752f71810579bc60949"
+  },
+  "episodeId": "probe_v1",
+  "profile": "storyteller",
+  "compilerVersion": "yaml-audio-v1",
+  "takes": [
+    {
+      "id": "pick.0.0",
+      "lineId": "pick.0",
+      "sceneId": "pick",
+      "statementIndex": 0,
+      "chunkIndex": 0,
+      "spokenIndex": 0,
+      "actor": "server",
+      "voiceAsset": "voice/zh/student_a",
+      "profile": "storyteller",
+      "compilerVersion": "yaml-audio-v1",
+      "cacheKey": "dfc93074df8bffba036917f44177e0b75c17f5fa50cfb4127928177650983470",
+      "sourceText": "……",
+      "text": "……",
+      "silence": true,
+      "speed": 1,
+      "relativeStartSec": 0,
+      "durationSec": 1.1,
+      "cleaned": {
+        "text": "……",
+        "removed": [],
+        "segments": [
+          {
+            "sourceStart": 0,
+            "sourceEnd": 2,
+            "cleanStart": 0,
+            "cleanEnd": 2
+          }
+        ]
+      },
+      "timing": {
+        "text": "……",
+        "startSec": 0,
+        "endSec": 1.1,
+        "durationSec": 1.1,
+        "boundaries": [],
+        "inlineEvents": []
+      },
+      "captions": [],
+      "lipSync": {
+        "text": "……",
+        "startSec": 0,
+        "endSec": 1.1,
+        "boundaries": []
+      },
+      "inlineEvents": []
+    }
+  ],
+  "reuseCount": 0,
+  "unmatchedCount": 0
+}
