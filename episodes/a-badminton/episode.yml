@@ -74,6 +74,6 @@ scenes:
       - server: "{prop.pickup(server, shuttle)}…………"
       # 2 serve — the strike leaves his hand while the camera opens its follow
       #   window on the same beat.
-      - server: "{action.push(server, shuttle, 1.0, 0.16), camera.follow(shuttle, {sec: 2.0})}"
+      - server: "{action.push(server, shuttle, 1.0, 0.16), camera.follow(shuttle, {sec: 2.0, zoom: 0.75})}"
       # 3 hold — silence while the shuttle settles where the camera left it.
       - server: "……"

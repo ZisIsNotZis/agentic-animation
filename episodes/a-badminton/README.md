@@ -31,8 +31,8 @@ to be paid for with silent beats (`…` = 0.55 s).
 
 ## The compiled events
 
-`make` (exit 0) writes `performance.json` (6.6 s of manifest, 5.5 s of
-performance) with an empty `motor.diagnostics` and:
+`make` (exit 0) writes a 5.5 s `performance.json` with an empty
+`motor.diagnostics` and:
 
 ```json
 [{"kind":"projectile.struck","prop":"shuttle","at":2.207,"velocity":[-533,-447]},
@@ -42,6 +42,21 @@ performance) with an empty `motor.diagnostics` and:
 `Δy/Δx = 447/533` → **40.00°**, launch speed 697 px/s. Staging at scale 0.88:
 server `[0.65, 0.602]`, receiver `[0.35, 0.602]`, shuttle `[0.538, 0.64]`,
 racket `[0.229, 0.593]` (placed `on(bench)`).
+
+The camera track carries one event, opening on the strike (the push and the
+follow share a brace group):
+
+```json
+{"operation":"follow","target":"shuttle","duration":2,"z":0.75}
+```
+
+`zoom: 0.75` rather than the recipe's default 1.0 is measured, not taste: at
+z 1 the follow's vertical travel (the evaluator pins the viewport inside the
+painted stage, so the frame's y runs 0 → 323) cuts both players' heads above
+the eyes from the first floor contact onward. At 0.75 the frame is 960 world px
+tall, its y range is 0 → 120, and the heads survive to the eyebrows — the cut
+is reduced, not removed (the drawn hair tops sit at world y ≈ 80). See
+"What the shot could not have".
 
 ## The force and the drive length
 
@@ -72,3 +87,10 @@ elevation and puts the bounce and the rest on the court.
   authorable, so this is a serve and reads as one.
 - **No authored toss.** `prop.release` opens the hand with no upward impulse, so
   the shuttle is struck out of the palm rather than tossed and hit.
+- **A following shot can cut a drawn head** (E4, deliberate). Measured here: at
+  `zoom: 1` the head is cut to the chin; at 0.75 to the eyebrows in the contact,
+  bounce and hold frames; below z ≈ 0.72 the head fits but the pan shrinks to
+  ~120 px and the shot stops reading as a follow. The shot keeps the pan.
+- **The shuttle is drawn large** (the asset's declared `stageWidth` 130 at scale
+  0.65 = 130 x 104 world px against a 633 px figure) and passes in front of the
+  receiving player's legs. Asset-side, not authorable here.
