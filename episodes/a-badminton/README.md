@@ -56,14 +56,11 @@ follow share a brace group):
 {"operation":"follow","target":"shuttle","duration":2,"z":0.75}
 ```
 
-**`make` also warns, and no earlier record of this episode says so.** Seven lines, on every
-bake of this episode (the log is kept at `artifacts/sa1-er-2026-10-21/make.log.txt`):
-
-```
-[make] sudden-move warning: shuttle jumps 33px at frame 63 (832,380 -> 810,404) — objects must move continuously
-…
-[make] sudden-move warning: shuttle jumps 55px at frame 69 (703,581 -> 681,631) — objects must move continuously
-```
+**`make` also warns, and no earlier record of this episode says so.** Eight lines on every
+bake of this episode, on the descent between the arc's apex and the first floor contact —
+frames 63–70 and 32–59 px since R1 put the floor back where the set paints it (frames 63–69,
+33–55 px before). The log of the reviewed rendition, whose descent was 41 px shorter, is at
+`artifacts/sa1-er-2026-10-21/make.log.txt`; a fresh `make` prints the current eight.
 
 They come from `detectPropDiscontinuities` (`packages/studio/src/performance/teleports.ts`),
 whose threshold is **30 stage px between consecutive frames**, and they fire on the descent
@@ -73,7 +70,7 @@ not a defect in it: at 697 px/s along 40° the vertical speed is 447 px/s at lau
 58 px in one frame, against a 30 px threshold. The warning is the price of a fast projectile
 at 24 fps and it is not being suppressed. A reader who sees these
 seven lines in `make` should read them as expected for this shot; a warning **outside**
-frames 63–69 is a new fact.
+frames 63–70 is a new fact.
 
 `zoom: 0.75` rather than the recipe's default 1.0 is measured, not taste: at
 z 1 the follow's vertical travel (the evaluator pins the viewport inside the
@@ -175,7 +172,10 @@ Two of its findings are mechanically checkable, and both need a correction:
 
    Each hop lasts 4–5 frames, ~0.2 s, so a 6 fps sample lands on one point of it. Its
    perception still holds: a 62 px hop on a 720 px frame, with nothing drawn under it,
-   does not read as a bounce.
+   does not read as a bounce. The two rows labelled "contact" are the deepest *sampled*
+   frames: the snap onto the surface happens in a substep between two frames, so a
+   turning point is always one frame short of the contact it marks — which is why
+   `prop-track` now prints the landings and the rest separately from the turning points.
 2. **The projectile's floor is not the set's floor — the defect it actually saw.** The
    shuttle is staged at y 691.2 and the hall paints its floor at 691; its contacts are at
    635.17 and 648.32 and it rests at 650.16. It bounces and comes to rest **41–56 px above
