@@ -110,3 +110,36 @@ test("two native actors never drag a root backward and never freeze the bake", (
   assert.deepEqual(diagnosticsOf(single), []);
   assert.equal(strikesOf(single).length, 2, "the legacy receiver lands the return");
 });
+
+test("a native athlete serves and a second native athlete returns: two struck contacts, empty diagnostics", () => {
+  // EP's acceptance: the pair E2 could not bake — a native server and a native
+  // receiver, staged where the descending arc comes back down to hand height.
+  // The serve is struck from the server's own hand (E2's hook at 35b8ffd); the
+  // receiver walks at the shuttle's LIVE x and strikes it in the air (a1f848a).
+  const baked = simulateScene(pairScene({nativeReceiver: true, beatAt: 2.12, receiverX: 1500}));
+  assert.deepEqual(diagnosticsOf(baked), [], JSON.stringify(diagnosticsOf(baked)));
+
+  const struck = strikesOf(baked);
+  assert.equal(struck.length, 2, `expected the serve and the return, got ${JSON.stringify((baked.events ?? []).map((event) => `${event.kind}@${event.at.toFixed(3)}`))}`);
+  const [serve, returned] = struck as [typeof struck[number], typeof struck[number]];
+  assert.ok(returned.at > serve.at, "the return follows the serve");
+  assert.equal(returned.prop, "shuttle", "the return is a second beat on the same prop");
+
+  // The serve leaves the server's hand on the engine's 40° arc, and the return
+  // leaves on the same arc back toward the server's side (+x for the receiver
+  // facing left: the engine strikes away from the striker's own facing).
+  const elevationOf = (event: typeof serve) => Math.atan2(-event.velocity![1], Math.abs(event.velocity![0])) * 180 / Math.PI;
+  assert.ok(Math.abs(elevationOf(serve) - 40) < 0.5, `the serve is not on the 40° arc: ${elevationOf(serve).toFixed(2)}°`);
+  assert.ok(Math.abs(elevationOf(returned) - 40) < 0.5, `the return is not on the 40° arc: ${elevationOf(returned).toFixed(2)}°`);
+  assert.ok(serve.velocity![1] < 0 && returned.velocity![1] < 0, "both strikes launch upward");
+  assert.ok(Math.sign(returned.velocity![0]) !== Math.sign(serve.velocity![0]),
+    "the return travels back the way the serve came");
+
+  // Both native actors ran: the receiver was the one the return needed, and it
+  // walked at the live shuttle rather than at the staged serve mark (x 700).
+  const receiverX = Math.min(...baked.actors.receiver!.map((frame) => frame.x));
+  assert.ok(receiverX < 1500 - 20,
+    `the receiver never walked at the shuttle's live x (min x ${receiverX.toFixed(1)})`);
+  assert.ok((baked.props.shuttle ?? []).every((frame) => Number.isFinite(frame.x) && Number.isFinite(frame.y)),
+    "the shuttle's flight must stay finite");
+});
