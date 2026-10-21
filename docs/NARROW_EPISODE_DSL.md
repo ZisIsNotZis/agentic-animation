@@ -103,6 +103,11 @@ measured timing, speech events, and renderer lip cadence.
 Semantic staging groups actors into inferred `left`, `center`, and `right`
 lanes, separates same-lane footprints in stable actor-ID order, clamps to the
 subject safe area, and fails when the requested composition cannot fit.
+An actor may declare `entrance` (`left`/`right`/`center`/`foreground`/
+`background`) beside `facing`; `background` stages that actor a court-depth
+further back (y 0.57 instead of 0.64), which is how one player stands on the
+far side of the net (D1). This is a relationship, not a coordinate: the value
+is still resolved by staging.
 Authors never write coordinates; plugins and the engine keep geometry normalized to `0..1`.
 
 For ordinary contact, use one `prop.pickup(actor, object)` and one

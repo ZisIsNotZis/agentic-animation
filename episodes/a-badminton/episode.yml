@@ -63,7 +63,7 @@ scenes:
     location: hall
     actors:
       server: {facing: left}
-      receiver: {facing: right}
+      receiver: {facing: right, entrance: background}
     objects:
       shuttle: center
       racket: on(bench)

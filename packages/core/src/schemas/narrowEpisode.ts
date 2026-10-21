@@ -164,7 +164,7 @@ const ScriptStatement = z.record(Id, z.string().min(1)).superRefine((item, ctx) 
 const Scene = z.object({
   id: Id,
   location: Id,
-  actors: z.record(Id, z.object({facing: Facing}).strict()).default({}),
+  actors: z.record(Id, z.object({facing: Facing, entrance: z.enum(["left", "right", "center", "foreground", "background"]).optional()}).strict()).default({}),
   objects: z.record(Id, Placement).default({}),
   script: z.array(ScriptStatement).min(1),
 }).strict();

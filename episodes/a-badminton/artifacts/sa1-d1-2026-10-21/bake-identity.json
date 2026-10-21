@@ -1,0 +1,22 @@
+{
+  "episode": "episodes/a-badminton/episode.yml",
+  "episodeSha256": "78bfdefea7d2340305cdfc139725c1deb03f95580be30798db85041cc8519659",
+  "video": "episodes/a-badminton/artifacts/sa1-d1-2026-10-21/episode.mp4",
+  "videoSha256": "4009482a769d42c2e1a75f09f13a8cff5d513a3a5e303b38ac3daca642d5370c",
+  "frameCount": 132,
+  "durationSec": 5.5,
+  "fps": 24,
+  "renderedFrom": "the working tree at 024dbb1 with D1's renderer half, the net at depth 45, and the receiver at the background entrance",
+  "renderCommand": "npm run anim -- render-yaml episodes/a-badminton/episode.yml --scale 0.6666666666666666",
+  "rebuild": "bash episodes/a-badminton/artifacts/sa1-d1-2026-10-21/verify.sh",
+  "stillsCommand": "ffmpeg -ss <sec> -i episode.mp4 -frames:v 1 stills/t<sec>.png",
+  "stills": [
+    {"name": "t2.208.png", "sec": 2.208, "beat": "the strike"},
+    {"name": "t2.375.png", "sec": 2.375, "beat": "the arc apex, inside the net's mesh band: the crossing"},
+    {"name": "t2.500.png", "sec": 2.5, "beat": "the descent past the net"},
+    {"name": "t2.917.png", "sec": 2.917, "beat": "the first floor contact"}
+  ],
+  "setLayers": "net declared depth 45; receiver staged at the background entrance (y 0.57) so one player stands beyond the net",
+  "knownDefect": "every actor renders inside one z-40 wrapper (components/PerformanceEpisode.tsx data-layer=\"actors\"), so the net at 45 also laces the NEAR player's legs: the far player is behind the net and the near one is not merely in front of it. Per-actor planes are the named next package; the depth field and the net's declaration are what it needs.",
+  "events": {"struck": {"at": 2.207, "velocity": [-533, -447]}, "settled": {"at": 3.717, "position": [509, 691]}}
+}
