@@ -77,6 +77,9 @@ export interface MotorPropInput {
   solid?: PropSolid;
   grip?: MotorGrip;
   rotation?: number;
+  /** Declared flight physics (`prop.kind: "projectile"`); absent for a
+   *  placement-only prop, which keeps the release-and-drop behaviour. */
+  projectile?: Projectile;
   id: string;
   /** Stage-space footprint [w, h]; the box anchors at (x, y) as base-center. */
   size: [number, number];
@@ -131,8 +134,25 @@ export interface MotorPropFrame {
   falling?: boolean;
 }
 
+/** A capability beat the bake emits as data, so a cue can attach to the name
+ *  the capability declared (compiler/capabilities.ts). Scene-relative seconds:
+ *  the compiler's scene `start` offsets it onto the film clock. */
+export interface MotorEvent {
+  kind: "projectile.struck" | "projectile.settled";
+  /** Id of the prop the beat is about. */
+  prop: string;
+  /** Scene-relative seconds at which the beat happened. */
+  at: number;
+  /** Stage-space velocity the strike imparted (px/s); `projectile.struck`. */
+  velocity?: [number, number];
+  /** Stage-space base position the prop came to rest at; `projectile.settled`. */
+  position?: [number, number];
+}
+
 export interface MotorTrajectory {
   diagnostics?: string[];
+  /** Capability beats in time order (`projectile.struck`, ...). */
+  events?: MotorEvent[];
   actors: Record<string, MotorActorFrame[]>;
   props: Record<string, MotorPropFrame[]>;
 }
@@ -142,7 +162,7 @@ import {accentSpeed, anticipationEnvelope, anticipationLean, settleOffset, smoot
   ANTICIPATION_LEAN, ANTICIPATION_MAX_SEC} from "./acting";
 import {solveActorFigure,type PoseActor} from './actorPose';
 import {resolveWholeBodyProposal,type WholeBodyState,type OwnershipEvent} from './wholeBodyProposal';
-import type { Skeleton } from "../schemas/libraryMeta";
+import type { Projectile, Skeleton } from "../schemas/libraryMeta";
 import {figureViewForOrientation, type FigureView} from "../schemas/figureArtwork";
 
 const FPS = 24;
@@ -170,6 +190,33 @@ const WAIST_RATE = 120; // deg/s
 const CROUCH_RATE = 1.6; // fraction/s
 /** Gravity for released props (stage px/s²). */
 const GRAVITY = 2600;
+/** Stylised strike scale: one force unit held for one second, on a prop of
+ *  the reference mass, leaves it at 2900 px/s. Calibrated on the default
+ *  authored push (force 1.4 over 0.25 s) so a strike from mid-stage lands
+ *  inside the 1920 stage rather than off the edge: 1.4 * 2900 * 0.25 * (1 +
+ *  0.5) = 1522 px/s, a 878 px flight at the strike elevation below. A
+ *  sustained push keeps its own `impulse * 6` scale, unchanged. */
+const STRIKE_SPEED_PER_FORCE_SEC = 2900;
+/** The mass the strike scale above is calibrated at: `prop/shuttle` declares
+ *  0.05, so a strike moves a shuttle at the calibrated speed and a heavier
+ *  prop in inverse proportion to its mass. */
+const STRIKE_REFERENCE_MASS = 0.05;
+/** Elevation a strike launches at, in degrees. Engine mechanics, not prop
+ *  data: every contact the motor had before E1 was a shove along the ground,
+ *  and a struck contact has to leave the ground or the capability is a slide
+ *  with a different name. At 40deg the calibrated strike (force 1.4 over
+ *  0.25s, restitution 0.5) leaves at 1522 px/s, clears 184 px by the apex and
+ *  lands 878 px downrange — an arc a rally can be read on, inside one stage. */
+const STRIKE_ELEVATION = 40;
+/** Fastest a strike may launch a prop (stage px/s): 100 px per 24fps frame is
+ *  already at the edge of legible travel, and the whole-body proposal's
+ *  `prop-rate` gate is raised to this plus the speed gravity adds, no further. */
+const STRIKE_MAX_SPEED = 2600;
+/** A projectile's bounce below this speed (stage px/s) is not worth drawing —
+ *  its apex is under 10 px, so the next contact would fall inside one frame.
+ *  There the prop settles and `projectile.settled` is emitted. */
+const PROJECTILE_SETTLE_SPEED = 220;
+
 /** Hand drive acceleration/top speed per unit force (stage px/s², px/s). */
 const HAND_ACC = 1500;
 const HAND_MAX = 560;
@@ -612,6 +659,14 @@ interface PropState {
   grip?: MotorGrip;
   rotation: number;
   carryVelocity: [number,number];
+  /** Declared flight physics; absent for a placement-only prop. */
+  projectile?: Projectile;
+  /** A `projectile.struck` beat this substep has not published yet. It lives on
+   *  the prop state so a rejected whole-body attempt drops it with the rest of
+   *  the candidate: the accepted substep publishes it once and clears it. */
+  strike?: {at: number; velocity: [number, number]};
+  /** A `projectile.settled` beat, published the same way. */
+  settle?: {at: number; position: [number, number]};
   id: string;
   x: number;
   y: number;
@@ -653,10 +708,31 @@ export interface MotorScene {
   resolveX(id: string): number | undefined;
 }
 
-/**
- * Simulate one scene. Pure and deterministic: same inputs -> identical
- * trajectories. Emits one frame per 24fps tick.
- */
+/** How much a declared mass changes the speed the same strike imparts: the
+ *  reference mass leaves at the calibrated speed, a heavier prop in inverse
+ *  proportion. */
+function strikeMassRatio(projectile: Projectile): number {
+  return STRIKE_REFERENCE_MASS / projectile.mass;
+}
+
+/** The struck contact: an `instant` hit spends the whole force window in the
+ *  first touching substep and the prop leaves in that substep, on the strike
+ *  arc; `sustained` keeps the per-substep conduction every pre-Wave-0 contact
+ *  uses (a shoved crate). Both record the `projectile.struck` beat. */
+function strikeProjectile(prop: PropState, dir: 1 | -1, force: number, sec: number, now: number): void {
+  const physics = prop.projectile!;
+  const struckSpeed = force * STRIKE_SPEED_PER_FORCE_SEC * sec * strikeMassRatio(physics);
+  // Restitution is the bounce the prop keeps, and on a struck contact it is
+  // also the share the hit returns: a livelier prop leaves faster.
+  const speed = Math.min(STRIKE_MAX_SPEED, struckSpeed * (1 + physics.restitution));
+  const elevation = STRIKE_ELEVATION * Math.PI / 180;
+  prop.vx = dir * Math.cos(elevation) * speed;
+  prop.vy = -Math.sin(elevation) * speed;
+  prop.falling = true;
+  prop.settle = undefined;
+  prop.strike = {at: now, velocity: [prop.vx, prop.vy]};
+}
+
 /** Open the hand: the held prop detaches and falls under gravity. */
 function propOpenHand(state: ActorState, props: Map<string, PropState>, free = false): void {
   const heldProp = state.holding ? props.get(state.holding) : undefined;
@@ -925,6 +1001,10 @@ function arriveMotorWalk(
   state.walkBackward = false;
 }
 
+/**
+ * Simulate one scene. Pure and deterministic: same inputs -> identical
+ * trajectories. Emits one frame per 24fps tick.
+ */
 export function simulateScene(scene: MotorScene): MotorTrajectory {
   const frameCount = Math.max(1, Math.ceil(scene.durationSec * FPS));
   let diagnostics: string[] = [];
@@ -938,8 +1018,10 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     }]),
   );
   let props = new Map<string, PropState>(
-    scene.props.map((prop) => [prop.id, { id: prop.id, x: prop.x, y: prop.y, vx: 0, vy: 0, falling: false, size: prop.size, solid: prop.solid, touchBox: prop.touchBox, grip: prop.grip, rotation: prop.rotation ?? 0, carryVelocity: [0,0] }]),
+    scene.props.map((prop) => [prop.id, { id: prop.id, x: prop.x, y: prop.y, vx: 0, vy: 0, falling: false, size: prop.size, solid: prop.solid, touchBox: prop.touchBox, grip: prop.grip, rotation: prop.rotation ?? 0, carryVelocity: [0,0], projectile: prop.projectile }]),
   );
+  /** Capability beats, in the order they happened. */
+  const events: MotorEvent[] = [];
 
   for(const input of scene.actors){
     if(!input.skeletonViews)continue;
@@ -960,6 +1042,25 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
 
   const actorFrames = new Map<string, MotorActorFrame[]>(scene.actors.map((actor) => [actor.id, []]));
   const propFrames = new Map<string, MotorPropFrame[]>(scene.props.map((prop) => [prop.id, []]));
+
+  /** Publish the beats the accepted substep recorded on its props. A rejected
+   *  whole-body attempt never reaches here with its own flags, because the
+   *  candidate state it set them on is discarded; this is why the beat is a
+   *  prop field and not a callback inside the substep. */
+  const publishProjectileEvents = (): void => {
+    for (const prop of props.values()) {
+      if (prop.strike) {
+        events.push({kind: "projectile.struck", prop: prop.id, at: Math.round(prop.strike.at * 1000) / 1000,
+          velocity: [Math.round(prop.strike.velocity[0]), Math.round(prop.strike.velocity[1])]});
+        prop.strike = undefined;
+      }
+      if (prop.settle) {
+        events.push({kind: "projectile.settled", prop: prop.id, at: Math.round(prop.settle.at * 1000) / 1000,
+          position: [Math.round(prop.settle.position[0] * 100) / 100, Math.round(prop.settle.position[1] * 100) / 100]});
+        prop.settle = undefined;
+      }
+    }
+  };
 
   const propBoxWorld = (prop: PropState): {a: [number, number]; b: [number, number]} =>
     prop.touchBox
@@ -1150,7 +1251,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     return {actors:nativeActors,props:Object.fromEntries([...props].map(([id,p])=>{
       const owner=[...actors.values()].find(a=>a.holding===id&&a.skeletonViews);
       const offset=owner?.grip?rotateVector([-owner.grip.ox,-owner.grip.oy],-owner.propAngleAtBind):undefined;
-      return [id,{x:p.x,y:p.y,rotation:p.rotation,...(owner?{owner:owner.id,
+      return [id,{x:p.x,y:p.y,rotation:p.rotation,...(p.projectile?{projectile:true}:{}),...(owner?{owner:owner.id,
         socket:p.grip?.at??offset,radius:p.grip?.radius??1.6}:{})}];
     })),controllers:{actors,props,queues,diagnostics,exhaustedActors}};
   };
@@ -1368,6 +1469,12 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         state.lean = approach(state.lean, 0, WAIST_RATE * delta);
         drive.hand = travelHand(drive.hand, rest, 0, 480 * (1 - blend), delta);
         if (blend >= 1) {
+          // A strike that never touched is a silent no-op without this: the
+          // author staged the prop where no hand can reach it, and the cue
+          // they expect never comes. Say it where check/make will show it.
+          if (drive.contactT === null && targetProp?.projectile) {
+            diagnostics.push(`strike missed: ${state.id} never touched ${drive.target}; a struck contact needs the prop inside the ${Math.round(state.body.armReach * state.scale)} px arm envelope — stage it held or in flight, not on the floor`);
+          }
           // Hand off to the shared retract: clearing the reach outright would
           // snap the extended arm to the authored rest pose in one substep
           // (57° forearm swing — the whole-body proposal correctly rejects it;
@@ -1394,7 +1501,9 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       const inContact = targetBox !== undefined && circleOverlapsBox({center: drive.hand, radius: state.body.handRadius * state.scale}, targetBox);
       drive.contact = inContact;
       // The force window opens at FIRST CONTACT (the reach + waist bend take
-      // whatever time they take), then conducts for `sec` seconds.
+      // whatever time they take), then conducts for `sec` seconds. An instant
+      // strike is decided on this one substep and never again in the window.
+      const firstTouch = inContact && drive.contactT === null;
       if (inContact && drive.contactT === null) drive.contactT = drive.t;
       const forcing = drive.contactT !== null && drive.t - drive.contactT <= drive.sec;
       if (forcing && inContact) {
@@ -1403,6 +1512,16 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         if (targetActor) {
           targetActor.stagger += impulse;
           targetActor.facing = (-dir) as 1 | -1; // pushed body faces the pusher
+        } else if (targetProp?.projectile) {
+          // A declared projectile is struck, not shoved: the rule decides
+          // whether the whole hit lands in one substep or conducts for the
+          // window, and the declared mass scales both.
+          if (targetProp.projectile.struck === "instant") {
+            if (firstTouch) strikeProjectile(targetProp, dir, drive.force, drive.sec, now + delta);
+          } else {
+            targetProp.vx += dir * impulse * 6 * strikeMassRatio(targetProp.projectile);
+            if (firstTouch) targetProp.strike = {at: now + delta, velocity: [targetProp.vx, targetProp.vy]};
+          }
         } else if (targetProp) {
           targetProp.vx += dir * impulse * 6;
         }
@@ -2003,20 +2122,43 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         const surface = supportYAt(prop.x + point.x, prop.y - prop.vy * delta + point.y);
         if (prop.vy >= 0 && prop.y + point.y >= surface) {
           prop.y = surface - point.y;
-          prop.vy = 0;
-          prop.falling = false;
+          // A projectile keeps the bounce it declares: the surface returns the
+          // impact speed times restitution, horizontally too, so each bounce is
+          // narrower than the last. Below the settle speed the bounce would not
+          // be drawn, and the prop comes to rest with its `projectile.settled`
+          // beat. Every other prop lands dead, exactly as it always has.
+          const bounce = prop.projectile ? prop.vy * prop.projectile.restitution : 0;
+          if (bounce > PROJECTILE_SETTLE_SPEED) {
+            prop.vy = -bounce;
+            prop.vx *= prop.projectile!.restitution;
+          } else {
+            prop.vy = 0;
+            prop.falling = false;
+            if (prop.projectile) {
+              prop.vx = 0;
+              prop.settle = {at: now + delta, position: [prop.x, prop.y]};
+            }
+          }
         }
       } else if (Math.abs(prop.vx) > 1) {
         prop.x += prop.vx * delta;
         const friction = Math.sign(prop.vx) * PROP_FRICTION * delta;
         prop.vx = Math.abs(prop.vx) <= Math.abs(friction) ? 0 : prop.vx - friction;
+        // A sustained strike leaves the prop sliding rather than flying; when
+        // friction brings it inside the rest threshold the prop is AT rest
+        // (a friction step can stop short of exactly 0), and that is its
+        // `projectile.settled` beat.
+        if (Math.abs(prop.vx) <= 1 && prop.projectile) {
+          prop.vx = 0;
+          prop.settle = {at: now + delta, position: [prop.x, prop.y]};
+        }
       } else {
         prop.vx = 0;
       }
     }
 
     };
-    if(!presentationSampling) advanceSubstep(DT);
+    if(!presentationSampling){advanceSubstep(DT);publishProjectileEvents();}
     else {
       const baseline=capture(now-DT);
       const isPresentation=step%SUBSTEPS===0;
@@ -2039,6 +2181,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       });
       actors=result.state.controllers.actors;props=result.state.controllers.props;queues=result.state.controllers.queues;
       diagnostics=result.state.controllers.diagnostics;exhaustedActors=result.state.controllers.exhaustedActors;
+      publishProjectileEvents();
       if(!result.accepted){
         const v=result.rejections.at(-1)!;
         const key=v.actor??(v.prop?result.state.props[v.prop]?.owner:undefined)??v.prop??'scene';
@@ -2098,6 +2241,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     actors: Object.fromEntries(actorFrames),
     props: Object.fromEntries(propFrames),
     ...(diagnostics.length ? {diagnostics} : {}),
+    ...(events.length ? {events} : {}),
   };
 }
 
@@ -2107,7 +2251,7 @@ export interface MotorSceneSource {
   actors: Record<string, {at: readonly [number, number]; facing?: number; scale?: number; skeleton?: Skeleton;skeletonViews?:Record<FigureView,Skeleton>}>;
   /** Global scene start, used by native figures' absolute IR event times. */
   startSec?: number;
-  objects: Record<string, {at: readonly [number, number]; size?: [number, number]; scale?: number; solid?: PropSolid; grip?: MotorGrip; rotation?: number; touchBox?: {a: [number, number]; b: [number, number]}}>;
+  objects: Record<string, {at: readonly [number, number]; size?: [number, number]; scale?: number; solid?: PropSolid; grip?: MotorGrip; rotation?: number; touchBox?: {a: [number, number]; b: [number, number]}; projectile?: Projectile}>;
   /** Declared support surfaces in stage space (released props land here; a
    *  hanging one carries a body, slice B). */
   supports?: MotorSupport[];
@@ -2227,7 +2371,7 @@ export function bakeSceneMotor(
   const movie = simulateScene({
     durationSec: source.durationSec,
     actors: actorInputs,
-    props: Object.entries(source.objects ?? {}).map(([id, staged]) => ({id, x: staged.at[0] * video.width, y: staged.at[1] * video.height, size: staged.size ?? [80, 120] as [number, number], touchBox: staged.touchBox, solid: staged.solid, grip: staged.grip, rotation: staged.rotation, intents: []})),
+    props: Object.entries(source.objects ?? {}).map(([id, staged]) => ({id, x: staged.at[0] * video.width, y: staged.at[1] * video.height, size: staged.size ?? [80, 120] as [number, number], touchBox: staged.touchBox, solid: staged.solid, grip: staged.grip, rotation: staged.rotation, projectile: staged.projectile, intents: []})),
     supports: source.supports,
     groundY: actorInputs[0]?.groundY,
     resolveX: (id) => {

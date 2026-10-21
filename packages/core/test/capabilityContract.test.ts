@@ -9,7 +9,7 @@ import {
   SupportSurfaceSchema,
 } from "../src/schemas/libraryMeta";
 import {normalizeSetWorld} from "../src/assets/setWorld";
-import {DECLARED_CAPABILITIES, assertCapabilityImplemented} from "../src/compiler/capabilities";
+import {DECLARED_CAPABILITIES, assertCapabilityImplemented, declaredCapability} from "../src/compiler/capabilities";
 import {compileEpisode} from "../src/compiler/index";
 
 // Wave 0 capability contract (docs/ART_ASSET_PROGRAM.md). These tests pin the
@@ -119,6 +119,19 @@ test("the capability vocabulary names one intent and one event spelling per capa
   assert.deepEqual(DECLARED_CAPABILITIES.hanging.events, []);
 });
 
+test("the gate selects a declaration by the field the episode asked through", () => {
+  // The defect E1 opened with: selecting on `intent` alone meant a
+  // `prop.kind` or `support.kind` was validated by zod and never gated.
+  assert.equal(declaredCapability("intent", "swing")?.intent, "swing");
+  assert.equal(declaredCapability("support", "hanging")?.support, "hanging");
+  assert.equal(declaredCapability("prop", "projectile")?.prop, "projectile");
+  // Cross-field names do not select: "swing" is an intent, not a prop kind.
+  assert.equal(declaredCapability("prop", "swing"), undefined);
+  assert.equal(declaredCapability("support", "projectile"), undefined);
+  // The selection is what the error names, so the owner travels with it.
+  assert.equal(declaredCapability("prop", "projectile")?.owner, "Wave 2 (E1 projectile + struck contact)");
+});
+
 const EPISODE = (call: string): string => `
 episode: {id: capability, title: Capability, language: en}
 actors: {lin: {use: figure/x/lin, voice: voice/x/lin}}
@@ -162,7 +175,7 @@ test("an implemented beat still compiles through the capability gate", async () 
 });
 
 test("swing is admitted by the gate once slice B implements it", () => {
-  assert.doesNotThrow(() => assertCapabilityImplemented("swing", "action.swing(lin)"));
+  assert.doesNotThrow(() => assertCapabilityImplemented("intent", "swing", "action.swing(lin)"));
   // Negative control: the declaration still exists, so the admission is the
   // slice implementing it, not the name silently disappearing.
   assert.equal(DECLARED_CAPABILITIES.swing.implemented, true);
@@ -173,4 +186,72 @@ test("pour fails loud naming the missing capability, not a missing export", asyn
     compileCall("action.pour(lin)"),
     /action\.pour\(lin\) needs the "pour" capability, which is declared but not implemented — Wave 2 \(slice C, pouring tea\) implements it/,
   );
+});
+
+/** A prop placement declaring flight physics, and a set whose only support is
+ *  hanging: the two `kind` fields the gate had to learn to select on. */
+const PROJECTILE_PLACEMENT = {base: 142, size: [200, 160], supports: [], kind: "projectile",
+  projectile: {mass: 0.05, restitution: 0.5, struck: "instant"}};
+const HANGING_WORLD = {
+  coordinateSpace: {width: 960, height: 540},
+  layers: [],
+  supports: [{name: "bar", x: [0.45, 0.55], y: 0.25, kind: "hanging",
+    grip: {x: [0.46, 0.54], y: 0.25}, rotationLimit: {forward: 360, back: 0}}],
+};
+
+/** Compile the shared fixture episode with one asset declaring `resolved`, so a
+ *  `prop.kind` / `support.kind` reaches the compiler as the registry hands it
+ *  over (the same seam library/ manifests arrive through). */
+async function compileDeclaring(select: (ref: string) => unknown): Promise<unknown> {
+  const root = mkdtempSync(join(tmpdir(), "anim-capability-kind-"));
+  try {
+    const dir = join(root, "episodes", "demo");
+    mkdirSync(dir, {recursive: true});
+    const episodePath = join(dir, "episode.yml");
+    writeFileSync(episodePath, EPISODE("action.raise(lin)"));
+    return await compileEpisode(episodePath, {
+      registry: (ref: string) => select(ref),
+      plugins: [{category: "action", manifest: {}, namespace: {raise: () => ({durationSec: 0.4, mode: "block", run: function* () { yield 0.4; }})}}],
+      speechTimingProvider: (request: {inlineTokens: readonly string[]}) => ({durationSec: 0.5, inline: Object.fromEntries(request.inlineTokens.map((token) => [token, 0]))}),
+    });
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+}
+
+/** Temporarily flip one declaration, so the gate — not zod, not the fixture —
+ *  is what refuses the episode. Restored before the test returns. */
+async function whileUnimplemented(capability: {implemented?: boolean}, run: () => Promise<void>): Promise<void> {
+  const implemented = capability.implemented;
+  capability.implemented = false;
+  try {
+    await run();
+  } finally {
+    capability.implemented = implemented;
+  }
+}
+
+test("a projectile prop fails to compile while no slice implements the capability", async () => {
+  await whileUnimplemented(DECLARED_CAPABILITIES.projectile as {implemented?: boolean}, async () => {
+    await assert.rejects(
+      compileDeclaring((ref) => (ref.startsWith("prop/") ? {placement: PROJECTILE_PLACEMENT} : {})),
+      /object mug \(prop\/x\/mug\) needs the "projectile" prop capability, which is declared but not implemented — Wave 2 \(E1 projectile \+ struck contact\) implements it/,
+    );
+  });
+  // Negative control: the same episode — same kind, same placement — compiles
+  // once the capability is implemented, so the refusal was the gate.
+  assert.ok((await compileDeclaring((ref) => (ref.startsWith("prop/") ? {placement: PROJECTILE_PLACEMENT} : {}))) !== undefined);
+  assert.equal(DECLARED_CAPABILITIES.projectile.implemented, true);
+});
+
+test("a hanging support fails to compile while no slice implements the capability", async () => {
+  await whileUnimplemented(DECLARED_CAPABILITIES.hanging as {implemented?: boolean}, async () => {
+    await assert.rejects(
+      compileDeclaring((ref) => (ref.startsWith("set/") ? {world: HANGING_WORLD} : {})),
+      /location stage \(set\/x\/stage\) support "bar" needs the "hanging" support capability, which is declared but not implemented — Wave 2 \(slice B, giant swing on a high bar\) implements it/,
+    );
+  });
+  // Negative control: an implemented hanging support compiles, so the support
+  // selection is wired and not merely declared.
+  assert.ok((await compileDeclaring((ref) => (ref.startsWith("set/") ? {world: HANGING_WORLD} : {}))) !== undefined);
 });

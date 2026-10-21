@@ -10,7 +10,7 @@ import type {Invocation, LoadedPlugin, World} from "../invocation/types";
 import {stageScene, type StageRect, type StagingResult} from "../staging";
 import {bakeSceneMotor} from "../motor";
 import {assertCapabilityImplemented} from "./capabilities";
-import type {Skeleton, NormalizedSetLayer, NormalizedSetWorld} from "../schemas/libraryMeta";
+import type {Skeleton, NormalizedSetLayer, NormalizedSetWorld, Projectile} from "../schemas/libraryMeta";
 import {FIGURE_VIEWS, type FigureArtwork, type FigureView} from "../schemas/figureArtwork";
 
 export type CompilerAssetKind = "actor" | "voice" | "location" | "object";
@@ -281,6 +281,7 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
     assetCache: new Map(),
   };
   await resolveAssets(context);
+  assertDeclaredCapabilities(context);
 
   const state = initialState(episode);
   const scenes: CompiledScene[] = [];
@@ -352,7 +353,7 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
           return [id, {at: staged.at, facing: staged.facing === -1 ? -1 : 1, scale: staged.scale ?? 1, skeleton: resolved?.skeleton, skeletonViews}];
         })),
         objects: Object.fromEntries(Object.entries(staging.objects).map(([id, staged]) => {
-          const placement = (context.assets.objects[id]?.resolved as {placement?: {base?: number; size?: [number, number]; body?: [number, number, number, number]; grip?: {at:[number,number];radius:number;depth:"front"|"behind"}}} | undefined)?.placement;
+          const placement = (context.assets.objects[id]?.resolved as {placement?: {base?: number; size?: [number, number]; body?: [number, number, number, number]; grip?: {at:[number,number];radius:number;depth:"front"|"behind"}; projectile?: Projectile}} | undefined)?.placement;
           const scale = staged.scale ?? 1;
           let touchBox: {a: [number, number]; b: [number, number]} | undefined;
           if (placement?.body) {
@@ -368,7 +369,9 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
           // motor's solid must be scaled the same way: otherwise a placed prop
           // rests (4 - 4*scale) px off the surface it is drawn against.
           const solid=isThermosArt(id) ? transformSolid(thermosSolid,placement?.size??[200,160],placement?.base??160,scale) : undefined;
-          return [id, {at: staged.at, size: placement?.size, scale, touchBox, grip, solid}];
+          // Declared flight physics reach the motor as data: the motor owns how
+          // a projectile moves, the manifest owns how it is struck (E1).
+          return [id, {at: staged.at, size: placement?.size, scale, touchBox, grip, solid, projectile: placement?.projectile}];
         })),
         tracks: sceneTracks as never,
       }),
@@ -399,6 +402,38 @@ async function resolveAssets(context: CompileContext): Promise<void> {
   }
   for (const [instance, declaration] of Object.entries(episode.objects)) {
     context.assets.objects[instance] = await resolveAsset(context, declaration.use, {kind: "object", instance});
+  }
+}
+
+/**
+ * Fail loud for every capability kind the episode's own declarations ask of
+ * the engine, before a scene is compiled. Zod admits `support.kind: "hanging"`
+ * and `prop.kind: "projectile"` as data; only this call decides whether the
+ * motor can act on them, so a kind no slice implements is a compile error
+ * naming its owner instead of a manifest whose motor silently ignores it (the
+ * defect E1 opened with: a projectile compiled and nothing moved).
+ */
+function assertDeclaredCapabilities(context: CompileContext): void {
+  /** One declaration's `kind`, whatever shape carries it: a prop placement, a
+   *  prop's own support surface, a world support, or a legacy set support. */
+  const checkKind = (surface: {name?: string; kind?: string} | undefined, where: string): void => {
+    if (surface?.kind !== undefined) assertCapabilityImplemented("support", surface.kind, `${where} support "${surface.name ?? "?"}"`);
+  };
+  for (const asset of Object.values(context.assets.objects)) {
+    const payload = asset.resolved as {placement?: {kind?: string; supports?: ReadonlyArray<{name?: string; kind?: string}>}} | undefined;
+    const placement = payload?.placement;
+    if (!placement) continue;
+    const where = `object ${asset.instance} (${asset.ref})`;
+    if (placement.kind !== undefined) assertCapabilityImplemented("prop", placement.kind, where);
+    for (const surface of placement.supports ?? []) checkKind(surface, where);
+  }
+  for (const asset of Object.values(context.assets.locations)) {
+    const payload = asset.resolved as {
+      world?: {supports?: ReadonlyArray<{name?: string; kind?: string}>};
+      supports?: ReadonlyArray<{name?: string; kind?: string}>;
+    } | undefined;
+    const where = `location ${asset.instance} (${asset.ref})`;
+    for (const surface of [...(payload?.world?.supports ?? []), ...(payload?.supports ?? [])]) checkKind(surface, where);
   }
 }
 
@@ -569,7 +604,7 @@ function evaluateCall(context: CompileContext, expression: string): {descriptor:
   const segments = callee.split(".");
   if (segments.length !== 2) throw new Error(`compileEpisode: call must be category.terminal(...): ${expression}`);
   const [namespace, terminal] = segments as [string, string];
-  assertCapabilityImplemented(terminal, calleeSource);
+  assertCapabilityImplemented("intent", terminal, calleeSource);
   const plugin = context.plugins.find((candidate) => candidate.category === namespace);
   if (!plugin) throw new Error(`compileEpisode: unknown plugin category "${namespace}" in ${expression}`);
   const evaluated = evaluateExpression(evalSource, context.scope);

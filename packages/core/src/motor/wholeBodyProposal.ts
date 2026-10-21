@@ -24,10 +24,18 @@ export interface WholeBodyActor {
    *  (slice B). Present, it carries the body instead of the feet (I1). */
   grip?: Point;
 }
+/** Trajectory cap for a prop the manifest declares as a projectile (stage
+ *  px/s): the fastest a strike may launch it plus the speed a full-stage fall
+ *  adds on top. The 720 px/s `prop-rate` below stays the teleport gate for
+ *  bodies and placed props; a projectile's flight is declared physics, not a
+ *  discontinuity, so the gate would otherwise freeze every strike. */
+export const PROJECTILE_PROP_RATE = 3200;
 export interface WholeBodyProp {
   x: number;
   y: number;
   rotation: number;
+  /** Declared `prop.kind: "projectile"`: its rate cap is the flight cap. */
+  projectile?: boolean;
   owner?: string;
   /** Declared socket or captured bind-time attachment, in prop-local units. */
   socket?: Point;
@@ -165,7 +173,7 @@ function validateState(before:WholeBodyState,after:WholeBodyState,elapsed:number
   }
   for(const [id,p] of Object.entries(after.props)){
     const old=before.props[id]!;
-    check('prop-rate',distance([p.x,p.y],[old.x,old.y]),720*elapsed,{prop:id});
+    check('prop-rate',distance([p.x,p.y],[old.x,old.y]),(p.projectile?PROJECTILE_PROP_RATE:720)*elapsed,{prop:id});
     check('prop-angle-rate',angleDelta(p.rotation,old.rotation),(p.owner?90:840)*elapsed,{prop:id});
     if(!p.owner)continue;
     const owner=after.actors[p.owner];

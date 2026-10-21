@@ -16,6 +16,12 @@
     ]
   },
   "placement": {
+    "kind": "projectile",
+    "projectile": {
+      "mass": 0.05,
+      "restitution": 0.5,
+      "struck": "instant"
+    },
     "base": 142,
     "size": [
       200,

@@ -39,6 +39,7 @@ export const DECLARED_CAPABILITIES = {
     prop: "projectile",
     events: ["projectile.struck", "projectile.settled"],
     owner: "Wave 2 (E1 projectile + struck contact)",
+    implemented: true,
   },
   swing: {
     intent: "swing",
@@ -56,17 +57,37 @@ export const DECLARED_CAPABILITIES = {
 
 export type DeclaredCapability = keyof typeof DECLARED_CAPABILITIES;
 
+/** The field an episode asks a capability through: the authored call terminal
+ * (`intent`), the `support.kind` a body attaches to, or the `prop.kind` a
+ * placed object declares. Selecting on the intent alone left the other two
+ * validated by zod and ignored by the engine, which is the defect this gate
+ * exists to close. */
+export type CapabilitySelector = "intent" | "support" | "prop";
+
+/** The declaration a selector and name ask for, or undefined when the
+ * vocabulary does not declare that name at all — zod's literal union owns the
+ * undeclared case, so nothing is refused twice. */
+export function declaredCapability(selector: CapabilitySelector, name: string): CapabilityDeclaration | undefined {
+  return Object.values(DECLARED_CAPABILITIES).find((capability) => (capability as Record<string, unknown>)[selector] === name);
+}
+
 /**
- * Fail loud for an intent the language names but no plugin implements yet: an
- * episode that asks for `swing` or `pour` is a compile error naming the
- * capability and the wave that owns it, never a manifest with the beat missing.
+ * Fail loud for a capability the language names but no plugin implements yet,
+ * whichever field the episode asks it through: `action.pour(...)`, a
+ * `support.kind` on the set the scene stages, or a `prop.kind` on the object
+ * it places. Each is a compile error naming the capability, the field, and the
+ * wave that owns it — never a manifest with the beat missing or the prop
+ * ignored.
  */
-export function assertCapabilityImplemented(terminal: string, raw: string): void {
-  const declarations: readonly CapabilityDeclaration[] = Object.values(DECLARED_CAPABILITIES);
-  const declared = declarations.find((capability) => capability.intent === terminal && capability.intent !== undefined);
-  if (declared?.intent === undefined || declared.implemented) return;
+export function assertCapabilityImplemented(selector: CapabilitySelector, name: string, raw: string): void {
+  const declared = declaredCapability(selector, name);
+  if (!declared || declared.implemented) return;
+  // The intent message is the one authors already read (`needs the "pour"`);
+  // a kind says which field it came through, because the same name can be a
+  // prop kind and an intent in a later slice.
+  const field = selector === "intent" ? "" : ` ${selector}`;
   throw new Error(
-    `compileEpisode: ${raw} needs the "${declared.intent}" capability, which is declared but not implemented — ` +
+    `compileEpisode: ${raw} needs the "${name}"${field} capability, which is declared but not implemented — ` +
     `${declared.owner} implements it; the contract is docs/ART_ASSET_PROGRAM.md`,
   );
 }
