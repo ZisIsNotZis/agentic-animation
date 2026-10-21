@@ -166,7 +166,8 @@ runs agreeing**, `npm run smoke` exit 0, `check` on the episode exit 0,
 dead. Re-running `make` at this HEAD reproduces EA's bake event for event (struck 2.207 s
 at `[-533,-447]`, settled 3.633 s at `[509, 650.16]`); the `performance.json` file hash
 cannot be used as an identity, because it embeds a generation timestamp — the episode and
-video hashes in `bake-identity.json` can.
+video hashes in `episodes/a-badminton/artifacts/sa1-er-2026-10-21/bake-identity.json` can,
+and that rendition's video now lives beside them in the tree, not in `/tmp`.
 
 **What EP changed.** A native serve **and** a native return bake with `diagnostics: []` at
 receiver x 1500, beat 2.12 s (strikes at 1.407 s and 2.226 s, both 40.00°), where a native

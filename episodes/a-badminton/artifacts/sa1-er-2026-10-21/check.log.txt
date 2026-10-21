@@ -1,0 +1,3 @@
+npm notice run agentic-animation@0.0.0 anim
+npm notice run tsx packages/cli/src/index.ts check episodes/a-badminton/episode.yml
+check: OK /home/z/vibe/agentic-animation/episodes/a-badminton/episode.yml (1 scene(s), 3 spoken take(s))

@@ -1,0 +1,30 @@
+{
+  "episode": "episodes/a-badminton/episode.yml",
+  "episodeSha256": "fcb4de68c49974327719b1a62693cdfc3df013957fbb9432927dfd3f5fcdb15d",
+  "performanceSha256": "7df6ee8780f5cabf008bd17a846a43d8d7b2a697e7a683c02a728c66c972dcff",
+  "performanceSha256Note": "unusable as an identity: performance.json embeds generatedBy.at, so a fresh bake of the same episode hashes differently",
+  "video": "episodes/a-badminton/artifacts/sa1-er-2026-10-21/episode.mp4",
+  "videoSha256": "6d3cbca5f03e3b4c58ddda505295f28d229e84f658c3029d40b454ccc3d8f907",
+  "frameCount": 132,
+  "durationSec": 5.5,
+  "fps": 24,
+  "width": 1280,
+  "height": 720,
+  "gitHead": "6a8d967fe0776675ce7c41e8d1f3ffdb1611d2f5",
+  "renderedFrom": "the working tree at gitHead (episode.yml byte-identical: sha256 above) on /tmp",
+  "verify": "bash episodes/a-badminton/artifacts/sa1-er-2026-10-21/verify.sh",
+  "stillsAreDerived": "the five stills are cut from episode.mp4 by verify.sh; they are not tracked, because the command in stillsCommand reproduces them from the video hash above",
+  "stillsCommand": "ffmpeg -ss <sec> -i episode.mp4 -frames:v 1 stills/t<sec>.png",
+  "stills": [
+    {"name": "t2.208.png", "sec": 2.208, "frame": 53, "beat": "the strike (projectile.struck at 2.207 s)"},
+    {"name": "t2.500.png", "sec": 2.500, "frame": 60, "beat": "mid-arc, the shuttle over the net"},
+    {"name": "t2.917.png", "sec": 2.917, "frame": 70, "beat": "the first floor contact"},
+    {"name": "t3.167.png", "sec": 3.167, "frame": 76, "beat": "the bounce (its apex)"},
+    {"name": "t4.583.png", "sec": 4.583, "frame": 110, "beat": "the hold (the shuttle at rest since 3.633 s)"}
+  ],
+  "gapStills": [
+    {"name": "gap_1.png", "sec": "unverified", "beat": "cut by the review that refused this rendition; the verdict names 3.083 s and 3.625 s for its own two cuts, and no hash of a frame cut here matches, so neither file is bound to a time"},
+    {"name": "gap_2.png", "sec": "unverified", "beat": "as gap_1.png"},
+    {"name": "gap_3.png", "sec": "unverified", "beat": "as gap_1.png"}
+  ]
+}

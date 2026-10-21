@@ -1,0 +1,23 @@
+episode:
+  id: probe_v2
+  title: probe
+  language: zh-CN
+actors:
+  server:
+    use: figure/athlete_a
+    voice: voice/zh/student_a
+locations:
+  hall:
+    use: set/badminton_hall
+objects:
+  shuttle:
+    use: prop/shuttle
+scenes:
+  - id: pick
+    location: hall
+    actors:
+      server: {facing: right}
+    objects:
+      shuttle: right
+    script:
+      - server: "{prop.pickup(server, shuttle)}……"

@@ -102,36 +102,30 @@ Exit codes, in order: `check` **0**, `make` **0**, `render-yaml` **0**
 `npm test` was **not** run: the integrating node owns the combined check and two
 concurrent runs race on the fixtures `pretest` rewrites.
 
-The video is deliberately **not** committed: it was moved to
-`/tmp/aa-sa1/episode.mp4` and `episodes/a-badminton/dist/` does not exist, so it
-cannot appear in `git status` (`episodes/*/dist/*.mp4` is un-ignored for
-published deliveries, which is why the file had to leave the repo).
+The video **is** committed, in this episode's declared home for renditions:
+`episodes/a-badminton/artifacts/sa1-er-2026-10-21/episode.mp4`, beside its identity.
+`episodes/a-badminton/dist/` is reserved for an accepted delivery and does not exist yet.
 
-`/tmp/aa-sa1/bake-identity.json` carries the identity of the artefact these
-stills were cut from, at `git rev-parse HEAD` **6a8d967**:
+`episodes/a-badminton/artifacts/sa1-er-2026-10-21/bake-identity.json` carries the identity
+of the artefact these stills were cut from, at `git rev-parse HEAD` **6a8d967**, and
+`bash episodes/a-badminton/artifacts/sa1-er-2026-10-21/verify.sh` recomputes every field of
+it and cuts the stills (exit 0 = intact; a non-zero exit names the field that moved). The
+identity is not restated here — one home.
 
-| field | value |
-| --- | --- |
-| episode sha256 | `fcb4de68c49974327719b1a62693cdfc3df013957fbb9432927dfd3f5fcdb15d` |
-| performance.json sha256 | `7df6ee8780f5cabf008bd17a846a43d8d7b2a697e7a683c02a728c66c972dcff` |
-| video sha256 | `6d3cbca5f03e3b4c58ddda505295f28d229e84f658c3029d40b454ccc3d8f907` |
-| frames / duration | 132 / 5.500 s at 24 fps, 1280x720 |
-| git HEAD | `6a8d967fe0776675ce7c41e8d1f3ffdb1611d2f5` |
-
-Five stills, cut with `ffmpeg -ss <t> -frames:v 1` from that video:
+Five stills, cut with `ffmpeg -ss <t> -frames:v 1` from that video (they are derived and not
+tracked; `verify.sh` recreates them):
 
 | still | t | frame | what it is |
 | --- | --- | --- | --- |
-| `/tmp/aa-sa1/t2.208.png` | 2.208 s | 53 | the strike — the shuttle leaves the palm |
-| `/tmp/aa-sa1/t2.500.png` | 2.500 s | 60 | mid-arc — the shuttle over the net |
-| `/tmp/aa-sa1/t2.917.png` | 2.917 s | 70 | the first floor contact |
-| `/tmp/aa-sa1/t3.167.png` | 3.167 s | 76 | the bounce — its apex |
-| `/tmp/aa-sa1/t4.583.png` | 4.583 s | 110 | the hold — the shuttle at rest |
+| `t2.208.png` | 2.208 s | 53 | the strike — the shuttle leaves the palm |
+| `t2.500.png` | 2.500 s | 60 | mid-arc — the shuttle over the net |
+| `t2.917.png` | 2.917 s | 70 | the first floor contact |
+| `t3.167.png` | 3.167 s | 76 | the bounce — its apex |
+| `t4.583.png` | 4.583 s | 110 | the hold — the shuttle at rest |
 
-Inspected by eye at full resolution: the arc reads across the net, the bounce
-reads as a bounce, the shuttle rests where the camera left it; both players'
-heads are cut above the eyebrows from the first floor contact onward (see
-"What the shot could not have").
+Inspected by eye at full resolution by the producer: the arc reads across the net and the
+court reads. The producer's reading of the rest and the bounce did **not** survive review —
+see §"S-A1 review (ER)" for what the stills actually show, and for the heads.
 
 ## S-A1 review (ER) — the shot does not pass yet
 

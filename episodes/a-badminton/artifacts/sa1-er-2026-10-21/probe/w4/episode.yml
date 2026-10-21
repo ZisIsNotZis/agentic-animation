@@ -1,0 +1,25 @@
+episode:
+  id: probe_w4
+  title: probe
+  language: zh-CN
+actors:
+  server:
+    use: figure/athlete_a
+    voice: voice/zh/student_a
+locations:
+  hall:
+    use: set/badminton_hall
+objects:
+  shuttle:
+    use: prop/shuttle
+scenes:
+  - id: pick
+    location: hall
+    actors:
+      server: {facing: right}
+    objects:
+      shuttle: center
+    script:
+      - server: "{pose.orient(server, \"right\")}"
+      - server: "{prop.pickup(server, shuttle), anticipation: 0.4, settle: 1}……"
+      - server: "{action.push(server, shuttle, 1.1)}……"

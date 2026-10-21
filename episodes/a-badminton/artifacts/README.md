@@ -1,0 +1,31 @@
+# episodes/a-badminton/artifacts/ — the declared home for this episode's renditions
+
+One directory per rendition, named `<verdict-date>-<rendered-at-short-sha>`. A rendition is
+a bake plus its render, and it never leaves this directory: `/tmp` is not a home, and a
+verdict may not rest on bytes a reboot deletes.
+
+Each rendition directory holds:
+
+- `episode.mp4` — the render itself, tracked, identified by its sha256.
+- `bake-identity.json` — the pinned identity: episode sha256, video sha256, frame count,
+  duration, size, and the revision the render was made at. It also names the stills (the
+  beats they show and the second each is cut at) and the command that cuts them.
+- `verify.sh` — one command that recomputes every field of the identity and cuts the
+  stills. Exit 0 means this rendition is intact; a non-zero exit names the field that moved.
+- `stills/` — created by `verify.sh`, regenerated from `episode.mp4`, not tracked.
+- `*.log.txt` — the logs of the commands that produced it (`*.log` is ignored repository-wide,
+  so they are stored with a `.txt` suffix rather than left behind).
+- `probe/` — the episode variants tried on the way, `episode.yml` only; their
+  `performance.json` is derivable with `make` and is not stored.
+
+A rendition is superseded, never overwritten: its identity is what a verdict is bound to.
+
+```
+bash episodes/a-badminton/artifacts/<rendition>/verify.sh
+```
+
+**Renditions here**
+
+| directory | revision | video sha256 | what it decided |
+| --- | --- | --- | --- |
+| `sa1-er-2026-10-21/` | `6a8d967` | `6d3cbca5…` | ER refused it `NOT SATISFIED`; a second, independent review agreed on substance and falsified ER's "no bounce" (two hops of 62 px and 16 px). The shot's rest sat 41 px above the painted floor — the R1 defect. |

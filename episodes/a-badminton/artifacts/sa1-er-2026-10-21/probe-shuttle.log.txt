@@ -1,0 +1,6 @@
+npm notice run agentic-animation@0.0.0 anim
+npm notice run tsx packages/cli/src/index.ts make /tmp/aa-sa1/probe/shuttle/episode.yml
+INFO  [yaml-audio] prepared 1 spoken take(s): pick.0.0; reused 0; unmatched 0 {"provider":"edge","profile":"storyteller","artifactPath":"/tmp/aa-sa1/probe/shuttle/audio/yaml-audio.json"}
+yaml-audio: wrote 1 take(s); reused 0; unmatched 0 → /tmp/aa-sa1/probe/shuttle/audio/yaml-audio.json
+make: wrote /tmp/aa-sa1/probe/shuttle/performance.json (1.100s)
+motor warning: whole-body proposal exhausted: server at 0.000s; segment-angle-rate/foot_r 12.046 > 7.000; original controllers/ownership retained
