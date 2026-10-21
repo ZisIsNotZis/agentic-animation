@@ -133,11 +133,11 @@ Optional extensions, not prerequisites for the closed engine milestone:
 ## Restart point (2026-10-18 — historical; see ART_ASSET_PROGRAM §Current facts)
 
 This section is a dated snapshot, not the current state. Where it disagrees with
-[ART_ASSET_PROGRAM](ART_ASSET_PROGRAM.md) §"Current facts" (2026-10-21), the programme
-document wins: E2, E4, EP and EA are landed since this was written, the combined check is
-333/333 at `70bf431`, and slice A's independent review has answered `NOT SATISFIED`
-(`tickets/S-A1-ER-REVIEW.md`) — the milestone is not reached, and the repair workset is
-ART_ASSET_PROGRAM §"The repair workset".
+[ART_ASSET_PROGRAM](ART_ASSET_PROGRAM.md) §"Current facts", the programme document wins:
+E2, E4, EP and EA are landed since this was written, slice A's independent review answered
+`NOT SATISFIED` (`tickets/S-A1-ER-REVIEW.md`), and the repair workset was dispatched on
+2026-10-21 — R1 (the projectile's ground) is in the tree. The milestone is not reached until
+a fresh reviewer passes the re-rendered stills.
 
 The work is being resumed elsewhere. This is the exact state, so nothing has to be
 re-derived.
