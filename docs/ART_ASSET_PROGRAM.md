@@ -158,6 +158,14 @@ then R3 and R4 together, then one re-render, one set of stills, and ER again wit
 reviewer. R5 and R2 only if the second review still fails on them — the cheap three may
 carry the reading, and buying them first is what "time is the scarce thing" asks for.
 
+## D1 — the depth order (decided 2026-10-21, `assumed`: root, not the person)
+
+**What is decided.** The renderer gains a depth order: a declared set layer may name a `depth` and is then composited at that plane instead of below every actor or above every actor, and an actor may be declared at the `background` entrance, which already stages it a court-depth further back at 0.82 scale. `set/badminton_hall` declares `net` at a depth between the two player planes, so the far player is drawn behind the mesh and the near player in front. Bound: depth ordering and what this shot needs; no other rendering change, and the whole thing is one reversible commit.
+
+**Why it is not root's taste call.** An `assumed` decision, decided by root, not quoted from the person: under a convention where no serve can cross the net, the thing to be tasted is not in the frame, so the question cannot be put as a taste question at all. Accepting the flat 2D convention would have answered a composition question by removing its subject.
+
+**What is not presumed.** R2 (does the bounce read), R3 (the follow locks) and R5 (the players are statues) still wait for the person.
+
 ## Current facts
 
 **Where slice A stands (2026-10-21):** engine landed, episode landed, first review returned
@@ -169,10 +177,9 @@ answered **FAIL** (`tickets/S-A1-REVIEW-2.md`), on a ground no earlier reading m
 actor draws above the set, so both players stand on the camera side of the net** and no serve
 can cross it — a compositing fact that no staging value can move. It also measured the camera
 locked for the last 3.0 s (R3), the shuttle's rest off court beside the bench, and no hand
-contact at frame 0. **The milestone is not reachable by repairing the shot**: it needs a
-decision between accepting the 2D convention (both figures in front of a painted net) and
-buying per-actor depth against a declared set layer. R2, R3 and R5 wait for root and nothing
-landed presumes them. The integrating node re-ran the combined check
+contact at frame 0. **The milestone was not reachable by repairing the shot**: it needed a
+decision between accepting the 2D convention and buying depth against a declared set layer.
+That decision is made — §D1 — and R2, R3 and R5 still wait for the person. The integrating node re-ran the combined check
 at this HEAD after EA and again while writing this note: **333/333 pass, `fail 0`, two
 runs agreeing**, `npm run smoke` exit 0, `check` on the episode exit 0,
 `git diff --check` clean. The previously recorded 328/328 at `c943d88` predated EP and is
