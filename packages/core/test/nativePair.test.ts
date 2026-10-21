@@ -77,7 +77,7 @@ const frozenOf = (baked: ReturnType<typeof simulateScene>) =>
   diagnosticsOf(baked).filter((line) => /whole-body proposal exhausted|-non-finite/.test(line));
 
 test("a native receiver no longer freezes the bake on a non-finite palm solve", () => {
-  // Measured before the fix (mail/2026-10-21-e2-report.md §"Could not land" 1):
+  // Measured before the fix (docs/tickets/SLICE-A-ENGINE.md §EP, limit 1):
   // `whole-body proposal exhausted: receiver at 2.25s; palm-contact/hand_r NaN`.
   // The native receiver's palm solve was fed a non-finite hip drop, because the
   // taut push arm dragged the root BACKWARD 885 px through its own stance in
