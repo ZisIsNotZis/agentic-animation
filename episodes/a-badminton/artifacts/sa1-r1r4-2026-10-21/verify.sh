@@ -23,7 +23,7 @@ check size "$(want width)x$(want height)" "$(ffprobe -v error -select_streams v:
 mkdir -p "$here/stills"
 for row in $(node -e "const j=require('$here/bake-identity.json');for(const s of j.stills)console.log(s.name+'@'+s.sec)"); do
   name=${row%@*}; sec=${row#*@}
-  ffmpeg -v error -y -ss "$sec" -i "$here/episode.mp4" -frames:v 1 "$here/stills/$name" || fail=1
+  ffmpeg -nostdin -v error -y -ss "$sec" -i "$here/episode.mp4" -frames:v 1 "$here/stills/$name" || fail=1
 done
 echo "stills: $(ls "$here/stills" | wc -l) cut into $here/stills"
 exit $fail

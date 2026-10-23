@@ -22,6 +22,6 @@ import json,sys
 for still in json.load(open(sys.argv[1]))["stills"]:
     print(f"{still['name']}\t{still['sec']}")
 PY
-  ffmpeg -loglevel error -ss "$sec" -i "$here/episode.mp4" -frames:v 1 -y "$here/stills/$name"
+  ffmpeg -nostdin -loglevel error -ss "$sec" -i "$here/episode.mp4" -frames:v 1 -y "$here/stills/$name"
 done
 echo "ok: episode $episode_sha, video $video_sha, $frames frames, stills cut"
