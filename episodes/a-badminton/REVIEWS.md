@@ -117,3 +117,49 @@ the verdict"). What is missing now is a decision, not a repair: either the 2D co
 accepted (both players in front of a painted net, as this record's own stills show) or the
 renderer grows per-actor depth against a declared set layer, which is a feature with a cost.
 R2, R3 and R5 ride along unchanged.
+
+## S-A1 review 3 — the D1 rendition, refused on the shot as well as on the net
+
+A third blind reviewer (fresh `reviewer`, run `aad0eadc`, 2026-10-23) judged
+`artifacts/sa1-d1w-2026-10-21/` on the four stills and the video, with one question and
+nothing else. **FAIL**; its text is filed verbatim at
+[tickets/S-A1-REVIEW-3](../../docs/tickets/S-A1-REVIEW-3.md). Unlike the two earlier
+verdicts this one measured every frame, so what it found can be checked against the bake.
+Three of its findings are one perception and two mechanisms, and the three do not have the
+same status:
+
+- **Its size reading is right and the rendition is the odd one.** `ffprobe` says 852×480;
+  the other two renditions and `anim.config.json` are 1280×720, and the render command
+  carried `--scale 0.6666666666666666` on a manifest that was already 1280 wide. The
+  reviewer judged at 852×480 and never upscaled, so the verdict is the stricter reading, not
+  the flattering one — but a verdict at 71% of the delivered size is not the acceptance the
+  programme asks for, and the next rendition is rendered at 1280.
+- **"The net does not stand between the two players" — right in what is seen, wrong in its
+  mechanism.** The compiled staging has the receiver at `at [0.35,0.57] scale 0.88
+  entrance background` and the server at `at [0.65,0.602] scale 0.88`, so the two bodies are
+  drawn at one scale and read as equidistant; the entrance's 0.82 factor never reaches the
+  scale. The compositing order itself is correct and not contradictory as the verdict
+  supposes: the net is one layer at depth 45, the receiver is z 40 and the server z 50, and
+  the tape and the mesh are the same layer. **The named defect is the missing background
+  scale, not a split net.**
+- **"The shuttle never crosses the net" — right, and now with a mechanism.** A prop bound to
+  a native palm paints in `data-layer="native-interaction-props"`, `zIndex: 50`
+  (`PerformanceEpisode.tsx:152`), which is above the net's declared plane 45. So the shuttle
+  draws over the net in every frame regardless of where it is, and the same defect that D1
+  closed for actors is still open for props.
+- **"No arc, no bounce" is a screen-space reading that the bake contradicts, and a real
+  perception finding anyway.** `node tools/prop-track.mjs episodes/a-badminton/performance.json
+  shuttle` at this HEAD gives apex 321.82 (2.375 s), contact 682.27 (2.917 s), hop apex
+  602.70 (3.167 s), contact 688.37 (3.458 s), rest 691.00 — the projectile path and both hops
+  exist in world space, and the strike is the baked `struck` at 2.207 s `[-533,-447]`. What
+  the reviewer saw is what the camera does to that path: ±25 px vertical jolts inside a
+  camera that pans 2 px/frame the wrong way, over a 35 px hop at 852×480. The measurement is
+  a sharper statement of R2 (does the bounce read) and R3 (the follow) than any earlier one.
+- **"The right player lies horizontally in mid-air" (t 1.2–1.9 s)** is the pickup's crouch
+  read at 852×480 — the action EA budgeted with silent beats, which no review had seen
+  before. It is owed as its own finding, not folded into R5.
+
+**Where that leaves S-A1.** The wrapper half of D1 is landed and correct; what the review
+found on top of it is two named defects (the background entrance's missing scale, props
+painting above declared depth planes) and a resolution mistake in this rendition. None of
+them is a taste call and none is the person's: R2, R3 and R5 stay the person's, unchanged.
