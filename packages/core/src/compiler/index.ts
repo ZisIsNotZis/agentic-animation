@@ -371,7 +371,12 @@ export async function compileEpisode(yamlPath: string, options: CompileEpisodeOp
           const solid=isThermosArt(id) ? transformSolid(thermosSolid,placement?.size??[200,160],placement?.base??160,scale) : undefined;
           // Declared flight physics reach the motor as data: the motor owns how
           // a projectile moves, the manifest owns how it is struck (E1).
-          return [id, {at: staged.at, size: placement?.size, scale, touchBox, grip, solid, projectile: placement?.projectile}];
+          // A `held-by(actor[, hand])` placement starts the prop in that hand:
+          // the motor owns the hold from frame 0 (R7).
+          const heldBy = staged.relation === "held-by" && staged.target
+            ? {actor: staged.target, ...(staged.hand === "left" ? {hand: "hand_l" as const} : {})}
+            : undefined;
+          return [id, {at: staged.at, size: placement?.size, scale, touchBox, grip, solid, projectile: placement?.projectile, ...(heldBy ? {heldBy} : {})}];
         })),
         tracks: sceneTracks as never,
       }),
@@ -1014,9 +1019,13 @@ function resolveSupportSurfaces(
   }
 }
 
-function relationFor(value: string): {relation?: "on"; target?: string} {
-  const target = value.match(/^on\(([a-z][a-z0-9_]*)\)$/)?.[1];
-  return target ? {relation: "on", target} : {};
+function relationFor(value: string): {relation?: "on" | "held-by"; target?: string; hand?: "left" | "right"} {
+  const on = value.match(/^on\(([a-z][a-z0-9_]*)\)$/)?.[1];
+  if (on) return {relation: "on", target: on};
+  // held-by(actor) / held-by(actor, left): the prop is in that actor's hand
+  // for the whole scene. The hand is optional and defaults to the right one.
+  const held = value.match(/^held-by\(([a-z][a-z0-9_]*)(?:\s*,\s*(left|right))?\)$/);
+  return held ? {relation: "held-by", target: held[1]!, ...(held[2] ? {hand: held[2] as "left" | "right"} : {})} : {};
 }
 
 function procedureKind(procedure: Record<string, unknown> | undefined, call: ProcedureCall): "timed" | "state" | "speech" {

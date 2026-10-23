@@ -9,6 +9,10 @@ export interface PoseActor {
   id:string;x:number;y:number;scale:number;flip:boolean;
   pose?:string;motor?:boolean;lean?:number;walk?:number;facing?:1|-1;
   orientation?:string;reach?:[number,number];reachInfluence?:number;
+  /** The OFF hand's world point (R7). Present only while the left hand holds
+   *  or reaches; the left arm is then solved onto it, exactly as `reach`
+   *  drives the right one. Inert on every pre-R7 actor. */
+  reachLeft?:[number,number];contactLeft?:boolean;
   waist?:number;crouch?:number;contact?:boolean;skeleton?:Skeleton;artwork?:unknown;
   /** Hanging from a support's grip: both hands hold the one grip point
    *  (the reach model is single-hand, so the left arm mirrors the right). */
@@ -21,7 +25,7 @@ export interface PoseActor {
 }
 import {solveSkeleton, plantedLegAngles, type SolvedSkeleton} from "./skeleton";
 import {nativeCrouchDrop} from "./skeleton";
-import {solveReach, designHandToWorld} from "./reach";
+import {solveReach, solveArmOntoReach, designHandToWorld} from "./reach";
 
 export type Side = "left" | "right";
 export type HandShape = "rest" | "open" | "point" | "fist" | "splayed";
@@ -781,6 +785,16 @@ export function solveActorFigure(actor: PoseActor): ActorFigure {
       waistPitch = reachResult.waistPitch;
       pose.torsoScaleY = 1;
     }
+  }
+  if (actor.motor && actor.reachLeft && sk) {
+    // The off hand (R7): the same two-bone solve on the LEFT rest chain. The
+    // torso is the right arm's to load (torsoTiltBoost is not added twice), so
+    // a left hold leaves the striking arm's composition untouched.
+    const leftActor = actor.artwork
+      ? {...actor, y: actor.y + pose.torsoY * actor.scale, reach: actor.reachLeft, contact: actor.contactLeft === true}
+      : {...actor, reach: actor.reachLeft, contact: actor.contactLeft === true};
+    const left = solveArmOntoReach(leftActor, "l");
+    pose.armLeft = {upper: left.arm.upper, lower: left.arm.lower, hand: left.arm.hand};
   }
   const skeletonPose: SkeletonPose = actor.skeletonPose ?? {
     waistPitch,

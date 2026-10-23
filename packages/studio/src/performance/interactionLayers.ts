@@ -12,9 +12,9 @@ export function nativeInteractionObjectIds(manifest:PerformanceManifest,actors:r
   }
   for(const scene of manifest.sceneTrack??[]) {
     for(const id of native) {
-      for(const frame of scene.motor?.actors[id]??[])if(frame.holds)objects.add(frame.holds);
+      for(const frame of scene.motor?.actors[id]??[]){if(frame.holds)objects.add(frame.holds);if(frame.holdsL)objects.add(frame.holdsL);}
     }
   }
-  for(const actor of actors)if(actor.artwork&&actor.holds)objects.add(actor.holds);
+  for(const actor of actors){if(actor.artwork&&actor.holds)objects.add(actor.holds);if(actor.artwork&&actor.holdsL)objects.add(actor.holdsL);}
   return objects;
 }

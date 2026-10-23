@@ -42,6 +42,9 @@ export interface SemanticObjectRelation {
   target?: string;
   between?: readonly [string, string];
   prominence?: "supporting" | "normal" | "primary";
+  /** Which hand a `held-by` target carries the object in. Absent is the
+   *  right hand, which every pre-R7 held object used. */
+  hand?: "left" | "right";
 }
 
 export type StagingFocus =
@@ -86,6 +89,8 @@ export interface StagedObject {
   readonly z: number;
   readonly relation?: ObjectRelationKind;
   readonly target?: string;
+  /** Which hand a `held-by` target carries it in (absent = the right hand). */
+  readonly hand?: "left" | "right";
 }
 
 export interface StagedCamera {
@@ -242,7 +247,13 @@ function objectPoint(
 
   switch (relation.relation) {
     case "held-by":
-      if (targetAt) return {at: point(targetAt[0] + targetFacing * 78 / 1920, targetAt[1] - 125 / 1080), z: (target.z ?? 40) + 2};
+      if (targetAt) return {
+        // The off hand stands just behind the shoulder line the near hand sits
+        // forward of; the motor puts the prop on that hand's carry socket the
+        // moment the scene opens, so this is a sane pre-motor placement only.
+        at: point(targetAt[0] + targetFacing * (relation.hand === "left" ? -78 : 78) / 1920, targetAt[1] - 125 / 1080),
+        z: (target.z ?? 40) + 2,
+      };
       break;
     case "near":
       if (targetAt) return {at: point(targetAt[0] + targetFacing * 115 / 1920, targetAt[1] - 12 / 1080), z: (target.z ?? 40) + 4};
@@ -398,6 +409,7 @@ export function stageScene(request: StagingRequest, options: StagingOptions = {}
       z: placement.z,
       ...(relation.relation ? {relation: relation.relation} : {}),
       ...(relation.target ? {target: relation.target} : {}),
+      ...(relation.hand ? {hand: relation.hand} : {}),
     };
   }
 

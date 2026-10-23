@@ -411,6 +411,10 @@ export interface EvaluatedActor {
   footSupport?:{l:boolean;r:boolean};
   /** The prop currently bound to this actor's hand (motor bake, I4). */
   holds?: string;
+  /** The prop bound to this actor's OFF hand (motor bake, R7). */
+  holdsL?: string;
+  /** The off hand's world point while it holds or reaches (motor bake, R7). */
+  reachLeft?: [number, number];
   contact?: boolean;
   gesture?: EvaluatedGesture;
   anchors: Record<string, [number, number]>;

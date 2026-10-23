@@ -20,6 +20,9 @@ export interface WholeBodyActor {
   /** World ankle-to-sole distance; supplied from the selected artwork. */
   soleOffset: Record<Side,number>;
   palmTarget?: Point;
+  /** The OFF hand's world point (R7): checked exactly as `palmTarget` is, on
+   *  the left arm's drawn composition. Absent on every pre-R7 bake. */
+  palmTargetL?: Point;
   /** World grip point the hands hold while the body hangs from a support
    *  (slice B). Present, it carries the body instead of the feet (I1). */
   grip?: Point;
@@ -39,6 +42,8 @@ export interface WholeBodyProp {
   owner?: string;
   /** Declared socket or captured bind-time attachment, in prop-local units. */
   socket?: Point;
+  /** Which hand holds it: the right hand unless the off hand bound it (R7). */
+  hand?: 'l'|'r';
   radius?: number;
 }
 /** S may add complete controller state. It is cloned and published as a unit. */
@@ -186,20 +191,40 @@ function validateState(before:WholeBodyState,after:WholeBodyState,elapsed:number
       // two diverge by the hand radius and the proposal freezes the beat.
       const surface={x:a.x,y:a.y+(a.pose.waistY??0)*a.scale,scale:a.scale,
         flip:a.flipped,motor:true,waist:a.pose.waistPitch??0,lean:0,skeleton:a.skeleton};
-      const drawnHand=renderedHandWorld(surface,a.pose.armR??{upper:0,lower:0},a.flipped);
       // Compare like with like at the reach cap: a target beyond the drawn
       // arm's bone reach is reached at the cap, not at the aim, so the hand is
       // judged against the reached point in the aim's direction. Inside the
       // reach the reached point IS the aim, so the check stays exact.
-      const shoulder=renderedShoulderWorld(surface,a.flipped);
-      const reach=(a.skeleton.arm.upper+a.skeleton.arm.fore)*a.scale;
-      const aim:Point=[a.palmTarget[0]-shoulder[0],a.palmTarget[1]-shoulder[1]];
-      const span=Math.hypot(aim[0],aim[1]);
-      const reached:Point=span>reach&&span>0
-        ? [shoulder[0]+aim[0]/span*reach,shoulder[1]+aim[1]/span*reach] : a.palmTarget;
-      check('palm-contact',distance(drawnHand,reached),.02,{actor:id,joint:'hand_r'});
+      const palmOf=(side:'l'|'r',target:Point,joint:string,constraint:string):void=>{
+        const drawnHand=renderedHandWorld(surface,side==='l'?a.pose.armL??{upper:0,lower:0}:a.pose.armR??{upper:0,lower:0},a.flipped,side);
+        const shoulder=renderedShoulderWorld(surface,a.flipped,side);
+        const reach=(a.skeleton.arm.upper+a.skeleton.arm.fore)*a.scale;
+        const aim:Point=[target[0]-shoulder[0],target[1]-shoulder[1]];
+        const span=Math.hypot(aim[0],aim[1]);
+        const reached:Point=span>reach&&span>0
+          ? [shoulder[0]+aim[0]/span*reach,shoulder[1]+aim[1]/span*reach] : target;
+        check(constraint,distance(drawnHand,reached),.02,{actor:id,joint});
+      };
+      if(nonFinite('hand_r','waist-drop',a.pose.waistY??0,{actor:id,joint:'hand_r'}))continue;
+      palmOf('r',a.palmTarget,'hand_r','palm-contact');
       const loaded=Object.values(after.props).some(p=>p.owner===id)||Object.values(before.props).some(p=>p.owner===id);
       if(old.palmTarget&&!loaded)check('incoming-palm-rate',distance(a.palmTarget,old.palmTarget),480*elapsed,{actor:id,joint:'hand_r'});
+    }
+    // The off hand's palm is checked on its own arm's drawing (R7).
+    if(a.palmTargetL){
+      const surface={x:a.x,y:a.y+(a.pose.waistY??0)*a.scale,scale:a.scale,
+        flip:a.flipped,motor:true,waist:a.pose.waistPitch??0,lean:0,skeleton:a.skeleton};
+      if(!nonFinite('hand_l','palm-target',a.palmTargetL[0],{actor:id,joint:'hand_l'})&&
+        !nonFinite('hand_l','palm-target',a.palmTargetL[1],{actor:id,joint:'hand_l'})){
+        const drawnHand=renderedHandWorld(surface,a.pose.armL??{upper:0,lower:0},a.flipped,'l');
+        const shoulder=renderedShoulderWorld(surface,a.flipped,'l');
+        const reach=(a.skeleton.arm.upper+a.skeleton.arm.fore)*a.scale;
+        const aim:Point=[a.palmTargetL[0]-shoulder[0],a.palmTargetL[1]-shoulder[1]];
+        const span=Math.hypot(aim[0],aim[1]);
+        const reached:Point=span>reach&&span>0
+          ? [shoulder[0]+aim[0]/span*reach,shoulder[1]+aim[1]/span*reach] : a.palmTargetL;
+        check('palm-contact-l',distance(drawnHand,reached),.02,{actor:id,joint:'hand_l'});
+      }
     }
   }
   for(const [id,p] of Object.entries(after.props)){
@@ -218,8 +243,8 @@ function validateState(before:WholeBodyState,after:WholeBodyState,elapsed:number
     // a raised or far-reaching aim reflects the elbow branch.
     const hand=renderedHandWorld({x:owner.x,y:owner.y+(owner.pose.waistY??0)*owner.scale,scale:owner.scale,
       flip:owner.flipped,motor:true,waist:owner.pose.waistPitch??0,lean:0,skeleton:owner.skeleton},
-      owner.pose.armR??{upper:0,lower:0},owner.flipped);
-    check('grip-socket',distance(hand,socket),Math.min(p.radius,1.6),{actor:p.owner,prop:id,joint:'hand_r'});
+      (p.hand==='l'?owner.pose.armL:owner.pose.armR)??{upper:0,lower:0},owner.flipped,p.hand==='l'?'l':'r');
+    check('grip-socket',distance(hand,socket),Math.min(p.radius,1.6),{actor:p.owner,prop:id,joint:p.hand==='l'?'hand_l':'hand_r'});
   }
   return errors;
 }

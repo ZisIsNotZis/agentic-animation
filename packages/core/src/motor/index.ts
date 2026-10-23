@@ -48,6 +48,48 @@ export interface MotorIntent {
   accent?: number;
   /** Acting shape: 0..1 decaying overshoot past the key pose (acting hand). */
   settle?: number;
+  /** Which hand a bind/grab/release drives (R7). Absent means the right hand,
+   *  which is every pre-R7 call site and keeps its bake byte for byte. */
+  hand?: MotorHand;
+}
+
+/**
+ * The two hands one actor has. `hand_r` is the striking hand and the one every
+ * pre-R7 binding drove; `hand_l` is the off hand a carried tool rides in. A
+ * prop lives in at most one hand, and the reach model solves one arm to the
+ * point that hand is at, so `solveReach` (right) and `solveArmOntoReach(…,"l")`
+ * (left) are the two halves of the same rule.
+ */
+export type MotorHand = "hand_r" | "hand_l";
+
+/** The off-hand hold channel (R7). Mirrors the right hand's carry fields; the
+ *  off hand never places, offers or strikes in this package, and has no
+ *  influence on the strike's arc, force, elevation or staging. */
+export interface OffHandState {
+  /** The prop bound to the left hand, if any. */
+  holding: string | null;
+  /** World point the left hand is at (a hold or a reach in progress). */
+  reach: {tx: number; ty: number; target: string; contact: boolean} | null;
+  /** Left-hand grab controller: reach/bend/contact until the palm touches. */
+  grab: {propId: string; t: number; notBefore?: number; accent: number; span?: number} | null;
+  /** Prop id a completed move intent should grab into this hand. */
+  grabTarget: string | null;
+  grabAccent?: number;
+  /** Where the prop sits relative to the hand point, and the eased socket. */
+  grip: {ox: number; oy: number} | null;
+  gripGoal: {ox: number; oy: number} | null;
+  /** Shoulder-relative hand offset blend after binding (incoming arm). */
+  rel: {from: [number, number]; t: number; dur: number} | null;
+  t: number;
+  /** Breath offset currently applied to the hand (absolute). */
+  breath: [number, number];
+  shoulder?: [number, number];
+  /** Prop rotation at bind, so a declared socket is re-solved live. */
+  angleAtBind: number;
+  /** Outgoing withdrawal of the off hand after a release: the arm returns to
+   *  rest at real hand speed instead of snapping there (the joint-rate gate
+   *  refuses a snap, and the right hand's `retract` is the same rule). */
+  retract: {t: number} | null;
 }
 
 export interface MotorActorInput {
@@ -89,6 +131,10 @@ export interface MotorPropInput {
   x: number;
   y: number;
   intents: MotorIntent[];
+  /** This prop is already IN a hand when the scene opens: staging's
+   *  `held-by(actor[, hand])`. The prop's first frame is placed on the hand's
+   *  carry socket, so no ownership change and no per-frame jump is baked. */
+  heldBy?: {actor: string; hand?: MotorHand};
 }
 
 export interface MotorActorFrame {
@@ -124,6 +170,10 @@ export interface MotorActorFrame {
   crouch?: number;
   /** The prop currently bound to this actor's hand. */
   holds?: string;
+  /** The prop bound to this actor's OFF hand (R7); absent on every pre-R7 bake. */
+  holdsL?: string;
+  /** Left-hand world point while the off hand holds or reaches. */
+  reachL?: [number, number];
 }
 
 export interface MotorPropFrame {
@@ -305,6 +355,8 @@ interface ActorBody {
   spaceHeight: number;
   /** Shoulder offset from the waist pivot (design, facing-right frame). */
   shoulderFromWaist: [number, number];
+  /** The off hand's shoulder offset from the waist pivot (design). */
+  shoulderLeftFromWaist: [number, number];
   /** Design-space rest hand (facing-right frame). */
   restHand: [number, number];
 }
@@ -334,12 +386,19 @@ function bodyOf(skeleton: Skeleton, native = false): ActorBody {
     groundToWaist: skeleton.space.height - waist[1],
     spaceHeight: skeleton.space.height,
     shoulderFromWaist: [shoulder[0] - waist[0], shoulder[1] - waist[1]],
+    shoulderLeftFromWaist: (() => {
+      // A figure that declares only one shoulder still has two arms: mirror it.
+      const left = skeleton.joints.shoulder_l ?? [2 * waist[0] - shoulder[0], shoulder[1]];
+      return [left[0] - waist[0], left[1] - waist[1]] as [number, number];
+    })(),
     restHand,
   };
 }
 
-/** World-space shoulder for an actor at a waist pitch + crouch (generic waist FK). */
-function shoulderAt(x: number, groundY: number, scale: number, facing: 1 | -1, body: ActorBody, pitchDeg: number, crouch: number): [number, number] {
+/** World-space shoulder for an actor at a waist pitch + crouch (generic waist FK).
+ *  `side` picks the shoulder: the right one is the striking hand's, the left one
+ *  the off hand's (R7). */
+function shoulderAt(x: number, groundY: number, scale: number, facing: 1 | -1, body: ActorBody, pitchDeg: number, crouch: number, side: "r" | "l" = "r"): [number, number] {
   // state.x IS the waist anchor: the renderer maps actor.x to design
   // space.width/2, and the declared waist.x == space.width/2 — so the waist
   // sits AT actor.x (adding body.waist[0] here double-offsets the sim's
@@ -347,7 +406,8 @@ function shoulderAt(x: number, groundY: number, scale: number, facing: 1 | -1, b
   // arm can then never reach the sim's hand).
   const wx = x;
   const wy = groundY - (body.groundToWaist - body.crouchDrop * crouch) * scale;
-  const d: [number, number] = [facing * body.shoulderFromWaist[0] * scale, body.shoulderFromWaist[1] * scale];
+  const from = side === "l" ? body.shoulderLeftFromWaist : body.shoulderFromWaist;
+  const d: [number, number] = [facing * from[0] * scale, from[1] * scale];
   const r = ((facing * pitchDeg) * Math.PI) / 180;
   const c = Math.cos(r);
   const s = Math.sin(r);
@@ -566,6 +626,9 @@ interface ActorState {
   prep: {t: number; dur: number; peak: number; sign: 1 | -1} | null;
   /** The prop bound to the hand; position = hand every substep until release. */
   holding: string | null;
+  /** The off hand's own hold (R7): a second, narrower channel — the left hand
+   *  carries and releases, and never places, offers or strikes. */
+  off: OffHandState;
   carryShoulder?:[number,number];
   reachShoulder?:[number,number];
   /** Shoulder-relative hand offset blend after binding (arm relaxes to carry). */
@@ -761,6 +824,34 @@ function propOpenHand(state: ActorState, props: Map<string, PropState>, free = f
     heldProp.vy = free ? heldProp.carryVelocity[1] : Math.max(0, -heldProp.vy);
   }
   clearHandHold(state);
+}
+
+/** Let go of the OFF hand's prop (R7). The left channel has no placing, no
+ *  offer and no strike: opening it is the whole release. */
+function clearOffHand(state: ActorState): void {
+  state.off.holding = null;
+  state.off.grip = null;
+  state.off.gripGoal = null;
+  state.off.rel = null;
+  state.off.t = 0;
+  state.off.breath = [0, 0];
+  // The hand stays where it is and withdraws from there: `retract` carries the
+  // outgoing point, so the arm never snaps and the drawn hand never teleports.
+  state.off.retract = state.off.reach ? {t: 0} : null;
+  state.off.grab = null;
+  state.off.grabTarget = null;
+}
+
+/** Open the off hand: the prop falls under gravity (or keeps its carry
+ *  velocity on a free release), exactly as the right hand's open does. */
+function propOpenHandOff(state: ActorState, props: Map<string, PropState>, free = false): void {
+  const heldProp = state.off.holding ? props.get(state.off.holding) : undefined;
+  if (heldProp) {
+    heldProp.falling = true;
+    heldProp.vx = free ? heldProp.carryVelocity[0] : 0;
+    heldProp.vy = free ? heldProp.carryVelocity[1] : Math.max(0, -heldProp.vy);
+  }
+  clearOffHand(state);
 }
 
 /** Slice 4 fall (docs/WORLD_PUPPET_MOTOR.md): balance is cut — stepping,
@@ -975,9 +1066,12 @@ function geometryFacing(state: ActorState): 1|-1 {
 function geometryShoulder(state: ActorState, pitch=state.waist, crouch=state.crouch): [number,number] {
   return shoulderAt(state.x,state.groundY,state.scale,geometryFacing(state),state.body,pitch+(state.skeletonViews?state.lean:0),crouch);
 }
-function clampHandToReach(state: ActorState, hand: [number,number]): [number,number] {
+function geometryShoulderL(state: ActorState, pitch=state.waist, crouch=state.crouch): [number,number] {
+  return shoulderAt(state.x,state.groundY,state.scale,geometryFacing(state),state.body,pitch+(state.skeletonViews?state.lean:0),crouch,"l");
+}
+function clampHandToReach(state: ActorState, hand: [number,number], side: "r" | "l" = "r"): [number,number] {
   if (!state.skeletonViews) return hand;
-  const sh=geometryShoulder(state),reach=state.body.armReach*state.scale;
+  const sh=side === "r" ? geometryShoulder(state) : geometryShoulderL(state),reach=state.body.armReach*state.scale;
   const dx=hand[0]-sh[0],dy=hand[1]-sh[1],d=Math.hypot(dx,dy);
   return d>reach ? [sh[0]+dx/d*reach,sh[1]+dy/d*reach] : hand;
 }
@@ -993,6 +1087,13 @@ function arriveMotorWalk(
     const prop = props.get(propId);
     if (prop && !state.holding && !state.grab) state.grab = {propId, t: 0, notBefore:state.grabContactAt, accent: state.grabAccent ?? 0};
     state.grabTarget = null;
+  }
+  // The off hand's own arrival hook (R7): a left-hand pickup starts here.
+  const offPropId = state.off.grabTarget;
+  if (offPropId) {
+    const prop = props.get(offPropId);
+    if (prop && !state.off.holding && !state.off.grab) state.off.grab = {propId: offPropId, t: 0, notBefore: state.grabContactAt, accent: state.off.grabAccent ?? 0};
+    state.off.grabTarget = null;
   }
   if (state.handDrive?.phase === "approach") {
     state.handDrive.phase = "drive";
@@ -1023,6 +1124,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     scene.actors.map((actor) => [actor.id, {
       id: actor.id, x: actor.x, vx: 0, facing: actor.facing, groundY: actor.groundY, scale: actor.scale,
       walkPhase: 0, lean: 0, moveTarget: null, walkBackward: false, walkEase: 0, grab: null, holding: null, holdRel: null, holdShape: 0, holdT: 0, holdBreath: [0, 0], handDrive: null, reach: null, retract: false, retractInfluence: 1, retractElapsed: 0, retractDuration: .65, propAngleAtBind: 0, grip: null, gripGoal: null, pursue: null, place: null, placeOut: 0,
+      off: {holding: null, reach: null, grab: null, grabTarget: null, grip: null, gripGoal: null, rel: null, t: 0, breath: [0, 0], angleAtBind: 0, retract: null},
       stagger: 0, stepsTaken: 0, staggerSlide: 0, gesture: null, handGesture: null, prep: null, fall: null, fallen: false, hang: null, body: bodyOf((actor.skeletonViews?.front??actor.skeleton) as Skeleton,actor.skeletonViews!==undefined),
       skeleton: actor.skeletonViews?.front??actor.skeleton, skeletonViews:actor.skeletonViews, orientation:actor.skeletonViews?'front':undefined, waist: 0, crouch: 0,
     }]),
@@ -1042,6 +1144,45 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     const first=input.intents.find(i=>i.at<=0&&!i.offerTo&&(i.intent==='grab'||i.intent==='move'));
     const target=first?.target?scene.resolveX(first.target):undefined;
     if(target!==undefined)state.facing=(Math.sign(target-state.x)||state.facing) as 1|-1;
+  }
+
+  // A prop staged `held-by(actor[, hand])` starts the scene in that hand: its
+  // first frame is the carry socket, not the staged spot, so the bake has no
+  // ownership change to make and no prop-rate jump to refuse (R7).
+  for (const prop of scene.props) {
+    const held = prop.heldBy;
+    if (!held) continue;
+    const state = actors.get(held.actor);
+    const live = props.get(prop.id);
+    if (!state || !live) continue;
+    const off = held.hand === "hand_l";
+    if (off) { state.off.holding = prop.id; state.off.grip = {ox: 0, oy: 0}; state.off.angleAtBind = live.rotation; }
+    else { state.holding = prop.id; state.grip = {ox: 0, oy: 0}; state.propAngleAtBind = live.rotation; }
+    // The declared socket puts the hand on the drawn handle: the prop's origin
+    // sits one rotated socket back from the hand point.
+    const socket = live.grip ? {x: live.grip.at[0], y: live.grip.at[1]} : {x: 0, y: 0};
+    const rotated = [socket.x * Math.cos(live.rotation * Math.PI / 180) - socket.y * Math.sin(live.rotation * Math.PI / 180),
+      socket.x * Math.sin(live.rotation * Math.PI / 180) + socket.y * Math.cos(live.rotation * Math.PI / 180)] as [number, number];
+    const sh = off ? geometryShoulderL(state) : geometryShoulder(state);
+    const hand: [number, number] = off
+      ? [sh[0] - 0.16 * state.body.armReach * state.scale * geometryFacing(state), sh[1] + 0.94 * state.body.armReach * state.scale]
+      : [sh[0] + (0.35 / Math.hypot(0.35, 0.94)) * state.body.armReach * state.scale * 0.6 * geometryFacing(state),
+         sh[1] + (0.94 / Math.hypot(0.35, 0.94)) * state.body.armReach * state.scale * 0.6];
+    live.x = hand[0] - rotated[0];
+    live.y = hand[1] - rotated[1];
+    live.falling = false;
+    live.vx = 0;
+    if (off) {
+      state.off.grip = {ox: -rotated[0], oy: -rotated[1]};
+      state.off.gripGoal = {...state.off.grip};
+      state.off.reach = {tx: hand[0], ty: hand[1], target: prop.id, contact: true};
+      state.off.shoulder = sh;
+    } else {
+      state.grip = {ox: -rotated[0], oy: -rotated[1]};
+      state.gripGoal = {...state.grip};
+      state.reach = {tx: hand[0], ty: hand[1], target: prop.id, contact: true};
+      state.carryShoulder = sh;
+    }
   }
 
   // Intent queues per actor, in start order.
@@ -1092,12 +1233,43 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     const ext = Math.min(d, state.body.armReach * k);
     return [sh[0] + (dx / d) * ext, sh[1] + (dy / d) * ext];
   };
+  /** The same reach point computed from the OFF hand's shoulder (R7). */
+  const handLeftTargetAt = (state: ActorState, aim: [number, number], pitch: number, crouch: number, x=state.x): [number, number] => {
+    const k = state.scale;
+    const sh = geometryShoulderL(state,pitch,crouch);
+    sh[0] += x-state.x;
+    const dx = aim[0] - sh[0];
+    const dy = aim[1] - sh[1];
+    const d = Math.hypot(dx, dy) || 1;
+    const ext = Math.min(d, state.body.armReach * k);
+    return [sh[0] + (dx / d) * ext, sh[1] + (dy / d) * ext];
+  };
   /** The relaxed carry pose: hand down-forward of the shoulder at 60% reach. */
   const carryHandAt = (state: ActorState): [number, number] => {
     const k = state.scale;
     const sh = geometryShoulder(state);
     const d = Math.hypot(0.35, 0.94);
     return [sh[0] + (0.35 / d) * state.body.armReach * k * 0.6 * geometryFacing(state), sh[1] + (0.94 / d) * state.body.armReach * k * 0.6];
+  };
+  /** The OFF hand's carry pose (R7): lower and just behind the shoulder, so a
+   *  carried racket hangs at his side instead of standing where the striking
+   *  palm carries the shuttle. */
+  const carryHandLeftAt = (state: ActorState): [number, number] => {
+    const k = state.scale;
+    const sh = geometryShoulderL(state);
+    return [sh[0] - 0.16 * state.body.armReach * k * geometryFacing(state), sh[1] + 0.94 * state.body.armReach * k];
+  };
+  /** World rest hand of the OFF arm (the left hand's neutral position). */
+  const restHandLeftAt = (state: ActorState): [number, number] => {
+    const k = state.scale;
+    if (state.skeleton) {
+      const sk = state.skeleton;
+      const space = sk.space ?? {width: 400, height: 720};
+      const design = sk.joints.hand_l ?? sk.joints.hand_r ?? [space.width / 2, space.height * 0.6];
+      const facing = geometryFacing(state);
+      return [state.x + (design[0] - space.width / 2) * k * facing, state.groundY - (space.height - design[1]) * k];
+    }
+    return carryHandLeftAt(state);
   };
   const supportPoint = (prop:PropState) => prop.solid ? solidSupport(prop.solid,prop.rotation) : {x:0,y:0};
   /**
@@ -1245,6 +1417,8 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         walk:state.walkPhase,waist:state.waist,crouch:state.crouch,contact:state.reach?.contact,
         ...(state.reach?{reach:[state.reach.tx,state.reach.ty] as [number,number],
           ...(state.retract?{reachInfluence:state.retractInfluence}:{})}:{}),
+        ...(state.off.reach?{reachLeft:[state.off.reach.tx,state.off.reach.ty] as [number,number],
+          contactLeft:state.off.reach.contact}:{}),
         worldFootTargets:{l:state.feet!.l.target,r:state.feet!.r.target},
         expression:{gaze:[0,0],lipsPart:0,smile:0},
         tracks:(input.poseTracks??[]).map(track=>({...track,events:track.events.map(event=>{
@@ -1271,13 +1445,17 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         ...(state.hang?.engaged?{grip:[state.hang.pivot[0],state.hang.pivot[1]] as [number,number],support:{l:null,r:null}}:{}),
         soleOffset:{l:(sk.space.height-sk.joints.foot_l![1])*state.scale,r:(sk.space.height-sk.joints.foot_r![1])*state.scale},
         ...(state.reach&&!state.retract?{palmTarget:[state.reach.tx,state.reach.ty] as [number,number]}:{}),
+        ...(state.off.reach?{palmTargetL:[state.off.reach.tx,state.off.reach.ty] as [number,number]}:{}),
       };
     }
     return {actors:nativeActors,props:Object.fromEntries([...props].map(([id,p])=>{
       const owner=[...actors.values()].find(a=>a.holding===id&&a.skeletonViews);
+      const offOwner=[...actors.values()].find(a=>a.off.holding===id&&a.skeletonViews);
       const offset=owner?.grip?rotateVector([-owner.grip.ox,-owner.grip.oy],-owner.propAngleAtBind):undefined;
-      return [id,{x:p.x,y:p.y,rotation:p.rotation,...(p.projectile?{projectile:true}:{}),...(owner?{owner:owner.id,
-        socket:p.grip?.at??offset,radius:p.grip?.radius??1.6}:{})}];
+      const offOffset=offOwner?.off.grip?rotateVector([-offOwner.off.grip.ox,-offOwner.off.grip.oy],-offOwner.off.angleAtBind):undefined;
+      return [id,{x:p.x,y:p.y,rotation:p.rotation,...(p.projectile?{projectile:true}:{}),
+        ...(owner?{owner:owner.id,hand:"r" as const,socket:p.grip?.at??offset,radius:p.grip?.radius??1.6}:{}),
+        ...(!owner&&offOwner?{owner:offOwner.id,hand:"l" as const,socket:p.grip?.at??offOffset,radius:p.grip?.radius??1.6}:{})}];
     })),controllers:{actors,props,queues,diagnostics,exhaustedActors}};
   };
   let lastPresentation:LiveState|undefined,lastPresentationTime:number|undefined;
@@ -1351,8 +1529,11 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
                 }
               }
               // The grabbed object: the move target for prop pickups, or the
-              // declared `grab` for receiver moves (handover).
-              state.grabTarget = intent.grab ?? (isProp ? intent.target! : null);
+              // declared `grab` for receiver moves (handover). A move that names
+              // the off hand arms THAT hand's controller instead (R7).
+              const grabId = intent.grab ?? (isProp ? intent.target! : null);
+              state.grabTarget = intent.hand === "hand_l" ? null : grabId;
+              if (intent.hand === "hand_l") state.off.grabTarget = grabId;
               state.grabContactAt = intent.contactAt;
               state.grabAccent = Math.min(1, Math.max(0, Number(intent.accent ?? 0)));
               state.grabSettle = Math.min(1, Math.max(0, Number(intent.settle ?? 0)));
@@ -1404,6 +1585,16 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           }
         } else if (intent.intent === "grab") {
           const targetId = intent.target!;
+          if (intent.hand === "hand_l") {
+            // Off hand (R7): the same grab, armed on the left controller.
+            if (state.off.holding !== targetId && state.off.grab?.propId !== targetId) {
+              const prop = props.get(targetId);
+              const accent = Math.min(1, Math.max(0, Number(intent.accent ?? 0)));
+              if (prop && state.moveTarget === null) state.off.grab = {propId: targetId, t: 0, notBefore: intent.contactAt, accent};
+              else if (prop) { state.off.grabTarget = targetId; state.off.grabAccent = accent; }
+            }
+            continue;
+          }
           if (intent.offerTo) {
             state.offer={recipient:intent.offerTo,prop:targetId,until:(intent.contactAt??now)+intent.duration};
             if(state.skeletonViews&&state.reach&&state.holding){
@@ -1420,6 +1611,10 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           }
         } else if (intent.intent === "release") {
           const targetId = intent.target!;
+          if (intent.hand === "hand_l") {
+            if (state.off.holding === targetId) propOpenHandOff(state, props, intent.releaseMode === 'free');
+            continue;
+          }
           if (state.holding === targetId) {
             const prop = props.get(targetId)!;
             // Placing onto a support: if the prop's base sits BELOW a declared
@@ -1941,7 +2136,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           // its shoulder-relative shape (the arm holds the object as the body
           // straightens), then relaxes to the carry pose. A fallen holder
           // keeps the down pose; the carried prop rides the hand down (I4).
-          if (!state.fallen) {
+          if (!state.fallen && !state.off.grab) {
             state.waist = approach(state.waist, 0, WAIST_RATE * dt);
             state.crouch = recoverCrouch(state, dt);
           }
@@ -2063,6 +2258,125 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         advance(delta);
 
       }
+      // Off hand (R7): the LEFT hand's own grab controller and carry. It is a
+      // narrower channel than the right hand's — reach, bind, carry, release —
+      // so the striking hand keeps its exact pre-R7 behaviour, and a prop in
+      // the off hand rides the left palm the way a held prop rides the right.
+      if (state.off.grab) {
+        const g = state.off.grab;
+        state.off.retract = null;
+        g.t += delta;
+        const k = state.scale;
+        const liveProp = props.get(g.propId)!;
+        const box = propBoxWorld(liveProp);
+        const aim = propAim(liveProp, true);
+        if (!state.skeletonViews || !state.off.reach) state.facing = (Math.sign(aim[0] - state.x) || state.facing) as 1 | -1;
+        const contact = (hand: [number, number]) => liveProp.grip
+          ? Math.hypot(hand[0] - aim[0], hand[1] - aim[1]) <= Math.min(liveProp.grip.radius, state.skeletonViews ? 1.6 : Infinity)
+          : circleOverlapsBox({center: hand, radius: state.body.handRadius * k}, box);
+        const touches = (pitch: number, crouch: number): boolean => contact(handLeftTargetAt(state, aim, pitch, crouch));
+        if (state.skeletonViews) {
+          // Least-touch posture: least waist pitch, then least crouch.
+          const goal = minimalTouchPosture(state, touches);
+          const onset = smoothstep01(g.t / .5);
+          state.waist = approach(state.waist, goal.pitch, WAIST_RATE * delta * onset);
+          state.crouch = approach(state.crouch, Math.max(goal.crouch, state.supportMinimum ?? 0), CROUCH_RATE * delta * onset);
+        }
+        const targetHand = handLeftTargetAt(state, aim, state.waist, state.crouch);
+        const shNow = geometryShoulderL(state), shBefore = state.off.shoulder ?? shNow;
+        const previousHand: [number, number] = state.off.reach
+          ? [state.off.reach.tx + (state.skeletonViews ? shNow[0] - shBefore[0] : 0), state.off.reach.ty + (state.skeletonViews ? shNow[1] - shBefore[1] : 0)]
+          : restHandLeftAt(state);
+        const span = g.span ?? (g.span = Math.hypot(targetHand[0] - previousHand[0], targetHand[1] - previousHand[1]) || 1);
+        const approachSpeed = 480 * smoothstep01(g.t / .25)
+          * accentSpeed(Math.hypot(targetHand[0] - previousHand[0], targetHand[1] - previousHand[1]), span, g.accent);
+        const hand = travelHand(previousHand, targetHand, 0, approachSpeed, delta);
+        state.off.reach = {tx: hand[0], ty: hand[1], target: g.propId, contact: false};
+        state.off.shoulder = shNow;
+        if (contact(hand) && now >= (g.notBefore ?? 0)) {
+          // The grip takes the weight: any previous holder's hand opens.
+          for (const other of actors.values()) {
+            if (other.holding === g.propId) { clearHandHold(other); other.retract = other.reach !== null; }
+            if (other.off.holding === g.propId) clearOffHand(other);
+          }
+          state.off.angleAtBind = liveProp.rotation;
+          state.off.holding = g.propId;
+          state.off.grab = null;
+          state.off.t = 0;
+          const sh = geometryShoulderL(state);
+          state.off.grip = {ox: liveProp.x - hand[0], oy: liveProp.y - hand[1]};
+          state.off.gripGoal = state.skeletonViews && !liveProp.grip ? {...state.off.grip} : {ox: liveProp.x - aim[0], oy: liveProp.y - aim[1]};
+          state.off.rel = {from: [hand[0] - sh[0], hand[1] - sh[1]], t: 0, dur: 0.45};
+          state.off.shoulder = sh;
+        } else if (g.t > 2.5 && now > (g.notBefore ?? 0) + 2.5) {
+          // Honest miss: no posture reaches it. The hand withdraws to rest.
+          state.off.grab = null;
+          state.off.retract = state.off.reach ? {t: 0} : null;
+        }
+      }
+      if (state.off.holding) {
+        // Hold (I4) on the off hand: the bound prop's position IS the left
+        // hand's position, through walking, crouching and settling.
+        const heldProp = props.get(state.off.holding)!;
+        // The posture belongs to whichever channel is still working: an
+        // off-hand carry never straightens a body that is bending to pick
+        // something up with the striking hand (the pickup would then never
+        // reach its own touch box).
+        if (!state.fallen && !state.grab && !state.holding && !state.handDrive && !state.handGesture) {
+          state.waist = approach(state.waist, 0, WAIST_RATE * delta);
+          state.crouch = recoverCrouch(state, delta);
+        }
+        const carry = carryHandLeftAt(state);
+        const sh = geometryShoulderL(state);
+        let desired: [number, number];
+        if (state.off.rel) {
+          state.off.rel.t += delta;
+          const blend = smoothstep01(state.off.rel.t / state.off.rel.dur);
+          const gripNow = state.off.grip && state.off.gripGoal
+            ? {ox: state.off.grip.ox + (state.off.gripGoal.ox - state.off.grip.ox) * blend,
+               oy: state.off.grip.oy + (state.off.gripGoal.oy - state.off.grip.oy) * blend}
+            : state.off.grip;
+          const from = state.off.rel.from;
+          const rel: [number, number] = [from[0] + ((carry[0] - sh[0]) - from[0]) * blend,
+            from[1] + ((carry[1] - sh[1]) - from[1]) * blend];
+          desired = [sh[0] + rel[0], sh[1] + rel[1]];
+          state.off.grip = gripNow;
+          if (blend >= 1) { state.off.grip = state.off.gripGoal ?? state.off.grip; state.off.rel = null; }
+        } else {
+          const previous: [number, number] = state.off.reach
+            ? [state.off.reach.tx + (state.skeletonViews ? sh[0] - (state.off.shoulder?.[0] ?? sh[0]) : 0),
+               state.off.reach.ty + (state.skeletonViews ? sh[1] - (state.off.shoulder?.[1] ?? sh[1]) : 0)]
+            : carry;
+          desired = state.skeletonViews ? travelHand(previous, carry, 0.1, 480, delta) : carry;
+        }
+        const hand = clampHandToReach(state, desired, "l");
+        heldProp.x = hand[0] + (state.off.grip?.ox ?? 0);
+        heldProp.y = hand[1] + (state.off.grip?.oy ?? 0);
+        heldProp.vx = 0;
+        heldProp.falling = false;
+        state.off.reach = {tx: hand[0], ty: hand[1], target: state.off.holding, contact: true};
+        state.off.shoulder = sh;
+        if (heldProp.grip) {
+          // A declared socket is re-solved every substep, exactly as the right
+          // hand's carry does: the hand point sits on the drawn handle.
+          const socket = rotateVector(heldProp.grip.at, heldProp.rotation);
+          heldProp.x = hand[0] - socket[0];
+          heldProp.y = hand[1] - socket[1];
+        }
+      } else if (state.off.retract) {
+        // The off hand returns to rest at real hand speed (never a snap: the
+        // joint-rate gate refuses one, and a refused substep freezes the beat).
+        state.off.retract.t += delta;
+        const rest = restHandLeftAt(state);
+        const previous: [number, number] = state.off.reach ? [state.off.reach.tx, state.off.reach.ty] : rest;
+        const hand = travelHand(previous, rest, state.skeletonViews ? .05 : .1, state.skeletonViews ? 240 : 480, delta);
+        if (Math.hypot(hand[0] - rest[0], hand[1] - rest[1]) < 0.01) {
+          state.off.reach = null;
+          state.off.retract = null;
+        } else {
+          state.off.reach = {tx: hand[0], ty: hand[1], target: state.off.reach?.target ?? "", contact: false};
+        }
+      }
       // Gesture intents (slice 3 vocabulary): torso-pitch envelopes and reach
       // gestures are baked motion — planted support, no contact (I1/I2).
       if (state.gesture) {
@@ -2126,7 +2440,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
       }
       // Posture return when nothing is held or grabbed. A fallen body keeps
       // the down pose (slice 4: get-up is out of scope).
-      if (!state.fallen && !state.grab && !state.holding && !state.gesture && (state.waist !== 0 || state.crouch !== 0)) {
+      if (!state.fallen && !state.grab && !state.holding && !state.gesture && !state.off.grab && (state.waist !== 0 || state.crouch !== 0)) {
         state.waist = approach(state.waist, 0, WAIST_RATE * delta);
         state.crouch = recoverCrouch(state,delta);
       }
@@ -2158,7 +2472,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     // Prop integration (I4): a prop moves only by carrying (handled in the
     // hold block), gravity after release, or friction slide from an impulse.
     for (const prop of props.values()) {
-      if ([...actors.values()].some(actor=>actor.holding===prop.id)) {
+      if ([...actors.values()].some(actor=>actor.holding===prop.id||actor.off.holding===prop.id)) {
         const previous=previousProps.get(prop.id)!;
         prop.carryVelocity=[(prop.x-previous[0])/(presentationSampling?DT:delta),(prop.y-previous[1])/(presentationSampling?DT:delta)];
       }
@@ -2271,6 +2585,8 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           ...(state.waist ? {waist: round(state.waist)} : {}),
           ...(state.crouch > (state.skeletonViews?0:0.01) ? {crouch: round(state.crouch)} : {}),
           ...(state.holding ? {holds: state.holding, ...(props.get(state.holding)?.grip ? {gripDepth:props.get(state.holding)!.grip!.depth} : {})} : {}),
+          ...(state.off.holding ? {holdsL: state.off.holding, ...(props.get(state.off.holding)?.grip ? {gripDepth:props.get(state.off.holding)!.grip!.depth} : {})} : {}),
+          ...(state.off.reach ? {reachL: [round(state.off.reach.tx), round(state.off.reach.ty)] as [number,number]} : {}),
           ...(planted ? {step: 1} : {}),
           ...(state.reach ? {
             reach: [round(state.reach.tx), round(state.reach.ty)],
@@ -2300,7 +2616,7 @@ export interface MotorSceneSource {
   actors: Record<string, {at: readonly [number, number]; facing?: number; scale?: number; skeleton?: Skeleton;skeletonViews?:Record<FigureView,Skeleton>}>;
   /** Global scene start, used by native figures' absolute IR event times. */
   startSec?: number;
-  objects: Record<string, {at: readonly [number, number]; size?: [number, number]; scale?: number; solid?: PropSolid; grip?: MotorGrip; rotation?: number; touchBox?: {a: [number, number]; b: [number, number]}; projectile?: Projectile}>;
+  objects: Record<string, {at: readonly [number, number]; size?: [number, number]; scale?: number; solid?: PropSolid; grip?: MotorGrip; rotation?: number; touchBox?: {a: [number, number]; b: [number, number]}; projectile?: Projectile; heldBy?: {actor: string; hand?: MotorHand}}>;
   /** Declared support surfaces in stage space (released props land here; a
    *  hanging one carries a body, slice B). */
   supports?: MotorSupport[];
@@ -2356,10 +2672,13 @@ export function bakeSceneMotor(
             const holder = String(value.holder ?? value.actorId ?? value.actor ?? subject ?? "");
             if (!object || !intentsByActor.has(holder)) continue;
             const at = Number(event.start ?? 0) - (source.actors[holder]?.skeletonViews ? source.startSec??0 : 0) + Number(item.at ?? item.frame ?? 0);
+            // A binding that names the hand drives that hand (R7); absent
+            // keeps the right hand, which is every pre-R7 binding.
+            const hand = value.hand === "hand_l" || value.hand === "left" ? "hand_l" as const : undefined;
             if (op === "release") {
-              intentsByActor.get(holder)!.push({at, duration: 0.01, intent: "release", target: object});
+              intentsByActor.get(holder)!.push({at, duration: 0.01, intent: "release", target: object, ...(hand ? {hand} : {})});
             } else {
-              intentsByActor.get(holder)!.push({at, duration: 1, intent: "grab", target: object});
+              intentsByActor.get(holder)!.push({at, duration: 1, intent: "grab", target: object, ...(hand ? {hand} : {})});
             }
           }
           continue;
@@ -2388,13 +2707,17 @@ export function bakeSceneMotor(
             anticipation: typeof intent.anticipation === "number" ? intent.anticipation : undefined,
             accent: typeof intent.accent === "number" ? intent.accent : undefined,
             settle: typeof intent.settle === "number" ? intent.settle : undefined,
+            ...(intent.hand === "hand_l" || intent.hand === "left" ? {hand: "hand_l" as const} : {}),
           });
         }
       }
     }
   }
   const totalIntents = [...intentsByActor.values()].reduce((sum, list) => sum + list.length, 0);
-  if (totalIntents === 0) return undefined;
+  // A prop that starts in a hand is motor content on its own: the hold is the
+  // bake, even with no intent to move anybody.
+  const startsHeld = Object.values(source.objects ?? {}).some((staged) => staged.heldBy !== undefined);
+  if (totalIntents === 0 && !startsHeld) return undefined;
   const planned: Array<{actor:string;prop:string;cue:number}> = [];
   for (const actor of actorInputs) {
     actor.intents = intentsByActor.get(actor.id)!;
@@ -2420,7 +2743,7 @@ export function bakeSceneMotor(
   const movie = simulateScene({
     durationSec: source.durationSec,
     actors: actorInputs,
-    props: Object.entries(source.objects ?? {}).map(([id, staged]) => ({id, x: staged.at[0] * video.width, y: staged.at[1] * video.height, size: staged.size ?? [80, 120] as [number, number], touchBox: staged.touchBox, solid: staged.solid, grip: staged.grip, rotation: staged.rotation, projectile: staged.projectile, intents: []})),
+    props: Object.entries(source.objects ?? {}).map(([id, staged]) => ({id, x: staged.at[0] * video.width, y: staged.at[1] * video.height, size: staged.size ?? [80, 120] as [number, number], touchBox: staged.touchBox, solid: staged.solid, grip: staged.grip, rotation: staged.rotation, projectile: staged.projectile, ...(staged.heldBy ? {heldBy: staged.heldBy} : {}), intents: []})),
     supports: source.supports,
     groundY: actorInputs[0]?.groundY,
     resolveX: (id) => {

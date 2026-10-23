@@ -148,7 +148,7 @@ const ActorDeclaration = z.object({use: AssetRef, voice: AssetRef}).strict();
 const LocationDeclaration = z.object({use: AssetRef}).strict();
 const ObjectDeclaration = z.object({use: AssetRef}).strict();
 const Facing = z.union([Id, z.enum(["audience", "left", "right"])]);
-const Placement = z.string().regex(/^(?:center|left|right|foreground|background|on\([a-z][a-z0-9_]*\))$/);
+const Placement = z.string().regex(/^(?:center|left|right|foreground|background|on\([a-z][a-z0-9_]*\)|held-by\([a-z][a-z0-9_]*(?:, ?(?:left|right))?\))$/);
 const ScriptStatement = z.record(Id, z.string().min(1)).superRefine((item, ctx) => {
   if (Object.keys(item).length !== 1) ctx.addIssue({code: z.ZodIssueCode.custom, message: "dialogue statement must name exactly one actor"});
   const text = Object.values(item)[0];

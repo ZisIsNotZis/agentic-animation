@@ -85,7 +85,10 @@ export const PerformanceFrame: React.FC<{
     // the staged plane (35 for a `center` object, below the net's 45); 0 means
     // the manifest declared none, and the historical plane 50 is kept there.
     const heldPlane = new Map<string,number>();
-    for (const actor of actors) if (actor.artwork && actor.holds) heldPlane.set(actor.holds, actor.z);
+    for (const actor of actors) {
+        if (actor.artwork && actor.holds) heldPlane.set(actor.holds, actor.z);
+        if (actor.artwork && actor.holdsL) heldPlane.set(actor.holdsL, actor.z);
+    }
     const propPlane = (prop: {id: string; z: number}): number =>
         heldPlane.get(prop.id) ?? (prop.z > 0 ? prop.z : 50);
     const subtitle = state.subtitles.at(-1)?.text;

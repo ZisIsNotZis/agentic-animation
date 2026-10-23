@@ -1456,7 +1456,7 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
   });
   /** The baked motor channels an evaluated actor reads (slice B adds the hang
    *  placement and the whole-body rotation). */
-  type MotorActorChannel = {x?: number; y?: number; rotation?: number; grip?: [number, number]; facing?: number; lean?: number; walk?: number; reach?: [number, number]; reachInfluence?: number; gripDepth?: "front"|"behind"; contact?: boolean; waist?: number;crouch?:number; skeletonPose?:import("@anim/core/skeleton").SkeletonPose; worldFootTargets?:{l:[number,number];r:[number,number]}; footSupport?:{l:boolean;r:boolean}; orientation?:EvaluatedActor["orientation"]; holds?: string};
+  type MotorActorChannel = {x?: number; y?: number; rotation?: number; grip?: [number, number]; facing?: number; lean?: number; walk?: number; reach?: [number, number]; reachInfluence?: number; gripDepth?: "front"|"behind"; contact?: boolean; waist?: number;crouch?:number; skeletonPose?:import("@anim/core/skeleton").SkeletonPose; worldFootTargets?:{l:[number,number];r:[number,number]}; footSupport?:{l:boolean;r:boolean}; orientation?:EvaluatedActor["orientation"]; holds?: string; holdsL?: string; reachL?: [number, number]};
   const motorFrameAt = (id: string, at: number): Record<string, unknown> | undefined => {
     const scene = motorScenes.find((candidate) => {
       const start = Math.round((candidate.start ?? 0) * motorFps);
@@ -1502,6 +1502,8 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
       crouch: motor.crouch ?? 0, worldFootTargets:motor.worldFootTargets, footSupport:motor.footSupport, skeletonPose:motor.skeletonPose, ...(motor.orientation?{orientation:motor.orientation, skeleton:base.artwork?.views[figureViewForOrientation(motor.orientation)].skeleton??base.skeleton}:{}),
       ...(base.artwork ? {motor:true as const,facing:(motor.facing??(base.flip?-1:1)) as 1|-1} : {}),
       ...(motor.holds === undefined ? {} : {holds: motor.holds}),
+      ...(motor.holdsL === undefined ? {} : {holdsL: motor.holdsL}),
+      ...(motor.reachL === undefined ? {} : {reachLeft: motor.reachL}),
       ...hangChannels(motor),
     };
   };
@@ -1509,7 +1511,7 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
     rawActors.map((actor) => {
       const motor = motorFrameFor(actor.id) as MotorActorChannel | undefined;
       if (!motor || typeof motor.x !== "number") return actor;
-      return {...actor, x: motor.x, lean: motor.lean ?? 0, walk: motor.walk ?? 0, facing: (motor.facing ?? (actor.flip ? -1 : 1)) as 1 | -1, flip: (motor.facing ?? (actor.flip ? -1 : 1)) === -1, reach: motor.reach as [number, number] | undefined, reachInfluence: motor.reachInfluence, gripDepth: motor.gripDepth, contact: motor.contact === true, waist: motor.waist ?? 0, motor: true as const, crouch: motor.crouch ?? 0, worldFootTargets:motor.worldFootTargets, footSupport:motor.footSupport, skeletonPose:motor.skeletonPose, ...(motor.orientation?{orientation:motor.orientation, skeleton:actor.artwork?.views[figureViewForOrientation(motor.orientation)].skeleton??actor.skeleton}:{}), ...(motor.holds === undefined ? {} : {holds: motor.holds}), ...hangChannels(motor)};
+      return {...actor, x: motor.x, lean: motor.lean ?? 0, walk: motor.walk ?? 0, facing: (motor.facing ?? (actor.flip ? -1 : 1)) as 1 | -1, flip: (motor.facing ?? (actor.flip ? -1 : 1)) === -1, reach: motor.reach as [number, number] | undefined, reachInfluence: motor.reachInfluence, gripDepth: motor.gripDepth, contact: motor.contact === true, waist: motor.waist ?? 0, motor: true as const, crouch: motor.crouch ?? 0, worldFootTargets:motor.worldFootTargets, footSupport:motor.footSupport, skeletonPose:motor.skeletonPose, ...(motor.orientation?{orientation:motor.orientation, skeleton:actor.artwork?.views[figureViewForOrientation(motor.orientation)].skeleton??actor.skeleton}:{}), ...(motor.holds === undefined ? {} : {holds: motor.holds}), ...(motor.holdsL === undefined ? {} : {holdsL: motor.holdsL}), ...(motor.reachL === undefined ? {} : {reachLeft: motor.reachL}), ...hangChannels(motor)};
     }),
   );
   const actorById = new Map(actors.map((actor) => [actor.id, actor]));
