@@ -1,0 +1,63 @@
+{
+  "episode": "episodes/a-badminton/episode.yml",
+  "episodeSha256": "ef3a688de5850047b7afc56413e6b0533be2cccd360fa143e6d1e1280ccd3bf1",
+  "video": "episodes/a-badminton/artifacts/sa1-r7-2026-10-23/episode.mp4",
+  "videoSha256": "7ffdf630fcaadb20c04d2414b2a884afdfebc9a9cea1f2c0a62b6f9a56adc4ee",
+  "frameCount": 132,
+  "durationSec": 5.5,
+  "fps": 24,
+  "size": [
+    1280,
+    720
+  ],
+  "renderedFrom": "R7: the racket is bound into the server's OFF hand for the whole shot (staged held-by(server, left)), so the striking palm carries the shuttle and the left hand carries the racket from the first frame to the end of the follow-through. The strike itself is untouched: same arc, force, elevation, staging and timing as the rendition the person accepted.",
+  "renderCommand": "npm run anim -- render-yaml episodes/a-badminton/episode.yml",
+  "bakeCommand": "npm run anim -- make episodes/a-badminton/episode.yml",
+  "rebuild": "bash episodes/a-badminton/artifacts/sa1-r7-2026-10-23/verify.sh",
+  "stillsCommand": "ffmpeg -ss <sec> -i episode.mp4 -frames:v 1 stills/t<sec>.png",
+  "stills": [
+    {
+      "name": "t0.600.png",
+      "sec": 0.6,
+      "beat": "the walk to the shuttle: the racket is already in the off hand, the bench is empty"
+    },
+    {
+      "name": "t1.800.png",
+      "sec": 1.8,
+      "beat": "the pickup completes: the shuttle is in the striking palm, the racket still in the off hand"
+    },
+    {
+      "name": "t2.208.png",
+      "sec": 2.208,
+      "beat": "the strike: both props in frame — the shuttle leaving the palm, the racket held at the off hand's side"
+    },
+    {
+      "name": "t2.500.png",
+      "sec": 2.5,
+      "beat": "the crossing: the free shuttle on its own plane, the net's tape in front of it, the racket still carried"
+    },
+    {
+      "name": "t3.717.png",
+      "sec": 3.717,
+      "beat": "the rest: the shuttle on the floor line, the racket still in the off hand at the end of the follow-through"
+    }
+  ],
+  "setLayers": "unchanged from the accepted rendition: net declared depth 45 between the receiver 40 and the server 50; the held racket composites on its holder's plane 50, in front of the net",
+  "events": {
+    "struck": {
+      "at": 2.207,
+      "velocity": [
+        -533,
+        -447
+      ]
+    },
+    "settled": {
+      "at": 3.717,
+      "position": [
+        476.56,
+        691
+      ]
+    }
+  },
+  "motorDiagnostics": "none; the racket's off-hand hold raises no warning and adds no diagnostic. The seven expected sudden-move lines on the descent are the bounce's physics (episodes/a-badminton/README.md)."
+}

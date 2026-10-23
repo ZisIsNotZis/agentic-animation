@@ -66,7 +66,10 @@ scenes:
       receiver: {facing: right, entrance: background}
     objects:
       shuttle: center
-      racket: on(bench)
+      # The racket is IN HIS OFF HAND from the shot's first frame (R7). A
+      # bench pickup would add ~3 s of walking to a shot the person has already
+      # accepted, and the strike's own time is one of R7's acceptance terms.
+      racket: held-by(server, left)
     script:
       # 0 orient — both bodies turn side-on before any contact.
       - server: "{pose.orient(server, \"left\")}{pose.orient(receiver, \"right\")}"

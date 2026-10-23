@@ -35,8 +35,11 @@ to be paid for with silent beats (`…` = 0.55 s).
 
 ```json
 [{"kind":"projectile.struck","prop":"shuttle","at":2.207,"velocity":[-533,-447]},
- {"kind":"projectile.settled","prop":"shuttle","at":3.633,"position":[509,650.16]}]
+ {"kind":"projectile.settled","prop":"shuttle","at":3.717,"position":[476.56,691]}]
 ```
+
+(These are the numbers after R1 put a projectile's ground on the set's floor; the EA run
+measured `3.633 s [509,650.16]` on the actor clamp, which R1 replaced.)
 
 Zero motor diagnostics is stated as its encoding, not as a key: `bakeSceneMotor` omits
 `motor.diagnostics` when it is empty (`if (diagnostics.length) movie.diagnostics =
@@ -47,7 +50,8 @@ CLI's warning channel is the second witness.
 
 `Δy/Δx = 447/533` → **40.00°**, launch speed 697 px/s. Staging at scale 0.88:
 server `[0.65, 0.602]`, receiver `[0.35, 0.602]`, shuttle `[0.538, 0.64]`,
-racket `[0.229, 0.593]` (placed `on(bench)`).
+racket held by the server (`held-by(server, left)`; R7 — before it, `on(bench)` at
+`[0.229, 0.593]`).
 
 The camera track carries one event, opening on the strike (the push and the
 follow share a brace group):
@@ -79,6 +83,39 @@ the eyes from the first floor contact onward. At 0.75 the frame is 960 world px
 tall, its y range is 0 → 120, and the heads survive to the eyebrows — the cut
 is reduced, not removed (the drawn hair tops sit at world y ≈ 80). See
 "What the shot could not have".
+
+## The racket in the off hand (R7)
+
+`racket: held-by(server, left)` is the whole authoring change. The prop starts the scene
+*in* the hand (no ownership change and no per-frame jump is baked), the motor carries it on
+the left palm's socket for the shot's length, and the episode's script is untouched: the
+serve is struck from the same palm at the same time.
+
+What to check, and with what:
+
+```bash
+node tools/prop-track.mjs episodes/a-badminton/performance.json shuttle   # struck 2.207 s, settled 3.717 s
+python3 -c "import json;f=json.load(open('episodes/a-badminton/performance.json'))['sceneTrack'][0]['motor']['actors']['server'];print(f[0].get('holdsL'),f[0].get('holds'),f[-1].get('holdsL'))"
+```
+
+The second command prints `racket None racket`: the OFF hand carries the racket from frame 0
+to the last frame, and the striking hand never holds it. The off hand's channel is
+`holdsL`/`reachL` in the bake; the renderer solves the drawn left arm onto `reachL`.
+
+**Two limits this shot records.**
+
+1. **No pickup beat.** The shot opens with the racket already in his hand. A bench pickup
+   would add ~3 s of walking to a shot the person accepted, and the strike's time is one of
+   R7's own acceptance terms. The *mechanism* still picks up with the off hand
+   (`prop.pickup(server, obj, {hand: "left"})`), exercised in
+   `packages/core/test/handHold.test.ts` rather than in this shot. If the pickup belongs in
+   frame, it is one authored beat away.
+2. **A motor-driven prop draws at scale 1.** `evaluatePerformance`'s motor path writes
+   `scale: 1` for a prop the bake owns, while the *motor* builds the touch box and the handle
+   socket at the declared stage scale (`prop/racket`'s 340/200 = 1.7). The racket's drawn
+   handle therefore sits ~11 px below the motor's socket. The shuttle has the same mismatch
+   (its accepted 2.4×-real size is the scale-1 drawing); changing it would move the accepted
+   shot, so it is recorded, not fixed here.
 
 ## The force and the drive length
 
