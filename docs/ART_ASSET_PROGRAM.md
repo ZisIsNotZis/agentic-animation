@@ -126,12 +126,16 @@ the server's and its staged y is above his. `python3 -c "import json;print(json.
 4. **The rendition is the acceptance size:** 1280×720, 132 frames, 24 fps, with stills cut
    at the four beats and their identity in `bake-identity.json` beside the video.
 5. **An independent blind reviewer reads the stills and the video at normal viewing size and
-   passes them** — the reviewer is not the package that built the shot.
+   passes them** — the reviewer is not the package that built the shot. **Status: not
+   separately exercised.** The person's own look at the rendition closed the milestone on
+   2026-10-23 (§Roadmap), and this term is recorded as not run rather than as passed; it stays
+   the required term for every later shot, because the next reviewer is not the builder either.
 
-**Who judges what.** The five terms above are the agent's and are checked by observation.
-**Whether a shot reads as badminton is the person's**, answered by looking at the serving
-rendition; R2 (does the bounce read), R3 (does the follow read) and R5 (the players are
-statues) are that same question in pieces and are not put to them as separate questions.
+**Who judges what.** Terms 1–4 are the agent's and are checked by observation. **Whether a shot
+reads as badminton is the person's**, and they answered it for this rendition: accepted, with
+“not very natural” as their observation. R2 (does the bounce read), R3 (does the follow read) and
+R5 (the players are statues) were that same question in pieces, and their answer covers them —
+they are not put to them as separate questions, and the person's rule means they are not chased.
 
 ## Roadmap
 
