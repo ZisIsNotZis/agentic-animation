@@ -487,13 +487,52 @@ def head(fr):
 
 # ---------------------------------------------------------------------------- arms
 
+def shoulder_bridge(fr, side, shoulder):
+    """Skin that carries the deltoid up to the armhole edge of the leotard.
+
+    A sleeveless leotard leaves the deltoid and the trapezius bare, so the armhole
+    edge - the torso's own upper outline - is the seam the skin has to reach. The
+    deltoid socket alone is a circle of radius 17.5 centred on the shoulder joint and
+    cannot reach that edge without swelling into a ball, so the shoulder is drawn as
+    the bare skin a sleeveless cut leaves: it follows the torso's upper outline
+    exactly (the same control points, so the leotard's ink edge is the seam), dives
+    into the deltoid, and closes over the top with the shoulder line from the neck to
+    the acromion. Drawn under the deltoid it leaves no seam; drawn before the torso
+    it is covered along the armhole; drawn after it (the near arm of a turned view)
+    it stops on the armhole edge and covers no cloth.
+
+    Only where a wedge exists: the armhole edge has to stand inboard of the deltoid's
+    centre, otherwise the arm already lies inside the silhouette and the profile's
+    collar covers the shoulder, so there is nothing to bridge.
+    """
+    chain = TORSO_OUTLINE[fr.view]["left" if side == "l" else "right"]
+    p0, p1, p2, p3 = chain[0], chain[1], chain[2], chain[3]
+    # `smooth()`'s first two segments: p0 -> Q p1 -> mid(p1,p2) -> Q p2 -> mid(p2,p3).
+    mid1 = ((p1[0] + p2[0]) / 2.0, (p1[1] + p2[1]) / 2.0)
+    mid2 = ((p2[0] + p3[0]) / 2.0, (p2[1] + p3[1]) / 2.0)
+    cx, cy = shoulder
+    sign = -1.0 if side == "l" else 1.0  # screen direction pointing away from the body
+    if (mid1[0] - cx) * sign > 0:
+        return None
+
+    def rel(out, down):
+        return (cx + sign * out, cy + down)
+
+    top = rel(-4.0, -16.0)   # the acromion end of the shoulder line, inside the deltoid
+    dive = [rel(-3.0, 20.0), rel(6.0, 4.0), rel(3.0, -11.0)]
+    d = (f"M {pt(*p0)} Q {pt(*p1)} {pt(*mid1)} Q {pt(*p2)} {pt(*mid2)} "
+         f"L {pt(*dive[0])} L {pt(*dive[1])} L {pt(*dive[2])} L {pt(*top)} Z")
+    return filled(d, SKIN, INK, 1.6)
+
+
 def arm_parts(fr, side):
     """Bare arm out of a sleeveless armhole, ending in a chalk cuff at the wrist.
 
     The leotard is sleeveless, so there is no sleeve to hand the attachment to: the
     bare shoulder cap is an unstroked skin socket buried in the torso, and the elbow
     is buried the same way by the forearm's socket. A limb that abuts its parent
-    instead of overlapping it leaves a background hairline at the junction.
+    instead of overlapping it leaves a background hairline at the junction, so the
+    deltoid is also carried up to the armhole edge by `shoulder_bridge`.
     """
     shoulder = fr.j(f"shoulder_{side}")
     elbow = fr.j(f"elbow_{side}")
@@ -504,7 +543,9 @@ def arm_parts(fr, side):
     band_end = (elbow[0] + (hand[0] - elbow[0]) * 0.95, elbow[1] + (hand[1] - elbow[1]) * 0.95)
     deltoid = (shoulder[0] + (elbow[0] - shoulder[0]) * 0.34,
                shoulder[1] + (elbow[1] - shoulder[1]) * 0.34)
-    upper = [socket(shoulder[0], shoulder[1], r_shoulder, SKIN),
+    bridge = shoulder_bridge(fr, side, shoulder)
+    upper = ([bridge] if bridge is not None else []) + [
+             socket(shoulder[0], shoulder[1], r_shoulder, SKIN),
              limb(shoulder, elbow, r_shoulder, r_arm, SKIN, INK, 1.6),
              # One shading arc on the deltoid, inboard of the outline: a line down
              # the middle of a limb reads as a construction mark, not as the limb.
