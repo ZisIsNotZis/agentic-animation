@@ -233,6 +233,11 @@ bounce" is its 6 fps sample stepping over two hops of 62 px and 16 px.
      shuttle (striking palm) with their planes ordered per D1; (d) the single-hold call sites
      keep their meaning for every other episode — the full suite green, no other episode's
      bake numbers moved.
+   - **Regression surface, counted so the next holder does not re-derive it:** six episodes
+     author `prop.pickup` / `prop.hold` / `prop.release` — `a-badminton`,
+     `ai-work-adventure`, `m5-acting`, `m6-film`, `m7-transfer`, `showcase-props` — and the hold
+     model is shared by legacy and native bodies, so those six are the episodes whose bake
+     numbers must not move.
    - **Mechanism the package must add:** a per-hand hold (`holding_l`/`holding_r`, or
      `holding: {hand, prop}`) with `carryHandAt`, `clearHandHold` and the grip channel
      parameterised by that hand; a binding that can name the hand (today a binding is
