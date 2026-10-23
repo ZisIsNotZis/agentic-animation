@@ -84,7 +84,8 @@ owns the capability contract, the file ownership and the wave order **and owns t
 acceptance**: slice A's serve was accepted by the person on 2026-10-23 at rendition
 `artifacts/sa1-d1p-2026-10-23/`, with their “not very natural” recorded there as an
 observation, not a defect; R7 (the racket in the server's off hand) then landed at rendition
-`artifacts/sa1-r7-2026-10-23/` with the serve's own events unmoved. M8 is planned,
+`artifacts/sa1-r7-2026-10-23/` with the serve's own events unmoved; R8 (the return's
+interception) is the next package and carries its measured baseline in §Roadmap. M8 is planned,
 not delivered. The M7 review also established the decisive blocker:
 the legacy puppet figures (`aqiang`, `elder`, `awei`, `liu`, `lin`) have no
 articulated posture, so any contact beat with them lifts the prop while the figure

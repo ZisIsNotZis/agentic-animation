@@ -273,15 +273,49 @@ bounce" is its 6 fps sample stepping over two hops of 62 px and 16 px.
      `reachLeft`, the proposal's `palm-contact-l`/socket check on the drawn LEFT arm, and
      staging's `held-by(actor[, hand])`. Naming no hand preserves every pre-R7 bake exactly
      (measured on the five other prop-holding episodes, digest-identical).
-8. **R8 · the rally's own package: a contact mechanism that widens the 0.09 s window, and
-   the elevation question behind it** — **open, and now the next package on this node's own
-   schedule.** Its blocker is gone: a second hit is racket-on-shuttle, R7 has landed (the
-   racket is in the off hand), so the mechanism R8 buys has something to strike. What still
-   stands from the earlier reasoning is the measurement, not the order: the 0.09 s contact
-   window is a timing fact no eye can judge in a shot whose first stroke has only just
-   started to read, so R8's acceptance has to be a bake-level observation (a sustained
-   contact span plus a second `projectile.struck`), never a viewing verdict. Nothing the
-   person asked for depends on R8, and the serve never waited for it.
+8. **R8 · the rally's own package: the return's interception, so a second hit stops being
+   a two-frame accident, and the elevation question behind it** — **open; the next package,
+   its contract written here, not started.** R7 unblocked it (the racket is in the off
+   hand). It did **not** land in R7's session, and the reason is written here so the next
+   holder starts on evidence: widening the window is an *interception solve*, not a
+   tolerance change, and the measurement below shows why.
+   - **Goal:** a receiver's hand/racket is placed where the descending shuttle *will* be,
+     so a return lands from a cue that a person could author, instead of only from the one
+     beat the current chase happens to hit.
+   - **Baseline, measured 2026-10-23 on EP's fixture** (`nativePair.test.ts`:
+     server x 640, receiver x 1500, floor 691, serve `force 1.2, forceSec 0.25`, serve struck
+     1.407 s, shuttle launched 40° and descending through hand height): across cues
+     **1.90 / 1.96 / 2.00 / 2.04 / 2.08 / 2.12 / 2.16 / 2.20 / 2.26 / 2.32 / 2.40 s**, exactly
+     **one** (2.12 s) produces a second `projectile.struck` (2.218 s). The others fail in
+     two classes: a plain `strike missed` (the hand never touches — at 2.16 s the hand
+     arrives at `(1505,389)` at 2.375 s while the shuttle passed `(1513,427)` at 2.25 s and
+     bounced), and `whole-body proposal exhausted` on `joint-rate/elbow_r` or
+     `segment-angle-rate/hand_r` (the chase swings the native arm faster than 6 px / 7° per
+     substep). **The shuttle is inside the hand circle for ~0.07 s; inside the arm's 137 px
+     envelope for ~0.39 s.** The mechanism must buy the difference.
+   - **Boundary (not-doing):** no authored elevation or force change to the serve, no change
+     to the serve's numbers, no new DSL for a rally (one procedure, not a script language),
+     no tolerance widening in `wholeBodyProposal`, no re-polish of the accepted serve, and
+     no publication or spending.
+   - **Acceptance, term by term:** (a) the cue grid above yields a second
+     `projectile.struck` for **at least six of the eleven cues** (a hand-authorable window,
+     ≥ 0.25 s wide), with empty diagnostics on each; (b) every failure that remains names
+     its class (`strike missed` or a named rate), never a NaN or a freeze; (c) the serve's
+     own events stay struck 1.407 s on the same arc and the accepted episode's shuttle
+     numbers do not move; (d) the full suite green and no other episode's bake digest
+     changed.
+   - **Mechanism the package is expected to add (a hypothesis, to be proven or replaced):**
+     an *interception* aim for the push drive on a projectile target — the hand is placed on
+     the ballistic path at the arrival time the reach allows (`y(t) = y0 + vy t + ½ g t²`,
+     solved against the arm envelope and the walk), and then **sweeps with the flight** so
+     the overlap is the closing speed (697 → ~217 px/s) rather than the hand standing in
+     the path. If the sweep does not buy the window, the alternative is a declared `receive`
+     window during which contact-to-projectile is judged against the hand's swept segment.
+     The first thing the package measures is the dispatch, not the code.
+   - **Why it is not a viewing verdict:** the 0.09 s window is a timing fact no eye can
+     judge. R8's acceptance is bake-level; the person judges whether a rally *reads* only
+     after a shot carries one.
+   - **Nothing the person asked for depends on R8**, and the serve never waited for it.
 
 ## The repair workset (dispatched 2026-10-21; R1, R4 and R6 are in the tree)
 
@@ -324,8 +358,8 @@ best as it can and next step” — relayed to this node by root, which is where
 quoted and where their “not very natural” stays an observation rather than a work item
 (§Roadmap, milestone S-A1). Closed by it: milestone S-A1, and the three depth defects R6
 carried. **Closed since:** R7 (the racket in the server's off hand) — its four terms are met in
-§Roadmap and its rendition is `artifacts/sa1-r7-2026-10-23/`. **Not closed:** R8 (the rally's
-contact mechanism, then elevation behind it), and the
+§Roadmap and its rendition is `artifacts/sa1-r7-2026-10-23/`. **Not closed:** R8 (the return's interception — its
+contract and its measured baseline are in §Roadmap; it needs its own session), and the
 serve's own remaining limits recorded in `episodes/a-badminton/README.md` (no authored toss, one
 strike elevation, the shuttle at 2.4× a real shuttlecock because its drawn size and the palm's
 contact body are one declaration).
