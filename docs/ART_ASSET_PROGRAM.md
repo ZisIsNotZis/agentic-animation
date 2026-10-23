@@ -14,11 +14,11 @@ the landed packages' mail files) is in [tickets/SLICE-A-ENGINE](tickets/SLICE-A-
 
 - **A · badminton.** Two native figures in the hall; the shuttle is a real projectile
   with gravity and a bounce; contact is instantaneous at the hit; the camera tracks the
-  shuttle. **Narrowed 2026-10-21 at `assumed`:** a serve, its 40° arc, its bounce and a
-  following camera — not a rally. Root recommended the narrowing and no answer has come
-  back; it is an agent fact and is never quoted as the person's (see §Roadmap). One 40°
-  elevation, a settle 1440–1560 px downrange, no authored toss and a 0.09 s contact
-  window narrowed it.
+  shuttle. **There is no fork between "a serve" and "a rally": the serve is on both
+  paths**, so the serve is built first — it is the only part judgeable by eye today — and
+  a rally is the shot that extends it later (see §Roadmap, R7/R8). One 40° elevation, a
+  settle 1440–1560 px downrange, no authored toss and a 0.09 s contact window bound the
+  serve's current reach.
 - **B · giant swing on a high bar.** A different body type rotates a full circle about a
   fixed bar while a second figure reacts; the support is the bar, not the ground.
 - **C · pouring tea.** A host tilts a pot into a cup; the tilt is authored intent and the
@@ -93,6 +93,37 @@ carry their bake identity, and an independent viewer review passes at normal vie
 size. **The reviewer may not be the package that built the shot** — a builder grading its
 own frames is the failure this rule exists for.
 
+## The serve's acceptance, term by term
+
+**Goal.** The shot is a badminton serve: the server strikes the shuttle out of his own
+hand over the net, and it comes down on the far court.
+
+**Boundary (the not-doing).** No rally, no second hit, no authored toss, no authorable
+elevation, no racket-in-hand mechanism, no publication or spending. A rally's work is not
+a prerequisite of this shot and does not hold it.
+
+**Acceptance, term by term — each decidable by a command, not by taste.**
+
+1. **The far player is drawn one court-depth back:** the receiver's drawn scale is 0.82 of
+the server's and its staged y is above his. `python3 -c "import json;print(json.load(open('episodes/a-badminton/performance.json'))['sceneTrack'][0]['staging']['actors'])"`
+   prints `receiver scale 0.722 … server scale 0.88`.
+2. **The shuttle crosses the net:** in the frames after the strike the shuttle paints on a
+   plane the net occludes, i.e. its composited plane is below the net's declared 45, while
+   in the hand it stands on the server's plane 50. The rendered frame at the mesh band shows
+   mesh over shuttle; `data-prop-plane` in the frame markup carries the number.
+3. **The flight is physical:** `node tools/prop-track.mjs episodes/a-badminton/performance.json shuttle`
+   prints one `projectile.struck` (2.207 s, `[-533,-447]`), one `projectile.settled`
+   (3.717 s, `[476.56, 691]`), and the settled y is the set's floor line 691 ±1 px.
+4. **The rendition is the acceptance size:** 1280×720, 132 frames, 24 fps, with stills cut
+   at the four beats and their identity in `bake-identity.json` beside the video.
+5. **An independent blind reviewer reads the stills and the video at normal viewing size and
+   passes them** — the reviewer is not the package that built the shot.
+
+**Who judges what.** The five terms above are the agent's and are checked by observation.
+**Whether a shot reads as badminton is the person's**, answered by looking at the serving
+rendition; R2 (does the bounce read), R3 (does the follow read) and R5 (the players are
+statues) are that same question in pieces and are not put to them as separate questions.
+
 ## Roadmap
 
 **Milestone S-A1 — slice A is accepted on its own evidence:** `episodes/a-badminton/`
@@ -101,19 +132,13 @@ and a fresh sight-capable reviewer passes the cut stills at normal viewing size.
 verdict is the observation that decides it; `check`, `make`, the named cues and the
 bake-identified stills are its preconditions.
 
-**The narrowing is an assumed decision, not a lost goal — and not the person's answer.**
-Corrected by root on 2026-10-21, because this paragraph previously recorded the scope
-question as answered. It is not: root recommended *ship the serve* and raised the question
-to the person the same day, and **no answer has come back**. The question is not filed in
-this tree and this document carries no pointer to it. The sentence is an agent fact of the assumed kind and must never be quoted as
-the person's word.
-
-What is true instead: S-A1 proceeds on root's recommendation because it is reversible and
-because a reviewer's verdict on one real moving shot is worth more than an argument about a
-second hit. If the person says "it has to be a rally", one contact-mechanism package enters
-ahead of the episode and the elevation question opens with it; nothing that has landed is
-lost. The rally returns as its own package when a contact mechanism widens the two-frame
-window, and nothing has been abandoned.
+**The serve-versus-rally question is withdrawn, and not by this node.** Root relayed on
+2026-10-23 that the person withdrew the fork: a full rally needs the serve too, so "serve
+only, or rally" was never a choice — the serve is on both paths. Asking it spent their
+attention on a choice that did not exist. This node did not hear the person say it and
+holds no file of it. Consequence, recorded so it is not re-litigated: the serve is built
+and is not held behind a rally decision, and the rally's extra work is a **scheduling**
+question inside this programme rather than a question for the person.
 
 Packages, in this order:
 
@@ -151,7 +176,38 @@ is a defect (`avoidActorCollisions` writes the actor y-clamp into the projectile
 so the shuttle bounces and rests 41–56 px above the line it started on), and ER's "no
 bounce" is its 6 fps sample stepping over two hops of 62 px and 16 px.
 
-## The repair workset (dispatched 2026-10-21; R1 and R4 are in the tree)
+6. **R6 · the depth defects review 3 named, plus the one they exposed, and the serving
+   rendition** — **landed 2026-10-23** (`idle-compute`, one session): (a) the `background`
+   *entrance* now carries the 0.82 court-depth scale the same-named `setup` already carried,
+   so the receiver draws at 0.722 against the server's 0.88 and the two players stop reading
+   as equidistant; (b) a native interaction prop composites on its holder's plane while held
+   (50, the server) and on its own staged plane once free (35, below the net's declared 45),
+   instead of at a flat `zIndex` 50 that painted it over the net in every frame; (c) **the
+   defect that made (b) invisible:** the actors' declared planes never reached the drawing.
+   `StagedActor.z` (receiver 40, server 50) was thrown away twice — `compiledPlacements`
+   dropped it and `semanticPlacement` rebuilt every placement out of `at/scale/rotation/flip`
+   — so both players drew at plane 0 and the net at 45 painted over both, which is review 2's
+   "every actor draws above the set" still true under the D1 wrapper. `PerformancePlacement`
+   now carries `z` and the evaluated actor takes it. All three are pinned in tests
+   (`core/test/staging.test.ts`, `studio/test/figureArtwork.test.ts`). Re-rendered at
+   **1280×720** into `episodes/a-badminton/artifacts/sa1-d1p-2026-10-23/`; the bake is
+   untouched — struck 2.207 s `[-533,-447]`, settled 3.717 s `[476.56, 691]`. The serving
+   rendition is what the person's badminton judgment is taken on.
+7. **R7 · the racket in the server's hand** — **open, next, and mine to schedule.** Review 3
+   found no racket in either player's hand (the racket is `on(bench)`); the motor holds one
+   prop per actor, so a hand that strikes the shuttle cannot also carry the racket. This is
+   the serve's remaining readability mechanism, not a rally's. It waits on the serving
+   rendition's verdict rather than racing it: if the shot passes without a racket, the
+   mechanism is not owed.
+8. **R8 · the rally's own package: a contact mechanism that widens the 0.09 s window, and
+   the elevation question behind it** — **open, placed after R7 and after the serve's
+   verdict.** Scheduling is this node's, so the reason is written here: a second hit is
+   racket-on-shuttle, so the mechanism R8 buys has nothing to strike until R7 exists; and
+   the 0.09 s window is a timing fact no eye can judge in a shot whose first stroke has not
+   yet read. Nothing the person asked for depends on R8, and the serve was never waiting
+   for it.
+
+## The repair workset (dispatched 2026-10-21; R1, R4 and R6 are in the tree)
 
 Each row is a package with its own acceptance. R1 is a defect; R2 and R3 are design and
 need root's word; R4 and R5 are asset and animation work.
@@ -179,11 +235,21 @@ carry the reading, and buying them first is what "time is the scarce thing" asks
 
 **Why it is not root's taste call.** An `assumed` decision, decided by root, not quoted from the person: under a convention where no serve can cross the net, the thing to be tasted is not in the frame, so the question cannot be put as a taste question at all. Accepting the flat 2D convention would have answered a composition question by removing its subject.
 
-**What is not presumed.** R2 (does the bounce read), R3 (the follow locks) and R5 (the players are statues) still wait for the person.
+**What is not presumed.** R2 (does the bounce read), R3 (the follow locks) and R5 (the players
+are statues) are not answered here. They are one question — does the shot read as badminton —
+put once, to the person, on the serving rendition.
 
 ## Current facts
 
-**D1's second half landed (2026-10-21, `264a09a`); its review returned FAIL (2026-10-23).** Every actor paints on its own declared plane, so the hall's net stands behind the near player and in front of the far one — and the blind review of `artifacts/sa1-d1w-2026-10-21/` (`aad0eadc`, [tickets/S-A1-REVIEW-3](tickets/S-A1-REVIEW-3.md)) still refuses the shot. Two defects are named there with their lines of code and are nobody's taste call: the `entrance: background` scale (0.82) is never applied, so both players draw at 0.88 and read as equidistant; and `PerformanceEpisode.tsx:152` paints a palm-bound prop at `zIndex` 50, above the net's plane 45, so the shuttle cannot cross the net. The rendition is 852×480 because its render command carried `--scale 0.6667` on a manifest that was already 1280 wide. Fixing those two and re-rendering at 1280 is the next package; it is not started, and the 30-minute spend of 2026-10-23 did not reach it. R2, R3 and R5 remain the person's.
+**The depth order is closed at R6 (2026-10-23).** Three defects of one family were found and
+fixed, not argued about: the `background` entrance's 0.82 scale never reached the drawn actor;
+a palm-bound prop painted at a flat `zIndex` 50 above the net's plane; and — found while
+closing the second — the actors' own declared planes (40 and 50) were dropped before the DOM,
+so both players drew at plane 0 under the net at 45. The stills at
+`episodes/a-badminton/artifacts/sa1-d1p-2026-10-23/` are the first at 1280×720. What a
+readable shot now needs is no longer a depth question: it is **R7, the racket in the server's
+hand**, and then the person's own verdict on whether the shot reads as badminton (R2, R3 and
+R5 are pieces of that one question, not separate ones for them).
 
 **Where slice A stands (2026-10-21):** engine landed, episode landed, first review returned
 `NOT SATISFIED`; the repair workset was then dispatched and **R1 landed** (`bfa837d`, a

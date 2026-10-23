@@ -100,3 +100,22 @@ test('canonical asset projection preserves artwork and chooses its native skelet
   assert.equal(actor.crouch,.75,'historical compiled branch retains baked crouch');
   assert.deepEqual(evaluatePerformance(compiled,10),frame,'seek-safe replay');
 });
+
+test('a native object composites on its holder plane while held and on its staged plane once free',async () => {
+  // S-A1 review 3, defect 2: a flat `zIndex: 50` on the native-interaction-prop
+  // layer painted every palm-bound object above the net's declared plane 45, so
+  // the served shuttle drew over the net in every frame. The plane is now the
+  // holder's while it is in that hand and the object's own staged plane after,
+  // and the gripping hand is one plane above the object it closes on.
+  const artwork=await artworkFixture();
+  const manifest={video:{width:1280,height:720,fps:24},durationInFrames:24,actors:[{id:'near',artwork,skeleton:artwork.views.front.skeleton,placement:{at:[820,650],scale:.7},z:50},{id:'far',artwork,skeleton:artwork.views.front.skeleton,placement:{at:[420,600],scale:.7},z:40}],props:[{id:'shuttle',type:'thermos',placement:{at:[820,600],scale:.4},z:35}],bindingConstraints:[{object:'shuttle',holder:'near',startFrame:0,endFrame:23}]} as unknown as PerformanceManifest;
+  const free=evaluatePerformance(manifest,0);
+  assert.equal(free.actors.find((a)=>a.id==='near')!.z,50);
+  const freeHtml=renderToStaticMarkup(React.createElement(PerformanceFrame,{manifest,state:free}));
+  assert.match(freeHtml,/data-layer="native-interaction-props" data-prop-plane="35"/,"a free object keeps its staged plane, below the net's 45");
+  assert.doesNotMatch(freeHtml,/data-layer="native-contact-hand"/,'no hand is redrawn over a free object');
+  const held={...free,actors:free.actors.map((actor)=>actor.id==='near'?{...actor,holds:'shuttle'}:actor)};
+  const heldHtml=renderToStaticMarkup(React.createElement(PerformanceFrame,{manifest,state:held}));
+  assert.match(heldHtml,/data-layer="native-interaction-props" data-prop-plane="50"/,'a held object sits on its holder plane, not above a declared set depth');
+  assert.match(heldHtml,/data-layer="native-contact-hand" data-actor-plane="51"/,'the gripping hand is one plane above the object it closes on');
+});

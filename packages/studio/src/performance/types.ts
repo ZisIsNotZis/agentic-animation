@@ -16,6 +16,9 @@ export interface PerformancePlacement {
   scale?: number;
   rotation?: number;
   flip?: boolean;
+  /** Declared compositing plane (D1). Carried from staging so a declared set
+   * depth can stand between two actor planes; absent means "no plane named". */
+  z?: number;
 }
 
 export interface SemanticPlacement {

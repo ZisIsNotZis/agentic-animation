@@ -132,3 +132,21 @@ test("declared safeActorArea clamps actor placement instead of the 10%-90% heuri
     staged.actors,
   );
 });
+
+test("a background entrance stages the body a court-depth further back, at 0.82 scale", () => {
+  // S-A1 review 3, finding 8: the far player declared `entrance: background`
+  // and was drawn at the near player's 0.88, so two players at different court
+  // depths read as equidistant. The entrance carries the same depth scale the
+  // same-named `setup` carries; the declared `setup` still wins where both are
+  // present, so no existing declaration moves.
+  const pair = stageScene({location, actors: [{id: "near", entrance: "center"}, {id: "far", entrance: "background"}]});
+  const near = pair.actors.near!.scale;
+  assert.equal(pair.actors.far!.scale, Number((near * 0.82).toFixed(3)));
+  assert.ok(pair.actors.far!.at[1] < pair.actors.near!.at[1], "the background body stands higher on the floor plane");
+  const posture = stageScene({location, actors: [{id: "seated", entrance: "background", setup: "seated"}, {id: "near", entrance: "center"}]});
+  assert.equal(posture.actors.seated!.scale, Number((near * 0.82).toFixed(3)), "a posture setup does not cancel the entrance's depth");
+  const setupWins = stageScene({location, actors: [{id: "deep", entrance: "foreground", setup: "background"}, {id: "near", entrance: "center"}]});
+  assert.equal(setupWins.actors.deep!.scale, Number((near * 0.82).toFixed(3)), "a declared depth setup wins over the entrance");
+  const foreground = stageScene({location, actors: [{id: "front", entrance: "foreground"}, {id: "near", entrance: "center"}]});
+  assert.equal(foreground.actors.front!.scale, Number((near * 1.05).toFixed(3)));
+});

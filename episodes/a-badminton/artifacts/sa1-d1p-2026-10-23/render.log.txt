@@ -1,0 +1,122 @@
+npm notice run agentic-animation@0.0.0 anim
+npm notice run tsx packages/cli/src/index.ts render-yaml episodes/a-badminton/episode.yml
+INFO  [yaml-audio] prepared 2 spoken take(s): serve.1.0, serve.3.0; reused 0; unmatched 0 {"provider":"edge","profile":"storyteller","artifactPath":"/home/z/vibe/agentic-animation/episodes/a-badminton/audio/yaml-audio.json"}
+yaml-audio: wrote 2 take(s); reused 0; unmatched 0 → /home/z/vibe/agentic-animation/episodes/a-badminton/audio/yaml-audio.json
+make: wrote /home/z/vibe/agentic-animation/episodes/a-badminton/performance.json (5.500s)
+[make] sudden-move warning: shuttle jumps 33px at frame 63 (829,374 -> 806,399) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 34px at frame 64 (806,399 -> 785,426) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 37px at frame 65 (785,426 -> 765,456) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 40px at frame 66 (765,456 -> 744,490) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 47px at frame 67 (744,490 -> 722,531) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 51px at frame 68 (722,531 -> 700,577) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 55px at frame 69 (700,577 -> 678,627) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 59px at frame 70 (678,627 -> 655,682) — objects must move continuously
+
+Hardware accelerated encoding disabled - "crf" option is not supported with hardware acceleration
+
+Hardware accelerated encoding disabled - "crf" option is not supported with hardware acceleration
+render: 0% (0/132 frames)
+render: 1% (1/132 frames)
+render: 2% (3/132 frames)
+render: 3% (5/132 frames)
+render: 4% (7/132 frames)
+render: 5% (9/132 frames)
+render: 6% (11/132 frames)
+render: 7% (13/132 frames)
+render: 8% (15/132 frames)
+render: 9% (17/132 frames)
+render: 10% (18/132 frames)
+render: 11% (20/132 frames)
+render: 12% (22/132 frames)
+render: 13% (24/132 frames)
+render: 14% (26/132 frames)
+render: 15% (28/132 frames)
+render: 16% (30/132 frames)
+render: 17% (32/132 frames)
+render: 18% (33/132 frames)
+render: 19% (35/132 frames)
+render: 20% (37/132 frames)
+render: 21% (39/132 frames)
+render: 22% (41/132 frames)
+render: 23% (43/132 frames)
+render: 24% (45/132 frames)
+render: 25% (47/132 frames)
+render: 26% (49/132 frames)
+render: 27% (50/132 frames)
+render: 28% (52/132 frames)
+render: 30% (56/132 frames)
+render: 31% (58/132 frames)
+render: 32% (60/132 frames)
+render: 33% (62/132 frames)
+render: 34% (64/132 frames)
+render: 35% (66/132 frames)
+render: 36% (67/132 frames)
+render: 37% (68/132 frames)
+render: 38% (70/132 frames)
+render: 39% (71/132 frames)
+render: 40% (72/132 frames)
+render: 41% (74/132 frames)
+render: 42% (75/132 frames)
+render: 43% (76/132 frames)
+render: 44% (78/132 frames)
+render: 45% (79/132 frames)
+render: 46% (81/132 frames)
+render: 47% (83/132 frames)
+render: 48% (83/132 frames)
+render: 49% (85/132 frames)
+render: 50% (87/132 frames)
+render: 51% (88/132 frames)
+render: 52% (89/132 frames)
+render: 53% (91/132 frames)
+render: 54% (92/132 frames)
+render: 55% (93/132 frames)
+render: 56% (95/132 frames)
+render: 57% (97/132 frames)
+render: 59% (99/132 frames)
+render: 60% (101/132 frames)
+render: 61% (102/132 frames)
+render: 62% (104/132 frames)
+render: 63% (105/132 frames)
+render: 64% (106/132 frames)
+render: 65% (108/132 frames)
+render: 66% (109/132 frames)
+render: 67% (110/132 frames)
+render: 68% (111/132 frames)
+render: 69% (113/132 frames)
+render: 70% (115/132 frames)
+render: 71% (115/132 frames)
+render: 72% (117/132 frames)
+render: 73% (119/132 frames)
+render: 74% (120/132 frames)
+render: 75% (122/132 frames)
+render: 76% (123/132 frames)
+render: 77% (124/132 frames)
+render: 78% (126/132 frames)
+render: 79% (127/132 frames)
+render: 80% (129/132 frames)
+render: 81% (130/132 frames)
+render: 82% (132/132 frames)
+render: 88% (132/132 frames)
+render: 94% (132/132 frames)
+
+Hardware accelerated encoding disabled - "crf" option is not supported with hardware acceleration
+
+Hardware accelerated encoding disabled - "crf" option is not supported with hardware acceleration
+render: 100% (132/132 frames)
+Svt[info]: -------------------------------------------
+Svt[info]: SVT [version]:	SVT-AV1 Encoder Lib v1.7.0
+Svt[info]: SVT [build]  :	GCC 13.2.0	 64 bit
+Svt[info]: -------------------------------------------
+Svt[info]: Number of logical cores available: 12
+Svt[info]: Number of PPCS 140
+Svt[info]: [asm level on system : up to avx2]
+Svt[info]: [asm level selected : up to avx2]
+Svt[info]: -------------------------------------------
+Svt[info]: SVT [config]: main profile	tier (auto)	level (auto)
+Svt[info]: SVT [config]: width / height / fps numerator / fps denominator 		: 1280 / 720 / 24 / 1
+Svt[info]: SVT [config]: bit-depth / color format 					: 8 / YUV420
+Svt[info]: SVT [config]: preset / tune / pred struct 					: 8 / PSNR / random access
+Svt[info]: SVT [config]: gop size / mini-gop size / key-frame type 			: 240 / 32 / key frame
+Svt[info]: SVT [config]: BRC mode / rate factor 					: CRF / 33 
+Svt[info]: -------------------------------------------
+render-yaml: wrote /home/z/vibe/agentic-animation/episodes/a-badminton/dist/a-badminton.mp4 (132 frames)

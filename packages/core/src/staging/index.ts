@@ -186,10 +186,23 @@ function setupY(setup: string | undefined): number {
   return 0.64;
 }
 
-function actorFootprintScale(actor: ActorSetup, scale: number): number {
+/** The court-depth scale an actor is drawn at (D1). A `background` or
+ * `foreground` *entrance* stages the body a court-depth further back or
+ * forward, exactly as the `setup` of the same name does; declaring one and
+ * not the other left the far player drawn at the near player's size, which
+ * reads as two players standing side by side (S-A1 review 3, finding 8).
+ * The declared `setup` wins where both name a depth. */
+function setupDepthScale(actor: ActorSetup): number {
   const setup = actor.setup?.toLowerCase();
-  const setupScale = setup === "background" || setup === "receding" ? 0.82 : setup === "foreground" ? 1.05 : 1;
-  return scale * setupScale * (actor.prominence === "primary" ? 1.05 : actor.prominence === "supporting" ? 0.94 : 1);
+  if (setup === "background" || setup === "receding") return 0.82;
+  if (setup === "foreground") return 1.05;
+  if (actor.entrance === "background") return 0.82;
+  if (actor.entrance === "foreground") return 1.05;
+  return 1;
+}
+
+function actorFootprintScale(actor: ActorSetup, scale: number): number {
+  return scale * setupDepthScale(actor) * (actor.prominence === "primary" ? 1.05 : actor.prominence === "supporting" ? 0.94 : 1);
 }
 
 function targetNames(focus: StagingFocus | undefined): string[] {
@@ -360,12 +373,10 @@ export function stageScene(request: StagingRequest, options: StagingOptions = {}
       ? (actorPoints[orderedActors[1 - orderedActors.indexOf(actor)]!.id]![0] > actorPoints[actor.id]![0] ? 1 : -1)
       : actor.entrance === "left" ? 1 : actor.entrance === "right" ? -1 : 1;
     const facing = facingFor(actor, actorPoints, {}, fallbackFacing);
-    const setup = actor.setup?.toLowerCase();
-    const setupScale = setup === "background" || setup === "receding" ? 0.82 : setup === "foreground" ? 1.05 : 1;
     stagedActors[actor.id] = {
       id: actor.id,
       at: actorPoints[actor.id]!,
-      scale: round(scale * setupScale * (actor.prominence === "primary" ? 1.05 : actor.prominence === "supporting" ? 0.94 : 1)),
+      scale: round(scale * setupDepthScale(actor) * (actor.prominence === "primary" ? 1.05 : actor.prominence === "supporting" ? 0.94 : 1)),
       z: 40 + orderedActors.indexOf(actor) * 10,
       facing,
       flip: actor.flip ?? false,

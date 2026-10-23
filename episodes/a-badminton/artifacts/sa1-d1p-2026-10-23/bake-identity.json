@@ -1,0 +1,58 @@
+{
+  "episode": "episodes/a-badminton/episode.yml",
+  "episodeSha256": "78bfdefea7d2340305cdfc139725c1deb03f95580be30798db85041cc8519659",
+  "video": "episodes/a-badminton/artifacts/sa1-d1p-2026-10-23/episode.mp4",
+  "videoSha256": "f2539bda2a773b034263de318a546a24fdf3863dc60b9adf3578d46165e656da",
+  "frameCount": 132,
+  "durationSec": 5.5,
+  "fps": 24,
+  "size": [
+    1280,
+    720
+  ],
+  "renderedFrom": "the working tree at the R6 commit: the background entrance's 0.82 depth scale, one plane per actor (receiver 40, server 50, net 45) carried through the placement, and a native object on its holder's plane while held and on its own staged plane (shuttle 35) once free",
+  "renderCommand": "npm run anim -- render-yaml episodes/a-badminton/episode.yml",
+  "bakeCommand": "npm run anim -- make episodes/a-badminton/episode.yml",
+  "rebuild": "bash episodes/a-badminton/artifacts/sa1-d1p-2026-10-23/verify.sh",
+  "stillsCommand": "ffmpeg -ss <sec> -i episode.mp4 -frames:v 1 stills/t<sec>.png",
+  "stills": [
+    {
+      "name": "t2.208.png",
+      "sec": 2.208,
+      "beat": "the strike: the shuttle leaves the palm; held plane 50, in front of the net"
+    },
+    {
+      "name": "t2.375.png",
+      "sec": 2.375,
+      "beat": "the arc apex over the net"
+    },
+    {
+      "name": "t2.500.png",
+      "sec": 2.5,
+      "beat": "the crossing: free plane 35, the net's tape passes in front of the shuttle"
+    },
+    {
+      "name": "t2.917.png",
+      "sec": 2.917,
+      "beat": "the first floor contact"
+    }
+  ],
+  "setLayers": "net declared depth 45 between the receiver 40 and the server 50; receiver staged at the background entrance (scale 0.722 against the server's 0.88)",
+  "events": {
+    "struck": {
+      "at": 2.207,
+      "velocity": [
+        -533,
+        -447
+      ]
+    },
+    "settled": {
+      "at": 3.717,
+      "position": [
+        476.56,
+        691
+      ]
+    }
+  },
+  "motorDiagnostics": "none; make prints seven expected sudden-move lines on the descent (frames 64-70), the bounce's physics, recorded in episodes/a-badminton/README.md"
+}

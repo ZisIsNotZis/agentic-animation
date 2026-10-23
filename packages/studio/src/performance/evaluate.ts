@@ -713,6 +713,9 @@ function semanticPlacement(
       scale: numberOr(direct.scale, 1),
       rotation: numberOr(direct.rotation, 0),
       flip: direct.flip === true,
+      // A resolved placement carries the declared plane too (D1): dropping it
+      // here drew every staged actor at plane 0, under a net that names 45.
+      ...(direct.z === undefined ? {} : {z: direct.z}),
     };
   }
   const semantic = placement && typeof placement === "object" && "mark" in placement ? placement : undefined;
@@ -736,6 +739,7 @@ function semanticPlacement(
     scale: numberOr(mark.scale, 1) * numberOr(semantic?.scale, 1),
     rotation: numberOr(mark.rotation, 0),
     flip: mark.flip === true,
+    ...(mark.z === undefined ? {} : {z: mark.z}),
   };
 }
 
@@ -970,7 +974,10 @@ function actorState(
     ...(actor.artwork === undefined ? {} : {artwork: actor.artwork, fps: numberOr(manifest.video?.fps,24)}),
     ...(handRadius === undefined ? {} : {handRadius: Math.round(handRadius * 100) / 100}),
     ...(orientation === undefined ? {} : {orientation}),
-    z: numberOr(actor.z, 0),
+    // The declared plane travels with the placement: a staging that puts two
+    // actors at 40 and 50 is what lets a set layer at 45 stand between them, and
+    // dropping it here drew both players at plane 0 with the net over both.
+    z: numberOr(actor.z, numberOr(placement?.z, 0)),
     present: lifecyclePresent ?? present ?? actor.present !== false,
     ...(lifecyclePose ?? pose ?? actor.pose) === undefined ? {} : {pose: lifecyclePose ?? pose ?? actor.pose},
     expression: evaluatedExpression,
@@ -1639,7 +1646,7 @@ function compiledPlacements(compiled: PerformanceManifest, assets: UnknownRecord
       else if (asRecord(value)) placements[name] = value as PerformancePlacement;
     }
     for (const [id, actor] of Object.entries(scene.staging?.actors ?? {})) {
-      placements[id] = {at: stagePoint([actor.at[0], actor.at[1]], scene.staging, video), scale: stageScale(actor.scale, scene.staging, video), flip: actor.flip};
+      placements[id] = {at: stagePoint([actor.at[0], actor.at[1]], scene.staging, video), scale: stageScale(actor.scale, scene.staging, video), flip: actor.flip, z: actor.z};
     }
     for (const [id, object] of Object.entries(scene.staging?.objects ?? {})) {
       placements[id] = {at: stagePoint([object.at[0], object.at[1]], scene.staging, video), scale: object.scale};
@@ -1665,7 +1672,7 @@ function compiledStateTracks(compiled: PerformanceManifest, actorId: string, fps
     const staged = scene.staging?.actors?.[actorId];
     if (staged) {
       const video = compiled.video ?? {width: 1920, height: 1080};
-      placements.push({frame, placement: {at: stagePoint([staged.at[0], staged.at[1]], scene.staging, video), scale: stageScale(staged.scale, scene.staging, video), flip: staged.flip}});
+      placements.push({frame, placement: {at: stagePoint([staged.at[0], staged.at[1]], scene.staging, video), scale: stageScale(staged.scale, scene.staging, video), flip: staged.flip, z: staged.z}});
     }
     else if (state.placement !== undefined) placements.push({frame, placement: state.placement as PerformancePlacement | SemanticPlacement | string});
     presents.push({frame, present: state.present});

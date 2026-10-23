@@ -77,6 +77,17 @@ export const PerformanceFrame: React.FC<{
     const props = [...state.props].sort((a, b) => a.z - b.z);
     const nativeObjects = nativeInteractionObjectIds(manifest,actors);
     const foregroundProps = props.filter((prop)=>nativeObjects.has(prop.id));
+    // A native object composites on the plane its holder stands on while it is
+    // in that hand, and on its own staged plane once it is free (D1's depth
+    // order, second defect of S-A1 review 3). A flat `zIndex: 50` painted every
+    // palm-bound prop above the net's declared plane 45, so a served shuttle
+    // drew over the net in every frame and could never cross it. `prop.z` is
+    // the staged plane (35 for a `center` object, below the net's 45); 0 means
+    // the manifest declared none, and the historical plane 50 is kept there.
+    const heldPlane = new Map<string,number>();
+    for (const actor of actors) if (actor.artwork && actor.holds) heldPlane.set(actor.holds, actor.z);
+    const propPlane = (prop: {id: string; z: number}): number =>
+        heldPlane.get(prop.id) ?? (prop.z > 0 ? prop.z : 50);
     const subtitle = state.subtitles.at(-1)?.text;
     const sceneVfx = state.vfx.filter((effect) =>
         Array.isArray(effect.targetPosition),
@@ -148,12 +159,18 @@ export const PerformanceFrame: React.FC<{
                         />
                     </div>
                 ))}
+                {/* One plane per native object, and one per gripping hand: an
+                    object in a hand paints on the holder's plane, a free one on
+                    its staged plane, and the hand that closes on it one plane
+                    above it — never a flat plane above a declared set depth. */}
                 {foregroundProps.length ? <>
-                    <div data-layer="native-interaction-props" style={{position:'absolute',inset:0,zIndex:50}}>
-                        {foregroundProps.map((prop)=><PerformanceProp key={prop.id} prop={prop}/>)}
-                    </div>
-                    <div data-layer="native-contact-hands" style={{position:'absolute',inset:0,zIndex:60}}>
-                        {actors.filter((actor)=>actor.artwork&&actor.gripDepth!=="behind"&&(actor.holds||actor.contact)).map((actor)=><PerformanceActor key={actor.id} actor={actor} props={props} handsOnly/>)}
+                    {foregroundProps.map((prop)=>{const plane=propPlane(prop);return <div key={prop.id} data-layer="native-interaction-props" data-prop-plane={plane} style={{position:'absolute',inset:0,zIndex:plane}}>
+                        <PerformanceProp prop={prop}/>
+                    </div>;})}
+                    {/* No `z-index` on this wrapper: it would open a stacking
+                        context and push every hand plane under the actors. */}
+                    <div data-layer="native-contact-hands" style={{position:'absolute',inset:0}}>
+                        {actors.filter((actor)=>actor.artwork&&actor.gripDepth!=="behind"&&(actor.holds||actor.contact)).map((actor)=><div key={actor.id} data-layer="native-contact-hand" data-actor-plane={actor.z+1} style={{position:'absolute',inset:0,zIndex:actor.z+1}}><PerformanceActor actor={actor} props={props} handsOnly/></div>)}
                     </div>
                 </> : null}
                 {/* Declared foreground set layers occlude actors and props (M3). */}
