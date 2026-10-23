@@ -93,6 +93,15 @@ carry their bake identity, and an independent viewer review passes at normal vie
 size. **The reviewer may not be the package that built the shot** — a builder grading its
 own frames is the failure this rule exists for.
 
+**The person's standing rule for this programme, 2026-10-23:** *“we prefer vertical
+improvement, not do everything as best as it can and next step.”* Read as an instruction about
+depth, not about sloppiness: **a layer is accepted at the level where it can be judged, and the
+next cut goes deeper — one layer is not perfected before the one under it is begun.** It binds
+this node's scheduling, so it is checkable: no package is dispatched to improve a shot that has
+already passed its own verdict, and a "not very natural yet" observation is recorded where it
+was made instead of being converted into work. Provenance: root relayed it; the words above are
+the person's, quoted once and not paraphrased elsewhere.
+
 ## The serve's acceptance, term by term
 
 **Goal.** The shot is a badminton serve: the server strikes the shuttle out of his own
@@ -126,11 +135,23 @@ statues) are that same question in pieces and are not put to them as separate qu
 
 ## Roadmap
 
-**Milestone S-A1 — slice A is accepted on its own evidence:** `episodes/a-badminton/`
-bakes and renders a served shuttle, its 40° arc, its bounce and a camera that follows it,
-and a fresh sight-capable reviewer passes the cut stills at normal viewing size. That
-verdict is the observation that decides it; `check`, `make`, the named cues and the
-bake-identified stills are its preconditions.
+**Milestone S-A1 — ACCEPTED 2026-10-23 by the person, on the rendition
+`episodes/a-badminton/artifacts/sa1-d1p-2026-10-23/`.** The shot bakes and renders a served
+shuttle, its 40° arc, its bounce and a camera that follows it; the rendition is the first at
+1280×720 (video sha256 `f2539bda2a773b034263de318a546a24fdf3863dc60b9adf3578d46165e656da`,
+132 frames, 5.5 s, 24 fps; episode `78bfdefe…`), and its four stills carry their identity in
+`bake-identity.json` beside it. `check`, `make` and the named cues were its preconditions and
+are green at the accepting commit's tree.
+
+**The person's words, verbatim, relayed by root on 2026-10-23 — this node did not hear them
+and holds no file of them:** “probably yes, not very natural, but again we prefer vertical
+improvement, not do everything as best as it can and next step.” Read as what it is: an
+**acceptance**, not a qualified one to be earned again, and **“not very natural” is their
+observation, recorded here as theirs and not as a defect to chase.** No polish pass is owed
+on this shot and none is scheduled; the next move is the layer below it, not another pass over
+it. The milestone's independent-reviewer term was **not** separately exercised on this
+rendition — the person's own look is the verdict that closed it, and the rule that a builder
+never grades its own frames still holds for every package under it.
 
 **The serve-versus-rally question is withdrawn, and not by this node.** Root relayed on
 2026-10-23 that the person withdrew the fork: a full rally needs the serve too, so "serve
@@ -193,15 +214,33 @@ bounce" is its 6 fps sample stepping over two hops of 62 px and 16 px.
    **1280×720** into `episodes/a-badminton/artifacts/sa1-d1p-2026-10-23/`; the bake is
    untouched — struck 2.207 s `[-533,-447]`, settled 3.717 s `[476.56, 691]`. The serving
    rendition is what the person's badminton judgment is taken on.
-7. **R7 · the racket in the server's hand** — **open, next, and mine to schedule.** Review 3
-   found no racket in either player's hand (the racket is `on(bench)`); the motor holds one
-   prop per actor, so a hand that strikes the shuttle cannot also carry the racket. This is
-   the serve's remaining readability mechanism, not a rally's. It waits on the serving
-   rendition's verdict rather than racing it: if the shot passes without a racket, the
-   mechanism is not owed.
+7. **R7 · the racket in the server's hand** — **open; the next package, contract written
+   here, not started.** Review 3 found no racket in either player's hand (the racket is
+   `on(bench)`), and the reason is mechanical, not authored: `ActorState.holding` is
+   `string | null` — **one prop per actor** — and the reach model is single-hand, so the hand
+   that strikes the shuttle cannot also carry a racket. The serve's verdict did not make this
+   mechanism unowed: it makes it the next layer down, which is what the person's rule asks for.
+   - **Goal:** the server holds the racket in his non-striking hand from the pickup to the end
+     of the follow-through, while the shuttle is still struck from his palm.
+   - **Boundary (not-doing):** no second hit, no rally timing, no change to the strike's arc,
+     force, elevation or staging; no re-polish of the shot's look; the racket is not animated
+     swinging through the shuttle in this package.
+   - **Acceptance, term by term:** (a) `node tools/prop-track.mjs
+     episodes/a-badminton/performance.json shuttle` prints the same events as at the accepting
+     rendition — struck 2.207 s `[-533,-447]`, settled 3.717 s `[476.56, 691]`; (b) the bake
+     carries a held-racket channel for the off hand and prints no `motor warning:` line;
+     (c) a 1280×720 rendition whose strike still shows both the racket (off hand) and the
+     shuttle (striking palm) with their planes ordered per D1; (d) the single-hold call sites
+     keep their meaning for every other episode — the full suite green, no other episode's
+     bake numbers moved.
+   - **Mechanism the package must add:** a per-hand hold (`holding_l`/`holding_r`, or
+     `holding: {hand, prop}`) with `carryHandAt`, `clearHandHold` and the grip channel
+     parameterised by that hand; a binding that can name the hand (today a binding is
+     `holder`/`object`/`start`/`end` only); and the episode's pickup of `prop/racket` into the
+     off hand. Default hand when none is named must preserve today's behaviour exactly.
 8. **R8 · the rally's own package: a contact mechanism that widens the 0.09 s window, and
-   the elevation question behind it** — **open, placed after R7 and after the serve's
-   verdict.** Scheduling is this node's, so the reason is written here: a second hit is
+   the elevation question behind it** — **open, placed after R7; the serve's verdict is now
+   in and no longer gates it.** Scheduling is this node's, so the reason is written here: a second hit is
    racket-on-shuttle, so the mechanism R8 buys has nothing to strike until R7 exists; and
    the 0.09 s window is a timing fact no eye can judge in a shot whose first stroke has not
    yet read. Nothing the person asked for depends on R8, and the serve was never waiting
@@ -241,15 +280,17 @@ put once, to the person, on the serving rendition.
 
 ## Current facts
 
-**The depth order is closed at R6 (2026-10-23).** Three defects of one family were found and
-fixed, not argued about: the `background` entrance's 0.82 scale never reached the drawn actor;
-a palm-bound prop painted at a flat `zIndex` 50 above the net's plane; and — found while
-closing the second — the actors' own declared planes (40 and 50) were dropped before the DOM,
-so both players drew at plane 0 under the net at 45. The stills at
-`episodes/a-badminton/artifacts/sa1-d1p-2026-10-23/` are the first at 1280×720. What a
-readable shot now needs is no longer a depth question: it is **R7, the racket in the server's
-hand**, and then the person's own verdict on whether the shot reads as badminton (R2, R3 and
-R5 are pieces of that one question, not separate ones for them).
+**Slice A's serve is accepted (2026-10-23), and what that closes is exactly the serve.**
+The person accepted the rendition `artifacts/sa1-d1p-2026-10-23/` in their own words —
+“probably yes, not very natural, but again we prefer vertical improvement, not do everything as
+best as it can and next step” — relayed to this node by root, which is where the words are
+quoted and where their “not very natural” stays an observation rather than a work item
+(§Roadmap, milestone S-A1). Closed by it: milestone S-A1, and the three depth defects R6
+carried. **Not closed by it:** R7 (the racket in the server's hand — the next package, whose
+contract is in §Roadmap), R8 (the rally's contact mechanism, then elevation behind it), and the
+serve's own remaining limits recorded in `episodes/a-badminton/README.md` (no authored toss, one
+strike elevation, the shuttle at 2.4× a real shuttlecock because its drawn size and the palm's
+contact body are one declaration).
 
 **Where slice A stands (2026-10-21):** engine landed, episode landed, first review returned
 `NOT SATISFIED`; the repair workset was then dispatched and **R1 landed** (`bfa837d`, a

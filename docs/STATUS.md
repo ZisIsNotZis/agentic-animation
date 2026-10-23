@@ -80,7 +80,10 @@ plates are gone from the frame, and the head rule no longer applies to person
 shots. The asset programme is the current work: three independent slices (badminton rally,
 bar swing, pouring tea), each with genuinely new native assets — four new figures,
 three new sets, new props — under [ART_ASSET_PROGRAM](ART_ASSET_PROGRAM.md), which
-owns the capability contract, the file ownership and the wave order. M8 is planned,
+owns the capability contract, the file ownership and the wave order **and owns the milestones'
+acceptance**: slice A's serve was accepted by the person on 2026-10-23 at rendition
+`artifacts/sa1-d1p-2026-10-23/`, with their “not very natural” recorded there as an
+observation, not a defect. M8 is planned,
 not delivered. The M7 review also established the decisive blocker:
 the legacy puppet figures (`aqiang`, `elder`, `awei`, `liu`, `lin`) have no
 articulated posture, so any contact beat with them lifts the prop while the figure
