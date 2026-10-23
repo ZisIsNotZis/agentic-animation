@@ -218,8 +218,33 @@ bounce" is its 6 fps sample stepping over two hops of 62 px and 16 px.
    **1280×720** into `episodes/a-badminton/artifacts/sa1-d1p-2026-10-23/`; the bake is
    untouched — struck 2.207 s `[-533,-447]`, settled 3.717 s `[476.56, 691]`. The serving
    rendition is what the person's badminton judgment is taken on.
-7. **R7 · the racket in the server's hand** — **open; the next package, contract written
-   here, not started.** Review 3 found no racket in either player's hand (the racket is
+7. **R7 · the racket in the server's hand** — **LANDED 2026-10-23** (`idle-compute`, one
+   session, no metered calls), rendition `episodes/a-badminton/artifacts/sa1-r7-2026-10-23/`.
+   **The contract it was carried under, kept as written, then the result.** Term by term: **(a)** `node tools/prop-track.mjs episodes/a-badminton/performance.json
+   shuttle` prints struck 2.207 s `[-533,-447]` and settled 3.717 s `[476.56, 691]` — the
+   accepting rendition's events, unmoved; **(b)** the bake carries the off-hand channel
+   (`holdsL`/`reachL` on the server for every frame) and prints no `motor warning:` line;
+   **(c)** the 1280×720, 132-frame rendition shows the shuttle leaving the striking palm and
+   the racket held at the off hand's side in the same frame, the racket on its holder's plane
+   50 in front of the net's 45; **(d)** the five other episodes that author
+   `prop.pickup`/`hold`/`release` were baked before and after the change on the same tree and
+   their motor channels are byte-identical (a digest over every actor frame, prop frame,
+   event and diagnostic). **The mechanism:** `MotorHand` on the intent and on the binding
+   event, a second hold channel on `ActorState` (`off`: bind, carry, release, socket,
+   retract) that never places, offers or strikes, `holdsL`/`reachL` reaching the renderer
+   (`actorPose`'s `reachLeft` solving the left arm onto it, `PerformanceProp`'s held plane
+   and `interactionLayers` including the off-hand prop), the whole-body proposal checking
+   `palm-contact-l` and the handle socket against the LEFT drawn arm, and staging's
+   `held-by(actor[, hand])` which starts a prop in a hand at frame 0. Naming no hand keeps
+   every pre-R7 call site's meaning exactly. **What this package does not carry, recorded so
+   it is not re-derived:** the shot opens with the racket already in hand (a bench pickup
+   would add ~3 s of walking to an accepted shot and move the strike time that term (a)
+   pins); the left-hand *pickup* is exercised by
+   `packages/core/test/handHold.test.ts` rather than by this shot, and putting it in frame
+   is one authored beat away. `episodes/a-badminton/README.md` owns the rendition's limits,
+   including the pre-existing fact that a motor-driven prop is drawn at scale 1 while its
+   declared stage scale sizes the motor's box and socket (the racket's drawn handle sits
+   ~11 px below the socket). Review 3 found no racket in either player's hand (the racket is
    `on(bench)`), and the reason is mechanical, not authored: `ActorState.holding` is
    `string | null` — **one prop per actor** — and the reach model is single-hand, so the hand
    that strikes the shuttle cannot also carry a racket. The serve's verdict did not make this
@@ -242,18 +267,21 @@ bounce" is its 6 fps sample stepping over two hops of 62 px and 16 px.
      `ai-work-adventure`, `m5-acting`, `m6-film`, `m7-transfer`, `showcase-props` — and the hold
      model is shared by legacy and native bodies, so those six are the episodes whose bake
      numbers must not move.
-   - **Mechanism the package must add:** a per-hand hold (`holding_l`/`holding_r`, or
-     `holding: {hand, prop}`) with `carryHandAt`, `clearHandHold` and the grip channel
-     parameterised by that hand; a binding that can name the hand (today a binding is
-     `holder`/`object`/`start`/`end` only); and the episode's pickup of `prop/racket` into the
-     off hand. Default hand when none is named must preserve today's behaviour exactly.
+   - **Mechanism the package added:** a per-hand hold — `MotorHand` on the intent and the
+     binding event, `ActorState.off` (bind, carry, release, socket, retract) beside the
+     right hand's untouched channel, `holdsL`/`reachL` through the bakes into `actorPose`'s
+     `reachLeft`, the proposal's `palm-contact-l`/socket check on the drawn LEFT arm, and
+     staging's `held-by(actor[, hand])`. Naming no hand preserves every pre-R7 bake exactly
+     (measured on the five other prop-holding episodes, digest-identical).
 8. **R8 · the rally's own package: a contact mechanism that widens the 0.09 s window, and
-   the elevation question behind it** — **open, placed after R7; the serve's verdict is now
-   in and no longer gates it.** Scheduling is this node's, so the reason is written here: a second hit is
-   racket-on-shuttle, so the mechanism R8 buys has nothing to strike until R7 exists; and
-   the 0.09 s window is a timing fact no eye can judge in a shot whose first stroke has not
-   yet read. Nothing the person asked for depends on R8, and the serve was never waiting
-   for it.
+   the elevation question behind it** — **open, and now the next package on this node's own
+   schedule.** Its blocker is gone: a second hit is racket-on-shuttle, R7 has landed (the
+   racket is in the off hand), so the mechanism R8 buys has something to strike. What still
+   stands from the earlier reasoning is the measurement, not the order: the 0.09 s contact
+   window is a timing fact no eye can judge in a shot whose first stroke has only just
+   started to read, so R8's acceptance has to be a bake-level observation (a sustained
+   contact span plus a second `projectile.struck`), never a viewing verdict. Nothing the
+   person asked for depends on R8, and the serve never waited for it.
 
 ## The repair workset (dispatched 2026-10-21; R1, R4 and R6 are in the tree)
 
@@ -295,8 +323,9 @@ The person accepted the rendition `artifacts/sa1-d1p-2026-10-23/` in their own w
 best as it can and next step” — relayed to this node by root, which is where the words are
 quoted and where their “not very natural” stays an observation rather than a work item
 (§Roadmap, milestone S-A1). Closed by it: milestone S-A1, and the three depth defects R6
-carried. **Not closed by it:** R7 (the racket in the server's hand — the next package, whose
-contract is in §Roadmap), R8 (the rally's contact mechanism, then elevation behind it), and the
+carried. **Closed since:** R7 (the racket in the server's off hand) — its four terms are met in
+§Roadmap and its rendition is `artifacts/sa1-r7-2026-10-23/`. **Not closed:** R8 (the rally's
+contact mechanism, then elevation behind it), and the
 serve's own remaining limits recorded in `episodes/a-badminton/README.md` (no authored toss, one
 strike elevation, the shuttle at 2.4× a real shuttlecock because its drawn size and the palm's
 contact body are one declaration).

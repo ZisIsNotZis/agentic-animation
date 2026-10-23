@@ -83,7 +83,8 @@ three new sets, new props — under [ART_ASSET_PROGRAM](ART_ASSET_PROGRAM.md), w
 owns the capability contract, the file ownership and the wave order **and owns the milestones'
 acceptance**: slice A's serve was accepted by the person on 2026-10-23 at rendition
 `artifacts/sa1-d1p-2026-10-23/`, with their “not very natural” recorded there as an
-observation, not a defect. M8 is planned,
+observation, not a defect; R7 (the racket in the server's off hand) then landed at rendition
+`artifacts/sa1-r7-2026-10-23/` with the serve's own events unmoved. M8 is planned,
 not delivered. The M7 review also established the decisive blocker:
 the legacy puppet figures (`aqiang`, `elder`, `awei`, `liu`, `lin`) have no
 articulated posture, so any contact beat with them lifts the prop while the figure
