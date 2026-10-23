@@ -52,7 +52,8 @@ broad engine rewrite is authorized. Licensing boundaries remain in
 - Present current actual artifact and comparisons for user milestone judgment;
   production asset-path approval is a per-character user gate. Do not proceed
   into dependent default-production replacement for a figure whose gate is not
-  approved (`figure/lin_b_draft` was approved 2026-10-16).
+  approved (`figure/lin_b_draft` was approved 2026-10-16). Where each figure
+  stands today is [ART_ASSET_PROGRAM](ART_ASSET_PROGRAM.md) §Cast.
 ## Current implementation and evidence
 `figure/lin_b_draft` is the preferred production figure: the user-approved svg-bone-parts draft now lives in `library/figure/lin_b_draft/`, the figure category manifest recommends it via `use`, and every showcase episode's default cast points at it. Canonical native artwork integration exists in the dirty working tree; old lin
 remains unchanged. `tools/art-direction-study/lin_parts.py` generates the draft.

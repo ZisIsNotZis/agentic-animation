@@ -37,6 +37,17 @@ a skeleton per view, hands, expressions, wardrobe — from the M2 pipeline.
 | host 丙 | older, robe, and the same figure as the tea guest | C |
 | spectator 丁 | small build, loud silhouette | A and B (deliberate reuse, measured as such) |
 
+**The person's answer to the cast question, 2026-10-23 — open.** Root asked whether the new
+assets may become the preferred production cast; the person answered: “probably yes, but
+open for me to review”. From that date `figure/athlete_a`, `figure/gymnast_b` and
+`set/badminton_hall` may be recommended by default for new episodes, and `figure/lin_b_draft`
+keeps its recommendation (the figure category's `use`) until the person has seen a slice they
+appear in. **The yes is open, not settled:** it is provisional on that review and one sentence
+from the person reverses it, so nothing dependent on it is hard to undo — a new episode's cast
+declaration is one line in its `episode.yml`. Provenance: the person's word as relayed to this
+node by root on 2026-10-23; this node did not hear it and holds no file of it. It grants no
+publication, no spending, and no change to the `use` recommendation itself.
+
 ## Capability contract (Wave 0, decided before any slice)
 
 Declared once so three slices cannot invent three vocabularies; behaviour belongs to the

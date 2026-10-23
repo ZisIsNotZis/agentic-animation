@@ -23,6 +23,9 @@ via the figure category manifest `use` recommendation, while old figures stay
 installed. No publication or spending was approved. Facts and accepted-revision
 binding:
 [tickets/M2-MILESTONE-ACCEPTANCE.md](tickets/M2-MILESTONE-ACCEPTANCE.md).
+Where the new cast stands as a recommendation is owned by
+[ART_ASSET_PROGRAM](ART_ASSET_PROGRAM.md) §Cast (the person's answer of
+2026-10-23, open for their review).
 Current M2 evidence, remaining limits and next actions are owned only by
 [ART_CHARACTER_M2](ART_CHARACTER_M2.md).
 Task history and independent documentation findings live in the
