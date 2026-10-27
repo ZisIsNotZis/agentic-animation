@@ -92,81 +92,80 @@ shot does not bake (framing and three sub-pixel invariants); C is not started.
 
 Each package runs in one session on its own lease, carries its own scoped tests
 and `npx tsc --noEmit`, and reports; the combined check belongs to the
-integrating node.
+integrating node. Landed packages keep one line here; their measurements live
+with their evidence.
 
-- **E2 the serve and the return** — landed. **E4 the tracking camera** — landed:
-  `camera.follow(target, {sec, zoom})`, per-frame keys, stage-clamped. **EP two
-  native figures could not bake together** — landed: the native pair bakes.
-- **EA the episode** — landed: `episodes/a-badminton/`, the serve from the hand,
-  `camera.follow(shuttle, {sec: 2.0, zoom: 0.75})`, 40° arc, bounce resting at
-  world x 509. Its measured reach, force table and the five limits it could not
-  land live in `episodes/a-badminton/README.md`.
-- **ER the independent review** — `NOT SATISFIED`
-  ([verbatim](../evidence/tickets/S-A1-ER-REVIEW.md)): one real defect (the
-  projectile's ground was seeded from the actor clamp, so the shuttle bounced
-  41–56 px high) and one sampling artifact (6 fps stepping over two hops).
-- **R6 depth defects and the serving rendition** — landed: court-depth scale on
-  the `background` entrance, a held prop on its holder's plane and free on its
-  own staged plane, and the defect that hid both — `StagedActor.z` was dropped
-  twice before the drawing. Re-rendered as the accepted rendition below.
-- **R7 the racket in the server's off hand** — landed; the serve is untouched.
-  A second hold channel on `ActorState` (bind, carry, release, socket, retract),
-  `holdsL`/`reachL` through the bake into the renderer's left arm, and
-  `held-by(actor[, hand])` starting a prop in a hand at frame 0; naming no hand
-  is byte-identical on the five other prop-holding episodes. Left open, and now
-  R9: a motor-driven prop is drawn at scale 1 while its declared stage scale
-  sizes the motor's box, so its drawn handle sat ~11 px below the socket.
-- **R8 the rally's own package — landed.** A `push` on a prop that declares
-  `projectile` and is already falling is an interception solved at the cue: the
-  prop's own integrator is walked forward and the drive aimed at the earliest
-  substep the hand, the walk and the reach can all meet it, then held there, so
-  overlap is a closing speed instead of one lucky frame; a cue with no such mark
-  is a named miss staged at no pose, which is why the two whole-body freezes are
-  gone. On EP's fixture seven of eleven cues (1.90–2.16 s) land with empty
-  diagnostics, the serve stays 1.407 s, `episodes/a-badminton`'s events do not
-  move, and six re-baked episodes are byte-identical
-  ([evidence](../evidence/tickets/R8-INTERCEPTION.md)). Not bought: the band is
-  that receiver's staging, bounces are not modelled, and a crouched or
-  mid-gesture striker falls into the named miss.
-- **S-A2 the rally, as a shot — delivered, and NOT PASSED by two blind
+- **E2 the serve and the return · E4 the tracking camera · EP the native pair**
+  — landed: `camera.follow(target, {sec, zoom})`, and two native figures bake in
+  one scene.
+- **EA the episode** — landed: `episodes/a-badminton`; its measured reach, force
+  table and five limits are in that episode's README.
+- **ER the review** — `NOT SATISFIED` on one real defect (the projectile's ground
+  was seeded from the actor clamp, so the shuttle bounced 41–56 px high) and one
+  sampling artifact ([verbatim](../evidence/tickets/S-A1-ER-REVIEW.md)).
+- **R6 the depth defects** — landed: court-depth scale, a held prop on its
+  holder's plane, and `StagedActor.z` dropped twice before the drawing.
+- **R7 the racket in the off hand** — landed: a second hold channel, `holdsL`/
+  `reachL` into the renderer's left arm, `held-by(actor[, hand])`; naming no hand
+  is byte-identical on the five other prop-holding episodes. Its recorded flaw
+  became R9.
+- **R8 the rally's own package** — landed: a `push` on an in-flight projectile is
+  an interception solved at the cue — the prop's own integrator walked forward,
+  the drive aimed at the earliest substep hand, walk and reach can all meet, then
+  held there, so overlap is a closing speed instead of one lucky frame; a cue
+  with no such mark is a named miss staged at no pose. Seven of eleven cues on
+  EP's fixture land with empty diagnostics, the serve stays 1.407 s, and six
+  re-baked episodes are byte-identical
+  ([evidence](../evidence/tickets/R8-INTERCEPTION.md)).
+- **S-A2 the rally, as a shot — delivered, and NOT PASSED by three blind
   reviews.** `episodes/a-rally` carries the accepted pickup and serve, the
   receiver walking into the descent and returning it inside a measured band
   (0.285 s, after the camera moved the serve to 2.307 s), the return's flight to
   its rest, and a camera that opens wide, holds a medium two-shot through the
-  contact and pulls back; four renditions are kept, superseded, never
-  overwritten. Both blind reviews are filed verbatim
+  contact and pulls back; five renditions are kept, superseded, never
+  overwritten. All three verdicts are filed verbatim
   ([r3](../evidence/tickets/S-A2-REVIEW.md),
-  [r4](../evidence/tickets/S-A2-REVIEW-R4.md)) and both decided on the picture,
-  not the bake: **the off-hand racket is never drawn in a hand**, and **the
-  returning palm meets the shuttlecock's cone edge while its cork hangs a hand's
-  width away**, so the shuttle looks pushed by air rather than struck. They also
-  name the asset itself: a translucent, 2.4×-real cone that reads as a
-  lampshade. The bakes are right; the picture is not, and the two mechanical
-  causes become R9 and R10 below. The person is not asked to look until those
-  land and a third blind review passes.
-- **R9 the held prop in the hand — landed.** The offset was two additive
-  faults: the renderer drew every motor-driven prop at scale 1 while the motor
-  sized its body and socket at the declared stage scale (11.2 px for the racket),
-  and `figure/athlete_a`'s side view paints its palms 49.6 px inboard of the
-  hand joints the bake carries — 53.7 px in the picture. A held prop now draws
-  at the declared scale and rides the *painted* palm, the bake untouched. The
-  correct size then put the upright carry's hoop across the server's face, so
-  the off-hand carry hangs the prop along the arm's carry line (head down,
-  behind the hand, bounded by the own-prop angle rate, never low enough to draw
-  through the floor); both shots re-rendered and re-judged by eye, events
-  unchanged, four other prop-holding bakes byte-identical
-  ([evidence](../evidence/tickets/R9-HELD-PROP.md)). Recorded, not fixed: the
-  painted-palm offset is the cast's artwork, so moving it is the person's call.
-- **R10 the strike meets the point a player strikes — open, next.** R8's
-  interception aims the drive at the box point the rest hand reaches soonest, so
-  a palm binds on the shuttlecock's cone edge while its cork hangs a hand's width
-  away. Aim the interception at the prop's declared contact point — its
-  grip socket where the asset declares one, the cork/point a strike reads as
-  otherwise — while the contact itself still binds on the body box. Acceptance:
-  on the EP fixture and on `episodes/a-rally`'s staging the drawn palm is inside
-  a hand's width of the prop's declared contact point at the contact frame; R8's
-  cue band does not shrink below 0.25 s; the serve's held-prop strike is
-  untouched; suite and hashes green.
+  [r4](../evidence/tickets/S-A2-REVIEW-R4.md),
+  [r5](../evidence/tickets/S-A2-REVIEW-R5.md)) and each failed on the picture:
+  two named real defects, now fixed (R9), and the rest is the accepted
+  vocabulary — a floor pickup whose fold reads as a collapse, a serve that is a
+  palm push rather than a swing, a returning player with no racket, a shuttle
+  that floats. The person is not asked to look until R10–R12 are in; S-A2's
+  increment (a return from an authored cue) is in the engine and the episode
+  either way.
+- **R9 the held prop in the hand — landed.** Two additive faults put the racket
+  53.7 px outside the drawn hand: the renderer drew motor props at scale 1 while
+  the motor sized them at the declared stage scale (11.2 px), and
+  `figure/athlete_a`'s side view paints its palms 49.6 px inboard of the hand
+  joints the bake carries. A held prop now draws at its declared size and rides
+  the painted palm, the bake untouched; the corrected size then put the upright
+  carry's hoop across the face, so the off-hand carry hangs the prop along the
+  arm's carry line, bounded by the own-prop angle rate and clear of the floor.
+  Both shots re-rendered, events unchanged, four other prop-holding bakes
+  byte-identical ([evidence](../evidence/tickets/R9-HELD-PROP.md)). The painted
+  palm is the cast's artwork, so moving it is the person's call.
+- **R10 the strike meets the point a player strikes — open, next.** R8 aims at
+  the box point the rest hand reaches soonest, so a palm binds on the
+  shuttlecock's cone edge while its cork hangs a hand's width away. Aim at the
+  prop's declared contact point — its grip socket where declared, the point a
+  strike reads as otherwise — while contact still binds on the body box.
+  Acceptance: on EP's fixture and `episodes/a-rally`'s staging the drawn palm is
+  inside a hand's width of that point at the contact frame; R8's band does not
+  shrink below 0.25 s; the serve's held-prop strike is untouched; suite and
+  hashes green.
+- **R11 the strike is a swing — open.** Three blind reviews watched a palm push
+  and a bare hand and read no badminton. The engine has no racket swing
+  (`swing.grip`/`swing.release` are undeclared, slice B's own work): give a
+  player a racket swung through the shuttle — the grip claim, the arc, the
+  released shuttle leaving the racket's face. Acceptance: the racket's face
+  passes within the shuttle's body at the contact and the shuttle leaves from it;
+  one authority over the prop; a viewer who is not the builder sees a swing.
+- **R12 the floor pickup is not a collapse — open.** A blind viewer read the
+  pickup's fold (torso horizontal at knee height, head hanging) as falling. Make
+  the pickup read as a reach to the floor — knees bent, torso upright-ish, the
+  hand doing the travel — or stage the pickup out of the shot. Acceptance: stills
+  at the fold read as reaching down; the serve's events do not move; the
+  accepted rendition stays as it is.
 
 ## Open work items
 
@@ -174,8 +173,8 @@ integrating node.
 - **The racket's pickup in frame** — one authored beat, costs the accepted shot's
   timing; awaiting the person's word.
 - **The cast review** — provisional yes, open for the person's look.
-- **S-A2's third independent review** — owed after R10, bound to the shot's
-  current rendition.
+- **S-A2's next review** — owed after R10–R12, bound to the shot's then-current
+  rendition.
 - **The shuttlecock asset is the person's decision.** Both blind reviewers named
   it unprompted: at 2.4× real size, a translucent feather mesh with a black rim,
   it reads as a lampshade. A new revision (opaque feathers, a readable cork, a
