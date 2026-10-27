@@ -1,8 +1,12 @@
-# In flight
+# INFERRED
 
-Information that deserves filing but whose home is not yet written. Append here
-the moment it arrives; nothing in flight goes unrecorded. An entry leaves this
-file when it lands in its level document — the entry is deleted, not marked done.
+Information that deserves filing but whose home is not yet written: until it
+lands, an in-flight entry is the agent's own reading, not the person's word.
+Append here the moment it arrives; nothing in flight goes unrecorded. An entry
+leaves this file when it lands in its level document — the entry is deleted, not
+marked done.
+
+## In flight
 
 ## Nothing in flight
 

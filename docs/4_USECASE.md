@@ -29,9 +29,10 @@ settles, the camera follows it, and the racket stays in his other hand. The rall
 extends it: the receiver's hand is placed where the descending shuttle will be, so
 a second hit lands from a cue a person could author.
 
-- **Accepted rendition:** `episodes/a-badminton/artifacts/sa1-d1p-2026-10-23/`
-  (1280×720, 132 frames, 5.5 s, 24 fps), and the R7 rendition beside it with the
-  racket in the off hand and the serve's events unmoved.
+- **Accepted rendition:** the one the episode's artifacts note records as
+  accepted — 1280×720, 132 frames, 5.5 s, 24 fps, the serve struck 2.207 s and
+  settled 3.717 s — and the later rendition beside it with the racket in the off
+  hand and those events unmoved ([renditions](../episodes/a-badminton/artifacts/README.md)).
 - **What a later cut owes:** a second `projectile.struck` from at least six of
   eleven authored cues ([roadmap](0_ROADMAP.md) R8).
 - **What it may not do:** change the accepted serve's arc, force, elevation,

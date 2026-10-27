@@ -80,13 +80,13 @@ checked-in location assets, the Remotion adapter adds a transient
 browser evaluation; this keeps filesystem access out of frame rendering and
 selects backgrounds by compiled location instance rather than scene names.
 
-### Motor intent acting shape (M5 additive implementation)
+### Motor intent acting shape
 
 A motor intent (the `motor` track recipe's event value) may carry `anticipation` (seconds, clamped 0..0.4), `accent` (0..1) and `settle` (0..1); absent means 0, and 0 is the pre-M5 motion, so every existing bake keeps byte-identical trajectories.
 The call form is the existing override syntax `{...action.point(a, b), accent: 0.6}`; the compiler stamps the three values onto the motor intents that call emits (a value the procedure set itself wins) and the motor applies them per [8_MOTOR](8_MOTOR.md).
 No frame field is added to the bake: the shapes appear in `lean` (anticipation), `x` (a deferred beat's start) and `reach`/the carried prop (accent, settle, the shaped hold and the shaped placement), and a clamped anticipation is reported in `motor.diagnostics` (`make` prints it as `motor warning:`).
 
-### Prop grip geometry (M2 additive implementation)
+### Prop grip geometry
 
 Prop placement may declare `grip: {at: [x,y], radius, depth}` in intrinsic art
 units. `at` is a handle/palm contact socket, not the prop center; radius is the
@@ -96,7 +96,7 @@ geometry. Assets without a socket retain body-box contact. Baked prop rotation
 is continuous and follows changes in the holder's wrist direction from bind,
 retaining the original attachment orientation across transfer and release.
 
-### Figure artwork (M2 additive implementation)
+### Figure artwork
 
 A figure may supply `artwork.json` alongside its declared skeleton. The loader
 validates its `svg-bone-parts` format and embeds renderer-safe vector layers in
@@ -129,7 +129,7 @@ This is conditional on native-art participation; legacy-only layering is unchang
 Draft previews use a disposable library; no draft becomes a production asset
 until sampled orientation, expression, speech and contact QA passes.
 
-### Set world declarations (M3 additive implementation)
+### Set world declarations
 
 A `library/set/<name>/manifest.json` may declare a world in
 `coordinateSpace` units (e.g. `"1920x1080"`): `layers` as an ordered

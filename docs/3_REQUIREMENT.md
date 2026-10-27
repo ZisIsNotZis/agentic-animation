@@ -61,5 +61,5 @@
   from them means re-authoring the mechanism, not copying their code.
 - One writer per hot file; assets never conflict; a package runs its own scoped
   tests and the combining node runs the whole check
-  ([ownership](6_ARCHITECTURE.md#ownership-and-the-conflict-rule)).
+  ([ownership](6_ARCHITECTURE.md#ownership)).
 - Public behavior changes come with a test that observes the defect being closed.

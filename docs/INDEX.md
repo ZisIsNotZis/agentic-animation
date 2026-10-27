@@ -22,7 +22,7 @@ Read the owning document before changing implementation, an asset or an episode.
 | 6 | [6_ARCHITECTURE](6_ARCHITECTURE.md) | module seams, data flow, ownership, the conflict rule |
 | 6 | [6_WORLD_PLUGIN_CONTRACT](6_WORLD_PLUGIN_CONTRACT.md) | world type, coordinates, categories, plugin lifecycle, ordering |
 | 6 | [6_DECISIONS](6_DECISIONS.md) | durable technology and licensing decisions |
-| 7 | [7_DSL](7_DSL.md) | the authored language: `episode.yml`, calls, shapes, capability contract |
+| 7 | [7_DSL](7_DSL.md) | the authored language: `episode.yml`, calls, acting shape, speech and silence, staging, the cutover |
 | 7 | [7_SCHEMAS](7_SCHEMAS.md) | source, plugin, IR and declaration contracts with error semantics |
 | 8 | [8_MOTOR](8_MOTOR.md) | the physical motion model, invariants, bake format, prop authority |
 | 9 | [9_PIPELINE](9_PIPELINE.md) | the operating order: check, make, preview, render, QA |
