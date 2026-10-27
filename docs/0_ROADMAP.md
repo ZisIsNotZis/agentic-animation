@@ -145,22 +145,23 @@ integrating node.
   lampshade. The bakes are right; the picture is not, and the two mechanical
   causes become R9 and R10 below. The person is not asked to look until those
   land and a third blind review passes.
-- **R9 the held prop in the hand — open, the next package.** The racket is
-  staged `held-by(server, left)` and the bake carries it on the off hand's
-  socket, yet in the picture the handle floats 30–70 px from the palm and the
-  head sits against the shoulder/chest; R7 already recorded the class as "a
-  motor-driven prop is drawn at scale 1 while its declared stage scale sizes the
-  motor's box" (its drawn handle ~11 px below the socket). Measure the drawn
-  handle against the drawn palm per frame on a held prop, then make the drawn
-  prop's declared handle sit in the palm — one declaration for drawn size,
-  physical body and socket. Acceptance: measured handle-to-palm offset inside a
-  hand width on every frame of a held window; two failing-first tests; the
-  bakes of the episodes that hold a prop unchanged; `a-badminton`'s racket
-  drawing re-rendered and reported (its serve's events must not move).
-- **R10 the strike meets the point a player strikes — open, after R9.** R8's
+- **R9 the held prop in the hand — landed.** The offset was two additive
+  faults: the renderer drew every motor-driven prop at scale 1 while the motor
+  sized its body and socket at the declared stage scale (11.2 px for the racket),
+  and `figure/athlete_a`'s side view paints its palms 49.6 px inboard of the
+  hand joints the bake carries — 53.7 px in the picture. A held prop now draws
+  at the declared scale and rides the *painted* palm, the bake untouched. The
+  correct size then put the upright carry's hoop across the server's face, so
+  the off-hand carry hangs the prop along the arm's carry line (head down,
+  behind the hand, bounded by the own-prop angle rate, never low enough to draw
+  through the floor); both shots re-rendered and re-judged by eye, the serve's
+  and the rally's events unchanged, four other prop-holding bakes byte-identical
+  ([evidence](../evidence/tickets/R9-HELD-PROP.md)). Recorded, not fixed: the
+  painted-palm offset is the cast's artwork and moving it is the person's call.
+- **R10 the strike meets the point a player strikes — open, next.** R8's
   interception aims the drive at the box point the rest hand reaches soonest, so
-  a palm can bind on the shuttlecock's cone edge while its cork hangs a hand's
-  width away. Aim the interception at the prop's declared contact point — its
+  a palm binds on the shuttlecock's cone edge while its cork hangs a hand's width
+  away. Aim the interception at the prop's declared contact point — its
   grip socket where the asset declares one, the cork/point a strike reads as
   otherwise — while the contact itself still binds on the body box. Acceptance:
   on the EP fixture and on `episodes/a-rally`'s staging the drawn palm is inside
@@ -174,8 +175,8 @@ integrating node.
 - **The racket's pickup in frame** — one authored beat, costs the accepted shot's
   timing; awaiting the person's word.
 - **The cast review** — provisional yes, open for the person's look.
-- **S-A2's third independent review** — owed after R9 and R10, bound to the
-  re-shot rendition.
+- **S-A2's third independent review** — owed after R10, bound to the shot's
+  current rendition.
 - **The shuttlecock asset is the person's decision.** Both blind reviewers named
   it unprompted: at 2.4× real size, a translucent feather mesh with a black rim,
   it reads as a lampshade. A new revision (opaque feathers, a readable cork, a
