@@ -1,0 +1,109 @@
+{
+  "episode": "episodes/a-rally/episode.yml",
+  "episodeSha256": "0e54241ca89d78ae38e9ba907158e5581d5e9fabba0130276d0c2c13d94d6359",
+  "video": "episodes/a-rally/artifacts/sa2-r2-2026-10-27/episode.mp4",
+  "videoSha256": "9c3f8530447a39b4e9855a4fafde2691122d1ff9ce11cfe9917e6e66efea2127",
+  "frameCount": 119,
+  "durationSec": 4.96,
+  "fps": 24,
+  "width": 1280,
+  "height": 720,
+  "gitHead": "676e4e6362b971886a3b32b99ba8a7f5791ac142",
+  "renderedFrom": "the working tree at gitHead with this package's uncommitted changes: episodes/a-rally/ (the episode) and packages/core/src/staging/index.ts (the held-by free-plane fix) plus its two tests. The episode is at the sha256 above.",
+  "bakeCommand": "npm run anim -- make episodes/a-rally/episode.yml",
+  "renderCommand": "npm run anim -- render-yaml episodes/a-rally/episode.yml",
+  "rebuild": "bash episodes/a-rally/artifacts/sa2-r2-2026-10-27/verify.sh",
+  "stillsCommand": "ffmpeg -nostdin -ss <sec> -i episode.mp4 -frames:v 1 stills/t<sec>.png",
+  "stillsAreDerived": "cut from episode.mp4 by verify.sh; not tracked, because the command above reproduces them from the video hash",
+  "stills": [
+    {
+      "name": "t1.900.png",
+      "sec": 1.9,
+      "frame": 45,
+      "beat": "the pickup: the crouched palm holds the shuttle at the chest, below the chin; the racket is in the off hand"
+    },
+    {
+      "name": "t2.250.png",
+      "sec": 2.25,
+      "frame": 54,
+      "beat": "the serve: the accepted strike at 2.207 s has left the palm"
+    },
+    {
+      "name": "t2.600.png",
+      "sec": 2.6,
+      "frame": 62,
+      "beat": "the return's contact (projectile.struck at 2.590 s): the receiver's hand at the shuttle's cork"
+    },
+    {
+      "name": "t2.800.png",
+      "sec": 2.8,
+      "frame": 67,
+      "beat": "the return in flight at its apex between the two players, clear of both bodies"
+    },
+    {
+      "name": "t4.200.png",
+      "sec": 4.2,
+      "frame": 100,
+      "beat": "the settle: the shuttle at rest since 4.075 s at [1387.94, 691]"
+    }
+  ],
+  "events": [
+    {
+      "kind": "projectile.struck",
+      "prop": "shuttle",
+      "at": 2.207,
+      "velocity": [
+        -533,
+        -447
+      ],
+      "note": "the accepted serve, exactly: pickup, palm strike, 40.00°, 697 px/s"
+    },
+    {
+      "kind": "projectile.struck",
+      "prop": "shuttle",
+      "at": 2.59,
+      "velocity": [
+        533,
+        -447
+      ],
+      "note": "the return, the serve's arc mirrored, 40.00°, 697 px/s (force 1.0 / forceSec 0.16)"
+    },
+    {
+      "kind": "projectile.settled",
+      "prop": "shuttle",
+      "at": 4.075,
+      "position": [
+        1387.94,
+        691
+      ],
+      "note": "on the hall's painted floor line, to the server's right"
+    }
+  ],
+  "motorDiagnostics": "none — `make` printed zero motor warnings (grep -c 'motor warning' make.log.txt = 0)",
+  "cueBand": {
+    "staging": "receiver at the accepted background lane: x 672, ground 615.6, scale 0.722, arm envelope 113 px; server x 1246, ground 650, scale 0.88; 574 px apart",
+    "serveCue": 2.2,
+    "serveStruck": 2.207,
+    "cue": 2.21,
+    "cueOffsetAfterServe": 0.01,
+    "band": [
+      2.205,
+      2.465
+    ],
+    "bandSec": 0.26,
+    "missingAt": "cues 2.205-2.465 all land with []; 2.470 and 2.480 land a strike but raise 'whole-body proposal exhausted: receiver …' (the follow-through breaks a joint rate); 2.490 and later are the named 'strike missed'",
+    "walk": "R8's interception walks the receiver 672 -> 774 (102 px) to the meeting point; the contact is at (864, 347), the shuttle's base/cork, with the hand's rest at y 353"
+  },
+  "propDrawPlane": {
+    "defect": "staging/index.ts `held-by` wrote z = (holder.z ?? 40) + 2 into the compiled object plane, and nothing recomputes a staged plane on release; a prop that STARTS held was drawn over every actor for the whole shot (z 52 > actor 50)",
+    "evidence": "per frame on r1: held frames drawn plane 50 (holder), free frames drawn plane 52 (above the server); a-badminton's control shuttle (staged center, z 35) draws 35 free / 50 held",
+    "fixed": "staging held-by now writes the object's own plane (35); the renderer's PerformanceEpisode propPlane raises it to the holder's plane only while the bake reports a hold, so picked-up and started-held props share one mechanism",
+    "tests": [
+      "packages/core/test/staging.test.ts: a held-by object keeps its own free plane",
+      "packages/studio/test/figureArtwork.test.ts: a prop staged held-by draws on its holder plane while held and on its own plane once released (both fail before the fix)"
+    ],
+    "badmintonUnchanged": "episodes/a-badminton rendered before and after the fix: identical mp4 sha256 5b10912a… for a 2.1 s render, frames at 1.5 s and 1.9 s pixel-identical (max channel diff 0)"
+  },
+  "camera": "no camera track: the composition's full-stage wide (zoom fit 0.667, frame top world y 0). A shuttle-follow at 0.75 drops the frame to the floor with the landing and slices both heads; a receiver-follow at 0.75 only crops the set's right edge.",
+  "cleanState": "episodes/a-rally/dist/ is a build output of this package and is deleted before hand-off; episodes/*/dist/*.mp4 is NOT ignored by .gitignore (a negation un-ignores it), so it must not be staged"
+}

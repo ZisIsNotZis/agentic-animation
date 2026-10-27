@@ -252,7 +252,14 @@ function objectPoint(
         // forward of; the motor puts the prop on that hand's carry socket the
         // moment the scene opens, so this is a sane pre-motor placement only.
         at: point(targetAt[0] + targetFacing * (relation.hand === "left" ? -78 : 78) / 1920, targetAt[1] - 125 / 1080),
-        z: (target.z ?? 40) + 2,
+        // The object's OWN plane, the same 35 a free object gets: a hold is a
+        // per-frame state, not a staging plane. The renderer paints a prop on
+        // its holder's plane while the bake says it is held and on this plane
+        // once it is free (PerformanceEpisode's propPlane). Raising it here
+        // made a prop that STARTS held draw above every actor for the whole
+        // shot, in flight included, because nothing recomputes a staged plane
+        // on release.
+        z: 35,
       };
       break;
     case "near":

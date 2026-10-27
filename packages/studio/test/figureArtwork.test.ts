@@ -119,3 +119,30 @@ test('a native object composites on its holder plane while held and on its stage
   assert.match(heldHtml,/data-layer="native-interaction-props" data-prop-plane="50"/,'a held object sits on its holder plane, not above a declared set depth');
   assert.match(heldHtml,/data-layer="native-contact-hand" data-actor-plane="51"/,'the gripping hand is one plane above the object it closes on');
 });
+
+test('a prop staged held-by draws on its holder plane while held and on its own plane once released',async () => {
+  // The staged plane of a held-by prop is the object's own (35). The renderer
+  // raises it to the holder's plane only while the bake reports the hold, so a
+  // prop that STARTS held falls back to its free plane the frame it is struck —
+  // it must not draw over the actor planes in flight.
+  const {stageScene}=await import("../../core/src/staging");
+  const artwork=await artworkFixture();
+  const staged=stageScene({location:{id:'hall',framing:'balanced',depth:'layered'},actors:[{id:'near',facing:'audience'},{id:'far',facing:'audience'}],objects:[{id:'shuttle',relation:'held-by',target:'near'}]},{width:1920,height:1080});
+  const near=staged.actors.near!, far=staged.actors.far!, shuttle=staged.objects.shuttle!;
+  const motorFrames=Array.from({length:48},(_,i)=>({x:820,facing:1,lean:0,walk:0,...(i<20?{holds:'shuttle'}:{})}));
+  const manifest={video:{width:1280,height:720,fps:24},durationInFrames:48,
+    actors:[
+      {id:'near',artwork,skeleton:artwork.views.front.skeleton,placement:{at:[near.at[0]*1920,near.at[1]*1080],scale:.7},z:near.z},
+      {id:'far',artwork,skeleton:artwork.views.front.skeleton,placement:{at:[far.at[0]*1920,far.at[1]*1080],scale:.7},z:far.z},
+    ],
+    props:[{id:'shuttle',type:'thermos',placement:{at:[shuttle.at[0]*1920,shuttle.at[1]*1080],scale:.4},z:shuttle.z}],
+    sceneTrack:[{start:0,motor:{actors:{near:motorFrames},props:{}}}]} as unknown as PerformanceManifest;
+  const held=evaluatePerformance(manifest,5);
+  const heldHtml=renderToStaticMarkup(React.createElement(PerformanceFrame,{manifest,state:held}));
+  assert.match(heldHtml,/data-layer="native-interaction-props" data-prop-plane="50"/,'a prop still held sits on its holder plane');
+  const free=evaluatePerformance(manifest,30);
+  const freeHtml=renderToStaticMarkup(React.createElement(PerformanceFrame,{manifest,state:free}));
+  const plane=Number(freeHtml.match(/data-layer="native-interaction-props" data-prop-plane="(\d+)"/)?.[1]);
+  assert.equal(plane,35,'a released prop falls back to its own free plane');
+  assert.ok(plane<near.z,`a released prop must not draw over the actor planes (got ${plane}, actor ${near.z})`);
+});

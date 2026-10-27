@@ -87,8 +87,9 @@ rule in [6_ARCHITECTURE](6_ARCHITECTURE.md#ownership).
 - **C · pouring tea.** A host tilts a pot into a cup; the tilt is authored
   intent and the stream, cup level and steam are derived from it.
 
-State: A's serve is accepted and R8 landed the in-flight interception, so its
-rally shot (S-A2) is next; B's capability is proven but
+State: A's serve is accepted, R8 landed the in-flight interception and S-A2's
+rally shot is delivered ([a-rally](../episodes/a-rally/README.md)); B's
+capability is proven but
 its shot does not bake (framing and three sub-pixel invariants); C is not
 started.
 
@@ -143,22 +144,24 @@ integrating node.
   shifts it), bounces are not modelled, and a crouched or mid-gesture striker
   falls into the named miss. Six re-baked episodes have byte-identical motor
   output ([evidence](../evidence/tickets/R8-INTERCEPTION.md)).
-- **S-A2 the rally, as a shot — open, the next package, and the next thing the
-  person can judge.** R8 is invisible on its own, so the route does not stop at
-  it: the mechanism lands, then a shot carries the rally. New episode
-  `episodes/a-rally` reusing the set, the two athletes, the shuttle and the
-  racket — the accepted serve's rendition and events are immutable, so the
-  rally does not edit `episodes/a-badminton`. Deliverables: `episode.yml`, a
-  1280×720 rendition with its identity and `verify.sh`, stills of the return's
-  contact and of the rally after it, `README.md` with the shot's measured
-  limits, `REVIEWS.md`. Acceptance: a second `projectile.struck` inside the
-  shot's own bake with empty motor diagnostics, with its cue inside the band that
-  bake measures (R8's 0.26 s holds at the fixture's staging; a re-staged receiver
-  needs its own measurement, and a shot that has to move him says so), the serve
-  still the one the person accepted, the return's contact visible in a still, and
-  an independent agent viewer pass before the person is asked. Not-doing: no new
-  asset, no change to `episodes/a-badminton`'s events or artifacts, no pickup
-  beat.
+- **S-A2 the rally, as a shot — delivered, awaiting the reviewer and then the
+  person.** `episodes/a-rally` reuses the accepted set, the two athletes, the
+  shuttle and the off-hand racket: the accepted pickup and serve, the receiver
+  walking into the descent and returning it at a cue inside a measured 0.260 s
+  band (2.205–2.465 s), the return's flight to its rest on the painted floor.
+  Events: serve 2.207 s `[-533,-447]`, return 2.590 s `[533,-447]` (the same 40°
+  arc mirrored), settle 4.075 s `[1387.94,691]`, zero motor diagnostics; the
+  1280×720 rendition lives in `episodes/a-rally/artifacts/` with its identity,
+  its `verify.sh` and five stills including the contact's own frame. Two manager
+  rejections shaped it: a 288 px staging where the follow-through arms read as a
+  high five, and a prop draw plane that kept a holder's z after release and put
+  shuttle ink on the server's chin — the second is fixed at its cause
+  (`held-by` bakes the object's own plane; the renderer raises it only while the
+  bake reports a hold) with two failing-first tests, and `episodes/a-badminton`
+  is drawing-identical across it. The band, the sweep, the rejected branches and
+  the plane evidence are in [the ticket](../evidence/tickets/S-A2-RALLY.md);
+  the bakes are in the episode's README. Next: an independent agent review bound
+  to r3, then the person's look.
 
 ## Open work items
 
@@ -167,8 +170,12 @@ integrating node.
   timing; awaiting the person's word.
 - **The cast review** — provisional yes, open for the person's look.
 - **R8** — landed ([evidence](../evidence/tickets/R8-INTERCEPTION.md)).
-- **S-A2 the rally shot** — open, the next package; the first rally the person
-  can judge.
+- **S-A2's independent review** — owed before the person looks; it binds to
+  the episode's current rendition.
+- **A push on a prop another actor is holding is a silent no-op** — measured in
+  S-A2: two pushes on one cue bake one strike and no diagnostic, where the
+  contract says an impossible beat fails loud. It costs a shot nothing today
+  (the spacer authors around it) and hides a wrong cue forever.
 - **Slice B** — the shot does not bake: a straight-up mount is singular, the
   staged standing line is not owned by the set so a full circle cannot fit any
   frame, and three sub-pixel invariants (`leg-annulus` 0.002 px,

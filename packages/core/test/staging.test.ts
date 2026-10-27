@@ -84,6 +84,26 @@ test("separates same-lane actors by footprint independently of input order", () 
   assert.equal(first.objects.book!.at[0], Number((first.actors.alpha!.at[0] + 78 / 1920).toFixed(3)));
 });
 
+test("a held-by object keeps its own free plane; the hold plane is the renderer's per-frame decision", () => {
+  // A prop that STARTS held used to get the holder's plane + 2 written into its
+  // staged z, and nothing recomputes a staged plane on release: it drew over
+  // every actor for the whole shot, in flight included. The staged plane is the
+  // object's own (35, the same a free object gets); PerformanceEpisode's
+  // propPlane raises it to the holder's plane only while the bake says it is
+  // held, so picked-up and started-held props share one mechanism.
+  const result = stageScene({
+    location,
+    actors: [
+      {id: "near", facing: "audience"},
+      {id: "far", facing: "audience"},
+    ],
+    objects: [{id: "shuttle", relation: "held-by", target: "near"}],
+  });
+  assert.equal(result.actors.near!.z, 50);
+  assert.equal(result.objects.shuttle!.z, 35, "a held-by object keeps its own free plane");
+  assert.ok(result.objects.shuttle!.z < result.actors.far!.z, "a freed prop must stay behind the actor planes");
+});
+
 test("clamps actor footprints to the subject safe area", () => {
   const result = stageScene({
     location,

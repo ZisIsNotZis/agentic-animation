@@ -1,0 +1,105 @@
+{
+  "episode": "episodes/a-rally/episode.yml",
+  "episodeSha256": "7f884cff3fc502efc526e28f06436edefbc7b9119685df6631ab120faafd14cf",
+  "video": "episodes/a-rally/artifacts/sa2-r1-2026-10-27/episode.mp4",
+  "videoSha256": "67da56dcf1b98b5183b49e30a6d30f10aa15bad2588772e61976172870ae00e9",
+  "frameCount": 66,
+  "durationSec": 2.75,
+  "fps": 24,
+  "width": 1280,
+  "height": 720,
+  "gitHead": "676e4e6362b971886a3b32b99ba8a7f5791ac142",
+  "renderedFrom": "the working tree at gitHead with episodes/a-rally/episode.yml at the sha256 above (the episode is new and uncommitted in this package); the only tracked files this shot adds are under episodes/a-rally/",
+  "bakeCommand": "npm run anim -- make episodes/a-rally/episode.yml",
+  "renderCommand": "npm run anim -- render-yaml episodes/a-rally/episode.yml",
+  "rebuild": "bash episodes/a-rally/artifacts/sa2-r1-2026-10-27/verify.sh",
+  "stillsCommand": "ffmpeg -nostdin -ss <sec> -i episode.mp4 -frames:v 1 stills/t<sec>.png",
+  "stillsAreDerived": "cut from episode.mp4 by verify.sh; not tracked, because the command above reproduces them from the video hash",
+  "stills": [
+    {
+      "name": "t0.560.png",
+      "sec": 0.56,
+      "frame": 13,
+      "beat": "the serve: the shuttle in the server's right palm, the racket in his off hand, the receiver across the net"
+    },
+    {
+      "name": "t0.900.png",
+      "sec": 0.9,
+      "frame": 22,
+      "beat": "the return's contact (projectile.struck at 0.898 s)"
+    },
+    {
+      "name": "t1.000.png",
+      "sec": 1.0,
+      "frame": 24,
+      "beat": "the beat after the contact: the shuttle has left the receiver's hand and is over the net"
+    },
+    {
+      "name": "t1.120.png",
+      "sec": 1.12,
+      "frame": 27,
+      "beat": "the return rising between the two players, still left of the server (no ink on his head box)"
+    },
+    {
+      "name": "t1.350.png",
+      "sec": 1.35,
+      "frame": 32,
+      "beat": "the return crossing the server at chest height; the free shuttle draws at its held-by plane 52, so its ink is over his shirt (recorded limit)"
+    },
+    {
+      "name": "t2.560.png",
+      "sec": 2.56,
+      "frame": 61,
+      "beat": "the settle: the shuttle at rest since 2.500 s at [1359.62, 691]"
+    }
+  ],
+  "events": [
+    {
+      "kind": "projectile.struck",
+      "prop": "shuttle",
+      "at": 0.558,
+      "velocity": [
+        -533,
+        -447
+      ],
+      "note": "the serve, the accepted 40.00° / 697 px/s launch, struck from the server's palm"
+    },
+    {
+      "kind": "projectile.struck",
+      "prop": "shuttle",
+      "at": 0.898,
+      "velocity": [
+        333,
+        -280
+      ],
+      "note": "the return, 40.00° in the mirror direction, speed 435 px/s (force 1.0 over forceSec 0.10)"
+    },
+    {
+      "kind": "projectile.settled",
+      "prop": "shuttle",
+      "at": 2.5,
+      "position": [
+        1359.62,
+        691
+      ],
+      "note": "on the hall's painted floor line, to the server's right"
+    }
+  ],
+  "motorDiagnostics": "none — `make` printed zero motor warnings (grep -c 'motor warning' make.log.txt = 0); the emptied list is the bake's encoding of 'no diagnostics'",
+  "cueBand": {
+    "staging": "receiver staged at entrance center (x 0.5 = 960, ground 0.602 = 650, scale 0.88); server at the default right lane (x 0.65 = 1246, 0.602, scale 0.88); the two stand 288 px apart",
+    "serveCue": 0.55,
+    "serveStruck": 0.558,
+    "cue": 0.57,
+    "cueOffsetAfterServe": 0.012,
+    "band": [
+      0.552,
+      0.75
+    ],
+    "bandSec": 0.198,
+    "missingAt": "cues at 0.770 s and later are named misses: 'strike missed: receiver never touched shuttle; a struck contact needs the prop inside the 137 px arm envelope — stage it held or in flight, not on the floor'",
+    "directionFlip": "inside the band the return's direction flips: cues up to ~0.700 s meet the shuttle right of the receiver and return it right (toward the server's side); cues 0.700-0.750 meet it left of the receiver and return it left. The chosen 0.570 returns it right."
+  },
+  "camera": "camera.follow(receiver, {sec: 2.2, zoom: 0.75}) from the serve cue (0.55 s): the frame is 1707 x 960 world px on the receiver, the frame top stays at world y 0, so no drawn head is sliced in any frame (the head tops are at world y 50)",
+  "cleanState": "episodes/a-rally/dist/ is a build output of this package and is deleted before hand-off; episodes/*/dist/*.mp4 is NOT ignored by .gitignore (a negation un-ignores it), so it must not be staged"
+}

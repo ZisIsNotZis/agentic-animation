@@ -1,0 +1,111 @@
+
+> agentic-animation@0.0.0 anim
+> tsx packages/cli/src/index.ts render-yaml episodes/a-rally/episode.yml
+
+INFO  [yaml-audio] prepared 2 spoken take(s): rally.1.0, rally.5.0; reused 0; unmatched 0 {"provider":"edge","profile":"storyteller","artifactPath":"/home/z/vibe/agentic-animation/episodes/a-rally/audio/yaml-audio.json"}
+yaml-audio: wrote 2 take(s); reused 0; unmatched 0 → /home/z/vibe/agentic-animation/episodes/a-rally/audio/yaml-audio.json
+make: wrote /home/z/vibe/agentic-animation/episodes/a-rally/performance.json (2.770s)
+[make] sudden-move warning: shuttle jumps 33px at frame 32 (1128,335 -> 1142,366) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 37px at frame 33 (1142,366 -> 1156,400) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 42px at frame 34 (1156,400 -> 1169,439) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 46px at frame 35 (1169,439 -> 1183,483) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 50px at frame 36 (1183,483 -> 1197,531) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 54px at frame 37 (1197,531 -> 1211,584) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 59px at frame 38 (1211,584 -> 1225,641) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 52px at frame 39 (1225,641 -> 1239,691) — objects must move continuously
+
+Hardware accelerated encoding disabled - "crf" option is not supported with hardware acceleration
+
+Hardware accelerated encoding disabled - "crf" option is not supported with hardware acceleration
+render: 0% (0/66 frames)
+render: 1% (1/66 frames)
+render: 2% (2/66 frames)
+render: 3% (3/66 frames)
+render: 4% (4/66 frames)
+render: 5% (5/66 frames)
+render: 6% (6/66 frames)
+render: 7% (7/66 frames)
+render: 8% (8/66 frames)
+render: 10% (9/66 frames)
+render: 11% (10/66 frames)
+render: 12% (11/66 frames)
+render: 13% (12/66 frames)
+render: 14% (13/66 frames)
+render: 15% (14/66 frames)
+render: 16% (15/66 frames)
+render: 17% (16/66 frames)
+render: 18% (17/66 frames)
+render: 19% (18/66 frames)
+render: 20% (19/66 frames)
+render: 21% (20/66 frames)
+render: 22% (21/66 frames)
+render: 23% (22/66 frames)
+render: 24% (23/66 frames)
+render: 25% (24/66 frames)
+render: 27% (25/66 frames)
+render: 28% (26/66 frames)
+render: 30% (28/66 frames)
+render: 31% (29/66 frames)
+render: 32% (30/66 frames)
+render: 33% (31/66 frames)
+render: 34% (32/66 frames)
+render: 35% (33/66 frames)
+render: 36% (34/66 frames)
+render: 37% (35/66 frames)
+render: 38% (36/66 frames)
+render: 39% (37/66 frames)
+render: 40% (38/66 frames)
+render: 41% (39/66 frames)
+render: 42% (40/66 frames)
+render: 43% (41/66 frames)
+render: 45% (42/66 frames)
+render: 46% (43/66 frames)
+render: 47% (44/66 frames)
+render: 48% (45/66 frames)
+render: 49% (46/66 frames)
+render: 50% (47/66 frames)
+render: 51% (48/66 frames)
+render: 52% (49/66 frames)
+render: 53% (50/66 frames)
+render: 54% (51/66 frames)
+render: 55% (52/66 frames)
+render: 56% (53/66 frames)
+render: 57% (55/66 frames)
+render: 59% (56/66 frames)
+render: 60% (57/66 frames)
+render: 62% (58/66 frames)
+render: 63% (59/66 frames)
+render: 64% (60/66 frames)
+render: 65% (61/66 frames)
+render: 66% (62/66 frames)
+render: 67% (63/66 frames)
+render: 68% (64/66 frames)
+render: 69% (65/66 frames)
+render: 70% (66/66 frames)
+render: 81% (66/66 frames)
+render: 94% (66/66 frames)
+
+Hardware accelerated encoding disabled - "crf" option is not supported with hardware acceleration
+
+Hardware accelerated encoding disabled - "crf" option is not supported with hardware acceleration
+render: 100% (66/66 frames)
+Svt[info]: -------------------------------------------
+Svt[info]: SVT [version]:	SVT-AV1 Encoder Lib v4.1.0
+Svt[info]: SVT [build]  :	GCC 15.2.0	 64 bit
+Svt[info]: -------------------------------------------
+Svt[info]: Level of Parallelism: 4
+Svt[info]: Number of PPCS 107
+Svt[info]: [asm level on system : up to avx2]
+Svt[info]: [asm level selected : up to avx2]
+Svt[info]: -------------------------------------------
+Svt[info]: SVT [config]: main profile	tier (auto)	level (auto)
+Svt[info]: SVT [config]: width / height / fps numerator / fps denominator 		: 1280 / 720 / 24 / 1
+Svt[info]: SVT [config]: bit-depth / color format 					: 8 / YUV420
+Svt[info]: SVT [config]: preset / tune / pred struct 					: 8 / PSNR / random access
+Svt[info]: SVT [config]: gop size / mini-gop size / key-frame type 			: 240 / 32 / key frame
+Svt[info]: SVT [config]: BRC mode / rate factor 					: CRF / 33.00
+Svt[info]: SVT [config]: AQ mode / Variance Boost 					: 2 / 0
+Svt[info]: SVT [config]: sharpness / luminance-based QP bias 				: 0 / 0
+Svt[info]: SVT [config]: QP scale compress strength 					: 0
+Svt[info]: -------------------------------------------
+render-yaml: wrote /home/z/vibe/agentic-animation/episodes/a-rally/dist/a-rally.mp4 (66 frames)

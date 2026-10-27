@@ -1,0 +1,16 @@
+
+> agentic-animation@0.0.0 anim
+> tsx packages/cli/src/index.ts make episodes/a-rally/episode.yml
+
+INFO  [yaml-audio] prepared 2 spoken take(s): rally.1.0, rally.5.0; reused 0; unmatched 0 {"provider":"edge","profile":"storyteller","artifactPath":"/home/z/vibe/agentic-animation/episodes/a-rally/audio/yaml-audio.json"}
+yaml-audio: wrote 2 take(s); reused 0; unmatched 0 → /home/z/vibe/agentic-animation/episodes/a-rally/audio/yaml-audio.json
+make: wrote /home/z/vibe/agentic-animation/episodes/a-rally/performance.json (4.960s)
+[make] sudden-move warning: shuttle jumps 30px at frame 71 (1018,365 -> 1040,386) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 33px at frame 72 (1040,386 -> 1062,411) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 37px at frame 73 (1062,411 -> 1085,440) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 41px at frame 74 (1085,440 -> 1107,474) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 45px at frame 75 (1107,474 -> 1129,513) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 48px at frame 76 (1129,513 -> 1151,556) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 53px at frame 77 (1151,556 -> 1174,604) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 57px at frame 78 (1174,604 -> 1196,656) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 36px at frame 79 (1196,656 -> 1216,685) — objects must move continuously

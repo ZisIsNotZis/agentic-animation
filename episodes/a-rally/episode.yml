@@ -1,0 +1,77 @@
+episode:
+  id: a_rally
+  title: 羽毛球：一次回合（切片 A）
+  language: zh-CN
+
+# Slice A / milestone S-A2: the accepted serve, and the rally R8 made
+# authorable. The measurements, the cue band and the rejected branches are in
+# README.md; this file is the authored intent only.
+#
+# THE ACCEPTED PREAMBLE IS BACK. r1 started with the shuttle in the server's
+# palm (`held-by`) to avoid a pickup beat; that put the held shuttle's ink on
+# the server's chin and struck the serve 84 px higher than the accepted shot's
+# low strike. The accepted serve's low strike comes FROM the pickup's crouch, so
+# the shot keeps a-badminton's pickup and is the accepted serve exactly:
+# projectile.struck 2.207 s [-533,-447] from the palm.
+#
+# COURT DISTANCE. The receiver stays at the accepted `background` lane (x 672,
+# scale 0.722, arm envelope 113 px), 574 px from the server — a two-court
+# two-shot. R8's interception walks him the 102 px to the descending shuttle
+# (672 -> 774) and meets it at the cork; the cue band this staging measures is
+# 2.205-2.465 s (0.260 s), README "The cue band".
+#
+# TIMING. The DSL has no explicit cue time: a beat happens where it sits in the
+# cursor, and the cursor advances by the durations before it (dialogue, `…`
+# beats, blocking calls). The receiver's push therefore sits on its own beat
+# 10 ms after the serve's cue — a `movement.to(receiver, receiver)` no-op with
+# durationSec 0.010, because state calls advance no cursor and a `…` beat is
+# 0.55 s. Putting both pushes on the serve's own cue was measured and does not
+# land the return (one strike — the serve; it settles 477.11; no diagnostic at
+# all, so the shared cue silently drops the beat), which is why the 10 ms spacer
+# stays. README "The cue band" holds the measurement and the band.
+#
+# No camera call: the composition's full-stage wide keeps the whole court and
+# never slices a drawn head. A shuttle-follow drops the frame to the floor with
+# the landing and cuts both heads; a receiver-follow at 0.75 only crops the set.
+actors:
+  server:
+    use: figure/athlete_a
+    voice: voice/zh/student_a
+  receiver:
+    use: figure/athlete_a
+    voice: voice/zh/aqiang
+
+locations:
+  hall:
+    use: set/badminton_hall
+
+objects:
+  shuttle:
+    use: prop/shuttle
+  racket:
+    use: prop/racket
+
+scenes:
+  - id: rally
+    location: hall
+    actors:
+      server: {facing: left}
+      receiver: {facing: right, entrance: background}
+    objects:
+      # The shuttle starts on the floor (the accepted pickup); the racket is in
+      # the server's OFF hand from the first frame (R7).
+      shuttle: center
+      racket: held-by(server, left)
+    script:
+      - server: "{pose.orient(server, \"left\")}{pose.orient(receiver, \"right\")}"
+      # 1 pick up — the accepted ~1.8 s walk-and-bend, budgeted in silent beats.
+      - server: "{prop.pickup(server, shuttle)}…………"
+      # 2 serve — the accepted strike (2.207 s, [-533,-447]); the cursor then
+      #   waits for the return's cue.
+      - server: "{...action.push(server, shuttle, 1.0, 0.16), mode: \"nonblock\"}"
+      # 3 the return, 10 ms after the serve's cue: the receiver walks to the
+      #   descending shuttle and meets it at the cork.
+      - receiver: "{...movement.to(receiver, receiver), durationSec: 0.010}"
+      - receiver: "{action.push(receiver, shuttle, 1.0, 0.16)}"
+      # 4 silence while the return flies and settles.
+      - server: "…"
