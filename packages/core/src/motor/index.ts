@@ -238,6 +238,12 @@ export {nativeCrouchDrop} from "./skeleton";
 
 const WAIST_RATE = 120; // deg/s
 const CROUCH_RATE = 1.6; // fraction/s
+/** Deg/s an off-hand pickup turns a carried prop to its hanging carry (R9):
+ *  under the 90 deg/s the whole-body proposal allows an owned prop, so a prop
+ *  picked up mid-shot swings down into the hand instead of being refused. */
+const OFF_CARRY_TURN_RATE = 80;
+/** Stage px a hanging carry keeps between its prop's lowest ink and the ground. */
+const CARRY_FLOOR_MARGIN = 6;
 /** Gravity for released props (stage px/s²). */
 const GRAVITY = 2600;
 /** Stylised strike scale: one force unit held for one second, on a prop of
@@ -1272,18 +1278,23 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     const live = props.get(prop.id);
     if (!state || !live) continue;
     const off = held.hand === "hand_l";
+    // An off-hand carry is a hanging carry (R9): the prop starts the scene at
+    // its hang angle, so the bake has no 170 deg turn to make while it carries.
+    if (off) live.rotation = offCarryHang(state);
     if (off) { state.off.holding = prop.id; state.off.grip = {ox: 0, oy: 0}; state.off.angleAtBind = live.rotation; }
     else { state.holding = prop.id; state.grip = {ox: 0, oy: 0}; state.propAngleAtBind = live.rotation; }
+    // The carry hand is the pose's own point (the off hand's hanging carry hangs
+    // from the same one), so the socket lands on the palm either way.
+    const hand: [number, number] = off
+      ? hangCarryPoint(state)
+      : [geometryShoulder(state)[0] + (0.35 / Math.hypot(0.35, 0.94)) * state.body.armReach * state.scale * 0.6 * geometryFacing(state),
+         geometryShoulder(state)[1] + (0.94 / Math.hypot(0.35, 0.94)) * state.body.armReach * state.scale * 0.6];
     // The declared socket puts the hand on the drawn handle: the prop's origin
     // sits one rotated socket back from the hand point.
     const socket = live.grip ? {x: live.grip.at[0], y: live.grip.at[1]} : {x: 0, y: 0};
     const rotated = [socket.x * Math.cos(live.rotation * Math.PI / 180) - socket.y * Math.sin(live.rotation * Math.PI / 180),
       socket.x * Math.sin(live.rotation * Math.PI / 180) + socket.y * Math.cos(live.rotation * Math.PI / 180)] as [number, number];
     const sh = off ? geometryShoulderL(state) : geometryShoulder(state);
-    const hand: [number, number] = off
-      ? [sh[0] - 0.16 * state.body.armReach * state.scale * geometryFacing(state), sh[1] + 0.94 * state.body.armReach * state.scale]
-      : [sh[0] + (0.35 / Math.hypot(0.35, 0.94)) * state.body.armReach * state.scale * 0.6 * geometryFacing(state),
-         sh[1] + (0.94 / Math.hypot(0.35, 0.94)) * state.body.armReach * state.scale * 0.6];
     live.x = hand[0] - rotated[0];
     live.y = hand[1] - rotated[1];
     live.falling = false;
@@ -1370,11 +1381,57 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
   /** The OFF hand's carry pose (R7): lower and just behind the shoulder, so a
    *  carried racket hangs at his side instead of standing where the striking
    *  palm carries the shuttle. */
-  const carryHandLeftAt = (state: ActorState): [number, number] => {
+  // A function declaration, not an arrow: the `held-by` seed above runs before
+  // this block and reads the same carry point (one home for it).
+  function carryHandLeftAt(state: ActorState): [number, number] {
     const k = state.scale;
     const sh = geometryShoulderL(state);
     return [sh[0] - 0.16 * state.body.armReach * k * geometryFacing(state), sh[1] + 0.94 * state.body.armReach * k];
-  };
+  }
+  /**
+   * The OFF-hand carry is a HANGING carry (R9): the prop's own up-axis is laid
+   * along the arm's carry line (shoulder -> carry hand), so a prop long enough
+   * to be carried at the side hangs head-down from the palm instead of standing
+   * upright out of it. Upright, a correctly-sized racket's hoop landed at head
+   * height and inked across the server's face (measured: 33 ink samples in the
+   * drawn head box); hanging, the hoop sits at knee height, 9.7 deg off vertical
+   * and behind the hand. The socket is re-solved against this rotation every
+   * substep, so the handle stays in the palm at any angle.
+   */
+  function offCarryHang(state: ActorState): number {
+    const k = state.scale;
+    const dx = -0.16 * state.body.armReach * k * geometryFacing(state);
+    const dy = 0.94 * state.body.armReach * k;
+    return Math.atan2(dx, -dy) * 180 / Math.PI;
+  }
+  /**
+   * How far a hanging prop reaches below the palm that carries it: the farthest
+   * corner of its own declared body box from its socket, in stage px. The
+   * hanging carry keeps the hand at least this far above the ground, so a prop
+   * carried at the side never draws its head through the floor when the body
+   * folds to pick something up with the other hand.
+   */
+  function carriedDrop(propId: string | null): number {
+    const prop = propId ? props.get(propId) : undefined;
+    if (!prop?.touchBox || !prop.grip) return 0;
+    const [sx, sy] = prop.grip.at;
+    const {a, b} = prop.touchBox;
+    return Math.max(
+      Math.hypot(a[0] - sx, a[1] - sy), Math.hypot(b[0] - sx, b[1] - sy),
+      Math.hypot(a[0] - sx, b[1] - sy), Math.hypot(b[0] - sx, a[1] - sy));
+  }
+  /** The lowest a hanging carry's hand may go: its prop's own drop above the
+   *  ground line, or no bound at all for a prop that declares no body box. */
+  function hangClearance(state: ActorState): number {
+    const drop = carriedDrop(state.off.holding);
+    return drop > 0 ? state.groundY - drop - CARRY_FLOOR_MARGIN : Number.POSITIVE_INFINITY;
+  }
+  /** The off hand's carry point: the carry pose, lifted when the prop it carries
+   *  would otherwise hang its head through the ground (R9). */
+  function hangCarryPoint(state: ActorState): [number, number] {
+    const point = carryHandLeftAt(state);
+    return [point[0], Math.min(point[1], hangClearance(state))];
+  }
   /** World rest hand of the OFF arm (the left hand's neutral position). */
   const restHandLeftAt = (state: ActorState): [number, number] => {
     const k = state.scale;
@@ -2481,7 +2538,9 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
           state.waist = approach(state.waist, 0, WAIST_RATE * delta);
           state.crouch = recoverCrouch(state, delta);
         }
-        const carry = carryHandLeftAt(state);
+        // A hanging carry lifts its hand rather than put its prop through the
+        // floor (R9): the hand never drops below the prop's own drop.
+        const carry = hangCarryPoint(state);
         const sh = geometryShoulderL(state);
         let desired: [number, number];
         if (state.off.rel) {
@@ -2513,7 +2572,16 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         state.off.shoulder = sh;
         if (heldProp.grip) {
           // A declared socket is re-solved every substep, exactly as the right
-          // hand's carry does: the hand point sits on the drawn handle.
+          // hand's carry does: the hand point sits on the drawn handle. The
+          // prop hangs from that socket (R9): it turns to the carry line at a
+          // rate the prop-angle gate accepts, so a long prop carried at the side
+          // hangs head-down instead of standing at head height.
+          const hang = offCarryHang(state);
+          const turned = approach(heldProp.rotation, hang, OFF_CARRY_TURN_RATE * delta);
+          if (Math.abs(turned - heldProp.rotation) > 1e-9) {
+            heldProp.rotation = turned;
+            state.off.angleAtBind = turned;
+          }
           const socket = rotateVector(heldProp.grip.at, heldProp.rotation);
           heldProp.x = hand[0] - socket[0];
           heldProp.y = hand[1] - socket[1];

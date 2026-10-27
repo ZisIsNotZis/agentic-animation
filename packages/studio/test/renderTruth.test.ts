@@ -24,9 +24,10 @@ import {
   type CompiledEpisode,
 } from "../../core/src/index";
 import {solidSupport, thermosSolid, transformSolid} from "../../core/src/motor/propGeometry";
+import {figureHandAnchor, figureViewForOrientation} from "../../core/src/schemas/figureArtwork";
 import {evaluatePerformance} from "../src/performance/evaluate";
 import {solveActorFigure} from "../src/components/performance/Actor";
-import {designHandToWorld} from "../src/components/performance/reach";
+import {designHandToWorld, drawnArmPoint} from "../src/components/performance/reach";
 import type {PerformanceManifest} from "../src/performance/types";
 
 const REPO = fileURLToPath(new URL("../../../", import.meta.url));
@@ -212,13 +213,35 @@ test("m5-acting: the drawn prop follows the bake at the pickup and putdown keys"
     const prop = evaluatePerformance(manifest, frame).props.find((candidate) => candidate.id === "thermos");
     assert.ok(prop, `frame ${frame} draws no thermos`);
     const support = solidSupport(solid, prop.rotation ?? 0);
-    return {drawn: prop.y + support.y, x: prop.x + support.x, bake: scene.motor.props.thermos![frame]!};
+    return {drawn: prop.y + support.y, x: prop.x + support.x, bake: scene.motor.props.thermos![frame]!, palm: paintedPalmOffset(manifest, frame)};
+  };
+  /** R9: a HELD prop draws on the palm the artwork paints, not on the hand joint
+   *  the bake carries (lin_b_draft paints its hand 9.6/17.6 px off the joint), so
+   *  the drawn prop is the bake translated by that palm's offset. A released prop
+   *  draws the bake exactly. Composed here through the renderer's own pose path,
+   *  not through the evaluator's term, so the two are independent measurements. */
+  const paintedPalmOffset = (source: PerformanceManifest, frame: number): [number, number] => {
+    const state = evaluatePerformance(source, frame);
+    const actor = state.actors.find((candidate) => candidate.holds === "thermos" || candidate.holdsL === "thermos");
+    if (!actor?.artwork || !actor.skeletonPose) return [0, 0];
+    const side = actor.holdsL === "thermos" ? "l" : "r";
+    const view = actor.artwork.views[figureViewForOrientation(actor.orientation)];
+    const anchor = figureHandAnchor(view.hands[side].rest);
+    const arm = side === "l" ? actor.skeletonPose.armL : actor.skeletonPose.armR;
+    if (!anchor || !arm) return [0, 0];
+    const figure = solveActorFigure(actor);
+    const torso = {drop: figure.pose.torsoY, scaleY: figure.pose.torsoScaleY};
+    const palm = drawnArmPoint(actor, arm, anchor.at, side, figure.flipped, torso);
+    const joint = drawnArmPoint(actor, arm, view.skeleton.joints[`hand_${side}`]!, side, figure.flipped, torso);
+    return [palm[0] - joint[0], palm[1] - joint[1]];
   };
   const keys = keyFrames(scene);
   const floorY = scene.staging.actors.lin!.at[1] * STAGE_HEIGHT;
   const pickup = drawnProp(keys.pickup.frame);
-  assert.ok(Math.abs(pickup.drawn - (pickup.bake.y + solidSupport(solid, pickup.bake.rotation ?? 0).y)) <= 1.5,
-    `pickup f${keys.pickup.frame}: the drawn prop follows a different position than the bake`);
+  assert.ok(Math.abs(pickup.drawn - (pickup.bake.y + solidSupport(solid, pickup.bake.rotation ?? 0).y + pickup.palm[1])) <= 1.5,
+    `pickup f${keys.pickup.frame}: the drawn prop is ${(pickup.drawn - (pickup.bake.y + solidSupport(solid, pickup.bake.rotation ?? 0).y + pickup.palm[1])).toFixed(1)} px off the bake carried on the painted palm`);
+  assert.ok(Math.hypot(pickup.palm[0], pickup.palm[1]) > 5,
+    `pickup f${keys.pickup.frame}: the hold carries no painted-palm offset (${pickup.palm.map((value) => value.toFixed(1)).join(",")}), so this frame cannot tell the palm from the joint`);
   assert.ok(pickup.drawn <= floorY - 20,
     `pickup f${keys.pickup.frame}: the drawn thermos base ${pickup.drawn.toFixed(1)} has not left the floor ${floorY.toFixed(1)} at the key pose`);
 

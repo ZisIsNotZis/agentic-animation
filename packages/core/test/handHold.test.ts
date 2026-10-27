@@ -132,13 +132,24 @@ test("R7: a prop staged held-by(actor, left) opens the scene on the left palm", 
   const prop = bake.props.racket!;
   assert.equal(frames[0]!.holdsL, "racket", "the prop must be in the off hand from the first frame");
   assert.ok(frames.every((frame) => frame.holds === undefined), "the striking hand must stay empty");
-  // The prop's first frame is the hand socket, not the staged bench spot.
-  const socket = RACKET.grip.at;
-  assert.ok(Math.abs(prop[0]!.x - (frames[0]!.reachL![0] - socket[0])) < 0.5, `prop x ${prop[0]!.x} is not on the socket`);
-  assert.ok(Math.abs(prop[0]!.y - (frames[0]!.reachL![1] - socket[1])) < 0.5, `prop y ${prop[0]!.y} is not on the socket`);
+  // The prop's first frame is the hand socket, not the staged bench spot. The
+  // off-hand carry hangs the prop from its socket (R9), so the socket is solved
+  // at the BAKED rotation: the drawn handle is the point that must land on the
+  // hand, not an unrotated art offset.
+  const handleAt = (frame: number): [number, number] => {
+    const socket = RACKET.grip.at;
+    const radians = ((prop[frame]!.rotation ?? 0) * Math.PI) / 180;
+    return [prop[frame]!.x + socket[0] * Math.cos(radians) - socket[1] * Math.sin(radians),
+      prop[frame]!.y + socket[0] * Math.sin(radians) + socket[1] * Math.cos(radians)];
+  };
+  const first = handleAt(0);
+  assert.ok(Math.hypot(first[0] - frames[0]!.reachL![0], first[1] - frames[0]!.reachL![1]) < 0.5,
+    `the handle at ${first.map((v) => v.toFixed(1)).join(",")} is not on the palm ${frames[0]!.reachL!.map((v) => v.toFixed(1)).join(",")}`);
+  assert.ok(Math.abs(prop[0]!.rotation ?? 0) > 90, `the off-hand carry must hang the prop (rotation ${prop[0]!.rotation}), not stand it upright`);
   // The hand point rides with the body and never leaves the socket.
   for (let frame = 0; frame < frames.length; frame++) {
-    assert.ok(Math.abs(prop[frame]!.x - (frames[frame]!.reachL![0] - socket[0])) < 0.5,
+    const handle = handleAt(frame);
+    assert.ok(Math.hypot(handle[0] - frames[frame]!.reachL![0], handle[1] - frames[frame]!.reachL![1]) < 0.5,
       `the carried prop left the socket at frame ${frame}`);
   }
 });

@@ -110,12 +110,22 @@ to the last frame, and the striking hand never holds it. The off hand's channel 
    (`prop.pickup(server, obj, {hand: "left"})`), exercised in
    `packages/core/test/handHold.test.ts` rather than in this shot. If the pickup belongs in
    frame, it is one authored beat away.
-2. **A motor-driven prop draws at scale 1.** `evaluatePerformance`'s motor path writes
-   `scale: 1` for a prop the bake owns, while the *motor* builds the touch box and the handle
-   socket at the declared stage scale (`prop/racket`'s 340/200 = 1.7). The racket's drawn
-   handle therefore sits ~11 px below the motor's socket. The shuttle has the same mismatch
-   (its accepted 2.4×-real size is the scale-1 drawing); changing it would move the accepted
-   shot, so it is recorded, not fixed here.
+2. **A motor-driven prop drew at scale 1 — CLOSED by R9.** `evaluatePerformance`'s motor
+   path wrote `scale: 1` for a prop the bake owns, while the *motor* built the touch box and
+   the handle socket at the declared stage scale (`prop/racket`'s 340/200 = 1.7), so the
+   racket's drawn handle sat ~11 px below the motor's socket — and, worse, 49.6 px from the
+   palm the *side* view paints, which is not the `hand_l` joint the bake carries (53.7 px of
+   float in total, the reviewers' "30–70 px"). The rule now in force is
+   [8_MOTOR](../../docs/8_MOTOR.md) "Prop placement (one authority)": a motor-driven prop
+   draws at its declared stage scale, and a held prop's declared socket rides the palm the
+   artwork paints. Measured after the change on this shot and on `a-rally`: the drawn handle
+   is 0.01 px from the drawn palm on every held frame (`heldPropHand.test.ts`). Its off-hand
+   carry also hangs the racket head-down now: upright, the correctly-sized hoop stood at head
+   height and inked across the server's face on this shot's own frames — hanging, the hoop
+   sits at knee height and no painted eye or mouth is ever covered
+   (`heldPropHand.test.ts`), with its hand kept clear of the floor while the body folds for
+   the pickup. The kept r7 rendition predates both, so that video still shows the scale-1
+   upright racket and a 2.4×-real shuttle (now drawn at its declared 0.58, ~1.4× real).
 
 ## The force and the drive length
 

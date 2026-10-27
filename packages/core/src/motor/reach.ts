@@ -163,21 +163,46 @@ export function renderedShoulderWorld(actor: ReachInput, flipped: boolean, side:
 }
 
 /**
- * EXACTLY what the SVG renders for the right arm: arm rotations nest inside
- * the torso group's rotate(waistPitch) about the waist joint, and the div
- * mirror (flipped figures) maps the design x about space.width/2. This is
- * the ground truth the angles must satisfy — solveSkeleton's arm chain uses
- * a different mirrored convention and is NOT the render truth.
+ * EXACTLY what the SVG renders for a design-frame point of one arm chain: the
+ * forearm turn about the elbow, the upper arm's about the shoulder, then the
+ * torso group — vertical scale about the waist, waist rotation, crouch drop —
+ * and finally the div's stage scale and mirror (flipped figures map the design
+ * x about space.width/2). `torso` is the native pose's torso channel; a legacy
+ * figure draws no torso group and leaves it out. This is the ground truth the
+ * angles must satisfy — solveSkeleton's arm chain uses a different mirrored
+ * convention and is NOT the render truth.
+ */
+export function drawnArmPoint(
+  actor: ReachInput,
+  arm: {upper: number; lower: number},
+  point: Pt,
+  side: ReachSide,
+  flipped: boolean,
+  torso: {drop?: number; scaleY?: number} = {},
+): [number, number] {
+  const sk = actor.skeleton;
+  if (!sk) throw new Error("drawnArmPoint needs skeleton");
+  const space = sk.space ?? {width: 400, height: 720};
+  const waistPitch = (actor.lean ?? 0) + (actor.motor ? actor.waist ?? 0 : 0);
+  const W = sk.joints.waist ?? [space.width / 2, space.height * 0.71];
+  const {S, E} = armRest(sk, side);
+  const elbowT = add(S, rot(arm.upper, sub(E, S)));
+  const handT = add(elbowT, rot(arm.upper + arm.lower, sub(point, E)));
+  // The torso group's translate(W) scale(1 sy) translate(-W) sits INSIDE its
+  // rotate(waistPitch W), and the group's own translate(0 drop) outside it.
+  const scaled: Pt = [handT[0], W[1] + (handT[1] - W[1]) * (torso.scaleY ?? 1)];
+  const wd = add([0, torso.drop ?? 0], add(W, rot(waistPitch, sub(scaled, W))));
+  return designHandToWorld(actor, wd, space, flipped);
+}
+
+/**
+ * EXACTLY what the SVG renders for the right arm's hand joint (no torso drop:
+ * callers that carry a crouch add it to `actor.y`). The reach IK is exact, so a
+ * POSED hand lands where this returns — but the joint is not where the artwork
+ * paints the palm; see `figureHandAnchor` and `drawnArmPoint`.
  */
 export function renderedHandWorld(actor: ReachInput, armRight: {upper: number; lower: number}, flipped: boolean, side: ReachSide = "r"): [number, number] {
   const sk = actor.skeleton;
   if (!sk) throw new Error("renderedHandWorld needs skeleton");
-  const space = sk.space ?? {width: 400, height: 720};
-  const waistPitch = (actor.lean ?? 0) + (actor.motor ? actor.waist ?? 0 : 0);
-  const W = sk.joints.waist ?? [space.width / 2, space.height * 0.71];
-  const {S, E, H0} = armRest(sk, side);
-  const elbowT = add(S, rot(armRight.upper, sub(E, S)));
-  const handT = add(elbowT, rot(armRight.upper + armRight.lower, sub(H0, E)));
-  const wd = add(W, rot(waistPitch, sub(handT, W)));
-  return designHandToWorld(actor, wd, space, flipped);
+  return drawnArmPoint(actor, armRight, armRest(sk, side).H0, side, flipped);
 }

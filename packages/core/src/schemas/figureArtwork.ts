@@ -111,6 +111,71 @@ export function createFigureArtworkSchema(skeleton: z.ZodType<Skeleton>) {
 }
 export type FigureArtwork = z.infer<ReturnType<typeof createFigureArtworkSchema>>;
 
+const handAnchors = new Map<string, {at: [number, number]; scale: number} | undefined>();
+
+/**
+ * Where one hand layer PAINTS its palm, in the view's design frame: the origin
+ * of the shape carrying `data-kind="hand"`, composed from the transforms that
+ * sit between the layer root and that shape, plus the linear scale that frame
+ * carries (a hand drawn at 1.2x). The drawing is the declaration of where its
+ * palm is painted — a view may draw its arm inboard of the declared `hand_*`
+ * joint (athlete_a `side` paints its palms 49.6 px from the joints), and the
+ * renderer carries a held prop on the painted palm, not on the joint. A layer
+ * whose transform chain the accepted grammar does not cover returns undefined
+ * so the caller keeps the declared joint instead of guessing.
+ */
+export function figureHandAnchor(layer: string): {at: [number, number]; scale: number} | undefined {
+  if (handAnchors.has(layer)) return handAnchors.get(layer);
+  type Matrix = [number, number, number, number, number, number];
+  const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
+  const multiply = (m: Matrix, n: Matrix): Matrix => [
+    m[0] * n[0] + m[1] * n[2], m[0] * n[1] + m[1] * n[3],
+    m[2] * n[0] + m[3] * n[2], m[2] * n[1] + m[3] * n[3],
+    m[4] * n[0] + m[5] * n[2] + n[4], m[4] * n[1] + m[5] * n[3] + n[5],
+  ];
+  const transforms = (value: string): Matrix | undefined => {
+    let matrix: Matrix = IDENTITY;
+    let rest = value;
+    while (rest.trim()) {
+      const call = rest.match(/^\s*(translate|scale|rotate|matrix)\s*\(([^)]*)\)/);
+      if (!call) return undefined;
+      const numbers = call[2]!.trim().split(/[\s,]+/).filter(Boolean).map(Number);
+      if (!numbers.length || numbers.some((number) => !Number.isFinite(number))) return undefined;
+      let step: Matrix;
+      if (call[1] === "translate") step = [1, 0, 0, 1, numbers[0]!, numbers[1] ?? 0];
+      else if (call[1] === "scale") step = [numbers[0]!, 0, 0, numbers[1] ?? numbers[0]!, 0, 0];
+      else if (call[1] === "matrix" && numbers.length === 6) step = [numbers[0]!, numbers[1]!, numbers[2]!, numbers[3]!, numbers[4]!, numbers[5]!];
+      else if (call[1] === "rotate") {
+        const radians = (numbers[0]! * Math.PI) / 180;
+        const turn: Matrix = [Math.cos(radians), Math.sin(radians), -Math.sin(radians), Math.cos(radians), 0, 0];
+        step = numbers.length < 3
+          ? turn
+          : multiply(multiply([1, 0, 0, 1, numbers[1]!, numbers[2]!], turn), [1, 0, 0, 1, -numbers[1]!, -numbers[2]!]);
+      } else return undefined;
+      matrix = multiply(step, matrix);
+      rest = rest.slice(call[0].length);
+    }
+    return matrix;
+  };
+  // Groups nest outermost-first; a child's own transform reaches the point first.
+  const chain: Matrix[] = [IDENTITY];
+  let found: {at: [number, number]; scale: number} | undefined;
+  for (const tag of layer.matchAll(/<(\/?)g\b([^<>]*?)(\/?)>/g)) {
+    if (tag[1] === "/") { if (chain.length > 1) chain.pop(); continue; }
+    const attribute = tag[2]!.match(/\btransform\s*=\s*(["'])([^"']*)\1/);
+    const parsed = attribute ? transforms(attribute[2]!) : IDENTITY;
+    if (!parsed) { handAnchors.set(layer, undefined); return undefined; }
+    const matrix = multiply(parsed, chain.at(-1)!);
+    if (/\bdata-kind\s*=\s*["']hand["']/.test(tag[2]!)) {
+      found = {at: [matrix[4], matrix[5]], scale: Math.hypot(matrix[0], matrix[1])};
+      break;
+    }
+    if (tag[3] !== "/") chain.push(matrix);
+  }
+  handAnchors.set(layer, found);
+  return found;
+}
+
 export function figureViewForOrientation(orientation: string = "front"): FigureView {
   if (orientation === "front" || orientation === "back") return orientation;
   if (orientation === "left" || orientation === "right") return "side";

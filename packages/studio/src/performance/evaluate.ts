@@ -2,7 +2,8 @@ import { ease } from "../lib/interpolate";
 import {actorTurn, rotateAboutPivot} from "./actorTurn";
 import { circleOverlapsBox, solveSkeleton } from "@anim/core/skeleton";
 import type {FigureArtwork, Skeleton} from "@anim/core";
-import {figureViewForOrientation} from "@anim/core/figure-artwork";
+import {figureViewForOrientation, figureHandAnchor} from "@anim/core/figure-artwork";
+import {drawnArmPoint, isFlipped} from "@anim/core/reach";
 import type {
   EvaluatedActor,
   EvaluatedCamera,
@@ -1045,6 +1046,77 @@ function applyHeldMotion(
   // Past the drop window: the staged position (already the fallback).
 }
 
+/**
+ * World offset from the hand joint the motor carries a prop by to the palm the
+ * ARTWORK PAINTS for that hand (R9). The bake is the physics hand; the drawing's
+ * hand layer is where the finger ink is, and the two disagree wherever a view
+ * paints its arm inboard of the declared joints (athlete_a `side`: 49.6 stage px
+ * at the server's 0.88). A held prop's drawn socket rides the painted palm, so
+ * the handle is in the hand a viewer sees; the offset is 0 for a legacy figure
+ * (no artwork), for a drawing whose palm sits on its joint, and wherever the
+ * frame carries no baked pose to compose.
+ */
+function paintedPalmOffset(actor: EvaluatedActor, side: "l" | "r"): [number, number] {
+  const artwork = actor.artwork;
+  const pose = actor.skeletonPose;
+  if (!artwork || !pose) return [0, 0];
+  const view = artwork.views[figureViewForOrientation(actor.orientation)];
+  const skeleton = view.skeleton;
+  const anchor = figureHandAnchor(view.hands[side].rest);
+  const arm = side === "l" ? pose.armL : pose.armR;
+  if (!anchor || !arm || !skeleton) return [0, 0];
+  const flipped = isFlipped(actor);
+  const torso = {drop: pose.waistY ?? 0, scaleY: pose.torsoScaleY ?? 1};
+  const drawn = drawnArmPoint(actor, arm, anchor.at, side, flipped, torso);
+  const joint = drawnArmPoint(actor, arm, skeleton.joints[`hand_${side}`]!, side, flipped, torso);
+  return [drawn[0] - joint[0], drawn[1] - joint[1]];
+}
+
+/** Frames the drawn painted-palm offset takes to release after the bake stops
+ *  reporting a hold (the same window the legacy held motion drops over). */
+const DRAWN_OFFSET_RELEASE_FRAMES = 8;
+
+/** The hand holding `id` this frame, if the frame reports one. */
+function holderOf(id: string, actors: Map<string, EvaluatedActor>): {actor: EvaluatedActor; side: "l" | "r"} | undefined {
+  for (const actor of actors.values()) {
+    if (actor.holds === id) return {actor, side: "r"};
+    if (actor.holdsL === id) return {actor, side: "l"};
+  }
+  return undefined;
+}
+
+/**
+ * The drawn painted-palm offset a prop carries this frame (R9). While the bake
+ * reports a hold it is the holder's own offset. Just after a release the prop is
+ * a free body at its baked position, but its drawing still stands where the hand
+ * was: the offset is released over DRAWN_OFFSET_RELEASE_FRAMES instead of
+ * vanishing on the strike frame (measured: a 62 px jump at a-badminton's 2.208 s
+ * strike, against the prop's own 22 px of motion per frame).
+ */
+function paintedPalmShift(
+  id: string,
+  actors: Map<string, EvaluatedActor>,
+  frame: number,
+  actorAtFrame?: (actorId: string, at: number) => EvaluatedActor | undefined,
+): [number, number] {
+  const held = holderOf(id, actors);
+  if (held) return paintedPalmOffset(held.actor, held.side);
+  if (!actorAtFrame) return [0, 0];
+  for (let back = 1; back <= DRAWN_OFFSET_RELEASE_FRAMES; back += 1) {
+    const at = frame - back;
+    if (at < 0) return [0, 0];
+    for (const actorId of actors.keys()) {
+      const previous = actorAtFrame(actorId, at);
+      const side = previous?.holds === id ? "r" as const : previous?.holdsL === id ? "l" as const : undefined;
+      if (!previous || !side) continue;
+      const offset = paintedPalmOffset(previous, side);
+      const fade = 1 - smoothstep(back / DRAWN_OFFSET_RELEASE_FRAMES);
+      return [offset[0] * fade, offset[1] * fade];
+    }
+  }
+  return [0, 0];
+}
+
 function propState(
   prop: PerformanceProp,
   actors: Map<string, EvaluatedActor>,
@@ -1052,9 +1124,22 @@ function propState(
   context?: {actorAtFrame?: (actorId: string, at: number) => EvaluatedActor | undefined; motorPropFrame?: {x?: number; y?: number; falling?: boolean; rotation?: number}},
 ): EvaluatedProp {
   // Motor authority: when the motor simulation owns this prop, its baked
-  // frame IS the position — the binding interpolation below never runs.
-  if (context?.motorPropFrame && typeof context.motorPropFrame.x === "number") {
-    return projectedProp(prop, {x: context.motorPropFrame.x, y: context.motorPropFrame.y ?? stagedPropPosition(prop, frame).y, rotation: context.motorPropFrame.rotation ?? 0, scale: 1}, evaluateTracks(prop.tracks, frame));
+  // frame IS the position — the binding interpolation below never runs. Two
+  // drawing terms ride on top of it (R9): the prop draws at its DECLARED stage
+  // scale (the scale the motor sized its body and socket with — a `scale: 1`
+  // drawing put the racket's handle 11.2 px below the socket), and while the
+  // bake reports a hold the drawn prop rides the palm the artwork PAINTS, not
+  // the hand joint the bake carries (`paintedPalmOffset`).
+  const motorFrame = context?.motorPropFrame;
+  if (motorFrame && typeof motorFrame.x === "number") {
+    const staged = stagedPropPosition(prop, frame);
+    const palm = paintedPalmShift(prop.id, actors, frame, context?.actorAtFrame);
+    return projectedProp(prop, {
+      x: motorFrame.x + palm[0],
+      y: (motorFrame.y ?? staged.y) + palm[1],
+      rotation: motorFrame.rotation ?? 0,
+      scale: staged.scale,
+    }, evaluateTracks(prop.tracks, frame));
   }
   const stagedNow = stagedPropPosition(prop, frame);
   const tracks = evaluateTracks(prop.tracks, frame);

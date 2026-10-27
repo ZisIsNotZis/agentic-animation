@@ -132,13 +132,20 @@ Softer and harder impulses were measured and rejected at the bake
 
 - **No racket swing, and the receiver has no racket.** `swing.grip`/`release`
   are undeclared (slice B) and the only racket is the server's off hand (R7), so
-  both contacts are the bare-hand strike the motor can bake. In the medium
+  both contacts are the bare-hand strike the motor can bake. The off-hand carry
+  holds it HANGING head-down at his side (R9): upright, the correctly-sized
+  racket's hoop stood at head height and inked across his face in this shot's
+  medium two-shot; the carry now keeps the hoop at knee height and its hand
+  clear of the floor
+  ([8_MOTOR](../../docs/8_MOTOR.md), "Prop placement (one authority)"). In the medium
   two-shot the server's serve follow-through arm is visibly extended while the
   shuttle is at the receiver's hand; the arm recovers on its own ~0.7 s ramp.
 - **One elevation only** (40°); the return differs from the serve only in
   direction.
-- **The shuttle is drawn at 2.4× real size** (R4's `stageWidth` 116 floor, the
-  motor-driven prop drawn at scale 1) — a recorded, accepted limit.
+- **The shuttle draws at its declared size** (R4's `stageWidth` 116 → scale 0.58,
+  ~1.4× real). The kept r4 rendition predates R9, when a motor-driven prop drew
+  at scale 1, so that video shows it at 2.4× real; the rule is
+  [8_MOTOR](../../docs/8_MOTOR.md) "Prop placement (one authority)".
 - **The return passes behind the server.** With the fixed plane the free shuttle
   draws at plane 35, so as the return crosses him the server's body (50) hides
   it for a couple of frames (`stills/t3.300.png` shows it in flight during the
