@@ -636,7 +636,13 @@ interface ActorState {
   /** Push hand drive: the force accelerates the HAND; a taut arm drags the body.
    *  Phase "approach" walks the pusher into arm's range first (his own legs —
    *  legitimate locomotion); "drive" extends the hand and conducts force. */
-  handDrive: {target: string; force: number; t: number; sec: number; speed: number; hand: [number, number]; contact: boolean; phase: "approach" | "drive"; contactT: number | null} | null;
+  handDrive: {target: string; force: number; t: number; sec: number; speed: number; hand: [number, number]; contact: boolean; phase: "approach" | "drive"; contactT: number | null;
+    /** R8 interception: the solved meeting point for a prop already in flight.
+     *  When set the hand travels to that fixed world point (and waits there for
+     *  the prop) instead of chasing the live prop, and the drive keeps the
+     *  facing it was solved for — a prop crossing the body must not flip the
+     *  strike direction mid-beat. */
+    aim?: [number, number]; facing?: 1 | -1} | null;
   /** Where the hand grips the held prop relative to the hand point (the prop
    *  never teleports to the hand — it stays exactly where the grip landed).
    *  A declared socket supersedes it: the wrist block re-solves the socket
@@ -1112,6 +1118,116 @@ function arriveMotorWalk(
   state.walkBackward = false;
 }
 
+/** Time for the drive hand to cover `distance` from rest under the same
+ *  acceleration/cap the drive itself uses (`HAND_ACC * force`, capped 480). */
+function handTravelTime(distance: number, force: number): number {
+  const a = HAND_ACC * force;
+  const vmax = Math.min(480, HAND_MAX * force);
+  const ramp = vmax / a;
+  const rampDistance = 0.5 * a * ramp * ramp;
+  return distance <= rampDistance ? Math.sqrt(2 * distance / a) : ramp + (distance - rampDistance) / vmax;
+}
+
+/**
+ * R8 interception: where a prop already in flight will be when the striker can
+ * meet it. A struck return cannot be aimed at the prop's current position: the
+ * hand travels at 480 px/s while a struck projectile crosses at ~1000 px/s, so
+ * a beat queued even a couple of frames off reaches the prop's PAST position and
+ * the contact window (a hand-disc inside a box) is a lucky frame instead of a
+ * hand-authorable beat.
+ *
+ * The solve walks the prop's own integrator forward (semi-implicit Euler, the
+ * same step the prop takes) and returns the earliest substep at which all three
+ * physical conditions hold at once:
+ *   1. the prop's drawn body box is inside the arm envelope — the hand's reach
+ *      disc around the shoulder plus the hand radius (the hand circle is what
+ *      touches the box, so the box's own height is reach the arm need not buy);
+ *   2. the striker's root can walk to a mark whose shoulder is inside that
+ *      envelope, within the walk speed (a prop outside a body's reach is not
+ *      teleported into it);
+ *   3. the drive hand can travel to the meeting point it needs least travel for
+ *      (the box point nearest its rest hand, clamped into the reach disc) by
+ *      then, at its honest rate (no faster hand than any other beat).
+ * The caller aims the hand at this fixed point and holds it; the prop arrives
+ * on its own arc, so overlap is a closing speed, not a lucky frame. Returns
+ * undefined when the remaining arc never satisfies the three — the beat is then
+ * an honest miss, named by the caller, never a freeze at a refused pose.
+ */
+function projectileIntercept(
+  state: ActorState,
+  prop: PropState,
+  now: number,
+  floorY: number,
+  force: number,
+): {aim: [number, number]; root: number; at: number} | undefined {
+  if (!prop.projectile || !prop.falling) return undefined;
+  const k = state.scale;
+  const R = state.body.armReach * k;
+  const handR = state.body.handRadius * k;
+  // Contact is the hand CIRCLE against the drawn body box, so the reach that
+  // counts is the arm plus the hand radius (a palm touches with its edge).
+  const envelope = R + handR;
+  const sh = geometryShoulder(state);
+  const shoulderX = sh[0] - state.x;
+  const shoulderY = sh[1];
+  const box = prop.touchBox;
+  const rest = restHandAt(state);
+  const restRelX = rest[0] - state.x;
+  const restY = rest[1];
+  // A legacy figure's rest hand mirrors with `facing`; a native one keeps the
+  // pose its declared orientation draws. The travel estimate must use the hand
+  // the striker will actually start from.
+  const mirrors = !state.skeletonViews;
+  for (let n = 1; n * DT <= 2.5; n++) {
+    const tau = n * DT;
+    // The prop's own integrator: x += vx*dt, vy += g*dt, y += vy*dt. Summed
+    // over n substeps it is the closed form below (the +DT term is the
+    // semi-implicit half-step the explicit `0.5*g*t^2` omits).
+    const px = prop.x + prop.vx * tau;
+    const py = prop.y + prop.vy * tau + 0.5 * GRAVITY * tau * (tau + DT);
+    // Flight ends at the first floor contact; a bounce is not part of the solve
+    // (a beat aimed at a bounce would be aimed at the floor).
+    if (py + (box ? box.b[1] : 0) >= floorY) break;
+    const bx0 = px + (box ? box.a[0] : -prop.size[0] / 2);
+    const bx1 = px + (box ? box.b[0] : prop.size[0] / 2);
+    const by0 = py + (box ? box.a[1] : -prop.size[1]);
+    const by1 = py + (box ? box.b[1] : 0);
+    // Vertical gap between the shoulder and the box; the box is the target, not
+    // its centre, so its own height is reach the striker does not spend arm on.
+    const dyGap = Math.max(by0 - shoulderY, shoulderY - by1, 0);
+    if (dyGap > envelope) continue;
+    const dxMax = Math.sqrt(envelope * envelope - dyGap * dyGap);
+    // Roots whose shoulder is close enough to the box, inside what the walk can
+    // cover by then. The body may stand under the arc or step to it.
+    const lo = Math.max(state.x - WALK_SPEED * tau, bx0 - dxMax - shoulderX);
+    const hi = Math.min(state.x + WALK_SPEED * tau, bx1 + dxMax - shoulderX);
+    if (lo > hi) continue;
+    // Of the walkable marks, take the one the rest hand reaches soonest: a short
+    // cue becomes a reach and a long one a step, never a stroll.
+    let best: {aim: [number, number]; root: number; travel: number} | undefined;
+    for (let i = 0; i <= 8; i++) {
+      const root = lo + ((hi - lo) * i) / 8;
+      const sx = root + shoulderX;
+      // The meeting point the hand needs LEAST travel for: the point of the box
+      // nearest the hand's own rest position (inside the box if the box already
+      // covers it), then clamped into the reach disc — the arm cannot leave its
+      // shoulder, and the hand radius closes the last palm-width.
+      const nx = Math.min(Math.max(root + restRelX, bx0), bx1);
+      const ny = Math.min(Math.max(restY, by0), by1);
+      const restX = root + (mirrors ? (Math.sign(nx - state.x) || 1) * Math.abs(restRelX) : restRelX);
+      const toShoulder = Math.hypot(nx - sx, ny - shoulderY);
+      const share = toShoulder > R ? R / toShoulder : 1;
+      const aim: [number, number] = [sx + (nx - sx) * share, shoulderY + (ny - shoulderY) * share];
+      const travel = Math.hypot(aim[0] - restX, aim[1] - restY);
+      if (!best || travel < best.travel) best = {aim, root, travel};
+    }
+    // The hand must be able to arrive; a palm touches with its radius, so the
+    // last hand-radius of the travel is contact, not a missed approach.
+    if (best && handTravelTime(Math.max(0, best.travel - handR), force) <= tau) return {...best, at: now + tau};
+  }
+  return undefined;
+}
+
 /**
  * Simulate one scene. Pure and deterministic: same inputs -> identical
  * trajectories. Emits one frame per 24fps tick.
@@ -1561,7 +1677,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             // press the adjacency clamp forever instead of arriving.
             const aimX = target?.x ?? props.get(intent.target!)?.x ?? tx;
             const dir = (Math.sign(aimX - state.x) || state.facing) as 1 | -1;
-            state.facing = dir;
+            const force = clamp(intent.force ?? 0.7, 0.1, 2);
             const rest = restHandAt(state);
             // A prop the striker is HOLDING is already at the hand (the serve):
             // there is nothing to walk to, and the hand must start where the
@@ -1571,6 +1687,32 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             // point — a `prop-rate` the whole-body proposal rightly refuses, so
             // the beat froze and the strike never landed.
             const held = state.holding === intent.target ? carryHandAt(state) : undefined;
+            const targetProp = props.get(intent.target!);
+            // R8 interception: a prop already in flight is met where it will
+            // be, not where it is. The solve is physical (reach envelope + walk
+            // speed + hand rate); a cue whose remaining arc never satisfies it
+            // is an authored miss named here — the drive is not created at a
+            // pose no body can hold, so the beat never freezes.
+            if (!held && targetProp?.projectile && targetProp.falling) {
+              const intercept = projectileIntercept(state, targetProp, now, floorY(), force);
+              if (!intercept) {
+                diagnostics.push(`strike missed: ${state.id} never touched ${intent.target!}; its remaining flight never enters the ${Math.round(state.body.armReach * state.scale)} px arm envelope at a mark the walk and the hand can reach — cue the beat earlier`);
+                continue;
+              }
+              // Face the meeting side FIRST: a legacy figure's rest hand mirrors
+              // with facing, and the drive must start from the hand the pose
+              // draws (seeding it from the old side costs a whole arm's travel).
+              state.facing = (Math.sign(intercept.aim[0] - state.x) || state.facing) as 1 | -1;
+              const meetRest = restHandAt(state);
+              state.moveTarget = intercept.root;
+              state.handDrive = {
+                target: intent.target!, force, t: 0, sec: intent.forceSec ?? 0.25, speed: 0,
+                hand: [meetRest[0], meetRest[1]], contact: false, phase: "drive", contactT: null,
+                aim: intercept.aim, facing: state.facing,
+              };
+              continue;
+            }
+            state.facing = dir;
             // Walk into arm's range first: stop where the extended hand can
             // touch the target's near edge (real locomotion, no teleport).
             const stopGap = target
@@ -1578,7 +1720,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
               : 140 * state.scale;
             state.moveTarget = held ? null : aimX - dir * stopGap;
             state.handDrive = {
-              target: intent.target!, force: clamp(intent.force ?? 0.7, 0.1, 2),
+              target: intent.target!, force,
               t: 0, sec: intent.forceSec ?? 0.25, speed: 0, hand: held ?? [rest[0], rest[1]], contact: false,
               phase: held ? "drive" : "approach", contactT: null,
             };
@@ -1715,7 +1857,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         state.reach = {tx: drive.hand[0], ty: drive.hand[1], target: drive.target, contact: false};
         continue;
       }
-      const dir = (Math.sign(targetX - state.x) || state.facing) as 1 | -1;
+      const dir = drive.facing ?? ((Math.sign(targetX - state.x) || state.facing) as 1 | -1);
       state.facing = dir;
       // Contact geometry: the target's declared torso box / prop body box.
       const targetBody = targetActor?.body;
@@ -1781,11 +1923,24 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
             ? propAim(targetProp)[1]
             : state.groundY - 300 * state.scale;
         const step = drive.speed * delta;
-        const goalX = drive.hand[0] + dir * step;
-        const goalY = drive.hand[1] + clamp(targetAimY - drive.hand[1], -step, step);
-        const span = Math.hypot(goalX - drive.hand[0], goalY - drive.hand[1]);
-        const share = span > step ? step / span : 1;
-        drive.hand = [drive.hand[0] + (goalX - drive.hand[0]) * share, drive.hand[1] + (goalY - drive.hand[1]) * share];
+        if (drive.aim) {
+          // R8: the solved meeting point is a fixed world mark. The hand travels
+          // to it at the same honest rate and WAITS; the prop arrives on its own
+          // arc, so the overlap is a closing speed rather than a lucky frame.
+          const ax = drive.aim[0] - drive.hand[0];
+          const ay = drive.aim[1] - drive.hand[1];
+          const span = Math.hypot(ax, ay);
+          if (span > 1e-6) {
+            const move = Math.min(step, span);
+            drive.hand = [drive.hand[0] + (ax / span) * move, drive.hand[1] + (ay / span) * move];
+          }
+        } else {
+          const goalX = drive.hand[0] + dir * step;
+          const goalY = drive.hand[1] + clamp(targetAimY - drive.hand[1], -step, step);
+          const span = Math.hypot(goalX - drive.hand[0], goalY - drive.hand[1]);
+          const share = span > step ? step / span : 1;
+          drive.hand = [drive.hand[0] + (goalX - drive.hand[0]) * share, drive.hand[1] + (goalY - drive.hand[1]) * share];
+        }
       } else {
         drive.speed = Math.max(0, drive.speed - HAND_ACC * drive.force * delta * 2);
         // Brace against the contact: the hand rests just inside the box edge.

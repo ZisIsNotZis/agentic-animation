@@ -135,11 +135,82 @@ test("a native athlete serves and a second native athlete returns: two struck co
   assert.ok(Math.sign(returned.velocity![0]) !== Math.sign(serve.velocity![0]),
     "the return travels back the way the serve came");
 
-  // Both native actors ran: the receiver was the one the return needed, and it
-  // walked at the live shuttle rather than at the staged serve mark (x 700).
+  // Both native actors ran: the receiver was the one the return needed. R8's
+  // interception solves the meeting point from the arm envelope and the walk,
+  // so the receiver no longer has to march to the shuttle's live x — it may
+  // stand and reach. What must stay true is that it never chases the STAGED
+  // serve mark (x 700): a beat aimed there would walk it out of the rally.
   const receiverX = Math.min(...baked.actors.receiver!.map((frame) => frame.x));
-  assert.ok(receiverX < 1500 - 20,
-    `the receiver never walked at the shuttle's live x (min x ${receiverX.toFixed(1)})`);
+  assert.ok(receiverX > 1300,
+    `the receiver walked toward the staged serve mark (min x ${receiverX.toFixed(1)})`);
   assert.ok((baked.props.shuttle ?? []).every((frame) => Number.isFinite(frame.x) && Number.isFinite(frame.y)),
     "the shuttle's flight must stay finite");
+});
+
+test("the return is cueable across a 0.26 s window: seven of the eleven beats land a second struck contact", () => {
+  // R8's acceptance: slice A's return only landed from the one cue that happened
+  // to put the hand inside the box at the lucky frame (measured before the fix:
+  // cue 2.12 only; 1.90–2.04 and 2.16–2.40 failed, two of them freezing the
+  // whole-body proposal). The interception solve makes a hand-authorable band.
+  const CUES = [1.90, 1.96, 2.00, 2.04, 2.08, 2.12, 2.16, 2.20, 2.26, 2.32, 2.40];
+  const landed: number[] = [];
+  for (const cue of CUES) {
+    const baked = simulateScene(pairScene({nativeReceiver: true, beatAt: cue, receiverX: 1500}));
+    const struck = strikesOf(baked);
+    if (struck.length < 2) continue;
+    assert.deepEqual(diagnosticsOf(baked), [], `cue ${cue.toFixed(2)} landed with diagnostics`);
+    assert.equal(struck.length, 2, `cue ${cue.toFixed(2)} struck ${struck.length} times`);
+    const [serve, returned] = struck as [typeof struck[number], typeof struck[number]];
+    assert.ok(returned.at > serve.at, `cue ${cue.toFixed(2)}: the return does not follow the serve`);
+    // Every return is a real strike on the engine's one arc, back toward the
+    // server: the same 40° elevation and the same speed the serve leaves at.
+    const elevation = Math.atan2(-returned.velocity![1], Math.abs(returned.velocity![0])) * 180 / Math.PI;
+    assert.ok(Math.abs(elevation - 40) < 0.5, `cue ${cue.toFixed(2)}: the return is off the 40° arc (${elevation.toFixed(2)}°)`);
+    assert.ok(returned.velocity![0] < 0, `cue ${cue.toFixed(2)}: the return did not travel back toward the server`);
+    landed.push(cue);
+  }
+  // The measured band: 1.90 through 2.16 inclusive (0.26 s), seven cues. The AC
+  // floor is six; the first six are the minimum a shot may author against.
+  assert.ok(landed.length >= 6, `only ${landed.length} of eleven cues landed a return: ${landed.join(', ')}`);
+  assert.deepEqual(landed, [1.90, 1.96, 2.00, 2.04, 2.08, 2.12, 2.16],
+    `the cueable band moved: ${landed.join(', ')}`);
+  assert.ok(landed.at(-1)! - landed[0]! >= 0.25,
+    `the cueable window is only ${(landed.at(-1)! - landed[0]!).toFixed(2)} s wide`);
+});
+
+test("a return cue outside the window is named a strike miss: never a freeze, never a non-finite frame", () => {
+  // AC (b): a beat that cannot meet the shuttle is an authored miss the author
+  // can read. Before R8 two of these froze the whole-body proposal
+  // (`whole-body proposal exhausted` / `segment-angle-rate/hand_r 8.419`). The
+  // miss is decided by the solve at the cue (no drive is staged at a pose no
+  // body can hold), so the class is stable and the trajectory stays finite.
+  for (const cue of [2.20, 2.26, 2.32, 2.40]) {
+    const baked = simulateScene(pairScene({nativeReceiver: true, beatAt: cue, receiverX: 1500}));
+    assert.equal(strikesOf(baked).length, 1, `cue ${cue.toFixed(2)}: only the serve may land`);
+    assert.deepEqual(frozenOf(baked), [], `cue ${cue.toFixed(2)} froze: ${JSON.stringify(frozenOf(baked))}`);
+    const diagnostics = diagnosticsOf(baked);
+    assert.equal(diagnostics.length, 1, `cue ${cue.toFixed(2)}: ${JSON.stringify(diagnostics)}`);
+    assert.match(diagnostics[0]!, /^strike missed: receiver never touched shuttle; /, `cue ${cue.toFixed(2)}: ${diagnostics[0]}`);
+    assert.ok(!/NaN|Infinity|-non-finite/.test(diagnostics[0]!), `cue ${cue.toFixed(2)} names a non-finite value: ${diagnostics[0]}`);
+    assert.ok((baked.props.shuttle ?? []).every((frame) => Number.isFinite(frame.x) && Number.isFinite(frame.y)),
+      `cue ${cue.toFixed(2)}: the shuttle's flight went non-finite`);
+    assert.ok(baked.actors.receiver!.every((frame) => Number.isFinite(frame.x)),
+      `cue ${cue.toFixed(2)}: the receiver's trajectory went non-finite`);
+  }
+});
+
+test("the interception leaves the serve exactly where it was: 1.407 s on the 40° arc, whether the return lands or not", () => {
+  // AC (c): the rally's mechanism must not move the accepted serve. The first
+  // struck contact is identical for a cue inside and outside the return window,
+  // and for the pre-R8 beat that landed — the interception only changes what the
+  // RECEIVER does after the shuttle is already in flight.
+  const serveOf = (cue: number) => strikesOf(simulateScene(pairScene({nativeReceiver: true, beatAt: cue, receiverX: 1500})))[0]!;
+  const serve = serveOf(2.12);
+  assert.equal(serve.at, 1.407, `the serve moved to ${serve.at} s`);
+  assert.deepEqual(serve.velocity, [1000, -839], `the serve left at ${JSON.stringify(serve.velocity)}`);
+  for (const cue of [1.90, 2.16, 2.40]) {
+    const other = serveOf(cue);
+    assert.equal(other.at, serve.at, `cue ${cue.toFixed(2)} moved the serve to ${other.at} s`);
+    assert.deepEqual(other.velocity, serve.velocity, `cue ${cue.toFixed(2)} changed the serve's launch velocity`);
+  }
 });

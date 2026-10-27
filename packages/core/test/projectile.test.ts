@@ -284,16 +284,17 @@ test("the struck rule decides whether the hit is one substep or a shove", () => 
   assert.ok(Math.max(...sustained.props.shuttle!.map((frame) => frame.x)) > PROP_X + 100, "a sustained contact still moves it");
 });
 
-test("a second struck contact lands on the shuttle in flight, and its window is not hand-cueable", () => {
+test("a second struck contact lands on the shuttle in flight, and its window is hand-cueable", () => {
   // The rally's return: the receiver cannot hold the shuttle (two actors keep
   // their drawn bodies apart), so it strikes it in the air, where the
-  // descending arc comes back down to hand height.
+  // descending arc comes back down to hand height. R8's interception solve is
+  // what makes the beat authorable from a cue: it meets the prop where it WILL
+  // be, inside the arm envelope, instead of only at the one frame the prop
+  // happened to be inside the hand (measured before R8: cue 2.04 alone landed;
+  // 1.98 and 2.10 missed).
   const struckOf = (baked: ReturnType<typeof simulateScene>) =>
     eventsOf(baked).filter((event) => event.kind === "projectile.struck");
 
-  // The measured window, at 0.01 s of beat granularity: the push may start
-  // anywhere in 2.00–2.08 s and land the return. Outside it the beat either
-  // finds the shuttle already past the reach or not yet in it.
   const hit = simulateScene(returnScene(2.04));
   const struck = struckOf(hit);
   assert.equal(struck.length, 2, `expected the serve and the return, got ${JSON.stringify(eventsOf(hit).map((event) => event.kind))}`);
@@ -303,19 +304,30 @@ test("a second struck contact lands on the shuttle in flight, and its window is 
   assert.ok(rvx > 0 && rvy < 0, `the return leaves up and away from the receiver, got (${rvx}, ${rvy})`);
   const elevation = Math.atan2(-rvy, rvx) * 180 / Math.PI;
   assert.ok(Math.abs(elevation - 40) < 0.5, `the return is not on the 40° arc: ${elevation.toFixed(2)}°`);
-  // The receiver met the LIVE shuttle: a beat aimed at the staged mark (x 700,
-  // where the serve began) would have walked it backwards out of the rally.
-  assert.ok(hit.actors.receiver!.some((frame) => frame.x > RECEIVER_X + 20),
-    "the receiver never walked at the shuttle's live x");
+  // The return is a real hand contact: at the last frame before the strike the
+  // receiver's baked hand stands on the shuttle's drawn body box (within the
+  // declared hand radius), so the launch is contact, not remote force.
+  const last = frameOf(struck[1]!.at) - 1;
+  const hand = hit.actors.receiver![last]!.reach!;
+  const shuttle = hit.props.shuttle![last]!;
+  const box = {x0: shuttle.x + SHUTTLE.touchBox.a[0], x1: shuttle.x + SHUTTLE.touchBox.b[0],
+    y0: shuttle.y + SHUTTLE.touchBox.a[1], y1: shuttle.y + SHUTTLE.touchBox.b[1]};
+  const gap = Math.hypot(Math.max(box.x0 - hand[0], 0, hand[0] - box.x1), Math.max(box.y0 - hand[1], 0, hand[1] - box.y1));
+  const handRadius = 21.5 * 0.88; // the legacy figure's declared hand radius at the staged scale
+  assert.ok(gap <= handRadius + 1, `the striking hand is ${gap.toFixed(1)} px from the shuttle's box (hand radius ${handRadius.toFixed(1)})`);
+  assert.deepEqual(hit.diagnostics ?? [], []);
 
-  // The window is real and it is TINY: one frame either side of the centre
-  // misses. A cue authored by hand has ±1 frame (0.04 s) of slack, so slice A's
-  // return cannot be cued by an author — it needs the shuttle carried or tossed
-  // into the receiving hand, or a mechanism that widens the contact.
-  const missBefore = struckOf(simulateScene(returnScene(1.98)));
-  const missAfter = struckOf(simulateScene(returnScene(2.1)));
-  assert.equal(missBefore.length, 1, `a beat 0.06 s early must miss the shuttle, got ${missBefore.length} strikes`);
-  assert.equal(missAfter.length, 1, `a beat 0.06 s late must miss the shuttle, got ${missAfter.length} strikes`);
+  // The window is real and it is authorable: cues 0.06 s either side of the old
+  // centre land too, and a beat that cannot reach the prop is an authored miss
+  // named `strike missed` (not a freeze, not silence).
+  for (const cue of [1.98, 2.10, 2.16]) {
+    const baked = simulateScene(returnScene(cue));
+    assert.equal(struckOf(baked).length, 2, `cue ${cue.toFixed(2)} must land the return, got ${struckOf(baked).length} strikes`);
+    assert.deepEqual(baked.diagnostics ?? [], [], `cue ${cue.toFixed(2)}: ${JSON.stringify(baked.diagnostics)}`);
+  }
+  const late = simulateScene(returnScene(2.3));
+  assert.equal(struckOf(late).length, 1, `a cue past the window must miss, got ${struckOf(late).length} strikes`);
+  assert.match((late.diagnostics ?? []).join(" "), /^strike missed: receiver never touched shuttle; /);
 });
 
 test("a strike that never touches says so instead of emitting nothing", () => {

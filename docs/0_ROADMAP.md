@@ -87,7 +87,8 @@ rule in [6_ARCHITECTURE](6_ARCHITECTURE.md#ownership).
 - **C · pouring tea.** A host tilts a pot into a cup; the tilt is authored
   intent and the stream, cup level and steam are derived from it.
 
-State: A's serve is accepted and its rally is at R8; B's capability is proven but
+State: A's serve is accepted and R8 landed the in-flight interception, so its
+rally shot (S-A2) is next; B's capability is proven but
 its shot does not bake (framing and three sub-pixel invariants); C is not
 started.
 
@@ -125,26 +126,24 @@ integrating node.
   declared stage scale sizes the motor's box (the racket's drawn handle sits
   ~11 px below the socket) — one declaration for drawn size and physical body is
   R4's unfinished class.
-- **R8 the rally's own package — open, the next package.** Its goal: place a
-  receiver's hand or racket where the descending shuttle *will* be, so a return
-  lands from a cue a person could author. Baseline, re-measured on EP's fixture
-  (the pair test in `packages/core/test/nativePair.test.ts`) across cues 1.90/1.96/2.00/2.04/2.08/2.12/2.16/2.20/2.26/2.32/2.40 s:
-  exactly one (2.12 s) yields a second `projectile.struck` (2.227 s). The rest
-  fail as a plain `strike missed` or as `whole-body proposal exhausted` on
-  `segment-angle-rate/hand_r`. The shuttle sits inside the
-  hand circle ~0.07 s and inside the arm's 137 px envelope ~0.39 s; the mechanism
-  must buy the difference. Acceptance: (a) at least six of the eleven cues yield
-  a second `projectile.struck` (a ≥0.25 s hand-authorable window) with empty
-  diagnostics; (b) every remaining failure names its class, never a NaN or a
-  freeze; (c) the serve's events stay struck 1.407 s on the same arc and the
-  accepted episode's shuttle numbers do not move; (d) the full suite green and no
-  other episode's bake digest changed. Expected mechanism, to be proven or
-  replaced: an interception aim on the ballistic path solved against the arm
-  envelope and the walk, then a sweep with the flight so overlap is the closing
-  speed. Not-doing: no authored elevation/force change, no rally DSL, no
-  tolerance widening, no re-polish of the accepted serve. R8 is bake-level; the
-  person judges a rally only after a shot carries one.
-- **S-A2 the rally, as a shot — the milestone after R8, and the next thing the
+- **R8 the rally's own package — landed.** A `push` naming a prop that declares
+  `projectile` and is already falling is now an interception solved at the cue:
+  the motor walks the prop's own integrator forward to the first floor contact
+  and takes the earliest substep where the hand's reach disc (arm + hand radius)
+  touches the drawn box, the root mark is inside what the walk can cover by
+  then, and the hand can travel there on its honest 480 px/s ramp. The drive
+  waits at that fixed aim and keeps the facing it was solved for, so overlap is
+  a closing speed instead of one lucky frame. A cue with no such mark is an
+  authored `strike missed` at the cue, staged at no pose — which is why the two
+  whole-body freezes are gone. Measured on EP's fixture: seven of eleven cues
+  (1.90–2.16 s, a 0.26 s band) land a second strike with empty diagnostics, the
+  other four are plain misses, the serve stays 1.407 s `[1000,-839]`, and
+  `episodes/a-badminton` keeps struck 2.207 s `[-533,-447]` / settled 3.717 s
+  `[476.56,691]`. Not bought: the band is this receiver's at x 1500 (re-staging
+  shifts it), bounces are not modelled, and a crouched or mid-gesture striker
+  falls into the named miss. Six re-baked episodes have byte-identical motor
+  output ([evidence](../evidence/tickets/R8-INTERCEPTION.md)).
+- **S-A2 the rally, as a shot — open, the next package, and the next thing the
   person can judge.** R8 is invisible on its own, so the route does not stop at
   it: the mechanism lands, then a shot carries the rally. New episode
   `episodes/a-rally` reusing the set, the two athletes, the shuttle and the
@@ -153,10 +152,13 @@ integrating node.
   1280×720 rendition with its identity and `verify.sh`, stills of the return's
   contact and of the rally after it, `README.md` with the shot's measured
   limits, `REVIEWS.md`. Acceptance: a second `projectile.struck` inside the
-  shot's own bake with empty motor diagnostics, the serve still the one the
-  person accepted, the return's contact visible in a still, and an independent
-  agent viewer pass before the person is asked. Not-doing: no new asset, no
-  change to `episodes/a-badminton`'s events or artifacts, no pickup beat.
+  shot's own bake with empty motor diagnostics, with its cue inside the band that
+  bake measures (R8's 0.26 s holds at the fixture's staging; a re-staged receiver
+  needs its own measurement, and a shot that has to move him says so), the serve
+  still the one the person accepted, the return's contact visible in a still, and
+  an independent agent viewer pass before the person is asked. Not-doing: no new
+  asset, no change to `episodes/a-badminton`'s events or artifacts, no pickup
+  beat.
 
 ## Open work items
 
@@ -164,8 +166,9 @@ integrating node.
 - **The racket's pickup in frame** — one authored beat, costs the accepted shot's
   timing; awaiting the person's word.
 - **The cast review** — provisional yes, open for the person's look.
-- **R8** — open, the next package; bake-level, no person needed.
-- **S-A2 the rally shot** — follows R8; the first rally the person can judge.
+- **R8** — landed ([evidence](../evidence/tickets/R8-INTERCEPTION.md)).
+- **S-A2 the rally shot** — open, the next package; the first rally the person
+  can judge.
 - **Slice B** — the shot does not bake: a straight-up mount is singular, the
   staged standing line is not owned by the set so a full circle cannot fit any
   frame, and three sub-pixel invariants (`leg-annulus` 0.002 px,
