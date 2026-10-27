@@ -22,10 +22,9 @@ revision did not contain.
   improvement…”* read as depth: a layer is accepted where it can be judged and
   the next cut goes deeper; no layer is perfected before the one under it.
 - **Quality bar — coarse is correct.** A defect counts only when it is visible
-  at normal viewing size; prefer the convenient mechanism inside that, and spend
-  effort on not looking wrong rather than on being exact. Two bounds keep their
-  force: a carried item must not read as spilling, and a hand must not read as
-  passing through the middle of a prop.
+  at normal viewing size; spend effort on not looking wrong rather than on being
+  exact. Two bounds keep their force: a carried item must not read as spilling,
+  and a hand must not read as passing through the middle of a prop.
 - **Cast — provisional yes, open for review.** The new figures may be
   recommended for new episodes, but the yes is provisional on the person seeing
   a slice they appear in; one sentence reverses it
@@ -154,10 +153,10 @@ integrating node.
   correct size then put the upright carry's hoop across the server's face, so
   the off-hand carry hangs the prop along the arm's carry line (head down,
   behind the hand, bounded by the own-prop angle rate, never low enough to draw
-  through the floor); both shots re-rendered and re-judged by eye, the serve's
-  and the rally's events unchanged, four other prop-holding bakes byte-identical
+  through the floor); both shots re-rendered and re-judged by eye, events
+  unchanged, four other prop-holding bakes byte-identical
   ([evidence](../evidence/tickets/R9-HELD-PROP.md)). Recorded, not fixed: the
-  painted-palm offset is the cast's artwork and moving it is the person's call.
+  painted-palm offset is the cast's artwork, so moving it is the person's call.
 - **R10 the strike meets the point a player strikes — open, next.** R8's
   interception aims the drive at the box point the rest hand reaches soonest, so
   a palm binds on the shuttlecock's cone edge while its cork hangs a hand's width
