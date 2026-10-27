@@ -158,7 +158,8 @@ Softer and harder impulses were measured and rejected at the bake
 
 | directory | what it decided |
 | --- | --- |
-| `artifacts/sa2-r4-2026-10-27/` | **current.** 1280×720, 24 fps, 108 frames, 4.50 s; video sha256 `115e61d5…`. The r3 reviewer's NOT SATISFIED answered: a punch-in on the receiver held through the contact, a pull back to the wide, a 0.333 s tail, and the contact-gap measurement. |
+| `artifacts/sa2-r5-2026-10-27/` | **current.** 1280×720, 24 fps, 108 frames, 4.50 s; video sha256 `7c8ac0a9…`. r4's shot with R9's drawing: the racket at its declared 1.7× with the grip in the painted fist, hanging head-down beside the hip so the hoop is not across the face, and the held prop riding the palm the artwork paints. Event times are r4's. |
+| `artifacts/sa2-r4-2026-10-27/` | **superseded, kept.** 1280×720, 24 fps, 108 frames, 4.50 s; video sha256 `115e61d5…`. The r3 reviewer's NOT SATISFIED answered: a punch-in on the receiver held through the contact, a pull back to the wide, a 0.333 s tail, and the contact-gap measurement. |
 | `artifacts/sa2-r3-2026-10-27/` | **superseded, kept.** 119 frames, 4.96 s; video sha256 `4f9e565c…`. Court-distance staging, the accepted pickup and serve, cue 2.210 s, no camera track; the rendition the blind review refused. |
 | `artifacts/sa2-r2-2026-10-27/` | **superseded, kept.** 119 frames, 4.96 s; video sha256 `9c3f8530…`. Same shot as r3 with its contact still one frame late; a re-render moved the video hash. |
 | `artifacts/sa2-r1-2026-10-27/` | **superseded, kept.** 66 frames, 2.75 s; video sha256 `67da56dc…`. The close (288 px) staging and the `held-by` start; its stills are the evidence of the plane defect. |
