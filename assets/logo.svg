@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 40" width="220" height="40" role="img" aria-label="agentic-animation">
+  <!-- Mark: a film frame whose inner shape is a keyframed motion path
+       (node -> eased curve -> node), i.e. code-driven motion, not sampled video. -->
+  <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="3" y="6" width="28" height="28" rx="6"/>
+    <path d="M9 26.5 C 13 26.5, 13.5 13.5, 17.5 13.5 C 21.5 13.5, 22 26.5, 26 18"/>
+  </g>
+  <g fill="currentColor" stroke="none">
+    <circle cx="9" cy="26.5" r="2.6"/>
+    <circle cx="17.5" cy="13.5" r="2.6"/>
+    <circle cx="26" cy="18" r="2.6"/>
+  </g>
+  <!-- Wordmark: drawn as text in the host sans stack, no external font. -->
+  <text x="41" y="25.4"
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="17.5" font-weight="600" letter-spacing="0.2" fill="currentColor">agentic-animation</text>
+</svg>
