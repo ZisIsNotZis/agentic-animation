@@ -103,9 +103,9 @@ heavy work in this — see OPEN ISSUES for that wiring.
 
 Tests: `node --import tsx --test tools/stage-lock/lock.test.ts`.
 
-## CI
+## The local gate
 
-`.github/workflows/smoke.yml` runs on push/PR: `npm ci`, typecheck, core unit
-tests, then the canonical `npm run smoke` flow, which creates an isolated
-episode.yml under `/tmp` and validates `check` plus `make`.
-No models, no render — those are local-only (`npm run smoke`).
+There is no CI. The gate is one command run on the machine that changed the
+tree: `npm run typecheck`, `npm test`, then `npm run smoke`, which creates an
+isolated `episode.yml` under `/tmp` and validates `check` plus `make`. No models
+and no render are needed; those stay local-only.
