@@ -1,0 +1,125 @@
+
+> agentic-animation@0.0.0 anim
+> tsx packages/cli/src/index.ts render-yaml episodes/a-rally/episode.yml
+
+INFO  [yaml-audio] prepared 1 spoken take(s): rally.1.0; reused 0; unmatched 0 {"provider":"edge","profile":"storyteller","artifactPath":"/home/z/vibe/agentic-animation/episodes/a-rally/audio/yaml-audio.json"}
+yaml-audio: wrote 1 take(s); reused 0; unmatched 0 → /home/z/vibe/agentic-animation/episodes/a-rally/audio/yaml-audio.json
+make: wrote /home/z/vibe/agentic-animation/episodes/a-rally/performance.json (4.500s)
+[make] sudden-move warning: shuttle jumps 33px at frame 74 (1036,376 -> 1058,400) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 36px at frame 75 (1058,400 -> 1080,428) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 40px at frame 76 (1080,428 -> 1102,461) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 43px at frame 77 (1102,461 -> 1125,498) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 47px at frame 78 (1125,498 -> 1147,540) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 51px at frame 79 (1147,540 -> 1169,587) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 56px at frame 80 (1169,587 -> 1191,638) — objects must move continuously
+[make] sudden-move warning: shuttle jumps 58px at frame 81 (1191,638 -> 1214,691) — objects must move continuously
+
+Hardware accelerated encoding disabled - "crf" option is not supported with hardware acceleration
+
+Hardware accelerated encoding disabled - "crf" option is not supported with hardware acceleration
+render: 0% (0/108 frames)
+render: 1% (1/108 frames)
+render: 2% (3/108 frames)
+render: 3% (4/108 frames)
+render: 4% (6/108 frames)
+render: 5% (7/108 frames)
+render: 6% (9/108 frames)
+render: 7% (11/108 frames)
+render: 8% (12/108 frames)
+render: 9% (14/108 frames)
+render: 10% (15/108 frames)
+render: 11% (17/108 frames)
+render: 12% (18/108 frames)
+render: 13% (20/108 frames)
+render: 14% (21/108 frames)
+render: 15% (23/108 frames)
+render: 16% (24/108 frames)
+render: 17% (26/108 frames)
+render: 18% (27/108 frames)
+render: 19% (29/108 frames)
+render: 20% (31/108 frames)
+render: 21% (32/108 frames)
+render: 22% (34/108 frames)
+render: 23% (35/108 frames)
+render: 24% (37/108 frames)
+render: 25% (38/108 frames)
+render: 26% (40/108 frames)
+render: 27% (41/108 frames)
+render: 28% (43/108 frames)
+render: 30% (46/108 frames)
+render: 31% (48/108 frames)
+render: 32% (49/108 frames)
+render: 33% (51/108 frames)
+render: 34% (52/108 frames)
+render: 35% (54/108 frames)
+render: 36% (55/108 frames)
+render: 37% (57/108 frames)
+render: 38% (58/108 frames)
+render: 39% (60/108 frames)
+render: 40% (61/108 frames)
+render: 41% (63/108 frames)
+render: 43% (64/108 frames)
+render: 44% (65/108 frames)
+render: 45% (67/108 frames)
+render: 46% (67/108 frames)
+render: 47% (69/108 frames)
+render: 48% (70/108 frames)
+render: 49% (71/108 frames)
+render: 50% (73/108 frames)
+render: 51% (73/108 frames)
+render: 52% (74/108 frames)
+render: 53% (76/108 frames)
+render: 54% (77/108 frames)
+render: 55% (78/108 frames)
+render: 56% (79/108 frames)
+render: 57% (81/108 frames)
+render: 59% (82/108 frames)
+render: 60% (84/108 frames)
+render: 61% (84/108 frames)
+render: 62% (86/108 frames)
+render: 63% (87/108 frames)
+render: 64% (89/108 frames)
+render: 65% (89/108 frames)
+render: 66% (91/108 frames)
+render: 67% (92/108 frames)
+render: 68% (93/108 frames)
+render: 69% (94/108 frames)
+render: 70% (95/108 frames)
+render: 71% (96/108 frames)
+render: 72% (97/108 frames)
+render: 73% (99/108 frames)
+render: 74% (99/108 frames)
+render: 75% (101/108 frames)
+render: 76% (102/108 frames)
+render: 77% (103/108 frames)
+render: 78% (104/108 frames)
+render: 79% (105/108 frames)
+render: 80% (107/108 frames)
+render: 81% (108/108 frames)
+render: 88% (108/108 frames)
+render: 94% (108/108 frames)
+
+Hardware accelerated encoding disabled - "crf" option is not supported with hardware acceleration
+
+Hardware accelerated encoding disabled - "crf" option is not supported with hardware acceleration
+render: 100% (108/108 frames)
+Svt[info]: -------------------------------------------
+Svt[info]: SVT [version]:	SVT-AV1 Encoder Lib v4.1.0
+Svt[info]: SVT [build]  :	GCC 15.2.0	 64 bit
+Svt[info]: -------------------------------------------
+Svt[info]: Level of Parallelism: 4
+Svt[info]: Number of PPCS 107
+Svt[info]: [asm level on system : up to avx2]
+Svt[info]: [asm level selected : up to avx2]
+Svt[info]: -------------------------------------------
+Svt[info]: SVT [config]: main profile	tier (auto)	level (auto)
+Svt[info]: SVT [config]: width / height / fps numerator / fps denominator 		: 1280 / 720 / 24 / 1
+Svt[info]: SVT [config]: bit-depth / color format 					: 8 / YUV420
+Svt[info]: SVT [config]: preset / tune / pred struct 					: 8 / PSNR / random access
+Svt[info]: SVT [config]: gop size / mini-gop size / key-frame type 			: 240 / 32 / key frame
+Svt[info]: SVT [config]: BRC mode / rate factor 					: CRF / 33.00
+Svt[info]: SVT [config]: AQ mode / Variance Boost 					: 2 / 0
+Svt[info]: SVT [config]: sharpness / luminance-based QP bias 				: 0 / 0
+Svt[info]: SVT [config]: QP scale compress strength 					: 0
+Svt[info]: -------------------------------------------
+render-yaml: wrote /home/z/vibe/agentic-animation/episodes/a-rally/dist/a-rally.mp4 (108 frames)

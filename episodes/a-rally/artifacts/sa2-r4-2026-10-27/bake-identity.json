@@ -1,0 +1,66 @@
+{
+  "episode": "episodes/a-rally/episode.yml",
+  "episodeSha256": "b1bf60108eae1361caa531f0f1fe6ac724475fe8fce192032d53f9f59a576c85",
+  "video": "episodes/a-rally/artifacts/sa2-r4-2026-10-27/episode.mp4",
+  "videoSha256": "115e61d597f2d02dac9ef1be629b6d955a9c62a3d90ea36d6f1a6c4c557eb729",
+  "frameCount": 108,
+  "durationSec": 4.5,
+  "fps": 24,
+  "width": 1280,
+  "height": 720,
+  "gitHead": "676e4e6362b971886a3b32b99ba8a7f5791ac142",
+  "renderedFrom": "the working tree at gitHead with this package's uncommitted changes: episodes/a-rally/ (the episode) and packages/core/src/staging/index.ts (the held-by free-plane fix) plus its two tests. The episode is at the sha256 above. r4 supersedes r3: a camera track (punch-in on the receiver and a pull back to the wide), a shorter tail (0.33 s after the settle), and the serve beat shifted +0.103 s by the camera's beat before it (2.307/2.680/4.167 vs r3's 2.207/2.590/4.075).",
+  "bakeCommand": "npm run anim -- make episodes/a-rally/episode.yml",
+  "renderCommand": "npm run anim -- render-yaml episodes/a-rally/episode.yml",
+  "rebuild": "bash episodes/a-rally/artifacts/sa2-r4-2026-10-27/verify.sh",
+  "stillsCommand": "ffmpeg -nostdin -ss <sec> -i episode.mp4 -frames:v 1 stills/t<sec>.png",
+  "stillsAreDerived": "cut from episode.mp4 by verify.sh; not tracked, because the command above reproduces them from the video hash",
+  "stills": [
+    {"name": "t1.900.png", "sec": 1.9, "frame": 45, "beat": "the pickup in the full-stage wide: the crouched palm holds the shuttle below the chin; the racket is in the off hand"},
+    {"name": "t2.350.png", "sec": 2.35, "frame": 56, "beat": "the serve in the medium two-shot: the accepted strike (2.307 s) has left the palm"},
+    {"name": "t2.667.png", "sec": 2.667, "frame": 64, "beat": "the return's contact in the medium two-shot: the last baked frame before the launch (projectile.struck at 2.680 s), the shuttle's cork in the receiver's hand"},
+    {"name": "t3.300.png", "sec": 3.3, "frame": 79, "beat": "the return in flight during the pull back to the wide"},
+    {"name": "t4.200.png", "sec": 4.2, "frame": 100, "beat": "the settle in the wide: the shuttle at rest since 4.167 s at [1387.94, 691]"}
+  ],
+  "events": [
+    {"kind": "projectile.struck", "prop": "shuttle", "at": 2.307, "velocity": [-533, -447], "note": "the accepted serve (pickup, palm strike, 40.00°, 697 px/s); +0.100 s vs r3 because the camera's beat sits before it"},
+    {"kind": "projectile.struck", "prop": "shuttle", "at": 2.68, "velocity": [533, -447], "note": "the return, the serve's arc mirrored, 40.00°, 697 px/s"},
+    {"kind": "projectile.settled", "prop": "shuttle", "at": 4.167, "position": [1387.94, 691], "note": "on the hall's painted floor line, to the server's right; the shot ends 0.333 s later"}
+  ],
+  "motorDiagnostics": "none — `make` printed zero motor warnings (grep -c 'motor warning' make.log.txt = 0)",
+  "camera": {
+    "keys": [
+      {"call": "camera.punch_in(receiver, 1.3)", "start": 1.65, "end": 2.3, "from": {"x": 0, "y": 0, "z": 0.667}, "to": {"x": 491, "y": 0, "z": 1.3}, "shape": "push over 0.65 s, 0.667 -> 1.3, eased linearly; the subject is the receiver, fitPushCamera fits the staged pair and the head rule moves y to 0"},
+      {"call": "hold (inside punch_in)", "start": 2.3, "end": 2.91, "to": {"x": 447, "y": 0, "z": 1.3}, "shape": "holds the medium two-shot through the serve, the return's contact (2.68) and the first part of the return"},
+      {"call": "camera.wide()", "start": 2.91, "end": 3.71, "from": {"z": 1.3}, "to": {"x": 0, "y": 0, "z": 0.72}, "shape": "pull back to the full court for the landing and the tail"}
+    ],
+    "verified": "per-frame evaluatePerformance over all 108 frames: 0 drawn-head slices, 0 frames with the shuttle's ink outside the frame, frame 0 at the composition wide (no wide-to-follow flash)"
+  },
+  "contactGap": {
+    "frame": 64,
+    "t": 2.6667,
+    "hand": [808, 340],
+    "handInkRadius": 6.9,
+    "shuttleBox": [792, 888, 232, 366],
+    "measured": "the drawn hand's centre is INSIDE the shuttle's drawn body box at the contact frame; the hand's ink (radius 9.5 design = 6.9 stage px at the receiver's 0.722 scale) overlaps the box by 6.9 px at the cork end. One frame earlier (2.625) the centre is 11.4 px from the box and the ink is 4.5 px short. The reviewer's ~30 px is the hand-to-skirt distance after the launch (2.60/2.70), not the cork at the contact: the hand is at the box's lower-left (the cork), the skirt's wide end ~108 px above it."
+  },
+  "cueBand": {
+    "staging": "receiver at the accepted background lane: x 672, ground 615.6, scale 0.722, arm envelope 113 px; server x 1246, ground 650, scale 0.88; 574 px apart",
+    "serveCue": 2.3,
+    "serveStruck": 2.307,
+    "cue": 2.31,
+    "cueOffsetAfterServe": 0.01,
+    "band": [2.305, 2.59],
+    "bandSec": 0.285,
+    "missingAt": "cues 2.305-2.590 all land with []; 2.595 and later are the named 'strike missed' (measured in this timing; r3's whole-body proposal refusals at its band top do not reproduce here because the receiver's push declares its presentation end at 2.91)",
+    "sameCueForm": "both pushes on the serve's own cue was measured in r3 and does not land a second strike: one strike (the serve), motor diagnostics empty — a silent dropped beat; the 10 ms spacer stays",
+    "walk": "R8's interception walks the receiver ~100 px to the meeting point; the contact is at (864, 347)-ish per cue, the shuttle's base at the cork"
+  },
+  "propDrawPlane": {
+    "defect": "staging/index.ts `held-by` wrote z = (holder.z ?? 40) + 2 into the compiled object plane, and nothing recomputes a staged plane on release; a prop that STARTS held was drawn over every actor for the whole shot (z 52 > actor 50)",
+    "fixed": "staging held-by now writes the object's own plane (35); the renderer's PerformanceEpisode propPlane raises it to the holder's plane only while the bake reports a hold",
+    "tests": ["packages/core/test/staging.test.ts: a held-by object keeps its own free plane", "packages/studio/test/figureArtwork.test.ts: a prop staged held-by draws on its holder plane while held and on its own plane once released"],
+    "badmintonUnchanged": "episodes/a-badminton rendered before and after the fix: identical mp4 sha256 5b10912a… for a 2.1 s render, frames at 1.5 s and 1.9 s pixel-identical (max channel diff 0)"
+  },
+  "cleanState": "episodes/a-rally/dist/ is a build output of this package and is deleted before hand-off; episodes/*/dist/*.mp4 is NOT ignored by .gitignore (a negation un-ignores it), so it must not be staged"
+}
