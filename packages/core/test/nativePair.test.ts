@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {simulateScene, type MotorPropInput, type MotorScene} from "../src/motor";
 import {PropAssetManifestSchema, type Skeleton} from "../src/schemas/libraryMeta";
 
-// EP (docs/ART_ASSET_PROGRAM.md, package 3): two NATIVE artwork figures in one
+// EP (docs/0_ROADMAP.md, package 3): two NATIVE artwork figures in one
 // bake. One native actor alone bakes clean, so the defect is in the pair: a
 // native receiver, or a second native body anywhere in the scene, made the
 // whole-body proposal refuse every substep of the return and freeze the beat.
@@ -77,7 +77,7 @@ const frozenOf = (baked: ReturnType<typeof simulateScene>) =>
   diagnosticsOf(baked).filter((line) => /whole-body proposal exhausted|-non-finite/.test(line));
 
 test("a native receiver no longer freezes the bake on a non-finite palm solve", () => {
-  // Measured before the fix (docs/tickets/SLICE-A-ENGINE.md §EP, limit 1):
+  // Measured before the fix (evidence/tickets/SLICE-A-ENGINE.md §EP, limit 1):
   // `whole-body proposal exhausted: receiver at 2.25s; palm-contact/hand_r NaN`.
   // The native receiver's palm solve was fed a non-finite hip drop, because the
   // taut push arm dragged the root BACKWARD 885 px through its own stance in

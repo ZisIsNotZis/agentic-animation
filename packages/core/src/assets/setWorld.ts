@@ -1,6 +1,6 @@
 /**
  * Set world declarations: load-time validation and one-shot normalization
- * (docs/SCHEMAS.md "Set world declarations"). A set is world-declaring
+ * (docs/7_SCHEMAS.md "Set world declarations"). A set is world-declaring
  * exactly when its scene.svg carries id-bearing <g> groups; legacy sets
  * without them keep the flat single-background path untouched.
  */

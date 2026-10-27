@@ -1,51 +1,85 @@
 # Documentation index
 
-This directory is the project’s docs-first single source of truth. Read the
-document owning a contract before changing implementation or an episode.
+`docs/` is the single source of truth. A document's **level** is its distance
+from purpose — lower index is closer to purpose and wins on conflict — and its
+**source zones** are the `EXPLICIT` / `CONFIRMED` / `INFERRED` H1s inside it:
+the person's own words, what the person agreed to, and what the agent decided.
 
-## Start here
+Read the owning document before changing implementation, an asset or an episode.
 
-- [STATUS.md](STATUS.md) — milestone state and links to owning evidence.
-- [ART_CHARACTER_M2.md](ART_CHARACTER_M2.md#current-state-and-recovery) —
-  M2 current state, evidence archive locations and recovery.
-- [tickets/M2-DOC-READINESS.md](tickets/M2-DOC-READINESS.md) — task contract,
-  historical provenance and documentation readiness audit.
-- [REPOSITORY_MAINTENANCE.md](REPOSITORY_MAINTENANCE.md) — upkeep and contribution rules.
-- [NARROW_EPISODE_DSL.md](NARROW_EPISODE_DSL.md) — canonical `episode.yml` language.
-- [ART_ASSET_PROGRAM.md](ART_ASSET_PROGRAM.md) — the three new situations (rally,
-  bar swing, pouring tea), four new native figures, capability contract, ownership
-  and waves.
+## The tree
 
-## Design contracts
+| level | document | owns |
+| --- | --- | --- |
+| 0 | [0_STAGING](0_STAGING.md) | information in flight; it is emptied into its level, never marked done |
+| 0 | [0_ROADMAP](0_ROADMAP.md) | the person's verdicts, milestone state, the package order, open work |
+| 1 | [1_PROBLEM](1_PROBLEM.md) | why the work is worth doing; the defect classes it removes |
+| 2 | [2_GOAL](2_GOAL.md) | success order, scope, prioritization, budget |
+| 3 | [3_REQUIREMENT](3_REQUIREMENT.md) | functional, non-functional and constraint requirements |
+| 4 | [4_USECASE](4_USECASE.md) | who completes what, the three situations, slice acceptance |
+| 4 | [4_SHOWCASES](4_SHOWCASES.md) | the minimal per-capability demonstration episodes |
+| 5 | [5_PRODUCT](5_PRODUCT.md) | the art product and its rejected branches |
+| 6 | [6_ARCHITECTURE](6_ARCHITECTURE.md) | module seams, data flow, ownership, the conflict rule |
+| 6 | [6_WORLD_PLUGIN_CONTRACT](6_WORLD_PLUGIN_CONTRACT.md) | world type, coordinates, categories, plugin lifecycle, ordering |
+| 6 | [6_DECISIONS](6_DECISIONS.md) | durable technology and licensing decisions |
+| 7 | [7_DSL](7_DSL.md) | the authored language: `episode.yml`, calls, shapes, capability contract |
+| 7 | [7_SCHEMAS](7_SCHEMAS.md) | source, plugin, IR and declaration contracts with error semantics |
+| 8 | [8_MOTOR](8_MOTOR.md) | the physical motion model, invariants, bake format, prop authority |
+| 9 | [9_PIPELINE](9_PIPELINE.md) | the operating order: check, make, preview, render, QA |
+| 9 | [9_REPOSITORY_MAINTENANCE](9_REPOSITORY_MAINTENANCE.md) | upkeep, contribution, doc rules |
 
-- [NARROW_EPISODE_DSL.md](NARROW_EPISODE_DSL.md): complete agent-authored YAML language.
-- [SCHEMAS.md](SCHEMAS.md): source, plugin, compiler IR, and validation contracts.
-- [ARCHITECTURE.md](ARCHITECTURE.md): module seams and runtime data flow.
-- [WORLD_PUPPET_MOTOR.md](WORLD_PUPPET_MOTOR.md): physical motion model — support/contact/reaction invariants, compile-time motor simulation, trajectory bake format.
-- [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md): canonical world/plugin contract — library layout, categories, world type, plugin lifecycle, ordering, and state rules.
-- [SHOWCASES.md](SHOWCASES.md): minimal per-capability showcase episodes (states, actions, camera, effects, props, voice, particle snow).
-- [tickets/PLUGIN_HOST_MIGRATION_PLAN.md](tickets/PLUGIN_HOST_MIGRATION_PLAN.md): historical migration plan; Steps 1-2 are implemented. Kept for reference, superseded by [WORLD_PLUGIN_CONTRACT.md](WORLD_PLUGIN_CONTRACT.md).
-- [PIPELINE.md](PIPELINE.md): assets-first production and QA workflow.
-- [ART_PRODUCTION_UPGRADE.md](ART_PRODUCTION_UPGRADE.md): approved M0–M8 art-quality roadmap, preservation boundaries, learning coverage and comparison budget.
-- [ART_BASELINE_M0.md](ART_BASELINE_M0.md): frozen short-scene baseline and inspected evidence for that roadmap.
-- [ART_DIRECTION_M1.md](ART_DIRECTION_M1.md): accepted B direction, preserved A/B/C studies and selection evidence.
-- [ART_CHARACTER_M2.md](ART_CHARACTER_M2.md): B-character identity/draft-rig work and canonical-engine integration boundary.
-- [ART_WORLD_M3.md](ART_WORLD_M3.md): M3 world contract — one coherent canteen set, set-metadata consumption, support agreement and package split.
-- [ART_MATERIALS_M4.md](ART_MATERIALS_M4.md): M4 materials/light contract — declared material and light passes, layer compositing declaration, layered ablation plan and limits.
-- [ART_ACTING_M5.md](ART_ACTING_M5.md): M5 acting contract — anticipation, key pose, accent, settle for the named beats.
-- [DECISIONS.md](DECISIONS.md): durable technology, licensing, and migration decisions.
-- [schemas/](schemas/): exported JSON Schema artifacts.
+`docs/schemas/` holds the exported JSON Schema artifacts, generated by
+`npm run schemas`; they are artifacts, not contracts — the contracts are in
+`7_SCHEMAS`.
+
+## Evidence
+
+[`evidence/`](../evidence) holds captures, not contracts: milestone bundles,
+review verdicts, measured numbers and process tickets. It is referenced by hash
+and is never the authority for behaviour; where its text and a level document
+disagree, the level document wins. `evidence/media/` holds the images the person
+is asked to look at.
+
+An episode's own directory is its package's home: `episodes/<slug>/README.md`
+owns that rendition's measured limits, and `REVIEWS.md` owns its review record.
 
 ## Precedence
 
-For public behavior, the DSL and schemas win. Architecture defines module
-ownership; pipeline defines operating order; decisions define durable choices;
-status routes current milestone state; each milestone document owns its evidence,
-acceptance and next actions. Tickets own process history/provenance. README files explain the
-project for users but do not override contracts.
+For public behaviour the DSL and the schemas win. Architecture defines module
+ownership; the pipeline defines operating order; decisions define durable
+choices; the roadmap routes current state and each milestone's judgment.
+Evidence explains and proves, and never overrides.
 
 If implementation or an episode contradicts a contract, update the owning
-document, then change code or content. `.scratch/` is working material and
-evidence capture, not a public contract; promote only reconciled conclusions.
+document, then change code or content. `.scratch/` is working material, not a
+contract; promote reconciled conclusions and delete the note.
 
-All maintained Markdown in this documentation set stays below 200 lines.
+## Rules the lint enforces
+
+`npm run docs:lint` fails on: a document under `docs/` that is not
+`<level>_<NAME>.md` or `INDEX.md`; a level document without ordered source-zone
+H1s; any `docs/` document at or over 200 lines; an event date or commit-hash
+diary line inside a level document; a relative link that does not resolve; and a
+second state home (`.scratch/active-work.md`, `docs/STATUS.md`).
+
+## Migration map
+
+The level tree replaced a milestone-and-ticket tree. Nothing was dropped: the
+previous documents are evidence now.
+
+| before | now |
+| --- | --- |
+| `STATUS.md` | [0_ROADMAP](0_ROADMAP.md) (state) + evidence tickets |
+| `ART_PRODUCTION_UPGRADE.md` | roadmap table in [0_ROADMAP](0_ROADMAP.md); evidence copy in [evidence/art](../evidence/art/ART_PRODUCTION_UPGRADE.md) |
+| `ART_ASSET_PROGRAM.md` | [0_ROADMAP](0_ROADMAP.md) (packages), [4_USECASE](4_USECASE.md) (slices), [5_PRODUCT](5_PRODUCT.md) (cast), [6_ARCHITECTURE](6_ARCHITECTURE.md) (ownership); evidence copy |
+| `ART_BASELINE_M0`, `ART_DIRECTION_M1`, `ART_CHARACTER_M2`, `ART_WORLD_M3`, `ART_MATERIALS_M4`, `ART_ACTING_M5`, `ART_FILM_LANGUAGE_M6`, `ART_TRANSFER_M7` | decisions in [5_PRODUCT](5_PRODUCT.md); contracts in 7/8; evidence copies |
+| `ARCHITECTURE.md` | [6_ARCHITECTURE](6_ARCHITECTURE.md) |
+| `WORLD_PLUGIN_CONTRACT.md` | [6_WORLD_PLUGIN_CONTRACT](6_WORLD_PLUGIN_CONTRACT.md) |
+| `DECISIONS.md` | [6_DECISIONS](6_DECISIONS.md) |
+| `NARROW_EPISODE_DSL.md` | [7_DSL](7_DSL.md) |
+| `SCHEMAS.md` | [7_SCHEMAS](7_SCHEMAS.md) |
+| `WORLD_PUPPET_MOTOR.md` | [8_MOTOR](8_MOTOR.md) |
+| `PIPELINE.md` | [9_PIPELINE](9_PIPELINE.md) |
+| `REPOSITORY_MAINTENANCE.md` | [9_REPOSITORY_MAINTENANCE](9_REPOSITORY_MAINTENANCE.md) |
+| `SHOWCASES.md` | [4_SHOWCASES](4_SHOWCASES.md) |
+| `evidence/tickets/`, `media/` | [`evidence/tickets/`](../evidence/tickets), [`evidence/media/`](../evidence/media) |

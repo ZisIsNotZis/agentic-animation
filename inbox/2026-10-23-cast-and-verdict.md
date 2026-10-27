@@ -23,28 +23,28 @@ mistake the review scale.
 
 ## 1. The cast answer, recorded as the person's, open
 
-`docs/ART_ASSET_PROGRAM.md` §Cast now records: the person answered root's question 3 on
+`docs/0_ROADMAP.md` §Cast now records: the person answered root's question 3 on
 **2026-10-23** with “probably yes, but open for me to review”. From that date `figure/athlete_a`,
 `figure/gymnast_b` and `set/badminton_hall` may be recommended by default for new episodes, and
 `figure/lin_b_draft` keeps its recommendation (the figure category's `use`) until the person has
 seen a slice they appear in. The record says **open**: provisional on that review, reversed by one
 sentence from the person, and cheap to reverse because a new episode's cast is one line of its
 `episode.yml`. The `use` recommendation itself is unchanged, and nothing here grants publication or
-spending. Two pointers, no second statement of the fact: `docs/ART_CHARACTER_M2.md` (the
-per-character gate rule) and `docs/STATUS.md`.
+spending. Two pointers, no second statement of the fact: `evidence/art/ART_CHARACTER_M2.md` (the
+per-character gate rule) and `docs/0_ROADMAP.md`.
 
 ## 2. The fresh verdict — FAIL, and it found two real defects
 
 Dispatched blind (`reviewer`, run `aad0eadc`, 2026-10-23): the four stills and the video, one
 question, nothing else — no docs, no identity, no motor numbers. **FAIL**; filed verbatim at
-`docs/tickets/S-A1-REVIEW-3.md`, with what each finding means for the shot in
+`evidence/tickets/S-A1-REVIEW-3.md`, with what each finding means for the shot in
 `episodes/a-badminton/REVIEWS.md` §"S-A1 review 3".
 
 **It judged `sa1-d1w-2026-10-21`, not the `sa1-r1r4-2026-10-21` your task named**, and that is a
 correction, not a substitution of convenience: the wrapper landed at `264a09a` after `r1r4` was
 rendered, so `r1r4` is the rendition whose net laces both players — a verdict on it is a verdict on
 a shot known to be wrong, which this project already refused once. `d1w` is the current shot and
-`docs/ART_ASSET_PROGRAM.md` names its review as the remaining pin.
+`docs/0_ROADMAP.md` names its review as the remaining pin.
 
 Its findings, with what I could check at the source:
 
@@ -97,7 +97,7 @@ next package is named below.
 One package, ~40 minutes: apply the entrance's 0.82 scale to the drawn actor, put a palm-bound prop
 under the declared depth order instead of at a flat `zIndex` 50, re-bake, re-render at **1280×720**,
 and take a fourth blind review. The rally question is untouched — it is still with the person, and
-`docs/ART_ASSET_PROGRAM.md`'s slice B was neither opened nor used.
+`docs/0_ROADMAP.md`'s slice B was neither opened nor used.
 
 ## Not exercised
 
@@ -105,7 +105,7 @@ and take a fourth blind review. The rally question is untouched — it is still 
 one `.mjs` tool and images, no code under `packages/**`. The cast stills' figure scale is the
 staging ladder's one-actor value (0.92) and is stated as such; a two-actor shot draws the same
 figure at 0.88. The stills are tracked images in `docs/media/`, against the repository's default of
-not committing generated media — the reason is in `docs/media/README.md`, and you asked for
+not committing generated media — the reason is in `evidence/media/README.md`, and you asked for
 openable paths.
 
 ## One correction to the house shape

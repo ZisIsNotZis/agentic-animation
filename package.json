@@ -14,8 +14,8 @@
   "scripts": {
     "anim": "tsx packages/cli/src/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test \"packages/core/test/*.test.ts\" \"packages/studio/test/*.test.ts\" \"tools/stage-lock/*.test.ts\"",
-    "test:all": "node --import tsx --test \"packages/core/test/*.test.ts\" \"packages/studio/test/*.test.ts\" \"packages/adapters/*/test/*.test.ts\" \"tools/stage-lock/*.test.ts\"",
+    "test": "node tools/docs-lint.mjs && node --import tsx --test \"packages/core/test/*.test.ts\" \"packages/studio/test/*.test.ts\" \"tools/stage-lock/*.test.ts\"",
+    "test:all": "node tools/docs-lint.mjs && node --import tsx --test \"packages/core/test/*.test.ts\" \"packages/studio/test/*.test.ts\" \"packages/adapters/*/test/*.test.ts\" \"tools/stage-lock/*.test.ts\"",
     "schemas": "tsx packages/core/scripts/export-schemas.ts",
     "validate:episode-yaml": "tsx tools/validate-narrow-episode.mjs",
     "gen:fixtures": "npm run gen:placeholder -w @anim/studio && npm run gen:testrig -w @anim/studio",
@@ -23,7 +23,8 @@
     "pretest": "npm run gen:fixtures && npm run cues",
     "pretest:all": "npm run cues",
     "smoke": "node tools/smoke.mjs",
-    "skill:audit": "node tools/skill-audit.mjs"
+    "skill:audit": "node tools/skill-audit.mjs",
+    "docs:lint": "node tools/docs-lint.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

@@ -12,7 +12,7 @@ shuttle, the arc, the bounce and the camera.
 
 ## The reachable strike, measured again in the episode route
 
-The engine facts are in [SLICE-A-ENGINE](../../docs/tickets/SLICE-A-ENGINE.md)
+The engine facts are in [SLICE-A-ENGINE](../../evidence/tickets/SLICE-A-ENGINE.md)
 §E1/§E2; these are the ones this episode re-measured through `check`/`make`:
 
 | what was tried | what the bake said |

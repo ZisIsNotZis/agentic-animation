@@ -1,5 +1,5 @@
 /**
- * Declared capability vocabulary (Wave 0, docs/ART_ASSET_PROGRAM.md).
+ * Declared capability vocabulary (Wave 0, docs/0_ROADMAP.md).
  *
  * One home for the names three slices must spell the same way: the intent the
  * compiler accepts, the support kind a body hangs from, the prop kind a
@@ -92,6 +92,6 @@ export function assertCapabilityImplemented(selector: CapabilitySelector, name: 
   const field = selector === "intent" ? "" : ` ${selector}`;
   throw new Error(
     `compileEpisode: ${raw} needs the "${name}"${field} capability, which is declared but not implemented — ` +
-    `${declared.owner} implements it; the contract is docs/ART_ASSET_PROGRAM.md`,
+    `${declared.owner} implements it; the contract is docs/0_ROADMAP.md`,
   );
 }

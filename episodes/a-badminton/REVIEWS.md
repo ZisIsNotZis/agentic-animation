@@ -3,13 +3,13 @@
 The verdicts on this episode, filed verbatim or summarised as they arrived, and what each
 one changed. The episode's own authoring record — what it bakes, what it cannot do and why —
 is [README](README.md). Milestone and workset live in
-[ART_ASSET_PROGRAM](../../docs/ART_ASSET_PROGRAM.md).
+[ART_ASSET_PROGRAM](../../docs/0_ROADMAP.md).
 
 ## S-A1 review (ER) — the shot does not pass yet
 
 ER (fresh `reviewer`, run `b9628190`, blind contract, stills at file resolution plus a
 6 fps sample of the video) answered **NOT SATISFIED**; its text is filed verbatim at
-[tickets/S-A1-ER-REVIEW](../../docs/tickets/S-A1-ER-REVIEW.md). What it read: the arc and
+[tickets/S-A1-ER-REVIEW](../../evidence/tickets/S-A1-ER-REVIEW.md). What it read: the arc and
 the court read; the bounce, the rest, the follow and the shuttle's scale do not.
 
 Two of its findings are mechanically checkable, and both need a correction:
@@ -86,7 +86,7 @@ A fresh reviewer was dispatched blind against this rendition, as acceptance requ
 
 A second blind reviewer (fresh context, run `f461a433`, given only the five stills and the
 video of `artifacts/sa1-r1r4-2026-10-21/`) answered **FAIL**; its text is filed verbatim at
-[tickets/S-A1-REVIEW-2](../../docs/tickets/S-A1-REVIEW-2.md). Its primary finding is one
+[tickets/S-A1-REVIEW-2](../../evidence/tickets/S-A1-REVIEW-2.md). Its primary finding is one
 neither earlier reading made:
 
 > Both figures stand on the camera side of the net at all five still times … the players are
@@ -123,7 +123,7 @@ R2, R3 and R5 ride along unchanged.
 A third blind reviewer (fresh `reviewer`, run `aad0eadc`, 2026-10-23) judged
 `artifacts/sa1-d1w-2026-10-21/` on the four stills and the video, with one question and
 nothing else. **FAIL**; its text is filed verbatim at
-[tickets/S-A1-REVIEW-3](../../docs/tickets/S-A1-REVIEW-3.md). Unlike the two earlier
+[tickets/S-A1-REVIEW-3](../../evidence/tickets/S-A1-REVIEW-3.md). Unlike the two earlier
 verdicts this one measured every frame, so what it found can be checked against the bake.
 Three of its findings are one perception and two mechanisms, and the three do not have the
 same status:

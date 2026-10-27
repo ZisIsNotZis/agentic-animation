@@ -5,10 +5,10 @@ description: Run or diagnose the canonical episode.yml path, including Edge TTS,
 
 # production-pipeline
 
-Read [docs/PIPELINE.md](../../../docs/PIPELINE.md),
-[docs/NARROW_EPISODE_DSL.md](../../../docs/NARROW_EPISODE_DSL.md), and
-[docs/SCHEMAS.md](../../../docs/SCHEMAS.md), and
-[docs/WORLD_PLUGIN_CONTRACT.md](../../../docs/WORLD_PLUGIN_CONTRACT.md).
+Read [docs/9_PIPELINE.md](../../../docs/9_PIPELINE.md),
+[docs/7_DSL.md](../../../docs/7_DSL.md), and
+[docs/7_SCHEMAS.md](../../../docs/7_SCHEMAS.md), and
+[docs/6_WORLD_PLUGIN_CONTRACT.md](../../../docs/6_WORLD_PLUGIN_CONTRACT.md).
 The only production source is `episode.yml`; category manifests and plugins are reusable inputs.
 
 ## Loop

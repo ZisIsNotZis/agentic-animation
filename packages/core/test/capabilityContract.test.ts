@@ -12,7 +12,7 @@ import {normalizeSetWorld} from "../src/assets/setWorld";
 import {DECLARED_CAPABILITIES, assertCapabilityImplemented, declaredCapability} from "../src/compiler/capabilities";
 import {compileEpisode} from "../src/compiler/index";
 
-// Wave 0 capability contract (docs/ART_ASSET_PROGRAM.md). These tests pin the
+// Wave 0 capability contract (docs/0_ROADMAP.md). These tests pin the
 // DECLARATIONS only: the shapes three slices must share, that every existing
 // flat support and prop manifest still parses unchanged, and that an episode
 // asking for an unimplemented intent fails loud instead of compiling.

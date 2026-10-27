@@ -67,7 +67,7 @@ a plain `strike missed` (at 2.16 s the hand arrives at `(1505,389)` at 2.375 s w
 shuttle passed `(1513,427)` at 2.25 s and bounced) or as `whole-body proposal exhausted` on
 `joint-rate/elbow_r` / `segment-angle-rate/hand_r`. The numbers that decide the design: the
 shuttle sits inside the hand circle ~0.07 s and inside the arm's 137 px envelope ~0.39 s. R8's
-contract is in `docs/ART_ASSET_PROGRAM.md` §Roadmap with four bake-level terms (six of eleven
+contract is in `docs/0_ROADMAP.md` §Roadmap with four bake-level terms (six of eleven
 cues must land) and the mechanism it expects to add. **R8 is the next package and needs its own
 session.**
 

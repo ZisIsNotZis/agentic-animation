@@ -20,7 +20,7 @@ One command recomputes every field and re-cuts the stills:
 The bake is untouched — struck 2.207 s `[-533,-447]`, settled 3.717 s at `[476.56, 691]`, on the
 set's floor line. Nothing is pushed; one commit, `ceb7e98`.
 
-## 1. The serve's acceptance, as written into `docs/ART_ASSET_PROGRAM.md`
+## 1. The serve's acceptance, as written into `docs/0_ROADMAP.md`
 
 **Goal.** A badminton serve: the server strikes the shuttle out of his own hand, over the net,
 and it comes down on the far court.
@@ -43,7 +43,7 @@ person's**, answered by looking at this rendition. R2 (does the bounce read), R3
 read) and R5 (the players are statues) are that one question in pieces; they are not put to them
 separately, and this report does not ask them.
 
-**The fork is withdrawn, and recorded as such.** `docs/ART_ASSET_PROGRAM.md` now carries: the
+**The fork is withdrawn, and recorded as such.** `docs/0_ROADMAP.md` now carries: the
 serve is on both paths, so "serve only, or rally" was never a choice; the serve is built and was
 never held behind a rally decision. Provenance is stated — root relayed it on 2026-10-23 and this
 node holds no file of the person saying it.
@@ -70,7 +70,7 @@ mechanism is not owed. That is my scheduling call and I carry it.
 | --- | --- |
 | the entrance's background scale | **closed.** A `background` entrance now carries the 0.82 court-depth scale the same-named `setup` already carried: the receiver draws at **0.722** against the server's 0.88. Pinned in `packages/core/test/staging.test.ts`. |
 | a prop's z above the net's plane | **closed, and it took two fixes.** A native object composites on its holder's plane while held (50) and on its own staged plane once free (35, below the net's 45) instead of a flat `zIndex: 50`. Then, because the first fix changed nothing on screen, the reason surfaced: **the actors' own declared planes never reached the drawing** — `compiledPlacements` dropped `StagedActor.z` and `semanticPlacement` rebuilt every placement out of at/scale/rotation/flip, so both players drew at plane 0 under the net at 45. That is review 2's "every actor draws above the set", still true under D1's wrapper. Both pinned in `packages/studio/test/figureArtwork.test.ts`. |
-| the gymnast's shoulder gap | **closed at `d5d7ece`.** Root_manager is right that the arm did not meet the torso, and the defect is a pale **seam** of open background, not a detached limb: `node tools/art-direction-study/silhouette-holes.mjs --figure library/figure/gymnast_b` exits 0 both before and after — front 0 holes, 1 silhouette piece, every limb axis bridged — so the gauge that exists for this defect could not see it, and passing it was never evidence. The fix carries the deltoid up to the torso's own upper outline (the armhole edge of a sleeveless leotard) with the same control points, so the seam is the leotard's ink edge instead of background; generator and output moved together, front silhouette is still 199.5 wide. **One thing for the eye:** the shoulder now reads as a straighter sleeveless cut, wider at the top than before — `docs/media/cast-review-2026-10-23/gymnast_b.png` is rebuilt from the corrected artwork, so the person can see it. |
+| the gymnast's shoulder gap | **closed at `d5d7ece`.** Root_manager is right that the arm did not meet the torso, and the defect is a pale **seam** of open background, not a detached limb: `node tools/art-direction-study/silhouette-holes.mjs --figure library/figure/gymnast_b` exits 0 both before and after — front 0 holes, 1 silhouette piece, every limb axis bridged — so the gauge that exists for this defect could not see it, and passing it was never evidence. The fix carries the deltoid up to the torso's own upper outline (the armhole edge of a sleeveless leotard) with the same control points, so the seam is the leotard's ink edge instead of background; generator and output moved together, front silhouette is still 199.5 wide. **One thing for the eye:** the shoulder now reads as a straighter sleeveless cut, wider at the top than before — `evidence/media/cast-review-2026-10-23/gymnast_b.png` is rebuilt from the corrected artwork, so the person can see it. |
 
 ## Green at `0b455a4` (the tree as it stands)
 

@@ -20,13 +20,13 @@ shuttlecock because its drawn size and the palm's contact body are one declarati
 
 ## 1. Their words, recorded once, with the rendition's identity
 
-`docs/ART_ASSET_PROGRAM.md` §Roadmap now opens the milestone with: accepted 2026-10-23 by the
+`docs/0_ROADMAP.md` §Roadmap now opens the milestone with: accepted 2026-10-23 by the
 person on that rendition, **their words verbatim** — “probably yes, not very natural, but again
 we prefer vertical improvement, not do everything as best as it can and next step.” — the
 provenance line that this node did not hear them and holds no file of them, and **“not very
 natural” marked as their observation, not as a defect**. The record says the consequence out
 loud: no polish pass is owed on this shot, none is scheduled, and the next move is the layer
-below it. `docs/STATUS.md` and `artifacts/README.md` carry pointers to that one statement, never
+below it. `docs/0_ROADMAP.md` and `artifacts/README.md` carry pointers to that one statement, never
 a second copy of it.
 
 One honest note about the milestone's own terms: its independent-reviewer clause was **not**

@@ -5,9 +5,9 @@ description: Diagnose or improve actor staging, camera framing, cropping, overla
 
 # camera-staging
 
-Read [docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md),
-[docs/NARROW_EPISODE_DSL.md](../../../docs/NARROW_EPISODE_DSL.md), and
-[docs/WORLD_PLUGIN_CONTRACT.md](../../../docs/WORLD_PLUGIN_CONTRACT.md), plus the
+Read [docs/6_ARCHITECTURE.md](../../../docs/6_ARCHITECTURE.md),
+[docs/7_DSL.md](../../../docs/7_DSL.md), and
+[docs/6_WORLD_PLUGIN_CONTRACT.md](../../../docs/6_WORLD_PLUGIN_CONTRACT.md), plus the
 current staging/runtime tests before changing code.
 
 ## Contract

@@ -10,10 +10,10 @@ M1–M3 bar and be exercised through the real engine before it earns a productio
 path. Asset formats and milestone scope are owned elsewhere; this skill owns the
 reusable production procedure and its evidence discipline.
 
-Read first: [docs/SCHEMAS.md](../../../docs/SCHEMAS.md) (Figure artwork; Set
-world declarations), [docs/WORLD_PLUGIN_CONTRACT.md](../../../docs/WORLD_PLUGIN_CONTRACT.md)
+Read first: [docs/7_SCHEMAS.md](../../../docs/7_SCHEMAS.md) (Figure artwork; Set
+world declarations), [docs/6_WORLD_PLUGIN_CONTRACT.md](../../../docs/6_WORLD_PLUGIN_CONTRACT.md)
 (library layout), the current milestone contract under `docs/`, and
-[docs/ART_PRODUCTION_UPGRADE.md](../../../docs/ART_PRODUCTION_UPGRADE.md)
+[docs/0_ROADMAP.md](../../../docs/0_ROADMAP.md)
 (scope, comparison budget, Art/Function/Production dimensions).
 Not for: staging (`camera-staging`), prose→episode (`text-to-episode`), or
 checking already-built assets (`qa-stills`).
@@ -49,7 +49,7 @@ material — never commit them.
   `data-support-top="<y>"` on the element named by `supports[].paint`. The
   loader validates layer ids, `coordinateSpace`, `safeActorArea` and `supports`
   (`viewBox == coordinateSpace`, painted-vs-declared tolerance 8); the exact
-  rules live in SCHEMAS.md. Declare exactly one support per name — the loader
+  rules live in [docs/7_SCHEMAS.md](../../../docs/7_SCHEMAS.md). Declare exactly one support per name — the loader
   does not reject duplicate support names and resolves to the last match,
   silently changing the rest surface (M3 probe).
 - **Figure** `library/figure/<name>/`: `skeleton.json` plus per-view

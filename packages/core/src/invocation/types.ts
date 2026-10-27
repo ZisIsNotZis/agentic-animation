@@ -1,7 +1,7 @@
 import type {ProcedureRecipeTrack} from "../procedures/types";
 
 /**
- * The world per docs/WORLD_PLUGIN_CONTRACT.md. Bodies mutate it in place;
+ * The world per docs/6_WORLD_PLUGIN_CONTRACT.md. Bodies mutate it in place;
  * frame/seconds/fps/seed are engine-maintained root fields; `invocation` is
  * engine-maintained run state for the invocation currently being expanded
  * (never serialized into manifests).

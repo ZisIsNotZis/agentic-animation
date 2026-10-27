@@ -1,7 +1,7 @@
 import type { EvaluatedActor } from "./types";
 
 /**
- * The point a drawn actor turns about (docs/WORLD_PUPPET_MOTOR.md, slice B).
+ * The point a drawn actor turns about (docs/8_MOTOR.md, slice B).
  *
  * A standing body turns about its ground point, which is the div's
  * bottom-centre; a hanging body turns about the grip its hands hold, which the

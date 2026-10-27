@@ -367,7 +367,7 @@ export interface EvaluatedActor {
   scale: number;
   rotation: number;
   /**
-   * Design-space point the body turns about (docs/WORLD_PUPPET_MOTOR.md,
+   * Design-space point the body turns about (docs/8_MOTOR.md,
    * slice B). Present while a body hangs from a support's grip line; absent,
    * the body turns about its ground point (the div's bottom-centre).
    */
@@ -377,7 +377,7 @@ export interface EvaluatedActor {
   present: boolean;
   pose?: string;
   expression: EvaluatedExpression;
-  /** Present when the actor follows a baked motor trajectory (docs/WORLD_PUPPET_MOTOR.md). */
+  /** Present when the actor follows a baked motor trajectory (docs/8_MOTOR.md). */
   motor?: boolean;
   /** Torso lean in degrees from the motor (reaction + gait). */
   lean?: number;
@@ -385,7 +385,7 @@ export interface EvaluatedActor {
   walk?: number;
   facing?: 1 | -1;
   /**
-   * Presented body orientation (docs/WORLD_PUPPET_MOTOR.md §45-degree facing):
+   * Presented body orientation (docs/8_MOTOR.md §45-degree facing):
    * "front" is the full camera-facing figure; the four diagonals render the
    * quarter-front / back views so characters can face each other naturally.
    * Left/right selects the mirror. Absent = "front".

@@ -124,7 +124,7 @@ function eachSide(e: SemanticEvent): Side[] {
   // A gaze beat aims the eyes; it is not an arm claim, so it may not splay the
   // arms. The handover's `offer` phase is an eyeline lead (`lead: head`) of a
   // physical transfer whose arm preparation the motor owns; read as a present
-  // it splayed both actors' arms across the bind (docs/WORLD_PUPPET_MOTOR.md,
+  // it splayed both actors' arms across the bind (docs/8_MOTOR.md,
   // m7 transfer). A gaze event that names an arm part explicitly still acts.
   if (e.trackKind === 'gaze' &&
       ![...e.parts].some((part) => /^(?:arm_[ul]|hand)_[lr]$/.test(part))) return [];
@@ -337,7 +337,7 @@ export function deriveActorPose(actor: PoseActor, continuity = true): ActorPose 
     const sides = eachSide(semantic);
     const hand = handFor(text, amount);
     // A channel that names no body part poses no body: a gaze/eyeline beat aims
-    // the eyes and leaves the torso and arms to the motor (docs/WORLD_PUPPET_MOTOR.md).
+    // the eyes and leaves the torso and arms to the motor (docs/8_MOTOR.md).
     const posesBody = sides.length > 0 || semantic.parts.size > 0;
     if (
       semantic.trackKind === "gaze" ||
@@ -356,7 +356,7 @@ export function deriveActorPose(actor: PoseActor, continuity = true): ActorPose 
       const end = number(semantic.event.endFrame, start + 18);
       const sampleFrame = start + p * Math.max(18, end - start);
       const speed = Math.max(0.01, number(semantic.value.speed, 1));
-      // Rhubarb viseme cues (docs/WORLD_PUPPET_MOTOR.md): real mouth shapes
+      // Rhubarb viseme cues (docs/8_MOTOR.md): real mouth shapes
       // when analysis exists; the alternating flap remains the fallback.
       const mouthCues = semantic.value.mouth as
         | ReadonlyArray<{ start: number; end: number; viseme: string }>
@@ -401,7 +401,7 @@ export function deriveActorPose(actor: PoseActor, continuity = true): ActorPose 
       legRight.lower += 14 * stride;
       torsoTilt -= 4 * stride;
       // The head follows the body: same lean direction, damped — the neck
-      // never counter-bends against the torso (docs/WORLD_PUPPET_MOTOR.md).
+      // never counter-bends against the torso (docs/8_MOTOR.md).
       headTilt += -1.5 * stride;
     } else if (action === "slam") {
       const peak = p >= 0.42;
@@ -688,10 +688,10 @@ export interface ActorFigure {
 }
 /** Single pose+FK source for the drawn figure: the renderer and the physics
  * debug overlay both consume this, so what is drawn and what is measured are
- * the same computation by construction (docs/WORLD_PUPPET_MOTOR.md). */
+ * the same computation by construction (docs/8_MOTOR.md). */
 export function solveActorFigure(actor: PoseActor): ActorFigure {
   const pose = deriveActorPose(actor);
-  // Motor trajectory (docs/WORLD_PUPPET_MOTOR.md): physical lean, planted-feet
+  // Motor trajectory (docs/8_MOTOR.md): physical lean, planted-feet
   // walk cycle, and a reaching/exerting arm override the heuristics.
   if (actor.motor) {
     pose.torsoTilt += actor.lean ?? 0;
@@ -711,7 +711,7 @@ export function solveActorFigure(actor: PoseActor): ActorFigure {
     }
   }
   // Forward kinematics from the declared skeleton: the drawn joints are THE
-  // physics joints (docs/WORLD_PUPPET_MOTOR.md Slice 1).
+  // physics joints (docs/8_MOTOR.md Slice 1).
   const sk = actor.skeleton;
   const space = sk?.space ?? { width: 400, height: 720 };
   const orientation = actor.orientation ?? "front";

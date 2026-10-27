@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {simulateScene, type MotorPropInput, type MotorScene} from "../src/motor";
 import {PropAssetManifestSchema, PropPlacementSchema, type Projectile, type Skeleton} from "../src/schemas/libraryMeta";
 
-// E1 projectile + struck contact (docs/ART_ASSET_PROGRAM.md, slice A). A prop
+// E1 projectile + struck contact (docs/0_ROADMAP.md, slice A). A prop
 // the manifest declares as a projectile is struck once, leaves on an arc under
 // the motor's gravity, keeps the bounce its restitution declares, and the bake
 // carries `projectile.struck` then `projectile.settled` as events a cue can

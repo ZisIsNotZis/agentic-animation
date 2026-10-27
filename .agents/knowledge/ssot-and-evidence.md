@@ -1,8 +1,16 @@
 # SSOT and evidence
 
-`docs/` owns human-facing contracts. `.agents/skills/` owns agent procedures.
-`.agents/knowledge/` owns reconciled agent lessons. `.scratch/` and `/tmp` hold
-working evidence and are not durable sources.
+`docs/` owns human-facing contracts, one level per document and one source zone
+per fact (`EXPLICIT`, `CONFIRMED`, `INFERRED`); `evidence/` owns captures and is
+never authority. `.agents/skills/` owns agent procedures. `.agents/knowledge/`
+owns reconciled agent lessons. `.scratch/` and `/tmp` hold working evidence and
+are not durable sources.
+
+A tree organized by milestone becomes a diary even when every entry is true: the
+same fact is restated per milestone and drifts, and state ends up spread across a
+status file, a roadmap and a ticket. Organizing by level (distance from purpose)
+and by source (who said it) deletes that class of error by construction;
+`npm run docs:lint` observes the shape so it cannot decay silently.
 
 Do not copy a contract into a skill when a sharp link is enough. Promote a
 lesson only after checking current source, tests, and runtime behavior. State

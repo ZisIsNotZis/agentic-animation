@@ -1,4 +1,4 @@
-// Physics debug overlay (docs/WORLD_PUPPET_MOTOR.md): draws what the engine
+// Physics debug overlay (docs/8_MOTOR.md): draws what the engine
 // actually believes — the exact per-part colliders (torso, head, limbs,
 // hands) transformed by the SAME forward kinematics the renderer uses, plus
 // the figure box, ground line, hand anchors, reach points, and declared prop

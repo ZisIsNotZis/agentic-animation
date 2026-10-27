@@ -175,7 +175,7 @@ async function main() {
     whatItIs: "One still per new asset and one contact sheet, each asset drawn at the size a 1280x720 episode frame draws it: no upscale, no sharpening, no colour change, no crop.",
     figureScale: { oneActorStagedScale: ONE_ACTOR_SCALE, stageToVideo: Number(STAGE_TO_VIDEO.toFixed(6)), floorLineY: FLOOR_Y },
     figureLayerOrder: "legs l/r, rear arms, torso, front arms, head, calm expression, resting mouth — the order ArtFigure.tsx draws",
-    sheet: { path: "docs/media/cast-review-2026-10-23/cast-sheet.png", sha256: sha256(sheetFile), sizePx: [STAGE_W, VIEW_H], note: "three 640 px cells; the figures are at their viewing size, the set is at half its viewing width to fit a cell" },
+    sheet: { path: "evidence/media/cast-review-2026-10-23/cast-sheet.png", sha256: sha256(sheetFile), sizePx: [STAGE_W, VIEW_H], note: "three 640 px cells; the figures are at their viewing size, the set is at half its viewing width to fit a cell" },
     stills: rendered,
   };
   writeFileSync(join(OUT, "identity.json"), JSON.stringify(identity, null, 2) + "\n");

@@ -43,7 +43,7 @@ episode.yml -> source 校验 -> registry + 音频时间轴 -> performance IR
 
 ## 证据、限制与未来
 
-最新记录见 [docs/STATUS.md](docs/STATUS.md)：包括 typecheck、112 个通过测试
+最新记录见 [docs/0_ROADMAP.md](docs/0_ROADMAP.md)：包括 typecheck、112 个通过测试
 和 7 个跳过测试、视觉资产检查、音频 QA，以及 180 秒基准测试。完整电影
 渲染仍是后续工作；smoke 不代表可选模型服务已安装，也不代表生产质量。
 
@@ -59,6 +59,6 @@ Issue 请附复现命令、环境、输入和日志或 QA 证据。PR 若改变�
 ## 文档
 
 - [docs/INDEX.md](docs/INDEX.md) — 规范导航和优先级。
-- [docs/STATUS.md](docs/STATUS.md) — 当前状态、证据、限制和后续工作。
-- [docs/REPOSITORY_MAINTENANCE.md](docs/REPOSITORY_MAINTENANCE.md) — 维护规则。
-- [docs/NARROW_EPISODE_DSL.md](docs/NARROW_EPISODE_DSL.md) — YAML authoring 语言。
+- [docs/0_ROADMAP.md](docs/0_ROADMAP.md) — 当前状态、证据、限制和后续工作。
+- [docs/9_REPOSITORY_MAINTENANCE.md](docs/9_REPOSITORY_MAINTENANCE.md) — 维护规则。
+- [docs/7_DSL.md](docs/7_DSL.md) — YAML authoring 语言。

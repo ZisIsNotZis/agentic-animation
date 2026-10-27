@@ -13,7 +13,7 @@ Status: **closed (milestone, 2026-09-29)** (`0.0.0`). The engine is functional
 end-to-end: three episodes validate, compile, and render through the canonical
 YAML pipeline. Episodes in this repository are demos, not a stable product API
 or finished-film release. Remaining ideas are deferred as backlog in
-[`docs/STATUS.md`](docs/STATUS.md), not required for the engine to be usable.
+[`docs/0_ROADMAP.md`](docs/0_ROADMAP.md), not required for the engine to be usable.
 
 ## Quickstart
 
@@ -62,7 +62,7 @@ npm run anim -- char rig krishna
 npm run anim -- char approve krishna --approver "you"
 ```
 
-See `docs/PIPELINE.md` for the full flow.
+See `docs/9_PIPELINE.md` for the full flow.
 
 ## Canonical YAML pipeline
 
@@ -97,11 +97,11 @@ for document ownership and conflict precedence.
 ## Docs
 
 - [docs/INDEX.md](docs/INDEX.md) — canonical design navigation and precedence.
-- [docs/STATUS.md](docs/STATUS.md) — current verified state, limits, and next work.
-- [docs/REPOSITORY_MAINTENANCE.md](docs/REPOSITORY_MAINTENANCE.md) — upkeep and contribution rules.
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — the master design (read before structural changes).
-- [docs/DECISIONS.md](docs/DECISIONS.md) — tool + licensing decisions (binding).
-- [CLAUDE.md](CLAUDE.md) — agent operating guide.
+- [docs/0_ROADMAP.md](docs/0_ROADMAP.md) — current verified state, limits, and next work.
+- [docs/9_REPOSITORY_MAINTENANCE.md](docs/9_REPOSITORY_MAINTENANCE.md) — upkeep and contribution rules.
+- [docs/6_ARCHITECTURE.md](docs/6_ARCHITECTURE.md) — the master design (read before structural changes).
+- [docs/6_DECISIONS.md](docs/6_DECISIONS.md) — tool + licensing decisions (binding).
+- [AGENTS.md](AGENTS.md) — agent operating guide; `.agents/skills/` — local procedures.
 
 ## Episode previews
 
@@ -118,9 +118,10 @@ The three current episode renders are playable directly on GitHub:
 
 ## Evidence, versioning, and contribution
 
-The latest recorded checks are summarized in [docs/STATUS.md](docs/STATUS.md):
-typecheck, 112 passing tests with 7 skips, visual asset inspection, audio QA,
-and a 180-second benchmark. The full film render remains future work. The
+The recorded checks are summarized in [docs/0_ROADMAP.md](docs/0_ROADMAP.md) and
+the evidence behind them: typecheck, 344 passing tests, the documentation lint,
+the canonical smoke test, visual asset inspection and audio QA. The full film
+render remains future work. The
 package is `0.0.0`; breaking DSL, schema, and IR changes are expected. Use
 Issues for reproducible bugs and design questions; PRs should update the owning
 document when public behavior changes and include focused tests or evidence.

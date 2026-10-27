@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import {simulateScene, type MotorScene} from "../src/motor/index";
 import type {Skeleton} from "../src/schemas/libraryMeta";
 
-// Slice B giant swing (docs/WORLD_PUPPET_MOTOR.md): a body attaches to a
+// Slice B giant swing (docs/8_MOTOR.md): a body attaches to a
 // hanging support's grip line, both hands on the one grip point, and turns
 // about it through the declared rotationLimit. These tests pin the mechanics
 // the bake must carry: the turn, the fixed grip, the unplanted feet, and the

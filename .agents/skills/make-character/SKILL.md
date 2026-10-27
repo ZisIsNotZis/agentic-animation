@@ -5,9 +5,9 @@ description: Create or approve an immutable category puppet for this engine when
 
 # make-character
 
-Read [docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md),
-[docs/DECISIONS.md](../../../docs/DECISIONS.md), and [docs/SCHEMAS.md](../../../docs/SCHEMAS.md).
-Read [docs/WORLD_PLUGIN_CONTRACT.md](../../../docs/WORLD_PLUGIN_CONTRACT.md) for category layout and face-rig/overlay ownership.
+Read [docs/6_ARCHITECTURE.md](../../../docs/6_ARCHITECTURE.md),
+[docs/6_DECISIONS.md](../../../docs/6_DECISIONS.md), and [docs/7_SCHEMAS.md](../../../docs/7_SCHEMAS.md).
+Read [docs/6_WORLD_PLUGIN_CONTRACT.md](../../../docs/6_WORLD_PLUGIN_CONTRACT.md) for category layout and face-rig/overlay ownership.
 Episodes pin approved assets; drafts do not enter production rendering.
 When producing or reworking the figure artwork itself at the accepted bar, use
 [art-asset-production](../art-asset-production/SKILL.md) for the disposable

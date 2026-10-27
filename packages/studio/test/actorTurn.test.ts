@@ -2,7 +2,7 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {actorTurn, rotateAboutPivot} from "../src/performance/actorTurn";
 
-// Slice B (docs/WORLD_PUPPET_MOTOR.md): the pivot a drawn body turns about.
+// Slice B (docs/8_MOTOR.md): the pivot a drawn body turns about.
 // A standing body turns about its ground point — the div's bottom-centre, the
 // pre-slice-B behaviour — and a hanging body about the grip the motor bakes.
 

@@ -1,6 +1,6 @@
 /**
  * Independent view of what the renderer actually draws for a baked motor frame
- * (docs/WORLD_PUPPET_MOTOR.md "Body geometry SSOT: drawn = collider").
+ * (docs/8_MOTOR.md "Body geometry SSOT: drawn = collider").
  *
  * The moter's own separation/collision code is deliberately NOT imported here:
  * these helpers reproduce the ArtFigure transform from the baked pose so the

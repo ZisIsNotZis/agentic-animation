@@ -1,4 +1,4 @@
-// Multi-view figure variants (docs/WORLD_PUPPET_MOTOR.md §orientation):
+// Multi-view figure variants (docs/8_MOTOR.md §orientation):
 // the same procedural puppet as Actor.tsx seen from other directions —
 // quarter-front, back, side, quarter-back — so orientation changes read
 // correctly. Same 400x720 design box and proportions as PerformanceActor

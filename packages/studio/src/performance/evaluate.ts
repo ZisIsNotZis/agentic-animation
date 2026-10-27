@@ -272,7 +272,7 @@ function repelActors(actors: readonly EvaluatedActor[]): EvaluatedActor[] {
     if (Math.abs(left.y - right.y) > 80) continue;
     const required = 200 * left.scale + 200 * right.scale;
     if (left.id === right.id) continue;
-    // Motor-driven positions are physical (docs/WORLD_PUPPET_MOTOR.md):
+    // Motor-driven positions are physical (docs/8_MOTOR.md):
     // the solver already enforces separation, so never nudge them.
     if ((left as {motor?: unknown}).motor || (right as {motor?: unknown}).motor) continue;
     // Separate the DRAWN bodies: a turned body's horizontal centre is not its
@@ -319,7 +319,7 @@ function fitCameraToActors(
 
 /**
  * Vertical centre for a framed shot. A framed shot must never slice a drawn
- * head (docs/ART_FILM_LANGUAGE_M6.md): a head straddling a frame edge reads as
+ * head (evidence/art/ART_FILM_LANGUAGE_M6.md): a head straddling a frame edge reads as
  * a mistake, while an insert that leaves the heads out of frame reads as a
  * choice, so the placement moves to the nearer side of every head that would be
  * cut. The unchanged placement is kept when no shift the painted stage allows
@@ -362,7 +362,7 @@ function fitPushCamera(
 }
 
 /**
- * A framed shot never slices a drawn head (docs/ART_FILM_LANGUAGE_M6.md). A
+ * A framed shot never slices a drawn head (evidence/art/ART_FILM_LANGUAGE_M6.md). A
  * head straddling the top or bottom frame edge reads as a mistake, while an
  * insert that leaves the heads out of frame reads as a choice, so the vertical
  * placement moves to the nearer side of every drawn head instead of leaving the
@@ -1006,7 +1006,7 @@ const GRAB_SEAT_FRAMES = 6;
 
 /**
  * Physical held-prop placement — the ONE authority for where a bound prop is
- * (docs/WORLD_PUPPET_MOTOR.md). Continuity is unconditional:
+ * (docs/8_MOTOR.md). Continuity is unconditional:
  * - bind start: the prop eases from its staged position into the hand over
  *   LIFT_FRAMES (the holder walks to the prop first via motor intents, so
  *   the hand is adjacent when the lift begins — no teleport);
@@ -1067,7 +1067,7 @@ function propState(
   // Binding events govern placement. Events chain recursively: a bind lifts
   // the prop from wherever it actually was when the bind started (staged,
   // mid-drop, or another hand) — so handovers and quick re-binds stay
-  // physically continuous (docs/WORLD_PUPPET_MOTOR.md).
+  // physically continuous (docs/8_MOTOR.md).
   const bindingTracks = tracks.filter((track) => track.kind === "binding");
   if (bindingTracks.some((track) => track.events.length)) {
     const events = bindingTracks
@@ -1186,7 +1186,7 @@ function propPlacementAt(
       : undefined;
   const isRelease = String(value.operation ?? "bind") === "release";
   if (!isRelease) {
-    // Grab semantics (docs/WORLD_PUPPET_MOTOR.md): the prop does not move by
+    // Grab semantics (docs/8_MOTOR.md): the prop does not move by
     // magic. It stays wherever it physically is until the binding hand
     // actually arrives (hand circle overlapping the prop box), and from the grab frame on it
     // follows that hand exactly, keeping the grip offset it was grabbed with.
@@ -1445,7 +1445,7 @@ export function evaluatePerformance(manifest: PerformanceManifest, frame: number
   const safeFrame = Number.isFinite(frame) ? Math.max(0, Math.floor(frame)) : 0;
   const tracks = (normalized.tracks ?? []).flatMap((track) => evaluateTracks([track], safeFrame));
   const rawActors = (normalized.actors ?? []).map((actor) => actorState(actor, normalized, safeFrame, tracksForSubject(tracks, actor.id)));
-  // Motor-driven actors follow baked trajectories exactly (docs/WORLD_PUPPET_MOTOR.md):
+  // Motor-driven actors follow baked trajectories exactly (docs/8_MOTOR.md):
   // their positions are physical and must not be repelled or eased.
   const motorScenes = (manifest as {sceneTrack?: Array<{start?: number; motor?: {actors?: Record<string, Array<Record<string, unknown>>>; props?: Record<string, Array<{x?: number; y?: number; falling?: boolean; rotation?: number}>>}}>}).sceneTrack ?? [];
   const motorFps = normalized.video?.fps ?? 24;

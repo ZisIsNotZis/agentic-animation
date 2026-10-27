@@ -1,5 +1,5 @@
 /**
- * M5 acting invariants (docs/ART_ACTING_M5.md "Invariants", docs/WORLD_PUPPET_MOTOR.md
+ * M5 acting invariants (evidence/art/ART_ACTING_M5.md "Invariants", docs/8_MOTOR.md
  * "Body geometry SSOT"): the classes of defect the WP3 review found, expressed
  * so that a regression fails the suite instead of reaching a reviewer.
  *

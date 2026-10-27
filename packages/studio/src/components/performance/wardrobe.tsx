@@ -1,7 +1,7 @@
 // Wardrobe SSOT (one wardrobe, eight views): every figure view — front,
 // side, quarter-front, quarter-back, back — draws its clothing from these
 // palette constants and this seeded fabric generator, so the eight direction
-// views of one figure always wear the same garment (docs/WORLD_PUPPET_MOTOR.md
+// views of one figure always wear the same garment (docs/8_MOTOR.md
 // §orientation). Algorithmic, SVG-only, subordinate to the ink-outline style.
 import React from "react";
 

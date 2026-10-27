@@ -1,5 +1,5 @@
 /**
- * Plugin discovery per docs/WORLD_PLUGIN_CONTRACT.md: the engine loads
+ * Plugin discovery per docs/6_WORLD_PLUGIN_CONTRACT.md: the engine loads
  * library/<category>/plugin.js, whose default export is the category
  * namespace (factory functions + static data such as cueAssets). Ordering is
  * declared per category manifest (before/after/priority) with cycle

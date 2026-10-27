@@ -1,5 +1,5 @@
 /**
- * Render truth for the M5 acting study (docs/ART_ACTING_M5.md "Render truth").
+ * Render truth for the M5 acting study (evidence/art/ART_ACTING_M5.md "Render truth").
  *
  * Every earlier m5-acting check measured the motor's own bake, so a bake could
  * only be compared to a render by hand — and the WP3 review compared one
@@ -124,7 +124,7 @@ function keyFrames(scene: MotorScene) {
   };
   const bind = firstFrame(lin, pickupStart, pickupEnd, (frame) => frame.holds !== undefined);
   // The pickup's key pose is the LIFT, not the grip: the first frame after the
-  // bind whose baked prop is clearly off the floor (docs/ART_ACTING_M5.md).
+  // bind whose baked prop is clearly off the floor (evidence/art/ART_ACTING_M5.md).
   const floorY = scene.staging.actors.lin!.at[1] * STAGE_HEIGHT;
   const carriedFrames = scene.motor.props.thermos!;
   let lift = bind;

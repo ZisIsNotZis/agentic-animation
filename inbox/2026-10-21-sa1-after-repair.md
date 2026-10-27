@@ -9,7 +9,7 @@ id:      the contract `inbox/2026-10-21-next-contract.md`, answering the verdict
 
 A fresh blind reviewer (run `f461a433`, given only the five stills and the video of the
 repaired rendition) answered **FAIL**. Its text is filed verbatim at
-`docs/tickets/S-A1-REVIEW-2.md`. Its primary finding is one neither earlier reading made:
+`evidence/tickets/S-A1-REVIEW-2.md`. Its primary finding is one neither earlier reading made:
 
 > Both figures stand on the camera side of the net at all five still times … the players are
 > drawn over the mesh; shoe soles bottom at y 382–387 while the net posts' bases stop at y 368.
@@ -75,8 +75,8 @@ dead, and both are decisions already on the table. The net is the expensive one.
   logs, the committed video and `verify.sh` (exit 0 = intact).
 - `episodes/a-badminton/REVIEWS.md` — both verdicts, what each forced, and the net finding
   stated for the next reader; `README.md` — what the episode is and what it cannot do.
-- `docs/ART_ASSET_PROGRAM.md` §"The repair workset" (R4's partial landing stated as partial)
-  and §"Current facts"; `docs/tickets/SLICE-A-ENGINE.md` (E1's old scene caveat).
+- `docs/0_ROADMAP.md` §"The repair workset" (R4's partial landing stated as partial)
+  and §"Current facts"; `evidence/tickets/SLICE-A-ENGINE.md` (E1's old scene caveat).
 - Commits: `f681cb5` artefact home · `02831e7` four falsified claims · `806f3b6`
   `mail/`→`inbox/` · `bfa837d` R1 · `c38c782` R4 · `da9b8bb` repaired rendition ·
   `3bd40ac` review 2.

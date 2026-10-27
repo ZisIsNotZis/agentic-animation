@@ -3,7 +3,7 @@
  * import it directly). The criterion is GEOMETRIC: the hand the SVG actually
  * renders must land on the motor's baked reach point in world space, for
  * every facing/flip/scale/waist-pitch combination — the drawn hand IS the
- * physics hand (docs/WORLD_PUPPET_MOTOR.md).
+ * physics hand (docs/8_MOTOR.md).
  */
 import {solveArmIK} from "./skeleton";
 import type {Skeleton} from "../schemas/libraryMeta";

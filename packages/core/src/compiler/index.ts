@@ -165,7 +165,7 @@ export interface SpeechPerformanceEvent {
   text: string;
   speed: number;
   boundaries?: readonly SpeechBoundary[];
-  /** Rhubarb viseme cues, scene-absolute seconds (docs/WORLD_PUPPET_MOTOR.md). */
+  /** Rhubarb viseme cues, scene-absolute seconds (docs/8_MOTOR.md). */
   mouth?: ReadonlyArray<{start: number; end: number; viseme: string}>;
   interruption?: true;
 }
@@ -726,7 +726,7 @@ async function compileInterruption(
 }
 
 /**
- * M5 acting shape (docs/NARROW_EPISODE_DSL.md): the call-site modifiers
+ * M5 acting shape (docs/7_DSL.md): the call-site modifiers
  * `anticipation` (s), `accent` (0..1) and `settle` (0..1) of an override group
  * (`{...action.point(a,b), accent: .6}`) become motor intent fields on the
  * beats that call emits. A value the procedure set itself wins, so the recipe

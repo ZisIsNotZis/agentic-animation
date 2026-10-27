@@ -5,7 +5,7 @@ import {dirname, join} from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
 
 /**
- * Authoring stdlib for invocation bodies (docs/WORLD_PLUGIN_CONTRACT.md).
+ * Authoring stdlib for invocation bodies (docs/6_WORLD_PLUGIN_CONTRACT.md).
  * Helpers write semantic track events at invocation-local time into
  * world.canvas.tracks — the same vocabulary the renderer already consumes.
  * Each helper returns its duration so bodies `yield helper(...)` to advance

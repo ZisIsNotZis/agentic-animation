@@ -1,6 +1,6 @@
 /**
  * Generic skeleton forward kinematics + part-shape contact (Slice 1,
- * docs/WORLD_PUPPET_MOTOR.md). The engine holds NO figure numbers here:
+ * docs/8_MOTOR.md). The engine holds NO figure numbers here:
  * every joint, part shape, arm length, and waist limit comes from the
  * figure's declared skeleton data (library/figure/<name>/skeleton.json).
  *

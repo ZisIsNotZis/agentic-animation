@@ -1,6 +1,6 @@
 import {solidSupport,type PropSolid} from "./propGeometry";
 /**
- * World Puppet Motor (docs/WORLD_PUPPET_MOTOR.md) — planar physical motion
+ * World Puppet Motor (docs/8_MOTOR.md) — planar physical motion
  * for actors and props. Deterministic fixed-timestep simulation run at
  * compile time; the renderer only looks up baked per-frame trajectories.
  *
@@ -41,7 +41,7 @@ export interface MotorIntent {
   forceSec?: number;
   /** The former holder of a released object (from binding tracks). */
   holder?: string;
-  /** Acting shape (M5, docs/WORLD_PUPPET_MOTOR.md): seconds the beat holds
+  /** Acting shape (M5, docs/8_MOTOR.md): seconds the beat holds
    *  while the torso shifts weight opposite the intended motion. */
   anticipation?: number;
   /** Acting shape: 0..1 timing contrast into the key pose (acting hand). */
@@ -285,7 +285,7 @@ const BODY_GAP = 0;
  *  screen px in the delivered 960-wide frame). A handover is a hand meeting a
  *  hand ACROSS a gap; at drawn-touch the two robes run ink-to-ink and the pair
  *  reads as one mass regardless of how correct each body's own pose is (m7
- *  transfer, docs/ART_TRANSFER_M7.md). The gap is a staging distance only, so
+ *  transfer, evidence/art/ART_TRANSFER_M7.md). The gap is a staging distance only, so
  *  the arms bridge it: the receiver stops here instead of at adjacency, and
  *  only the transfer pair is held this far apart — every other pair keeps
  *  BODY_GAP, because a corridor on every approach shortens the offer reach
@@ -854,7 +854,7 @@ function propOpenHandOff(state: ActorState, props: Map<string, PropState>, free 
   clearOffHand(state);
 }
 
-/** Slice 4 fall (docs/WORLD_PUPPET_MOTOR.md): balance is cut — stepping,
+/** Slice 4 fall (docs/8_MOTOR.md): balance is cut — stepping,
  *  posture recovery, drives and gestures end; the collapse envelope drops the
  *  body through the shared FK and it stays down (get-up is out of scope). */
 function startFall(state: ActorState, dir: 1 | -1, dur = FALL_DUR): void {
@@ -885,7 +885,7 @@ function startFall(state: ActorState, dir: 1 | -1, dur = FALL_DUR): void {
 }
 
 /**
- * Slice B giant swing, attach (docs/WORLD_PUPPET_MOTOR.md): a `swing` intent
+ * Slice B giant swing, attach (docs/8_MOTOR.md): a `swing` intent
  * binds the body to a hanging support's grip line. The hang placement is solved
  * from the declared skeleton — the shoulder sits one bone-length below the grip
  * so the drawn arm reaches it without the IK clamping — and the beat is split
@@ -1332,7 +1332,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     }
     return {pitch: state.facing * SPINE_MAX, crouch: 1};
   };
-  /** M5 joint shaping (docs/WORLD_PUPPET_MOTOR.md): a shaped hold breathes —
+  /** M5 joint shaping (docs/8_MOTOR.md): a shaped hold breathes —
    *  the hand (and the carried prop with it) drifts a few px against the
    *  shoulder, so the elbow and forearm keep moving instead of locking.
    *  0 is the still pre-M5 hold; the ramp keeps the start continuous. */
@@ -1377,7 +1377,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
     return tx === undefined ? 0 : (Math.sign(tx - state.x) || 0) as 1 | 0 | -1;
   };
   /**
-   * M5 anticipation (docs/WORLD_PUPPET_MOTOR.md): a shaped beat holds for its
+   * M5 anticipation (docs/8_MOTOR.md): a shaped beat holds for its
    * pre-roll while the torso shifts weight opposite the intended motion, then
    * starts. The intent is re-queued with its preparation spent, so every
    * existing beat path runs unmodified and 0 stays the pre-M5 timing.
@@ -1487,7 +1487,7 @@ export function simulateScene(scene: MotorScene): MotorTrajectory {
         if (intent.intent === "move") {
           const tx = intent.target !== undefined ? scene.resolveX(intent.target) : undefined;
           if (tx !== undefined) {
-            // M5 putdown visibility (docs/WORLD_PUPPET_MOTOR.md): a holder
+            // M5 putdown visibility (docs/8_MOTOR.md): a holder
             // sent to a mark behind its facing steps back instead of turning.
             // The facing is what mirrors a held prop, so a carrying turn would
             // teleport it; the backward step keeps the prop continuous.
@@ -2703,7 +2703,7 @@ export function bakeSceneMotor(
             forceSec: typeof intent.forceSec === "number" ? intent.forceSec : undefined,
             grab: typeof intent.grab === "string" ? intent.grab : undefined,
             releaseMode: intent.releaseMode === 'free' ? 'free' : 'place',
-            // M5 acting shape (docs/SCHEMAS.md): data on the intent, 0 = pre-M5.
+            // M5 acting shape (docs/7_SCHEMAS.md): data on the intent, 0 = pre-M5.
             anticipation: typeof intent.anticipation === "number" ? intent.anticipation : undefined,
             accent: typeof intent.accent === "number" ? intent.accent : undefined,
             settle: typeof intent.settle === "number" ? intent.settle : undefined,

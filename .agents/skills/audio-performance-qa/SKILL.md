@@ -5,8 +5,8 @@ description: Diagnose or verify Edge TTS, voice speed, audio-authoritative timin
 
 # audio-performance-qa
 
-Read [docs/PIPELINE.md](../../../docs/PIPELINE.md),
-[docs/NARROW_EPISODE_DSL.md](../../../docs/NARROW_EPISODE_DSL.md), and the
+Read [docs/9_PIPELINE.md](../../../docs/9_PIPELINE.md),
+[docs/7_DSL.md](../../../docs/7_DSL.md), and the
 current audio/studio tests.
 
 ## Contract

@@ -1,6 +1,6 @@
 /**
  * M5 acting shapes — anticipation, accent, settle
- * (docs/WORLD_PUPPET_MOTOR.md "Acting shapes"). Additive performance
+ * (docs/8_MOTOR.md "Acting shapes"). Additive performance
  * parameters on a motor intent: every one defaults to 0 and 0 reproduces the
  * pre-M5 trajectory exactly, so the motor needs no second motion path.
  *

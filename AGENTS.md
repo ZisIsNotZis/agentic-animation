@@ -14,9 +14,9 @@ This is the standalone main repository. Agent procedures live in
 Start with `.agents/skills/agentic-animation/SKILL.md` when a task spans
 subsystems. Third-party skills linked there are immutable.
 
-The current milestone, the packages that reach it and the measured facts each
-one starts from are in `docs/ART_ASSET_PROGRAM.md` §"Roadmap"; repository-wide
-state is `docs/STATUS.md`. Both are maintained by the agent that owns this
+The person's verdicts, the milestone state, the package order and every open
+work item live in `docs/0_ROADMAP.md`; nothing else holds state. That document
+and the level documents under `docs/` are maintained by the agent that owns this
 project's roadmap, not by a worker package.
 
 ## Working spirit
@@ -38,8 +38,25 @@ or temporary files. Use `/tmp` for disposable work. Run typecheck, tests, the
 canonical smoke test, and `git diff --check` before handoff. For visual changes,
 inspect representative rendered frames manually.
 
-Keep documentation under `docs/` as the single source of truth. Put temporary
-task lists in `.scratch/` only while working, then promote durable conclusions
-to the owning document and remove the scratch note. Do not add a parallel DSL
-or pipeline. Historical stage names, where mentioned, must be explicitly
-marked deprecated and must not be presented as entry points.
+## Documents
+
+`docs/` is the single source of truth and is organized by level, not by
+milestone: `docs/<level>_<NAME>.md`, where a lower level is closer to purpose
+and wins on conflict — 0 staging/roadmap, 1 problem, 2 goal, 3 requirement,
+4 use case, 5 product, 6 architecture and decisions, 7 interface, 8 detail,
+9 implementation. Inside a document the H1s are its sources, in order:
+`# EXPLICIT` (the person's own words), `# CONFIRMED` (what they agreed to),
+`# INFERRED` (what an agent decided). Each fact has one home; a document states
+current fact, its evidence and the decision tree, never an event date, commit
+hash or diary entry — those are captures and live in `evidence/`.
+
+`npm run docs:lint` (also part of `npm test`) observes the naming, the zones,
+the 200-line ceiling, the no-diary rule and every relative link. When a
+conclusion is worth keeping, put it in its level document; use
+`docs/0_STAGING.md` only for information still in flight, and empty it into the
+level documents rather than letting it accumulate.
+
+Put temporary task lists in `.scratch/` only while working, then promote durable
+conclusions to the owning document and remove the scratch note. Do not add a
+parallel DSL or pipeline. Historical stage names, where mentioned, must be
+explicitly marked deprecated and must not be presented as entry points.

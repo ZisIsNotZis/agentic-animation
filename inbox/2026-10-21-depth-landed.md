@@ -43,8 +43,8 @@ renderer edit, one re-bake/re-render (~20 s), one review run.
 - `episodes/a-badminton/artifacts/sa1-d1-2026-10-21/` — `episode.mp4` (132 f / 5.500 s),
   `bake-identity.json` (episode and video sha256, the stills command, the known defect).
 - `packages/studio/test/setLayers.test.ts` — the depth test, the six others unchanged.
-- `docs/ART_ASSET_PROGRAM.md` §D1 · `docs/SCHEMAS.md` (set-world declarations) ·
-  `docs/NARROW_EPISODE_DSL.md` (actor `entrance`).
+- `docs/0_ROADMAP.md` §D1 · `docs/7_SCHEMAS.md` (set-world declarations) ·
+  `docs/7_DSL.md` (actor `entrance`).
 - Commits `935542a`, `024dbb1`, `93f385f`; nothing pushed.
 
 ## Not exercised

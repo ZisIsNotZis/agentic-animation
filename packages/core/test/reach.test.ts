@@ -1,4 +1,4 @@
-// Geometric contract for the reach -> drawn-arm mapping (docs/WORLD_PUPPET_MOTOR.md):
+// Geometric contract for the reach -> drawn-arm mapping (docs/8_MOTOR.md):
 // the FK hand joint, back-mapped to world space the way the renderer places
 // the figure, must land ON the motor's baked reach point — for every facing,
 // flip, scale, and waist-pitch combination. Reachable targets are hit within

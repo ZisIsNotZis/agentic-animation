@@ -1,4 +1,4 @@
-// R7 — the racket in the server's off hand (docs/ART_ASSET_PROGRAM.md §Roadmap).
+// R7 — the racket in the server's off hand (docs/0_ROADMAP.md §Roadmap).
 //
 // The hold model was single-hand: `ActorState.holding` is one prop per actor and
 // the reach model solved one arm, so the hand that strikes the shuttle could not

@@ -3,7 +3,7 @@ import type { CorpusDoc } from "@anim/core";
 /**
  * The reliability tags the corpus embeds inline (e.g. `[disputed]`,
  * `[scholarly]`). Closed set as of 2026-07 — verified by a sweep of
- * `04-deep-dives/` (see docs/PIPELINE.md, corpus stage). Unknown tags are
+ * `04-deep-dives/` (see docs/9_PIPELINE.md, corpus stage). Unknown tags are
  * preserved verbatim in `RawBullet.tagsRaw` but not lifted into this union.
  */
 export const RELIABILITY_TAGS = [
