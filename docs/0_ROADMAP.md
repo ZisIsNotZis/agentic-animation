@@ -9,21 +9,18 @@ revision did not contain.
   itemized ([record](../evidence/tickets/M2-MILESTONE-ACCEPTANCE.md)).
 - **M2 production path — opened for `figure/lin_b_draft` only.** “old characters
   shall still be there, just not the top choice”. Every other figure's
-  production replacement, and any publication or spending, stays closed.
+  replacement, and any publication or spending, stays closed.
 - **M3 — met.** “Looks good enough” at the M3 gate bundle.
 - **Slice A, the badminton serve — accepted.** “probably yes, not very natural,
   but again we prefer vertical-improvement, not do everything as best as it can
-  and next step.” The rendition is the one its artifacts note records as
-  accepted ([renditions](../episodes/a-badminton/artifacts/README.md)); “not
-  very natural” is their observation, not a defect to chase, and no polish pass
-  is owed.
+  and next step.” The rendition is the one its
+  [artifacts note](../episodes/a-badminton/artifacts/README.md) records as
+  accepted; “not very natural” is their observation, not a defect to chase.
 - **The serve-versus-rally fork — withdrawn by the person.** A rally needs the
-  serve too, so the serve is on both paths; the rally's extra work is a
-  scheduling question, not a question for them.
+  serve too, so the serve is on both paths; its extra work is scheduling.
 - **The working rule for the asset programme.** *“we prefer vertical
-  improvement, not do everything as best as it can and next step.”* Read as
-  depth: a layer is accepted at the level where it can be judged and the next
-  cut goes deeper; one layer is never perfected before the one under it begins.
+  improvement…”* read as depth: a layer is accepted where it can be judged and
+  the next cut goes deeper; no layer is perfected before the one under it.
 - **Quality bar — coarse is correct.** A defect counts only when it is visible
   at normal viewing size; prefer the convenient mechanism inside that, and spend
   effort on not looking wrong rather than on being exact. Two bounds keep their
@@ -34,9 +31,9 @@ revision did not contain.
   a slice they appear in; one sentence reverses it
   ([cast](../evidence/media/README.md)).
 - **Priority order.** Absorb every valuable Huashu mechanism into this engine,
-  its skills and its practice (image-generation models excepted), then continue
-  the main engine goal with ready-made example assets; every step ships as a
-  vertical slice a person can see.
+  its skills and its practice (image generation excepted), then continue the
+  engine goal with ready-made example assets; every step ships as a vertical
+  slice a person can see.
 
 # CONFIRMED
 
@@ -63,8 +60,8 @@ a fact about the tree, so it lives here and nowhere else.
 | M1 direction | accepted: B selected, A/B/C preserved ([directions](../evidence/art/ART_DIRECTION_M1.md)) |
 | M2 character | judged met; `figure/lin_b_draft` is the recommended production figure ([character](../evidence/art/ART_CHARACTER_M2.md)) |
 | M3 world | judged met; `set/canteen_counter_m3` backs the canteen scene ([world](../evidence/art/ART_WORLD_M3.md)) |
-| M4 materials | delivered, **awaiting the person's judgment**: pigment in `color`, both light passes in `soft-light`, ink contrast 0.964–1.063 in all eight regions, no matte/cut-out/tile/raised layer; +65% wall time over the M3 baseline at concurrency 4 ([materials](../evidence/art/ART_MATERIALS_M4.md)) |
-| M5 acting | delivered, **awaiting the person's judgment**: six beats with anticipation, accent and settle; third perceptual review ACTING PASS ([acting](../evidence/art/ART_ACTING_M5.md)) |
+| M4 materials | delivered, **awaiting the person**: pigment in `color`, both light passes in `soft-light`, ink contrast 0.964–1.063 everywhere, +65% wall time ([materials](../evidence/art/ART_MATERIALS_M4.md)) |
+| M5 acting | delivered, **awaiting the person**: six beats with anticipation, accent and settle, third perceptual review ACTING PASS ([acting](../evidence/art/ART_ACTING_M5.md)) |
 | M6 film language | delivered and PASS (§CONFIRMED); awaiting the person's judgment |
 | M7 transfer | delivered and PASS (§CONFIRMED); awaiting the person's judgment |
 | M8 default production | planned, not started |
@@ -88,10 +85,9 @@ rule in [6_ARCHITECTURE](6_ARCHITECTURE.md#ownership).
   intent and the stream, cup level and steam are derived from it.
 
 State: A's serve is accepted, R8 landed the in-flight interception and S-A2's
-rally shot is delivered ([a-rally](../episodes/a-rally/README.md)); B's
-capability is proven but
-its shot does not bake (framing and three sub-pixel invariants); C is not
-started.
+rally shot is delivered but unreadable to blind reviewers
+([a-rally](../episodes/a-rally/README.md)); B's capability is proven but its
+shot does not bake (framing and three sub-pixel invariants); C is not started.
 
 ## Slice A packages, in order
 
@@ -106,62 +102,71 @@ integrating node.
   `camera.follow(shuttle, {sec: 2.0, zoom: 0.75})`, 40° arc, bounce resting at
   world x 509. Its measured reach, force table and the five limits it could not
   land live in `episodes/a-badminton/README.md`.
-- **ER the independent review** — returned `NOT SATISFIED`
-  ([verbatim](../evidence/tickets/S-A1-ER-REVIEW.md)). Two thirds of its
-  shortfall was one defect (the actor y-clamp written into the projectile's
-  ground, so the shuttle bounced 41–56 px above its line) and one sampling
-  artifact (6 fps stepping over two hops).
+- **ER the independent review** — `NOT SATISFIED`
+  ([verbatim](../evidence/tickets/S-A1-ER-REVIEW.md)): one real defect (the
+  projectile's ground was seeded from the actor clamp, so the shuttle bounced
+  41–56 px high) and one sampling artifact (6 fps stepping over two hops).
 - **R6 depth defects and the serving rendition** — landed: court-depth scale on
   the `background` entrance, a held prop on its holder's plane and free on its
   own staged plane, and the defect that hid both — `StagedActor.z` was dropped
   twice before the drawing. Re-rendered as the accepted rendition below.
-- **R7 the racket in the server's off hand** — landed. The serve is untouched
-  (struck 2.207 s `[-533,-447]`, settled 3.717 s `[476.56,691]`). The mechanism
-  outlives the shot: a second hold channel on `ActorState` (`off`: bind, carry,
-  release, socket, retract) that never places, offers or strikes; `holdsL`/
-  `reachL` through the bake into the renderer's left arm; `held-by(actor[, hand])`
-  starting a prop in a hand at frame 0. Naming no hand is byte-identical to
-  pre-R7 on the five other prop-holding episodes. Not carried, on purpose: the
-  shot opens with the racket in hand (a bench pickup would add ~3 s and move the
-  strike time R7 pins), and a motor-driven prop is drawn at scale 1 while its
-  declared stage scale sizes the motor's box (the racket's drawn handle sits
-  ~11 px below the socket) — one declaration for drawn size and physical body is
-  R4's unfinished class.
-- **R8 the rally's own package — landed.** A `push` naming a prop that declares
-  `projectile` and is already falling is now an interception solved at the cue:
-  the motor walks the prop's own integrator forward to the first floor contact
-  and takes the earliest substep where the hand's reach disc (arm + hand radius)
-  touches the drawn box, the root mark is inside what the walk can cover by
-  then, and the hand can travel there on its honest 480 px/s ramp. The drive
-  waits at that fixed aim and keeps the facing it was solved for, so overlap is
-  a closing speed instead of one lucky frame. A cue with no such mark is an
-  authored `strike missed` at the cue, staged at no pose — which is why the two
-  whole-body freezes are gone. Measured on EP's fixture: seven of eleven cues
-  (1.90–2.16 s, a 0.26 s band) land a second strike with empty diagnostics, the
-  other four are plain misses, the serve stays 1.407 s `[1000,-839]`, and
-  `episodes/a-badminton` keeps struck 2.207 s `[-533,-447]` / settled 3.717 s
-  `[476.56,691]`. Not bought: the band is this receiver's at x 1500 (re-staging
-  shifts it), bounces are not modelled, and a crouched or mid-gesture striker
-  falls into the named miss. Six re-baked episodes have byte-identical motor
-  output ([evidence](../evidence/tickets/R8-INTERCEPTION.md)).
-- **S-A2 the rally, as a shot — delivered, awaiting the reviewer and then the
-  person.** `episodes/a-rally` reuses the accepted set, the two athletes, the
-  shuttle and the off-hand racket: the accepted pickup and serve, the receiver
-  walking into the descent and returning it at a cue inside a measured 0.260 s
-  band (2.205–2.465 s), the return's flight to its rest on the painted floor.
-  Events: serve 2.207 s `[-533,-447]`, return 2.590 s `[533,-447]` (the same 40°
-  arc mirrored), settle 4.075 s `[1387.94,691]`, zero motor diagnostics; the
-  1280×720 rendition lives in `episodes/a-rally/artifacts/` with its identity,
-  its `verify.sh` and five stills including the contact's own frame. Two manager
-  rejections shaped it: a 288 px staging where the follow-through arms read as a
-  high five, and a prop draw plane that kept a holder's z after release and put
-  shuttle ink on the server's chin — the second is fixed at its cause
-  (`held-by` bakes the object's own plane; the renderer raises it only while the
-  bake reports a hold) with two failing-first tests, and `episodes/a-badminton`
-  is drawing-identical across it. The band, the sweep, the rejected branches and
-  the plane evidence are in [the ticket](../evidence/tickets/S-A2-RALLY.md);
-  the bakes are in the episode's README. Next: an independent agent review bound
-  to r3, then the person's look.
+- **R7 the racket in the server's off hand** — landed; the serve is untouched.
+  A second hold channel on `ActorState` (bind, carry, release, socket, retract),
+  `holdsL`/`reachL` through the bake into the renderer's left arm, and
+  `held-by(actor[, hand])` starting a prop in a hand at frame 0; naming no hand
+  is byte-identical on the five other prop-holding episodes. Left open, and now
+  R9: a motor-driven prop is drawn at scale 1 while its declared stage scale
+  sizes the motor's box, so its drawn handle sat ~11 px below the socket.
+- **R8 the rally's own package — landed.** A `push` on a prop that declares
+  `projectile` and is already falling is an interception solved at the cue: the
+  prop's own integrator is walked forward and the drive aimed at the earliest
+  substep the hand, the walk and the reach can all meet it, then held there, so
+  overlap is a closing speed instead of one lucky frame; a cue with no such mark
+  is a named miss staged at no pose, which is why the two whole-body freezes are
+  gone. On EP's fixture seven of eleven cues (1.90–2.16 s) land with empty
+  diagnostics, the serve stays 1.407 s, `episodes/a-badminton`'s events do not
+  move, and six re-baked episodes are byte-identical
+  ([evidence](../evidence/tickets/R8-INTERCEPTION.md)). Not bought: the band is
+  that receiver's staging, bounces are not modelled, and a crouched or
+  mid-gesture striker falls into the named miss.
+- **S-A2 the rally, as a shot — delivered, and NOT PASSED by two blind
+  reviews.** `episodes/a-rally` carries the accepted pickup and serve, the
+  receiver walking into the descent and returning it inside a measured band
+  (0.285 s, after the camera moved the serve to 2.307 s), the return's flight to
+  its rest, and a camera that opens wide, holds a medium two-shot through the
+  contact and pulls back; four renditions are kept, superseded, never
+  overwritten. Both blind reviews are filed verbatim
+  ([r3](../evidence/tickets/S-A2-REVIEW.md),
+  [r4](../evidence/tickets/S-A2-REVIEW-R4.md)) and both decided on the picture,
+  not the bake: **the off-hand racket is never drawn in a hand**, and **the
+  returning palm meets the shuttlecock's cone edge while its cork hangs a hand's
+  width away**, so the shuttle looks pushed by air rather than struck. They also
+  name the asset itself: a translucent, 2.4×-real cone that reads as a
+  lampshade. The bakes are right; the picture is not, and the two mechanical
+  causes become R9 and R10 below. The person is not asked to look until those
+  land and a third blind review passes.
+- **R9 the held prop in the hand — open, the next package.** The racket is
+  staged `held-by(server, left)` and the bake carries it on the off hand's
+  socket, yet in the picture the handle floats 30–70 px from the palm and the
+  head sits against the shoulder/chest; R7 already recorded the class as "a
+  motor-driven prop is drawn at scale 1 while its declared stage scale sizes the
+  motor's box" (its drawn handle ~11 px below the socket). Measure the drawn
+  handle against the drawn palm per frame on a held prop, then make the drawn
+  prop's declared handle sit in the palm — one declaration for drawn size,
+  physical body and socket. Acceptance: measured handle-to-palm offset inside a
+  hand width on every frame of a held window; two failing-first tests; the
+  bakes of the episodes that hold a prop unchanged; `a-badminton`'s racket
+  drawing re-rendered and reported (its serve's events must not move).
+- **R10 the strike meets the point a player strikes — open, after R9.** R8's
+  interception aims the drive at the box point the rest hand reaches soonest, so
+  a palm can bind on the shuttlecock's cone edge while its cork hangs a hand's
+  width away. Aim the interception at the prop's declared contact point — its
+  grip socket where the asset declares one, the cork/point a strike reads as
+  otherwise — while the contact itself still binds on the body box. Acceptance:
+  on the EP fixture and on `episodes/a-rally`'s staging the drawn palm is inside
+  a hand's width of the prop's declared contact point at the contact frame; R8's
+  cue band does not shrink below 0.25 s; the serve's held-prop strike is
+  untouched; suite and hashes green.
 
 ## Open work items
 
@@ -169,9 +174,13 @@ integrating node.
 - **The racket's pickup in frame** — one authored beat, costs the accepted shot's
   timing; awaiting the person's word.
 - **The cast review** — provisional yes, open for the person's look.
-- **R8** — landed ([evidence](../evidence/tickets/R8-INTERCEPTION.md)).
-- **S-A2's independent review** — owed before the person looks; it binds to
-  the episode's current rendition.
+- **S-A2's third independent review** — owed after R9 and R10, bound to the
+  re-shot rendition.
+- **The shuttlecock asset is the person's decision.** Both blind reviewers named
+  it unprompted: at 2.4× real size, a translucent feather mesh with a black rim,
+  it reads as a lampshade. A new revision (opaque feathers, a readable cork, a
+  smaller declared size) is additive and does not rewrite the accepted asset,
+  but it changes how the accepted serve's shuttle looks in any new rendition.
 - **A push on a prop another actor is holding is a silent no-op** — measured in
   S-A2: two pushes on one cue bake one strike and no diagnostic, where the
   contract says an impossible beat fails loud. It costs a shot nothing today
